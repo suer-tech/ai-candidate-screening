@@ -1,0 +1,22 @@
+# Candidate source materials and generated private artifacts
+candidate/
+tmp/
+
+# Local secrets
+.env
+.env.*
+!.env.example
+
+# Dependencies and build outputs
+**/node_modules/
+**/.next/
+**/dist/
+**/coverage/
+**/tsconfig.tsbuildinfo
+
+# Editor and OS metadata
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+

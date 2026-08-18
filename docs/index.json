@@ -1,0 +1,89 @@
+{
+  "symbols": {
+    "Home": {
+      "file": "web/app/page.tsx",
+      "kind": "function",
+      "summary": "Главный клиентский интерфейс очереди кандидатов и их анализа."
+    },
+    "Vacancies": {
+      "file": "web/app/page.tsx",
+      "kind": "function",
+      "summary": "Экран настройки профилей вакансий и правил оценки."
+    },
+    "VacancySettings": {
+      "file": "web/app/page.tsx",
+      "kind": "function",
+      "summary": "Редактор версии профиля вакансии: управляет ABC-направлениями, блокирует невалидное сохранение и связывает структурированные ошибки с полями."
+    },
+    "STANDARD_ABC_DIRECTIONS": {
+      "file": "web/app/page.tsx",
+      "kind": "constant",
+      "summary": "Стартовый перечень пяти ABC-направлений из ТЗ для демонстрационных профилей, ещё не получивших согласованные описания A/B/C."
+    },
+    "BUSINESS_ASSISTANT_ABC_DIRECTIONS": {
+      "file": "web/app/page.tsx",
+      "kind": "constant",
+      "summary": "Пять ABC-направлений вакансии бизнес-ассистента с короткими предзаполненными описаниями A/B/C."
+    },
+    "AbcProfileDirection": {
+      "file": "web/app/abc-profile-validation.ts",
+      "kind": "type",
+      "summary": "Тип направления ABC: стабильный идентификатор, название, определения A/B/C и происхождение standard/custom."
+    },
+    "AbcProfileValidationError": {
+      "file": "web/app/abc-profile-validation.ts",
+      "kind": "type",
+      "summary": "Структурированная ошибка ABC-валидации уровня коллекции, направления или конкретного поля."
+    },
+    "validateAbcProfile": {
+      "file": "web/app/abc-profile-validation.ts",
+      "kind": "function",
+      "summary": "Чисто проверяет полноту ABC-направлений и уникальность названий без изменения входных значений или порядка."
+    },
+    "normalizeAbcDirectionName": {
+      "file": "web/app/abc-profile-validation.ts",
+      "kind": "function",
+      "summary": "Нормализует название ABC-направления только для trim и регистронезависимого сравнения."
+    },
+    "Vacancy": {
+      "file": "web/app/page.tsx",
+      "kind": "type",
+      "summary": "Демонстрационная модель вакансии с версией, статусом, профилем оценки и агрегатами кандидатов."
+    },
+    "BUSINESS_ASSISTANT_PROFILE": {
+      "file": "web/app/page.tsx",
+      "kind": "constant",
+      "summary": "Демонстрационный профиль вакансии бизнес-ассистента с образом результата и четырьмя ключевыми компетенциями."
+    },
+    "runTranscriptionPipeline": {
+      "file": "web/server/transcription/pipeline.ts",
+      "kind": "function",
+      "summary": "Извлекает аудио из видео, получает стенограмму AssemblyAI и сохраняет артефакты для последующего анализа."
+    },
+    "extractAudioTrack": {
+      "file": "web/server/transcription/extract-audio.ts",
+      "kind": "function",
+      "summary": "Извлекает первую аудиодорожку через FFmpeg с копированием AAC и резервным перекодированием."
+    },
+    "transcribeAudio": {
+      "file": "web/server/transcription/assemblyai-client.ts",
+      "kind": "function",
+      "summary": "Отправляет локальное аудио в AssemblyAI EU и ожидает русскую стенограмму с диаризацией."
+    },
+    "buildTranscriptionParams": {
+      "file": "web/server/transcription/assemblyai-client.ts",
+      "kind": "function",
+      "summary": "Формирует зафиксированный набор параметров AssemblyAI для русскоязычного интервью."
+    },
+    "createTranscriptArtifact": {
+      "file": "web/server/transcription/format-transcript.ts",
+      "kind": "function",
+      "summary": "Преобразует ответ AssemblyAI во внутреннюю версионируемую схему для последующих моделей."
+    },
+    "TranscriptArtifact": {
+      "file": "web/server/transcription/types.ts",
+      "kind": "type",
+      "summary": "Внутренний контракт schemaVersion 1: текст, реплики, слова, таймкоды, говорящие и уверенность."
+    }
+  }
+}
