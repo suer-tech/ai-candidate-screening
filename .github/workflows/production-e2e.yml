@@ -1,0 +1,106 @@
+name: Mandatory production-like E2E
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: Provisioned application URL
+        required: true
+        type: string
+      control_url:
+        description: Protected E2E control-plane URL
+        required: true
+        type: string
+      fixture_set_id:
+        description: Immutable synthetic fixture set
+        required: true
+        type: string
+      build_id:
+        description: Exact deployed build identifier
+        required: true
+        type: string
+      environment:
+        description: Destructive test environment
+        required: true
+        type: choice
+        options:
+          - staging
+          - preproduction
+  workflow_call:
+    inputs:
+      base_url:
+        required: true
+        type: string
+      control_url:
+        required: true
+        type: string
+      fixture_set_id:
+        required: true
+        type: string
+      build_id:
+        required: true
+        type: string
+      environment:
+        required: true
+        type: string
+    secrets:
+      E2E_AUTH_STORAGE_STATE_B64:
+        required: true
+      E2E_PREFLIGHT_TOKEN:
+        required: true
+      E2E_CONTROL_TOKEN:
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-e2e-${{ inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  required-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    environment: ${{ inputs.environment }}
+    defaults:
+      run:
+        working-directory: web
+    env:
+      E2E_BASE_URL: ${{ inputs.base_url }}
+      E2E_CONTROL_URL: ${{ inputs.control_url }}
+      E2E_FIXTURE_SET_ID: ${{ inputs.fixture_set_id }}
+      E2E_BUILD_ID: ${{ inputs.build_id }}
+      E2E_ENVIRONMENT: ${{ inputs.environment }}
+      E2E_ALLOW_DESTRUCTIVE_CLEANUP: "true"
+      E2E_AUTH_STORAGE_STATE: ${{ github.workspace }}/web/tests/e2e/.auth/hr.storage-state.json
+      E2E_PREFLIGHT_TOKEN: ${{ secrets.E2E_PREFLIGHT_TOKEN }}
+      E2E_CONTROL_TOKEN: ${{ secrets.E2E_CONTROL_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - run: npm run e2e:install -- --with-deps
+      - name: Materialize protected HR identity
+        env:
+          E2E_AUTH_STORAGE_STATE_B64: ${{ secrets.E2E_AUTH_STORAGE_STATE_B64 }}
+        run: |
+          mkdir -p tests/e2e/.auth
+          printf '%s' "$E2E_AUTH_STORAGE_STATE_B64" | base64 --decode > "$E2E_AUTH_STORAGE_STATE"
+          chmod 600 "$E2E_AUTH_STORAGE_STATE"
+      - run: npm run e2e:preflight
+      - run: npm run e2e:required
+      - name: Upload safe acceptance evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-e2e-${{ inputs.build_id }}
+          path: |
+            web/test-results
+            web/playwright-report
+          if-no-files-found: warn
+          retention-days: 30

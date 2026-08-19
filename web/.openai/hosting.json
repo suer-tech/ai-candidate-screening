@@ -1,5 +1,5 @@
 {
   "project_id": "appgprj_6a7eb3b6c28481918167f087ba8f512b",
-  "d1": null,
-  "r2": null
+  "d1": "DB",
+  "r2": "PROTECTED_LLM_TRACES"
 }

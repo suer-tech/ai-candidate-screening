@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import "./globals.css";
+import { THEME_BOOTSTRAP_SCRIPT } from "./theme-preference";
 
 export async function generateMetadata(): Promise<Metadata> {
   const headerStore = await headers();
@@ -19,5 +20,5 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="ru"><body>{children}</body></html>;
+  return <html lang="ru" suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP_SCRIPT }} /></head><body>{children}</body></html>;
 }

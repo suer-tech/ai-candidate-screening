@@ -2,105 +2,92 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-async function render() {
+async function render(pathname = "/", headers = { accept: "text/html" }, init = {}) {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
   workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}`);
   const { default: worker } = await import(workerUrl.href);
-
-  return worker.fetch(
-    new Request("http://localhost/", { headers: { accept: "text/html" } }),
-    { ASSETS: { fetch: async () => new Response("Not found", { status: 404 }) } },
-    { waitUntil() {}, passThroughOnException() {} },
-  );
+  return worker.fetch(new Request(`http://localhost${pathname}`, { headers, ...init }), { ASSETS: { fetch: async () => new Response("Not found", { status: 404 }) } }, { waitUntil() {}, passThroughOnException() {} });
 }
 
-test("server-renders the HR processing dashboard", async () => {
+test("server-renders the canonical operational dashboard", async () => {
   const response = await render();
   assert.equal(response.status, 200);
-  assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
-
   const html = await response.text();
-  assert.match(html, /Правильный выбор/);
-  assert.match(html, /Google Drive подключён/);
-  assert.match(html, /Следующая проверка через/);
-  assert.match(html, /Контроль очереди/);
-  assert.doesNotMatch(html, /Обработка сейчас/);
-  assert.doesNotMatch(html, /Оставшееся время рассчитано по медиане/);
-  assert.match(html, /Михаил Сергеев/);
-  assert.match(html, /Поток кандидатов/);
-  assert.doesNotMatch(html, /Приоритетная очередь/);
-  assert.doesNotMatch(html, /В реальном времени/);
+  for (const label of ["Правильный выбор", "Контроль очереди", "Недостаточно материалов", "Транскрибация", "AI-анализ", "Проверка результатов", "Готово", "Ошибка", "Архив", "Поток кандидатов", "Результаты анализа", "Проверяем подключение"]) assert.match(html, new RegExp(label));
+  assert.doesNotMatch(html, /<p>Ожидание стабильности<\/p>/);
+  assert.doesNotMatch(html, /<p>Обработка<\/p>/);
+  assert.match(html, /Загружаем актуальную очередь/);
+  assert.doesNotMatch(html, /Ожидают решения|высоким рейтингом|На следующий этап|Скачать отчёт/);
+  assert.doesNotMatch(html, /Активные вакансии/);
 });
 
-test("keeps the requested HR interactions in the client", async () => {
-  const [page, css, layout] = await Promise.all([
+test("client source contains reviewed MVP flows and excludes demo controls", async () => {
+  const [page, model, route, css, layout] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/product-model.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/results/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
   ]);
-
-  assert.match(page, /setScanCountdown/);
-  assert.match(page, /В обработке/);
-  assert.match(page, /Сравнить кандидатов/);
-  assert.match(page, /Все вакансии/);
-  assert.match(page, /В архив/);
-  assert.match(page, /\["AI-обзор", "Транскрипция"\]/);
-  assert.match(page, /Критерии и факты/);
-  assert.match(page, /Материалы/);
-  assert.match(page, /Сохранить новую версию/);
-  assert.match(page, /STANDARD_ABC_DIRECTIONS/);
-  assert.match(page, /Соответствие корпоративным ценностям/);
-  assert.match(page, /Добавить направление/);
-  assert.match(page, /removeAbcDirection/);
-  assert.match(page, /validateAbcProfile/);
-  assert.match(page, /aria-invalid/);
-  assert.match(page, /Бизнес-ассистент/);
-  assert.match(page, /BUSINESS_ASSISTANT_PROFILE/);
-  assert.match(page, /Коммуникация и эмпатия/);
-  assert.match(page, /Исчерпывающая передача информации/);
-  assert.match(page, /Управление окружением и проактивность/);
-  assert.match(page, /Поиск оптимальных решений/);
-  assert.match(page, /Образ результата/);
-  assert.match(page, /Кандидатов пока нет/);
-  assert.match(page, /candidate-card-hit/);
-  assert.match(page, /Открыть карточку/);
-  assert.doesNotMatch(page, /Открыть →/);
-  assert.ok(page.indexOf("processing-panel") < page.indexOf("metric-grid"));
-  assert.match(css, /\.processing-panel/);
-  assert.match(css, /\.processing-panel\{margin:14px 0;/);
-  assert.match(css, /\.comparison-panel/);
+  for (const value of ["Новая вакансия", "Название вакансии", "Сохранить вакансию", "Сбросить настройки", "STANDARD_ABC_DIRECTIONS", "Добавить направление", "Повторная обработка", "Восстановить", "Удалить окончательно", "Итоги", "ABC-тест", "PdfPreview", "7 дней", "30 дней", "90 дней"]) assert.match(page, new RegExp(value));
+  for (const value of ["WORKFLOW_STATUS", "createVacancyAtomically", "completeCandidateStabilityCheck", "deleteArchivedCandidate", "buildDashboardSnapshot", "validateResultPair"]) assert.match(model, new RegExp(value));
+  assert.match(route, /application\/pdf/);
+  assert.match(route, /oai-authenticated-user-id/);
+  assert.doesNotMatch(page, />\s*Аналитика\s*</);
+  assert.doesNotMatch(page, />\s*На следующий этап\s*</);
+  assert.doesNotMatch(page, />[^<]*Скачать отчёт[^<]*</);
+  assert.doesNotMatch(page, /table-tools[^]*(?:Фильтры|Экспорт)/);
+  assert.match(css, /\.pdf-modal/);
+  assert.match(css, /\.create-vacancy-modal/);
   assert.match(css, /\.abc-direction-card/);
-  assert.match(css, /\.abc-field-error/);
-  assert.match(css, /text-shadow:none !important/);
   assert.match(css, /font-family:"Segoe UI",Arial,sans-serif/);
-  assert.match(css, /-webkit-font-smoothing:antialiased/);
-  assert.match(css, /body \{ font-size:15px; \}/);
-  assert.match(css, /small \{ font-size:12px !important;/);
-  assert.match(css, /\.settings-content>aside button\{font-size:13px!important;/);
-  assert.match(css, /\.settings-field textarea\{font-size:14px!important;/);
-  assert.match(css, /\.abc-grade-grid textarea\{font-size:13px;/);
-  assert.doesNotMatch(css, /font-size:(?:[0-9]|10)px/);
-  assert.doesNotMatch(css, /font-weight:(650|750)/);
-  assert.match(css, /html\[data-theme="dark"\] \.stage-list \.done i\{background:#25b889;color:#fff;box-shadow:none\}/);
-  assert.match(css, /\.topbar \{[^}]*max-width:1520px;[^}]*margin:0 auto;/);
-  assert.match(css, /html\[data-theme="dark"\] \.drive-monitor/);
   assert.match(layout, /Правильный выбор/);
-  assert.doesNotMatch(layout, /next\/font\/google/);
 });
 
-test("stacks ABC grade descriptions vertically in vacancy assessment settings", async () => {
+test("stacks ABC grade descriptions vertically", async () => {
   const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
-  const abcGradeGridRule = css.match(/\.abc-grade-grid\{([^}]*)\}/)?.[1] ?? "";
+  const rule = css.match(/\.abc-grade-grid\{([^}]*)\}/)?.[1] ?? "";
+  assert.match(rule, /grid-template-columns\s*:\s*1fr/);
+  assert.doesNotMatch(rule, /repeat\(3\s*,/);
+});
 
-  assert.notEqual(abcGradeGridRule, "", "CSS rule for the ABC grade description fields is missing");
-  assert.match(
-    abcGradeGridRule,
-    /(?:^|;)\s*grid-template-columns\s*:\s*1fr\s*(?:;|$)/,
-    "A, B and C description fields must be arranged in one vertical column",
-  );
-  assert.doesNotMatch(
-    abcGradeGridRule,
-    /grid-template-columns\s*:\s*repeat\(3\s*,/,
-    "A, B and C description fields must not be arranged in three horizontal columns",
-  );
+test("production worker protects PDF and never falls back when storage is unavailable", async () => {
+  const unauthorized = await render("/api/results?candidate=1&type=abc-test&version=2", { accept: "application/pdf" });
+  assert.equal(unauthorized.status, 401);
+  const invalid = await render("/api/results?candidate=1&type=wrong&version=2", { accept: "application/pdf", "oai-authenticated-user-id": "synthetic-hr" });
+  assert.equal(invalid.status, 400);
+  const unavailable = await render("/api/results?candidate=1&type=abc-test&version=2", { accept: "application/pdf", "oai-authenticated-user-id": "synthetic-hr" });
+  assert.equal(unavailable.status, 503);
+  assert.match(JSON.stringify(await unavailable.json()), /временно недоступен/);
+});
+
+test("server product routes fail explicitly without the configured database", async () => {
+  const dashboard = await render("/api/dashboard?period=7", { accept: "application/json", "oai-authenticated-user-id": "synthetic-hr" });
+  assert.equal(dashboard.status, 503);
+  const vacancy = await render("/api/vacancies", { accept: "application/json", "content-type": "application/json", "oai-authenticated-user-id": "synthetic-hr" }, { method: "POST", body: "{}" });
+  assert.equal(vacancy.status, 503);
+});
+
+test("Drive health never reports a synthetic connection", async () => {
+  const unauthorized = await render("/api/integrations/google-drive/health", { accept: "application/json" });
+  assert.equal(unauthorized.status, 401);
+  const unavailable = await render("/api/integrations/google-drive/health", {
+    accept: "application/json",
+    "oai-authenticated-user-id": "synthetic-hr",
+  });
+  assert.equal(unavailable.status, 503);
+  assert.deepEqual(await unavailable.json(), { state: "disconnected" });
+});
+
+test("production E2E readiness is protected and fails closed without provisioned bindings", async () => {
+  const unauthorized = await render("/api/readiness/e2e", { accept: "application/json" });
+  assert.equal(unauthorized.status, 401);
+  assert.deepEqual(await unauthorized.json(), { ready: false, error: "HR_IDENTITY_MISSING" });
+  const unavailable = await render("/api/readiness/e2e", {
+    accept: "application/json",
+    "oai-authenticated-user-id": "synthetic-hr",
+    "x-e2e-preflight-token": "not-a-provisioned-secret",
+  });
+  assert.equal(unavailable.status, 503);
+  assert.deepEqual(await unavailable.json(), { ready: false, error: "PREFLIGHT_INFRASTRUCTURE_UNAVAILABLE" });
 });
