@@ -64,9 +64,9 @@ function findButton(tree, label) {
 }
 
 function versionFrom(tree) {
-  const match = textContent(tree).match(/Синтетическая вакансия · версия (\d+)/);
-  assert.ok(match, "Displayed vacancy version is observable");
-  return Number(match[1]);
+  const settings = findAll(tree, (node) => node.props?.className === "settings-content")[0];
+  assert.ok(settings, "Vacancy settings version state is observable");
+  return Number(settings.props?.["data-profile-version"]);
 }
 
 function directionCards(tree) {
@@ -91,6 +91,7 @@ function readDraft(tree) {
 function createSession(runtime, directions = VALID_DIRECTIONS) {
   const notifications = [];
   const vacancy = {
+    id: "vacancy-synthetic",
     title: "Синтетическая вакансия",
     short: "СВ",
     avatar: "СВ",
@@ -100,6 +101,7 @@ function createSession(runtime, directions = VALID_DIRECTIONS) {
     color: "#000000",
     status: "Черновик",
     version: 7,
+    templateVersion: "vacancy-profile/v1",
     profile: {},
     abcDirections: structuredClone(directions),
   };
@@ -117,8 +119,8 @@ function createSession(runtime, directions = VALID_DIRECTIONS) {
     tree() {
       return tree;
     },
-    save() {
-      findButton(tree, "Сохранить новую версию").props.onClick();
+    async save() {
+      await findButton(tree, "Сохранить").props.onClick();
       tree = component.render();
       return tree;
     },
@@ -138,9 +140,9 @@ function updateDirectionField(session, directionIndex, field, value) {
   session.render();
 }
 
-function assertRejectedWithoutMutation(session, expectedDraft, messagePattern) {
+async function assertRejectedWithoutMutation(session, expectedDraft, messagePattern) {
   const beforeVersion = versionFrom(session.tree());
-  session.save();
+  await session.save();
   assert.deepEqual(readDraft(session.tree()), expectedDraft, "Rejected save preserves values, ids, origin and order");
   assert.equal(versionFrom(session.tree()), beforeVersion, "Rejected save must not change version");
   assert.ok(session.notifications.some((message) => messagePattern.test(message)), "HR receives a relevant rejection reason");
@@ -155,48 +157,68 @@ test(`${ACCEPTANCE_CASE.id}: VAC-017/VAC-019 save boundary`, async (t) => {
     const session = createSession(runtime);
     assert.equal(versionFrom(session.tree()), 7);
     assert.equal(directionCards(session.tree()).length, 2);
-    assert.equal(typeof findButton(session.tree(), "Сохранить новую версию").props.onClick, "function");
+    assert.equal(typeof findButton(session.tree(), "Сохранить").props.onClick, "function");
   });
 
-  await t.test("rejects a profile with no ABC directions and keeps version 7", () => {
+  await t.test("accepts a profile with no ABC directions", () => {
+    const previousFetch = globalThis.fetch;
+    const previousDocument = globalThis.document;
+    globalThis.document = { cookie: "csrf_token=synthetic" };
+    globalThis.fetch = async () => ({ ok: true, json: async () => ({ vacancy: {
+      id: "vacancy-synthetic", title: "Синтетическая вакансия", version: 8, templateVersion: "vacancy-profile/v1", profile: {}, abcDirections: [],
+    } }) });
     const session = createSession(runtime, []);
-    assertRejectedWithoutMutation(session, [], /хотя бы одно|направлен/i);
+    return session.save().then(() => {
+      assert.equal(session.notifications.filter((message) => /^Профиль вакансии сохранён$/i.test(message)).length, 1);
+    }).finally(() => { globalThis.fetch = previousFetch; globalThis.document = previousDocument; });
   });
 
   for (const blankName of ["", " \t "]) {
-    await t.test(`rejects ${JSON.stringify(blankName)} direction name after trim`, () => {
+    await t.test(`rejects ${JSON.stringify(blankName)} direction name after trim`, async () => {
       const session = createSession(runtime);
       updateDirectionField(session, 0, "name", blankName);
       const expectedDraft = readDraft(session.tree());
-      assertRejectedWithoutMutation(session, expectedDraft, /назван/i);
+      await assertRejectedWithoutMutation(session, expectedDraft, /назван/i);
     });
   }
 
-  for (const field of ["gradeA", "gradeB", "gradeC"]) {
-    for (const blankValue of ["", " \t "]) {
-      await t.test(`rejects ${field}=${JSON.stringify(blankValue)} after trim`, () => {
-        const session = createSession(runtime);
-        updateDirectionField(session, 0, field, blankValue);
-        const expectedDraft = readDraft(session.tree());
-        assertRejectedWithoutMutation(session, expectedDraft, new RegExp(field.at(-1), "i"));
-      });
-    }
-  }
+  await t.test("accepts directions with empty A, B and C descriptions", () => {
+    const directions = VALID_DIRECTIONS.map((direction) => ({ ...direction, gradeA: "", gradeB: "", gradeC: "" }));
+    const previousFetch = globalThis.fetch;
+    const previousDocument = globalThis.document;
+    globalThis.document = { cookie: "csrf_token=synthetic" };
+    globalThis.fetch = async () => ({ ok: true, json: async () => ({ vacancy: {
+      id: "vacancy-synthetic", title: "Синтетическая вакансия", version: 8, templateVersion: "vacancy-profile/v1", profile: {}, abcDirections: directions,
+    } }) });
+    const session = createSession(runtime, directions);
+    return session.save().then(() => {
+      assert.equal(session.notifications.filter((message) => /^Профиль вакансии сохранён$/i.test(message)).length, 1);
+    }).finally(() => { globalThis.fetch = previousFetch; globalThis.document = previousDocument; });
+  });
 
-  await t.test("rejects names equal after trim and case-insensitive comparison", () => {
+  await t.test("rejects names equal after trim and case-insensitive comparison", async () => {
     const session = createSession(runtime);
     updateDirectionField(session, 0, "name", "Инициатива");
     updateDirectionField(session, 1, "name", "  иНиЦиАтИвА  ");
     const expectedDraft = readDraft(session.tree());
-    assertRejectedWithoutMutation(session, expectedDraft, /повтор|уникаль/i);
+    await assertRejectedWithoutMutation(session, expectedDraft, /повтор|уникаль/i);
   });
 
-  await t.test("one valid save increments version exactly once and confirms version 8", () => {
+  await t.test("one valid save increments the internal version exactly once without exposing it", () => {
+    const previousFetch = globalThis.fetch;
+    const previousDocument = globalThis.document;
+    globalThis.document = { cookie: "csrf_token=synthetic" };
+    globalThis.fetch = async () => ({
+      ok: true,
+      json: async () => ({ vacancy: {
+        id: "vacancy-synthetic", title: "Синтетическая вакансия", version: 8, templateVersion: "vacancy-profile/v1", profile: {}, abcDirections: structuredClone(VALID_DIRECTIONS),
+      } }),
+    });
     const session = createSession(runtime);
     const beforeDraft = readDraft(session.tree());
-    session.save();
-    assert.equal(versionFrom(session.tree()), 8);
-    assert.deepEqual(readDraft(session.tree()), beforeDraft);
-    assert.equal(session.notifications.filter((message) => /сохранён как версия 8/i.test(message)).length, 1);
+    return session.save().then(() => {
+      assert.deepEqual(readDraft(session.tree()), beforeDraft);
+      assert.equal(session.notifications.filter((message) => /^Профиль вакансии сохранён$/i.test(message)).length, 1);
+    }).finally(() => { globalThis.fetch = previousFetch; globalThis.document = previousDocument; });
   });
 });

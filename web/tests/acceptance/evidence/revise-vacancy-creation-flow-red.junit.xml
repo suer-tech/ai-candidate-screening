@@ -1,0 +1,586 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="TST-086: first step exposes manual title and explicit generation only" time="0.181794" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\revise-vacancy-creation-flow.acceptance.test.mjs" failure="expected explicit generation action; buttons=[&amp;quot;×&amp;quot;,&amp;quot;Отмена&amp;quot;,&amp;quot;Продолжить&amp;quot;]">
+		<failure type="testCodeFailure" message="expected explicit generation action; buttons=[&amp;quot;×&amp;quot;,&amp;quot;Отмена&amp;quot;,&amp;quot;Продолжить&amp;quot;]">
+[Error [ERR_TEST_FAILURE]: expected explicit generation action; buttons=["×","Отмена","Продолжить"]] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: expected explicit generation action; buttons=["×","Отмена","Продолжить"]
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/revise-vacancy-creation-flow.acceptance.test.mjs:27:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TST-086: normalized uniqueness is enforced server-side before the first LLM call" time="0.036574" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\revise-vacancy-creation-flow.acceptance.test.mjs" failure="Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts&#10;status: expected &amp;quot;REJECTED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;error.code: expected &amp;quot;VACANCY_TITLE_DUPLICATE&amp;quot;; actual=undefined&#10;title.original: expected &amp;quot;  бизнес   ассистент &amp;quot;; actual=undefined&#10;title.normalized: expected &amp;quot;бизнес ассистент&amp;quot;; actual=undefined&#10;llm.calls: expected 0; actual=undefined&#10;drive.calls: expected 0; actual=undefined&#10;persistence.vacancies: expected 0; actual=undefined&#10;persistence.versions: expected 0; actual=undefined&#10;persistence.drafts: expected 0; actual=undefined&#10;&#10;10 !== 0&#10;">
+		<failure type="testCodeFailure" message="Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts&#10;status: expected &amp;quot;REJECTED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;error.code: expected &amp;quot;VACANCY_TITLE_DUPLICATE&amp;quot;; actual=undefined&#10;title.original: expected &amp;quot;  бизнес   ассистент &amp;quot;; actual=undefined&#10;title.normalized: expected &amp;quot;бизнес ассистент&amp;quot;; actual=undefined&#10;llm.calls: expected 0; actual=undefined&#10;drive.calls: expected 0; actual=undefined&#10;persistence.vacancies: expected 0; actual=undefined&#10;persistence.versions: expected 0; actual=undefined&#10;persistence.drafts: expected 0; actual=undefined&#10;&#10;10 !== 0">
+[Error [ERR_TEST_FAILURE]: Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts
+status: expected "REJECTED"; actual="NOT_IMPLEMENTED"
+error.code: expected "VACANCY_TITLE_DUPLICATE"; actual=undefined
+title.original: expected "  бизнес   ассистент "; actual=undefined
+title.normalized: expected "бизнес ассистент"; actual=undefined
+llm.calls: expected 0; actual=undefined
+drive.calls: expected 0; actual=undefined
+persistence.vacancies: expected 0; actual=undefined
+persistence.versions: expected 0; actual=undefined
+persistence.drafts: expected 0; actual=undefined
+
+10 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts
+  status: expected "REJECTED"; actual="NOT_IMPLEMENTED"
+  error.code: expected "VACANCY_TITLE_DUPLICATE"; actual=undefined
+  title.original: expected "  бизнес   ассистент "; actual=undefined
+  title.normalized: expected "бизнес ассистент"; actual=undefined
+  llm.calls: expected 0; actual=undefined
+  drive.calls: expected 0; actual=undefined
+  persistence.vacancies: expected 0; actual=undefined
+  persistence.versions: expected 0; actual=undefined
+  persistence.drafts: expected 0; actual=undefined
+  
+  10 !== 0
+  
+      at accept (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/revise-vacancy-creation-flow.acceptance.test.mjs:15:10)
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/revise-vacancy-creation-flow.acceptance.test.mjs:33:3)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 10,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TST-086: valid structured output succeeds on attempts 1, 2, 3 and 4 with one operation ID" time="0.000288" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\revise-vacancy-creation-flow.acceptance.test.mjs" failure="Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;cases.length: expected 4; actual=undefined&#10;cases: each allowed success attempt must open one editor from the valid LLM snapshot; actual=undefined&#10;&#10;4 !== 0&#10;">
+		<failure type="testCodeFailure" message="Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;cases.length: expected 4; actual=undefined&#10;cases: each allowed success attempt must open one editor from the valid LLM snapshot; actual=undefined&#10;&#10;4 !== 0">
+[Error [ERR_TEST_FAILURE]: Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts
+status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+cases.length: expected 4; actual=undefined
+cases: each allowed success attempt must open one editor from the valid LLM snapshot; actual=undefined
+
+4 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts
+  status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+  cases.length: expected 4; actual=undefined
+  cases: each allowed success attempt must open one editor from the valid LLM snapshot; actual=undefined
+  
+  4 !== 0
+  
+      at accept (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/revise-vacancy-creation-flow.acceptance.test.mjs:15:10)
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/revise-vacancy-creation-flow.acceptance.test.mjs:41:3)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 4,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TST-086: editor exists only after valid LLM output and reset/discard stay session-only" time="0.000239" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\revise-vacancy-creation-flow.acceptance.test.mjs" failure="Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;beforeValidResponse.editorAvailable: expected false; actual=undefined&#10;afterValidResponse.editorAvailable: expected true; actual=undefined&#10;afterValidResponse.source: expected &amp;quot;LLM_STRUCTURED_PROFILE&amp;quot;; actual=undefined&#10;hrDecisionMarkers.editable: expected true; actual=undefined&#10;reset.confirmed: expected true; actual=undefined&#10;reset.matchesLastValidLlmSnapshot: expected true; actual=undefined&#10;reset.additionalLlmCalls: expected 0; actual=undefined&#10;discard.confirmationShown: expected true; actual=undefined&#10;discard.unsavedStateCleared: expected true; actual=undefined&#10;reload.unsavedStatePresent: expected false; actual=undefined&#10;persistence.vacancies: expected 0; actual=undefined&#10;persistence.versions: expected 0; actual=undefined&#10;persistence.drafts: expected 0; actual=undefined&#10;&#10;15 !== 0&#10;">
+		<failure type="testCodeFailure" message="Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;beforeValidResponse.editorAvailable: expected false; actual=undefined&#10;afterValidResponse.editorAvailable: expected true; actual=undefined&#10;afterValidResponse.source: expected &amp;quot;LLM_STRUCTURED_PROFILE&amp;quot;; actual=undefined&#10;hrDecisionMarkers.editable: expected true; actual=undefined&#10;reset.confirmed: expected true; actual=undefined&#10;reset.matchesLastValidLlmSnapshot: expected true; actual=undefined&#10;reset.additionalLlmCalls: expected 0; actual=undefined&#10;discard.confirmationShown: expected true; actual=undefined&#10;discard.unsavedStateCleared: expected true; actual=undefined&#10;reload.unsavedStatePresent: expected false; actual=undefined&#10;persistence.vacancies: expected 0; actual=undefined&#10;persistence.versions: expected 0; actual=undefined&#10;persistence.drafts: expected 0; actual=undefined&#10;&#10;15 !== 0">
+[Error [ERR_TEST_FAILURE]: Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts
+status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+beforeValidResponse.editorAvailable: expected false; actual=undefined
+afterValidResponse.editorAvailable: expected true; actual=undefined
+afterValidResponse.source: expected "LLM_STRUCTURED_PROFILE"; actual=undefined
+hrDecisionMarkers.editable: expected true; actual=undefined
+reset.confirmed: expected true; actual=undefined
+reset.matchesLastValidLlmSnapshot: expected true; actual=undefined
+reset.additionalLlmCalls: expected 0; actual=undefined
+discard.confirmationShown: expected true; actual=undefined
+discard.unsavedStateCleared: expected true; actual=undefined
+reload.unsavedStatePresent: expected false; actual=undefined
+persistence.vacancies: expected 0; actual=undefined
+persistence.versions: expected 0; actual=undefined
+persistence.drafts: expected 0; actual=undefined
+
+15 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts
+  status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+  beforeValidResponse.editorAvailable: expected false; actual=undefined
+  afterValidResponse.editorAvailable: expected true; actual=undefined
+  afterValidResponse.source: expected "LLM_STRUCTURED_PROFILE"; actual=undefined
+  hrDecisionMarkers.editable: expected true; actual=undefined
+  reset.confirmed: expected true; actual=undefined
+  reset.matchesLastValidLlmSnapshot: expected true; actual=undefined
+  reset.additionalLlmCalls: expected 0; actual=undefined
+  discard.confirmationShown: expected true; actual=undefined
+  discard.unsavedStateCleared: expected true; actual=undefined
+  reload.unsavedStatePresent: expected false; actual=undefined
+  persistence.vacancies: expected 0; actual=undefined
+  persistence.versions: expected 0; actual=undefined
+  persistence.drafts: expected 0; actual=undefined
+  
+  15 !== 0
+  
+      at accept (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/revise-vacancy-creation-flow.acceptance.test.mjs:15:10)
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/revise-vacancy-creation-flow.acceptance.test.mjs:50:3)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 15,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TST-086: preview confirms the exact snapshot and any edit invalidates confirmation" time="0.000295" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\revise-vacancy-creation-flow.acceptance.test.mjs" failure="Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;preview.sections: expected to include [&amp;quot;assessmentRules&amp;quot;,&amp;quot;reportStructure&amp;quot;]; actual=undefined&#10;confirmation.snapshotHash: expected &amp;quot;sha256:synthetic-generated-profile-v1&amp;quot;; actual=undefined&#10;confirmation.explicit: expected true; actual=undefined&#10;afterEdit.confirmationValid: expected false; actual=undefined&#10;afterEdit.finalSaveAllowed: expected false; actual=undefined&#10;afterRepreview.confirmationValid: expected true; actual=undefined&#10;afterRepreview.snapshotHash: expected &amp;quot;sha256:synthetic-hr-edited-profile-v2&amp;quot;; actual=undefined&#10;&#10;9 !== 0&#10;">
+		<failure type="testCodeFailure" message="Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;preview.sections: expected to include [&amp;quot;assessmentRules&amp;quot;,&amp;quot;reportStructure&amp;quot;]; actual=undefined&#10;confirmation.snapshotHash: expected &amp;quot;sha256:synthetic-generated-profile-v1&amp;quot;; actual=undefined&#10;confirmation.explicit: expected true; actual=undefined&#10;afterEdit.confirmationValid: expected false; actual=undefined&#10;afterEdit.finalSaveAllowed: expected false; actual=undefined&#10;afterRepreview.confirmationValid: expected true; actual=undefined&#10;afterRepreview.snapshotHash: expected &amp;quot;sha256:synthetic-hr-edited-profile-v2&amp;quot;; actual=undefined&#10;&#10;9 !== 0">
+[Error [ERR_TEST_FAILURE]: Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts
+status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+preview.sections: expected to include ["assessmentRules","reportStructure"]; actual=undefined
+confirmation.snapshotHash: expected "sha256:synthetic-generated-profile-v1"; actual=undefined
+confirmation.explicit: expected true; actual=undefined
+afterEdit.confirmationValid: expected false; actual=undefined
+afterEdit.finalSaveAllowed: expected false; actual=undefined
+afterRepreview.confirmationValid: expected true; actual=undefined
+afterRepreview.snapshotHash: expected "sha256:synthetic-hr-edited-profile-v2"; actual=undefined
+
+9 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts
+  status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+  preview.sections: expected to include ["assessmentRules","reportStructure"]; actual=undefined
+  confirmation.snapshotHash: expected "sha256:synthetic-generated-profile-v1"; actual=undefined
+  confirmation.explicit: expected true; actual=undefined
+  afterEdit.confirmationValid: expected false; actual=undefined
+  afterEdit.finalSaveAllowed: expected false; actual=undefined
+  afterRepreview.confirmationValid: expected true; actual=undefined
+  afterRepreview.snapshotHash: expected "sha256:synthetic-hr-edited-profile-v2"; actual=undefined
+  
+  9 !== 0
+  
+      at accept (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/revise-vacancy-creation-flow.acceptance.test.mjs:15:10)
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/revise-vacancy-creation-flow.acceptance.test.mjs:61:3)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 9,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TST-087: timeout/network/429/5xx/invalid output use initial plus three retries" time="0.000318" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\revise-vacancy-creation-flow.acceptance.test.mjs" failure="Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts&#10;status: expected &amp;quot;TERMINAL_FAILURES_OBSERVED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;failureKinds: expected to include [&amp;quot;timeout&amp;quot;,&amp;quot;network&amp;quot;,&amp;quot;http-429&amp;quot;,&amp;quot;http-500&amp;quot;,&amp;quot;http-503&amp;quot;,&amp;quot;invalid-structured-output&amp;quot;]; actual=undefined&#10;cases: every retryable failure must perform exactly four calls with one stable operation ID; actual=undefined&#10;&#10;4 !== 0&#10;">
+		<failure type="testCodeFailure" message="Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts&#10;status: expected &amp;quot;TERMINAL_FAILURES_OBSERVED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;failureKinds: expected to include [&amp;quot;timeout&amp;quot;,&amp;quot;network&amp;quot;,&amp;quot;http-429&amp;quot;,&amp;quot;http-500&amp;quot;,&amp;quot;http-503&amp;quot;,&amp;quot;invalid-structured-output&amp;quot;]; actual=undefined&#10;cases: every retryable failure must perform exactly four calls with one stable operation ID; actual=undefined&#10;&#10;4 !== 0">
+[Error [ERR_TEST_FAILURE]: Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts
+status: expected "TERMINAL_FAILURES_OBSERVED"; actual="NOT_IMPLEMENTED"
+failureKinds: expected to include ["timeout","network","http-429","http-500","http-503","invalid-structured-output"]; actual=undefined
+cases: every retryable failure must perform exactly four calls with one stable operation ID; actual=undefined
+
+4 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts
+  status: expected "TERMINAL_FAILURES_OBSERVED"; actual="NOT_IMPLEMENTED"
+  failureKinds: expected to include ["timeout","network","http-429","http-500","http-503","invalid-structured-output"]; actual=undefined
+  cases: every retryable failure must perform exactly four calls with one stable operation ID; actual=undefined
+  
+  4 !== 0
+  
+      at accept (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/revise-vacancy-creation-flow.acceptance.test.mjs:15:10)
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/revise-vacancy-creation-flow.acceptance.test.mjs:69:3)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 4,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TST-087: auth/config failure is immediate and safe" time="0.000342" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\revise-vacancy-creation-flow.acceptance.test.mjs" failure="Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts&#10;status: expected &amp;quot;TERMINAL_FAILURES_OBSERVED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;failureKinds: expected to include [&amp;quot;authentication&amp;quot;,&amp;quot;configuration&amp;quot;]; actual=undefined&#10;cases: auth/config failures must stop after one attempt; actual=undefined&#10;&#10;4 !== 0&#10;">
+		<failure type="testCodeFailure" message="Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts&#10;status: expected &amp;quot;TERMINAL_FAILURES_OBSERVED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;failureKinds: expected to include [&amp;quot;authentication&amp;quot;,&amp;quot;configuration&amp;quot;]; actual=undefined&#10;cases: auth/config failures must stop after one attempt; actual=undefined&#10;&#10;4 !== 0">
+[Error [ERR_TEST_FAILURE]: Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts
+status: expected "TERMINAL_FAILURES_OBSERVED"; actual="NOT_IMPLEMENTED"
+failureKinds: expected to include ["authentication","configuration"]; actual=undefined
+cases: auth/config failures must stop after one attempt; actual=undefined
+
+4 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts
+  status: expected "TERMINAL_FAILURES_OBSERVED"; actual="NOT_IMPLEMENTED"
+  failureKinds: expected to include ["authentication","configuration"]; actual=undefined
+  cases: auth/config failures must stop after one attempt; actual=undefined
+  
+  4 !== 0
+  
+      at accept (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/revise-vacancy-creation-flow.acceptance.test.mjs:15:10)
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/revise-vacancy-creation-flow.acceptance.test.mjs:78:3)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 4,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TST-087: duplicate click joins one active generation operation" time="0.000551" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\revise-vacancy-creation-flow.acceptance.test.mjs" failure="Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;clicks: expected 2; actual=undefined&#10;generationOperations: expected 1; actual=undefined&#10;parallelProviderCalls: expected 1; actual=undefined&#10;operationIds.length: expected 1; actual=undefined&#10;ui.submitDisabledWhilePending: expected true; actual=undefined&#10;ui.currentAttemptVisible: expected true; actual=undefined&#10;&#10;8 !== 0&#10;">
+		<failure type="testCodeFailure" message="Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;clicks: expected 2; actual=undefined&#10;generationOperations: expected 1; actual=undefined&#10;parallelProviderCalls: expected 1; actual=undefined&#10;operationIds.length: expected 1; actual=undefined&#10;ui.submitDisabledWhilePending: expected true; actual=undefined&#10;ui.currentAttemptVisible: expected true; actual=undefined&#10;&#10;8 !== 0">
+[Error [ERR_TEST_FAILURE]: Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts
+status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+clicks: expected 2; actual=undefined
+generationOperations: expected 1; actual=undefined
+parallelProviderCalls: expected 1; actual=undefined
+operationIds.length: expected 1; actual=undefined
+ui.submitDisabledWhilePending: expected true; actual=undefined
+ui.currentAttemptVisible: expected true; actual=undefined
+
+8 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts
+  status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+  clicks: expected 2; actual=undefined
+  generationOperations: expected 1; actual=undefined
+  parallelProviderCalls: expected 1; actual=undefined
+  operationIds.length: expected 1; actual=undefined
+  ui.submitDisabledWhilePending: expected true; actual=undefined
+  ui.currentAttemptVisible: expected true; actual=undefined
+  
+  8 !== 0
+  
+      at accept (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/revise-vacancy-creation-flow.acceptance.test.mjs:15:10)
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/revise-vacancy-creation-flow.acceptance.test.mjs:86:3)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 8,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TST-087: terminal generation failure has a safe retry action and no fallback or persistent artifacts" time="0.000254" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\revise-vacancy-creation-flow.acceptance.test.mjs" failure="Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts&#10;status: expected &amp;quot;FAILED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;attempts: expected 4; actual=undefined&#10;ui.titleRetainedInSession: expected true; actual=undefined&#10;ui.retryAction: expected &amp;quot;Повторить генерацию&amp;quot;; actual=undefined&#10;ui.messageMentionsAttemptCount: expected true; actual=undefined&#10;ui.messageIsUnderstandable: expected true; actual=undefined&#10;ui.rawProviderResponseExposed: expected false; actual=undefined&#10;ui.secretExposed: expected false; actual=undefined&#10;ui.editorAvailable: expected false; actual=undefined&#10;ui.manualTemplateAvailable: expected false; actual=undefined&#10;persistence.vacancies: expected 0; actual=undefined&#10;persistence.versions: expected 0; actual=undefined&#10;persistence.drafts: expected 0; actual=undefined&#10;drive.calls: expected 0; actual=undefined&#10;&#10;15 !== 0&#10;">
+		<failure type="testCodeFailure" message="Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts&#10;status: expected &amp;quot;FAILED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;attempts: expected 4; actual=undefined&#10;ui.titleRetainedInSession: expected true; actual=undefined&#10;ui.retryAction: expected &amp;quot;Повторить генерацию&amp;quot;; actual=undefined&#10;ui.messageMentionsAttemptCount: expected true; actual=undefined&#10;ui.messageIsUnderstandable: expected true; actual=undefined&#10;ui.rawProviderResponseExposed: expected false; actual=undefined&#10;ui.secretExposed: expected false; actual=undefined&#10;ui.editorAvailable: expected false; actual=undefined&#10;ui.manualTemplateAvailable: expected false; actual=undefined&#10;persistence.vacancies: expected 0; actual=undefined&#10;persistence.versions: expected 0; actual=undefined&#10;persistence.drafts: expected 0; actual=undefined&#10;drive.calls: expected 0; actual=undefined&#10;&#10;15 !== 0">
+[Error [ERR_TEST_FAILURE]: Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts
+status: expected "FAILED"; actual="NOT_IMPLEMENTED"
+attempts: expected 4; actual=undefined
+ui.titleRetainedInSession: expected true; actual=undefined
+ui.retryAction: expected "Повторить генерацию"; actual=undefined
+ui.messageMentionsAttemptCount: expected true; actual=undefined
+ui.messageIsUnderstandable: expected true; actual=undefined
+ui.rawProviderResponseExposed: expected false; actual=undefined
+ui.secretExposed: expected false; actual=undefined
+ui.editorAvailable: expected false; actual=undefined
+ui.manualTemplateAvailable: expected false; actual=undefined
+persistence.vacancies: expected 0; actual=undefined
+persistence.versions: expected 0; actual=undefined
+persistence.drafts: expected 0; actual=undefined
+drive.calls: expected 0; actual=undefined
+
+15 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts
+  status: expected "FAILED"; actual="NOT_IMPLEMENTED"
+  attempts: expected 4; actual=undefined
+  ui.titleRetainedInSession: expected true; actual=undefined
+  ui.retryAction: expected "Повторить генерацию"; actual=undefined
+  ui.messageMentionsAttemptCount: expected true; actual=undefined
+  ui.messageIsUnderstandable: expected true; actual=undefined
+  ui.rawProviderResponseExposed: expected false; actual=undefined
+  ui.secretExposed: expected false; actual=undefined
+  ui.editorAvailable: expected false; actual=undefined
+  ui.manualTemplateAvailable: expected false; actual=undefined
+  persistence.vacancies: expected 0; actual=undefined
+  persistence.versions: expected 0; actual=undefined
+  persistence.drafts: expected 0; actual=undefined
+  drive.calls: expected 0; actual=undefined
+  
+  15 !== 0
+  
+      at accept (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/revise-vacancy-creation-flow.acceptance.test.mjs:15:10)
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/revise-vacancy-creation-flow.acceptance.test.mjs:93:3)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 15,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TST-087: manual retry after terminal failure starts a new operation without reviving failed state" time="0.000359" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\revise-vacancy-creation-flow.acceptance.test.mjs" failure="Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;failedOperation.attempts: expected 4; actual=undefined&#10;retryOperation.startedExplicitly: expected true; actual=undefined&#10;retryOperation.reusedFailedOperationId: expected false; actual=undefined&#10;retryOperation.titlePreserved: expected true; actual=undefined&#10;retryOperation.editorOpenCount: expected 1; actual=undefined&#10;persistence.vacanciesBeforeFinalSave: expected 0; actual=undefined&#10;drive.callsBeforeFinalSave: expected 0; actual=undefined&#10;&#10;9 !== 0&#10;">
+		<failure type="testCodeFailure" message="Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;failedOperation.attempts: expected 4; actual=undefined&#10;retryOperation.startedExplicitly: expected true; actual=undefined&#10;retryOperation.reusedFailedOperationId: expected false; actual=undefined&#10;retryOperation.titlePreserved: expected true; actual=undefined&#10;retryOperation.editorOpenCount: expected 1; actual=undefined&#10;persistence.vacanciesBeforeFinalSave: expected 0; actual=undefined&#10;drive.callsBeforeFinalSave: expected 0; actual=undefined&#10;&#10;9 !== 0">
+[Error [ERR_TEST_FAILURE]: Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts
+status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+failedOperation.attempts: expected 4; actual=undefined
+retryOperation.startedExplicitly: expected true; actual=undefined
+retryOperation.reusedFailedOperationId: expected false; actual=undefined
+retryOperation.titlePreserved: expected true; actual=undefined
+retryOperation.editorOpenCount: expected 1; actual=undefined
+persistence.vacanciesBeforeFinalSave: expected 0; actual=undefined
+drive.callsBeforeFinalSave: expected 0; actual=undefined
+
+9 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts
+  status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+  failedOperation.attempts: expected 4; actual=undefined
+  retryOperation.startedExplicitly: expected true; actual=undefined
+  retryOperation.reusedFailedOperationId: expected false; actual=undefined
+  retryOperation.titlePreserved: expected true; actual=undefined
+  retryOperation.editorOpenCount: expected 1; actual=undefined
+  persistence.vacanciesBeforeFinalSave: expected 0; actual=undefined
+  drive.callsBeforeFinalSave: expected 0; actual=undefined
+  
+  9 !== 0
+  
+      at accept (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/revise-vacancy-creation-flow.acceptance.test.mjs:15:10)
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/revise-vacancy-creation-flow.acceptance.test.mjs:102:3)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 9,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TST-088: final save is idempotent and publishes one active v1 only after complete confirmation and binding" time="0.000354" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\revise-vacancy-creation-flow.acceptance.test.mjs" failure="Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;requests: expected 2; actual=undefined&#10;operationIds.length: expected 2; actual=undefined&#10;operationIds.0: expected &amp;quot;vacancy-final-save-op-synthetic-001&amp;quot;; actual=undefined&#10;operationIds.1: expected &amp;quot;vacancy-final-save-op-synthetic-001&amp;quot;; actual=undefined&#10;outcome.vacancies: expected 1; actual=undefined&#10;outcome.versions: expected 1; actual=undefined&#10;outcome.version: expected 1; actual=undefined&#10;outcome.activeVacancies: expected 1; actual=undefined&#10;outcome.driveFolders: expected 1; actual=undefined&#10;outcome.driveBindings: expected 1; actual=undefined&#10;outcome.persistedHrEdits: expected true; actual=undefined&#10;outcome.availableToIntakeAfterCommit: expected true; actual=undefined&#10;outcome.availableToAnalysisAfterCommit: expected true; actual=undefined&#10;&#10;15 !== 0&#10;">
+		<failure type="testCodeFailure" message="Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;requests: expected 2; actual=undefined&#10;operationIds.length: expected 2; actual=undefined&#10;operationIds.0: expected &amp;quot;vacancy-final-save-op-synthetic-001&amp;quot;; actual=undefined&#10;operationIds.1: expected &amp;quot;vacancy-final-save-op-synthetic-001&amp;quot;; actual=undefined&#10;outcome.vacancies: expected 1; actual=undefined&#10;outcome.versions: expected 1; actual=undefined&#10;outcome.version: expected 1; actual=undefined&#10;outcome.activeVacancies: expected 1; actual=undefined&#10;outcome.driveFolders: expected 1; actual=undefined&#10;outcome.driveBindings: expected 1; actual=undefined&#10;outcome.persistedHrEdits: expected true; actual=undefined&#10;outcome.availableToIntakeAfterCommit: expected true; actual=undefined&#10;outcome.availableToAnalysisAfterCommit: expected true; actual=undefined&#10;&#10;15 !== 0">
+[Error [ERR_TEST_FAILURE]: Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts
+status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+requests: expected 2; actual=undefined
+operationIds.length: expected 2; actual=undefined
+operationIds.0: expected "vacancy-final-save-op-synthetic-001"; actual=undefined
+operationIds.1: expected "vacancy-final-save-op-synthetic-001"; actual=undefined
+outcome.vacancies: expected 1; actual=undefined
+outcome.versions: expected 1; actual=undefined
+outcome.version: expected 1; actual=undefined
+outcome.activeVacancies: expected 1; actual=undefined
+outcome.driveFolders: expected 1; actual=undefined
+outcome.driveBindings: expected 1; actual=undefined
+outcome.persistedHrEdits: expected true; actual=undefined
+outcome.availableToIntakeAfterCommit: expected true; actual=undefined
+outcome.availableToAnalysisAfterCommit: expected true; actual=undefined
+
+15 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts
+  status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+  requests: expected 2; actual=undefined
+  operationIds.length: expected 2; actual=undefined
+  operationIds.0: expected "vacancy-final-save-op-synthetic-001"; actual=undefined
+  operationIds.1: expected "vacancy-final-save-op-synthetic-001"; actual=undefined
+  outcome.vacancies: expected 1; actual=undefined
+  outcome.versions: expected 1; actual=undefined
+  outcome.version: expected 1; actual=undefined
+  outcome.activeVacancies: expected 1; actual=undefined
+  outcome.driveFolders: expected 1; actual=undefined
+  outcome.driveBindings: expected 1; actual=undefined
+  outcome.persistedHrEdits: expected true; actual=undefined
+  outcome.availableToIntakeAfterCommit: expected true; actual=undefined
+  outcome.availableToAnalysisAfterCommit: expected true; actual=undefined
+  
+  15 !== 0
+  
+      at accept (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/revise-vacancy-creation-flow.acceptance.test.mjs:15:10)
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/revise-vacancy-creation-flow.acceptance.test.mjs:110:3)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 15,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TST-088: generation and all generation retries make zero Drive calls" time="0.000157" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\revise-vacancy-creation-flow.acceptance.test.mjs" failure="Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;generation.attempts: expected 4; actual=undefined&#10;generation.driveCalls: expected 0; actual=undefined&#10;beforePreview.driveCalls: expected 0; actual=undefined&#10;afterPreviewBeforeConfirmation.driveCalls: expected 0; actual=undefined&#10;afterConfirmationBeforeFinalSave.driveCalls: expected 0; actual=undefined&#10;finalSave.driveCalls: expected 1; actual=undefined&#10;&#10;8 !== 0&#10;">
+		<failure type="testCodeFailure" message="Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;generation.attempts: expected 4; actual=undefined&#10;generation.driveCalls: expected 0; actual=undefined&#10;beforePreview.driveCalls: expected 0; actual=undefined&#10;afterPreviewBeforeConfirmation.driveCalls: expected 0; actual=undefined&#10;afterConfirmationBeforeFinalSave.driveCalls: expected 0; actual=undefined&#10;finalSave.driveCalls: expected 1; actual=undefined&#10;&#10;8 !== 0">
+[Error [ERR_TEST_FAILURE]: Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts
+status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+generation.attempts: expected 4; actual=undefined
+generation.driveCalls: expected 0; actual=undefined
+beforePreview.driveCalls: expected 0; actual=undefined
+afterPreviewBeforeConfirmation.driveCalls: expected 0; actual=undefined
+afterConfirmationBeforeFinalSave.driveCalls: expected 0; actual=undefined
+finalSave.driveCalls: expected 1; actual=undefined
+
+8 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts
+  status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+  generation.attempts: expected 4; actual=undefined
+  generation.driveCalls: expected 0; actual=undefined
+  beforePreview.driveCalls: expected 0; actual=undefined
+  afterPreviewBeforeConfirmation.driveCalls: expected 0; actual=undefined
+  afterConfirmationBeforeFinalSave.driveCalls: expected 0; actual=undefined
+  finalSave.driveCalls: expected 1; actual=undefined
+  
+  8 !== 0
+  
+      at accept (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/revise-vacancy-creation-flow.acceptance.test.mjs:15:10)
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/revise-vacancy-creation-flow.acceptance.test.mjs:120:3)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 8,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TST-088: timeout after folder creation recovers the same binding without duplicates" time="0.000120" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\revise-vacancy-creation-flow.acceptance.test.mjs" failure="Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;firstResponse: expected &amp;quot;TIMEOUT_AFTER_FOLDER_CREATE&amp;quot;; actual=undefined&#10;retry.safe: expected true; actual=undefined&#10;retry.reconciledBeforeCreate: expected true; actual=undefined&#10;retry.folderId: expected &amp;quot;drive-folder-synthetic-001&amp;quot;; actual=undefined&#10;outcome.vacancies: expected 1; actual=undefined&#10;outcome.versions: expected 1; actual=undefined&#10;outcome.driveFolders: expected 1; actual=undefined&#10;outcome.driveBindings: expected 1; actual=undefined&#10;outcome.activeVacancies: expected 1; actual=undefined&#10;&#10;11 !== 0&#10;">
+		<failure type="testCodeFailure" message="Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;firstResponse: expected &amp;quot;TIMEOUT_AFTER_FOLDER_CREATE&amp;quot;; actual=undefined&#10;retry.safe: expected true; actual=undefined&#10;retry.reconciledBeforeCreate: expected true; actual=undefined&#10;retry.folderId: expected &amp;quot;drive-folder-synthetic-001&amp;quot;; actual=undefined&#10;outcome.vacancies: expected 1; actual=undefined&#10;outcome.versions: expected 1; actual=undefined&#10;outcome.driveFolders: expected 1; actual=undefined&#10;outcome.driveBindings: expected 1; actual=undefined&#10;outcome.activeVacancies: expected 1; actual=undefined&#10;&#10;11 !== 0">
+[Error [ERR_TEST_FAILURE]: Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts
+status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+firstResponse: expected "TIMEOUT_AFTER_FOLDER_CREATE"; actual=undefined
+retry.safe: expected true; actual=undefined
+retry.reconciledBeforeCreate: expected true; actual=undefined
+retry.folderId: expected "drive-folder-synthetic-001"; actual=undefined
+outcome.vacancies: expected 1; actual=undefined
+outcome.versions: expected 1; actual=undefined
+outcome.driveFolders: expected 1; actual=undefined
+outcome.driveBindings: expected 1; actual=undefined
+outcome.activeVacancies: expected 1; actual=undefined
+
+11 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts
+  status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+  firstResponse: expected "TIMEOUT_AFTER_FOLDER_CREATE"; actual=undefined
+  retry.safe: expected true; actual=undefined
+  retry.reconciledBeforeCreate: expected true; actual=undefined
+  retry.folderId: expected "drive-folder-synthetic-001"; actual=undefined
+  outcome.vacancies: expected 1; actual=undefined
+  outcome.versions: expected 1; actual=undefined
+  outcome.driveFolders: expected 1; actual=undefined
+  outcome.driveBindings: expected 1; actual=undefined
+  outcome.activeVacancies: expected 1; actual=undefined
+  
+  11 !== 0
+  
+      at accept (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/revise-vacancy-creation-flow.acceptance.test.mjs:15:10)
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/revise-vacancy-creation-flow.acceptance.test.mjs:127:3)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 11,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TST-088: terminal Drive failure never exposes a partial active vacancy" time="0.000103" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\revise-vacancy-creation-flow.acceptance.test.mjs" failure="Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts&#10;status: expected &amp;quot;FAILED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;ui.safeRetryAvailable: expected true; actual=undefined&#10;ui.messageIsUnderstandable: expected true; actual=undefined&#10;outcome.activeVacancies: expected 0; actual=undefined&#10;outcome.intakeVisibleVacancies: expected 0; actual=undefined&#10;outcome.analysisVisibleVacancies: expected 0; actual=undefined&#10;outcome.duplicateVacancies: expected 0; actual=undefined&#10;outcome.duplicateVersions: expected 0; actual=undefined&#10;outcome.duplicateFolders: expected 0; actual=undefined&#10;&#10;10 !== 0&#10;">
+		<failure type="testCodeFailure" message="Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts&#10;status: expected &amp;quot;FAILED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;ui.safeRetryAvailable: expected true; actual=undefined&#10;ui.messageIsUnderstandable: expected true; actual=undefined&#10;outcome.activeVacancies: expected 0; actual=undefined&#10;outcome.intakeVisibleVacancies: expected 0; actual=undefined&#10;outcome.analysisVisibleVacancies: expected 0; actual=undefined&#10;outcome.duplicateVacancies: expected 0; actual=undefined&#10;outcome.duplicateVersions: expected 0; actual=undefined&#10;outcome.duplicateFolders: expected 0; actual=undefined&#10;&#10;10 !== 0">
+[Error [ERR_TEST_FAILURE]: Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts
+status: expected "FAILED"; actual="NOT_IMPLEMENTED"
+ui.safeRetryAvailable: expected true; actual=undefined
+ui.messageIsUnderstandable: expected true; actual=undefined
+outcome.activeVacancies: expected 0; actual=undefined
+outcome.intakeVisibleVacancies: expected 0; actual=undefined
+outcome.analysisVisibleVacancies: expected 0; actual=undefined
+outcome.duplicateVacancies: expected 0; actual=undefined
+outcome.duplicateVersions: expected 0; actual=undefined
+outcome.duplicateFolders: expected 0; actual=undefined
+
+10 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Create-vacancy LLM conformance boundary is absent: export runVacancyCreationConformanceScenario(fixture) from server/product/application.ts
+  status: expected "FAILED"; actual="NOT_IMPLEMENTED"
+  ui.safeRetryAvailable: expected true; actual=undefined
+  ui.messageIsUnderstandable: expected true; actual=undefined
+  outcome.activeVacancies: expected 0; actual=undefined
+  outcome.intakeVisibleVacancies: expected 0; actual=undefined
+  outcome.analysisVisibleVacancies: expected 0; actual=undefined
+  outcome.duplicateVacancies: expected 0; actual=undefined
+  outcome.duplicateVersions: expected 0; actual=undefined
+  outcome.duplicateFolders: expected 0; actual=undefined
+  
+  10 !== 0
+  
+      at accept (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/revise-vacancy-creation-flow.acceptance.test.mjs:15:10)
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/revise-vacancy-creation-flow.acceptance.test.mjs:136:3)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 10,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 14 -->
+	<!-- suites 0 -->
+	<!-- pass 0 -->
+	<!-- fail 14 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 463.4898 -->
+</testsuites>

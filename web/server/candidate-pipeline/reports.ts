@@ -1,0 +1,397 @@
+import { sha256 } from "./core.ts";
+import type { EvidenceFact, Recommendation } from "./types.ts";
+import type { PDFFont, PDFImage, PDFPage, RGB } from "pdf-lib";
+import type { CandidateMatrixRow } from "./matrix-driven.ts";
+
+export type ReportModel = {
+  type: "abc-test" | "candidate-results";
+  candidateId: string;
+  candidateDisplayName: string;
+  vacancyId: string;
+  vacancyTitle: string;
+  profileVersion: string;
+  analysisVersion: number;
+  generatedAtUtc: string;
+  recommendation: Recommendation;
+  workflowVersion?: string;
+  matrixProvenance?: { matrixId: string; checksum: string; skillVersions?: Record<string, string>; policyVersion?: string };
+  matrixRows?: readonly CandidateMatrixRow[];
+  sections: readonly { id: string; title: string; body: string }[];
+  evidence: readonly EvidenceFact[];
+  interviewSummary?: InterviewSummary;
+};
+
+export type InterviewSummary = {
+  interviewDate: string;
+  fullName: string;
+  age: string;
+  compensation: string;
+  recentEmployment: readonly {
+    employer: string;
+    role: string;
+    period: string;
+    summary: string;
+    achievements: string;
+  }[];
+  hardSkills: readonly string[];
+  softSkills: readonly string[];
+  positives: readonly string[];
+  negatives: readonly string[];
+  additional: readonly string[];
+};
+
+const REQUIRED: Record<ReportModel["type"], readonly string[]> = {
+  "abc-test": ["identity", "scale", "directions", "evidence", "conflicts", "strengths", "limitations", "questions"],
+  "candidate-results": ["identity", "recommendation", "stop-factors", "critical-mismatches", "strengths", "limitations", "risks", "abc", "competencies", "confirmed-results", "conflicts", "unverified-questions", "interview-quality", "access-to-ke", "ke-questions", "transcription-quality", "evidence"],
+};
+
+const SECTION_TITLES: Record<ReportModel["type"], Readonly<Record<string, string>>> = {
+  "abc-test": { identity: "Кандидат", scale: "Шкала оценки", directions: "ABC-профиль", evidence: "Основания", conflicts: "Противоречия",
+    strengths: "Сильные стороны", limitations: "Ограничения", questions: "Вопросы HR" },
+  "candidate-results": { identity: "Кандидат", recommendation: "Рекомендация", "stop-factors": "Стоп-факторы",
+    "critical-mismatches": "Критические несоответствия", strengths: "Сильные стороны", limitations: "Ограничения", risks: "Риски",
+    abc: "ABC-профиль", competencies: "Компетенции", "confirmed-results": "Подтверждённые результаты", conflicts: "Противоречия",
+    "unverified-questions": "Что проверить", "interview-quality": "Качество интервью", "access-to-ke": "Допуск к КЕ",
+    "ke-questions": "Вопросы КЕ", "transcription-quality": "Качество транскрипции", evidence: "Основания" },
+};
+
+export function requiredReportSections(type: ReportModel["type"]) { return [...REQUIRED[type]]; }
+export function reportSectionTitle(type: ReportModel["type"], sectionId: string) { return SECTION_TITLES[type][sectionId] ?? sectionId; }
+
+export function validateReportModel(model: ReportModel) {
+  const present = new Set(model.sections.map((section) => section.id));
+  const missing = REQUIRED[model.type].filter((section) => !present.has(section));
+  if (missing.length) throw new Error(`REPORT_REQUIRED_SECTIONS_MISSING:${missing.join(",")}`);
+  if (!model.candidateId || !model.vacancyId || model.analysisVersion < 1) throw new Error("REPORT_IDENTITY_INVALID");
+  if (model.workflowVersion?.startsWith("matrix-v")) {
+    if (!model.matrixProvenance?.matrixId || !model.matrixProvenance.checksum || !model.matrixRows?.length || !present.has("matrix")) throw new Error("REPORT_MATRIX_PROJECTION_MISSING");
+    const renderedIds = new Set(model.matrixRows.map((row) => row.criterionId));
+    if (renderedIds.size !== model.matrixRows.length) throw new Error("REPORT_MATRIX_ROW_DUPLICATE");
+    if (model.matrixRows.some((row) => !present.has(`matrix:${row.criterionId}`))) throw new Error("REPORT_MATRIX_ROW_SECTION_MISSING");
+  }
+  return true;
+}
+
+function escapePdf(value: string) {
+  return value.normalize("NFKD").replace(/[^\x20-\x7E]/g, "?").replace(/[()\\]/g, (character) => `\\${character}`);
+}
+
+export function renderMinimalPdf(model: ReportModel) {
+  validateReportModel(model);
+  const lines = [
+    `${model.type} | candidate=${model.candidateId} | vacancy=${model.vacancyId}`,
+    `profile=${model.profileVersion} | analysis=v${String(model.analysisVersion).padStart(4, "0")}`,
+    `recommendation=${model.recommendation}`,
+    ...model.sections.map((section) => `${section.id}: ${section.title} - ${section.body}`),
+  ];
+  const stream = `BT /F1 9 Tf 40 800 Td ${lines.map((line, index) => `${index ? "0 -13 Td " : ""}(${escapePdf(line)}) Tj`).join(" ")} ET`;
+  const objects = [
+    "1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj",
+    "2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj",
+    "3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >> endobj",
+    `4 0 obj << /Length ${Buffer.byteLength(stream)} >> stream\n${stream}\nendstream endobj`,
+    "5 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj",
+  ];
+  let body = "%PDF-1.4\n";
+  const offsets = [0];
+  for (const object of objects) { offsets.push(Buffer.byteLength(body)); body += `${object}\n`; }
+  const xref = Buffer.byteLength(body);
+  body += `xref\n0 6\n0000000000 65535 f \n${offsets.slice(1).map((offset) => `${String(offset).padStart(10, "0")} 00000 n `).join("\n")}\ntrailer << /Size 6 /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+  return new Uint8Array(Buffer.from(body));
+}
+
+export async function renderCandidatePdf(model: ReportModel, options: { fontBytes?: Uint8Array } = {}) {
+  validateReportModel(model);
+  const [{ PDFDocument, rgb }, fontkit, { readFile }] = await Promise.all([import("pdf-lib"), import("@pdf-lib/fontkit"), import("node:fs/promises")]);
+  const document = await PDFDocument.create();
+  document.registerFontkit(fontkit.default);
+  const fontBytes = options.fontBytes ?? new Uint8Array(await readFile(new URL("../../node_modules/pdfmake/fonts/Roboto/Roboto-Regular.ttf", import.meta.url)));
+  const font = await document.embedFont(fontBytes, { subset: true });
+  const boldBytes = new Uint8Array(await readFile(new URL("../../node_modules/pdfmake/fonts/Roboto/Roboto-Medium.ttf", import.meta.url)));
+  const bold = await document.embedFont(boldBytes, { subset: true });
+  const logoBytes = new Uint8Array(await readFile(new URL("../../public/company-logo.png", import.meta.url)));
+  const logo = await document.embedPng(logoBytes);
+  const pageSize = { width: 595.28, height: 841.89 };
+  let page = document.addPage([pageSize.width, pageSize.height]);
+  const ink = rgb(0.10, 0.14, 0.18);
+  const muted = rgb(0.38, 0.44, 0.50);
+  const blue = rgb(0.05, 0.42, 0.72);
+  const paleBlue = rgb(0.94, 0.97, 0.99);
+  const line = rgb(0.83, 0.87, 0.90);
+  if (model.type === "candidate-results" && model.interviewSummary) {
+    renderInterviewSummary(page, model, model.interviewSummary, { font, bold, ink, muted, blue, line, logo });
+    document.setTitle(reportFileName(model));
+    document.setSubject(`Итоги интервью: ${sanitizeReportText(model.interviewSummary.fullName)}`);
+    document.setProducer("AI screener report-tool/v1");
+    return new Uint8Array(await document.save({ useObjectStreams: false }));
+  }
+  page.drawImage(logo, { x: 40, y: 774, width: 34, height: 34 });
+  page.drawText("Правильный выбор", { x: 83, y: 793, size: 12, font: bold, color: ink });
+  page.drawText("AI-анализ кандидатов", { x: 83, y: 778, size: 7.5, font, color: muted });
+  const reportTitle = model.type === "abc-test" ? "ABC-профиль кандидата" : "Итоги анализа кандидата";
+  page.drawText(reportTitle, { x: 40, y: 742, size: 19, font: bold, color: ink });
+  page.drawText(`Кандидат: ${sanitizeReportText(model.candidateDisplayName)}`, { x: 40, y: 716, size: 9, font: bold, color: ink });
+  page.drawText(`Вакансия: ${sanitizeReportText(model.vacancyTitle)}`, { x: 40, y: 700, size: 9, font, color: ink });
+  page.drawText(new Date(model.generatedAtUtc).toLocaleDateString("ru-RU", { timeZone: "UTC" }), { x: 485, y: 716, size: 8, font, color: muted });
+  page.drawRectangle({ x: 40, y: 644, width: 515, height: 40, color: paleBlue, borderColor: rgb(0.72, 0.84, 0.94), borderWidth: 0.7 });
+  page.drawText("Рекомендация", { x: 52, y: 668, size: 7.3, font: bold, color: blue });
+  page.drawText(sanitizeReportText(model.recommendation), { x: 52, y: 650, size: 12, font: bold, color: ink });
+
+  const visibleSections = reportVisibleSections(model);
+  const singleColumn = model.type === "abc-test";
+  const columnGap = 12;
+  const columnWidth = singleColumn ? 515 : (515 - columnGap) / 2;
+  const left = 40;
+  const top = 628;
+  const bottom = 58;
+  let columnY = [top, top];
+  const addContinuationPage = () => {
+    page = document.addPage([pageSize.width, pageSize.height]);
+    page.drawText(`${reportTitle} · продолжение`, { x: 40, y: 806, size: 11, font: bold, color: ink });
+    page.drawText(sanitizeReportText(model.candidateDisplayName), { x: 40, y: 787, size: 8.5, font, color: muted });
+    columnY = [766, 766];
+  };
+  visibleSections.forEach((section, index) => {
+    const column = singleColumn ? 0 : index % 2;
+    const x = left + column * (columnWidth + columnGap);
+    const bodySize = singleColumn ? 10.2 : 9.2;
+    const bodyLineHeight = singleColumn ? 13.6 : 12.2;
+    const pending = sectionParagraphLines(section.body, columnWidth - 20, font, bodySize);
+    let continuation = false;
+    do {
+      const cardChromeHeight = 41;
+      let availableLines = Math.floor((columnY[column] - bottom - cardChromeHeight) / bodyLineHeight);
+      if (availableLines < 1) {
+        addContinuationPage();
+        availableLines = Math.floor((columnY[column] - bottom - cardChromeHeight) / bodyLineHeight);
+      }
+      const bodyLines: string[] = [];
+      while (pending.length && bodyLines.length + pending[0].length <= availableLines) bodyLines.push(...pending.shift()!);
+      if (!bodyLines.length && pending.length) {
+        bodyLines.push(...pending[0].splice(0, Math.max(1, availableLines)));
+        if (!pending[0].length) pending.shift();
+      }
+      const height = cardChromeHeight + bodyLines.length * bodyLineHeight;
+      const y = columnY[column] - height;
+      page.drawRectangle({ x, y, width: columnWidth, height, borderColor: line, borderWidth: 0.7, color: rgb(0.995, 0.997, 1) });
+      const title = continuation ? `${section.title} · продолжение` : section.title;
+      page.drawText(sanitizeReportText(title), { x: x + 10, y: y + height - 20, size: singleColumn ? 12 : 11, font: bold, color: blue });
+      bodyLines.forEach((bodyLine, bodyIndex) => page.drawText(bodyLine, { x: x + 10, y: y + height - 37 - bodyIndex * bodyLineHeight, size: bodySize, font, color: ink }));
+      columnY[column] = y - 10;
+      continuation = true;
+      if (pending.length) addContinuationPage();
+    } while (pending.length);
+  });
+  document.getPages().forEach((reportPage, index) => {
+    reportPage.drawLine({ start: { x: 40, y: 40 }, end: { x: 555, y: 40 }, thickness: 0.6, color: line });
+    reportPage.drawText("Сформировано системой «Правильный выбор»", { x: 40, y: 24, size: 7.5, font, color: muted });
+    reportPage.drawText(`${index + 1} / ${document.getPageCount()}`, { x: 520, y: 24, size: 7.5, font, color: muted });
+  });
+  document.setTitle(reportFileName(model));
+  document.setSubject(`${reportTitle}: ${sanitizeReportText(model.candidateDisplayName)}`);
+  document.setProducer("AI screener report-tool/v1");
+  return new Uint8Array(await document.save({ useObjectStreams: false }));
+}
+
+function renderInterviewSummary(
+  page: PDFPage,
+  model: ReportModel,
+  summary: InterviewSummary,
+  style: {
+    font: PDFFont;
+    bold: PDFFont;
+    ink: RGB;
+    muted: RGB;
+    blue: RGB;
+    line: RGB;
+    logo: PDFImage;
+  },
+) {
+  const { font, bold, ink, muted, blue, line, logo } = style;
+  const left = 40;
+  const width = 515;
+  const bodySize = 10.4;
+  const lineHeight = 12.6;
+  let y = 802;
+  page.drawImage(logo, { x: left, y: y - 25, width: 26, height: 26 });
+  page.drawText("Правильный выбор", { x: left + 34, y: y - 10, size: 10.5, font: bold, color: ink });
+  page.drawText("AI-анализ кандидатов", { x: left + 34, y: y - 22, size: 6.7, font, color: muted });
+  y -= 48;
+  page.drawText("Итоги интервью", { x: left, y, size: 16, font: bold, color: ink });
+  y -= 22;
+
+  const drawLabelValue = (label: string, value: string) => {
+    const safeLabel = sanitizeReportText(label);
+    const safeValue = sanitizeReportText(value) || "Не указано";
+    page.drawText(safeLabel, { x: left, y, size: bodySize, font: bold, color: ink });
+    const labelWidth = bold.widthOfTextAtSize(safeLabel, bodySize);
+    const valueLines = wrap(safeValue, bodySize, font, width - labelWidth - 6);
+    valueLines.slice(0, 2).forEach((text, index) => page.drawText(text, { x: left + labelWidth + 5, y: y - index * lineHeight, size: bodySize, font, color: ink }));
+    y -= Math.max(1, Math.min(2, valueLines.length)) * lineHeight;
+  };
+  drawLabelValue("Дата:", summary.interviewDate);
+  drawLabelValue("ФИО кандидата:", summary.fullName);
+  drawLabelValue("Вакантная должность:", model.vacancyTitle);
+  drawLabelValue("Возраст кандидата:", summary.age);
+  drawLabelValue("Зарплата на данный момент/ожидания:", summary.compensation);
+  y -= 4;
+
+  const drawHeading = (title: string) => {
+    page.drawText(title, { x: left, y, size: 11.5, font: bold, color: blue });
+    y -= 15;
+  };
+  const drawParagraph = (value: string, options: { prefix?: string; maxLines?: number } = {}) => {
+    const prefix = options.prefix ?? "";
+    const lines = wrap(`${prefix}${sanitizeReportText(value) || "Не указано"}`, bodySize, font, width).slice(0, options.maxLines ?? 4);
+    for (const text of lines) {
+      if (y < 48) break;
+      page.drawText(text, { x: left, y, size: bodySize, font, color: ink });
+      y -= lineHeight;
+    }
+  };
+  const drawNumbered = (items: readonly string[], maximum: number) => {
+    (items.length ? items : ["Недостаточно подтверждённых данных."]).slice(0, maximum).forEach((item, index) => {
+      drawParagraph(item, { prefix: `${index + 1}. `, maxLines: 2 });
+    });
+  };
+
+  drawHeading("Последние места работы:");
+  (summary.recentEmployment.length ? summary.recentEmployment : [{ employer: "Не указано", role: "Не указано", period: "", summary: "", achievements: "" }]).slice(0, 2).forEach((employment) => {
+    drawParagraph(employment.employer, { maxLines: 1 });
+    drawParagraph(employment.role, { maxLines: 1 });
+    if (employment.period) drawParagraph(employment.period, { maxLines: 1 });
+    if (employment.summary) drawParagraph(employment.summary, { maxLines: 3 });
+    drawParagraph(employment.achievements || "Не указаны", { prefix: "• Достижения: ", maxLines: 2 });
+  });
+  y -= 3;
+  drawHeading("Hard skills:");
+  drawNumbered(summary.hardSkills, 9);
+  y -= 3;
+  drawHeading("Soft skills:");
+  drawNumbered(summary.softSkills, 7);
+  y -= 3;
+  drawHeading("Плюсы кандидата:");
+  drawParagraph(summary.positives.join(" "), { maxLines: 5 });
+  y -= 3;
+  drawHeading("Минусы кандидата:");
+  drawParagraph(summary.negatives.join(" "), { maxLines: 5 });
+  y -= 3;
+  drawHeading("ДОПОЛНИТЕЛЬНО:");
+  drawParagraph(summary.additional.join(" "), { maxLines: 5 });
+
+  page.drawLine({ start: { x: left, y: 35 }, end: { x: left + width, y: 35 }, thickness: 0.6, color: line });
+  page.drawText("Сформировано системой «Правильный выбор»", { x: left, y: 21, size: 7.5, font, color: muted });
+}
+
+const VISIBLE_SECTIONS: Record<ReportModel["type"], readonly string[]> = {
+  "abc-test": ["identity", "scale", "directions", "evidence", "conflicts", "strengths", "limitations", "questions"],
+  "candidate-results": ["strengths", "limitations", "risks", "competencies", "confirmed-results", "unverified-questions", "access-to-ke"],
+};
+
+function reportVisibleSections(model: ReportModel) {
+  const allowed = new Set(VISIBLE_SECTIONS[model.type]);
+  if (model.workflowVersion?.startsWith("matrix-v")) allowed.add("matrix");
+  return model.sections.filter((section) => allowed.has(section.id) || (model.workflowVersion?.startsWith("matrix-v") && section.id.startsWith("matrix:")));
+}
+
+function sanitizeReportText(value: string) {
+  return normalizeReportBodyText(value)
+    .replace(/\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/gi, "")
+    .replace(/\b(?:candidate|vacancy|profile|run|artifact|file)[:=][^\s;,\]]+/gi, "")
+    .replace(/\[\s*\]/g, "")
+    .replace(/\s+([,.;:])/g, "$1")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
+function normalizeReportBodyText(value: string) {
+  return value
+    .replace(/\[\s*\]/g, "")
+    .replace(/\s+([,.;:])/g, "$1")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
+function sectionParagraphLines(body: string, maxWidth: number, font: { widthOfTextAtSize(value: string, size: number): number }, bodySize = 8.1) {
+  const cleaned = normalizeReportBodyText(body)
+    .split(/\r?\n/)
+    .map((line) => line.replace(/^\s*[•*-]\s*/, "• ").trim())
+    .filter(Boolean);
+  return cleaned.map((paragraph) => wrap(paragraph, bodySize, font, maxWidth));
+}
+
+function wrap(text: string, size: number, font: { widthOfTextAtSize(value: string, size: number): number }, maxWidth: number) {
+  const result: string[] = [];
+  for (const paragraph of text.split(/\r?\n/)) {
+    let line = "";
+    for (const word of paragraph.split(/\s+/).filter(Boolean)) {
+      const candidate = line ? `${line} ${word}` : word;
+      if (line && font.widthOfTextAtSize(candidate, size) > maxWidth) { result.push(line); line = word; } else line = candidate;
+    }
+    result.push(line || " ");
+  }
+  return result;
+}
+
+export async function validateRenderedReportPdf(bytes: Uint8Array, model: ReportModel) {
+  const structural = validatePdf(bytes, model);
+  const { PdfJsExtractionAdapter } = await import("./documents.ts");
+  const pages = await new PdfJsExtractionAdapter().extract(bytes);
+  const text = pages.map((page) => page.text).join(" ").replace(/\s+/g, " ");
+  if (!pages.length || pages.length > 50 || bytes.byteLength > 5_000_000) throw new Error("PDF_READABILITY_BUDGET_EXCEEDED");
+  const requiredContent = model.type === "candidate-results" && model.interviewSummary
+    ? ["Итоги интервью", model.interviewSummary.fullName, model.vacancyTitle, "Hard skills", "Soft skills", "Плюсы кандидата", "Минусы кандидата", "ДОПОЛНИТЕЛЬНО"]
+    : model.type === "abc-test"
+      ? [model.candidateDisplayName, model.vacancyTitle, model.recommendation,
+        ...reportVisibleSections(model).flatMap((section) => [section.title, ...section.body.split(/\r?\n/).filter(Boolean)])]
+      : [model.candidateDisplayName, model.vacancyTitle, model.recommendation,
+        ...reportVisibleSections(model).flatMap((section) => [section.title])];
+  const normalizedRequiredContent = requiredContent.map(model.type === "abc-test" ? normalizeReportBodyText : sanitizeReportText);
+  const missing = normalizedRequiredContent.filter((value) => value && !text.includes(value.replace(/\s+/g, " ")));
+  if (missing.length) throw new Error(`PDF_CONTENT_ORACLE_FAILED:${missing[0]}`);
+  return { ...structural, pageCount: pages.length, textChecksum: sha256(text) };
+}
+
+export function validateReportPairModels(left: ReportModel, right: ReportModel) {
+  if (left.type === right.type || left.candidateId !== right.candidateId || left.vacancyId !== right.vacancyId || left.profileVersion !== right.profileVersion || left.analysisVersion !== right.analysisVersion || left.recommendation !== right.recommendation) throw new Error("REPORT_PAIR_MODEL_MISMATCH");
+  if (sha256(left.evidence) !== sha256(right.evidence)) throw new Error("REPORT_PAIR_EVIDENCE_MISMATCH");
+  if (left.workflowVersion !== right.workflowVersion || sha256(left.matrixProvenance ?? null) !== sha256(right.matrixProvenance ?? null) || sha256(left.matrixRows ?? []) !== sha256(right.matrixRows ?? [])) throw new Error("REPORT_PAIR_MATRIX_MISMATCH");
+  return true;
+}
+
+export function validatePdf(bytes: Uint8Array, model: ReportModel) {
+  validateReportModel(model);
+  const text = Buffer.from(bytes).toString("latin1");
+  if (!text.startsWith("%PDF-") || !text.trimEnd().endsWith("%%EOF") || bytes.byteLength < 100) throw new Error("INVALID_PDF_STRUCTURE");
+  return { checksum: sha256(bytes), size: bytes.byteLength };
+}
+
+export function reportFileName(model: ReportModel) {
+  const prefix = model.type === "abc-test" ? "ABC-тест" : "Итоги по кандидату";
+  return `${prefix} — ${model.candidateDisplayName} — v${String(model.analysisVersion).padStart(4, "0")}.pdf`;
+}
+
+export type PublishableReport = { type: ReportModel["type"]; checksum: string; fileName: string; bytes: Uint8Array };
+
+export class ReportPublicationRegistry {
+  private readonly files = new Map<string, { driveFileId: string; checksum: string; fileName: string }>();
+
+  publishPair(candidateId: string, analysisVersion: number, reports: readonly PublishableReport[]) {
+    if (reports.length !== 2 || new Set(reports.map((report) => report.type)).size !== 2) throw new Error("REPORT_PAIR_INCOMPLETE");
+    const version = `v${String(analysisVersion).padStart(4, "0")}`;
+    const pending: Array<{ identity: string; value: { driveFileId: string; checksum: string; fileName: string } }> = [];
+    for (const report of reports) {
+      if (!report.bytes.byteLength || report.checksum !== sha256(report.bytes)) throw new Error("REPORT_CHECKSUM_INVALID");
+      const identity = `${candidateId}:${version}:${report.type}`;
+      const existing = this.files.get(identity);
+      if (existing && existing.checksum !== report.checksum) throw new Error("REPORT_VERSION_CONFLICT");
+      pending.push({ identity, value: existing ?? { driveFileId: `drive-${sha256(identity).slice(0, 16)}`, checksum: report.checksum, fileName: report.fileName } });
+    }
+    for (const item of pending) this.files.set(item.identity, item.value);
+    return { state: "READY" as const, directory: `Результаты/${version}`, documents: pending.map((item) => structuredClone(item.value)) };
+  }
+
+  deleteCandidate(candidateId: string) {
+    for (const identity of this.files.keys()) if (identity.startsWith(`${candidateId}:`)) this.files.delete(identity);
+  }
+}

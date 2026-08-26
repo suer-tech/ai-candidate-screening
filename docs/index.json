@@ -1,89 +1,134 @@
 {
   "symbols": {
-    "Home": {
-      "file": "web/app/page.tsx",
+    "loadRuntimeConfiguration": {
+      "file": "web/server/configuration/runtime.ts",
       "kind": "function",
-      "summary": "Главный клиентский интерфейс очереди кандидатов и их анализа."
+      "summary": "Fail-closed загрузка runtime.env и точного allowlist credential-файлов."
     },
-    "Vacancies": {
-      "file": "web/app/page.tsx",
+    "validateProcessorEndpoints": {
+      "file": "web/server/configuration/runtime.ts",
       "kind": "function",
-      "summary": "Экран настройки профилей вакансий и правил оценки."
+      "summary": "Проверяет совпадение loopback URL, host, port и exact route media/document processors до запуска runtime."
     },
-    "VacancySettings": {
-      "file": "web/app/page.tsx",
+    "serverContainer": {
+      "file": "web/server/configuration/container.ts",
       "kind": "function",
-      "summary": "Редактор версии профиля вакансии: управляет ABC-направлениями, блокирует невалидное сохранение и связывает структурированные ошибки с полями."
+      "summary": "Процессный dependency container PostgreSQL product/runtime services."
     },
-    "STANDARD_ABC_DIRECTIONS": {
-      "file": "web/app/page.tsx",
-      "kind": "constant",
-      "summary": "Стартовый перечень пяти ABC-направлений из ТЗ для демонстрационных профилей, ещё не получивших согласованные описания A/B/C."
+    "migratePostgres": {
+      "file": "web/server/storage/migrations.ts",
+      "kind": "function",
+      "summary": "Применяет forward-only PostgreSQL migrations под advisory lock."
     },
-    "BUSINESS_ASSISTANT_ABC_DIRECTIONS": {
-      "file": "web/app/page.tsx",
-      "kind": "constant",
-      "summary": "Пять ABC-направлений вакансии бизнес-ассистента с короткими предзаполненными описаниями A/B/C."
+    "PostgresBlobStore": {
+      "file": "web/server/storage/blob-store.ts",
+      "kind": "class",
+      "summary": "Bounded immutable bytea artifact store со scope cleanup."
     },
-    "AbcProfileDirection": {
-      "file": "web/app/abc-profile-validation.ts",
+    "PostgresProductRepository": {
+      "file": "web/server/product/postgres-repository.ts",
+      "kind": "class",
+      "summary": "PostgreSQL repository вакансий, кандидатов, lifecycle, results и dashboard."
+    },
+    "generateVacancyProfile": {
+      "file": "web/server/product/vacancy-generation.ts",
+      "kind": "function",
+      "summary": "Генерирует LLM-профиль вакансии с durable operation и bounded retry."
+    },
+    "assertStrictResponseSchema": {
+      "file": "web/server/llm/strict-schema.ts",
+      "kind": "function",
+      "summary": "Fail-closed проверяет response artifact по поддерживаемому strict Structured Outputs subset."
+    },
+    "structuredResponseFormat": {
+      "file": "web/server/llm/gateway.ts",
+      "kind": "function",
+      "summary": "Строит provider-safe strict json_schema response format из точного versioned artifact."
+    },
+    "createGoogleDriveOAuthRuntime": {
+      "file": "web/server/google-drive-oauth/runtime.ts",
+      "kind": "function",
+      "summary": "Собирает personal My Drive OAuth runtime поверх PostgreSQL и encrypted token provider."
+    },
+    "GoogleMyDriveAdapter": {
+      "file": "web/server/google-drive-oauth/my-drive-adapter.ts",
+      "kind": "class",
+      "summary": "Работа с разрешённым корнем личного My Drive, включая resumable upload."
+    },
+    "ScopedGoogleDriveExecutor": {
+      "file": "web/server/google-drive-oauth/scoped-executor.ts",
+      "kind": "class",
+      "summary": "Проверяет owner, connection, descendant registry и exact operation grants."
+    },
+    "PostgresAgentRuntimeRepository": {
+      "file": "web/server/agent-runtime/postgres-runtime-repository.ts",
+      "kind": "class",
+      "summary": "Durable PostgreSQL queue, leases/fencing, checkpoints, grants, budgets, escalation и outbox."
+    },
+    "AgentRuntimeConsumer": {
+      "file": "web/server/agent-runtime/consumer.ts",
+      "kind": "class",
+      "summary": "Постоянный worker с startup recovery, fenced heartbeat и tool dispatch."
+    },
+    "DurableAgentRuntime": {
+      "file": "web/server/agent-runtime/runtime.ts",
+      "kind": "class",
+      "summary": "Goal/plan state machine с eval, retry, repair, replan, escalation и compensation."
+    },
+    "CandidateDiscoveryCoordinator": {
+      "file": "web/server/candidate-pipeline/discovery.ts",
+      "kind": "class",
+      "summary": "Регистрирует Drive folders, стабильные snapshots и immutable input versions."
+    },
+    "projectCandidate": {
+      "file": "web/server/candidate-pipeline/dashboard-projection.ts",
+      "kind": "function",
+      "summary": "Проецирует durable milestones в единый candidate progress/status."
+    },
+    "runCanonicalCandidatePipelineConformance": {
+      "file": "web/server/candidate-pipeline/conformance.ts",
+      "kind": "function",
+      "summary": "Исполняемый canonical pipeline conformance boundary."
+    },
+    "compileVacancyMatrix": {
+      "file": "web/server/candidate-pipeline/matrix-compilation.ts",
+      "kind": "function",
+      "summary": "Shared-компиляция claim → compiler → один clean critic-editor с полным successor → canonical publish."
+    },
+    "canonicalizeVacancyMatrix": {
+      "file": "web/server/candidate-pipeline/matrix-driven.ts",
+      "kind": "function",
+      "summary": "Проверяет source/tree invariants и hardRequired ↔ stop-factor sourceRef, назначает stable criterion IDs и checksum."
+    },
+    "buildCriterionClaimExtractionBatches": {
+      "file": "web/server/candidate-pipeline/transcript-claim-batching.ts",
+      "kind": "function",
+      "summary": "Детерминированно разбивает decision-safe документы и нормализованную стенограмму на перекрывающиеся LLM-пакеты по полному токенному бюджету запроса без суммаризации и потери реплик."
+    },
+    "sourceRefIsStopFactor": {
+      "file": "web/server/candidate-pipeline/matrix-driven.ts",
+      "kind": "function",
+      "summary": "Определяет принадлежность точного sourceRef разделу стоп-факторов для технического hardRequired gate."
+    },
+    "PostgresVacancyMatrixRepository": {
+      "file": "web/server/candidate-pipeline/matrix-postgres-repository.ts",
+      "kind": "class",
+      "summary": "Fenced compilation claim, immutable matrix publish и scoped claims/conflicts/rows."
+    },
+    "deriveMatrixRecommendation": {
+      "file": "web/server/candidate-pipeline/matrix-driven.ts",
+      "kind": "function",
+      "summary": "Детерминированный приоритет stop trigger, required mismatch, verified critical unmapped risk, uncertainty и caveats."
+    },
+    "CriticalUnmappedRisk": {
+      "file": "web/server/candidate-pipeline/matrix-driven.ts",
       "kind": "type",
-      "summary": "Тип направления ABC: стабильный идентификатор, название, определения A/B/C и происхождение standard/custom."
+      "summary": "Candidate-scoped риск с distinct assessment/verification traces, locators и verified criticality."
     },
-    "AbcProfileValidationError": {
-      "file": "web/app/abc-profile-validation.ts",
-      "kind": "type",
-      "summary": "Структурированная ошибка ABC-валидации уровня коллекции, направления или конкретного поля."
-    },
-    "validateAbcProfile": {
-      "file": "web/app/abc-profile-validation.ts",
+    "createPrivateTemp": {
+      "file": "web/server/storage/private-temp.ts",
       "kind": "function",
-      "summary": "Чисто проверяет полноту ABC-направлений и уникальность названий без изменения входных значений или порядка."
-    },
-    "normalizeAbcDirectionName": {
-      "file": "web/app/abc-profile-validation.ts",
-      "kind": "function",
-      "summary": "Нормализует название ABC-направления только для trim и регистронезависимого сравнения."
-    },
-    "Vacancy": {
-      "file": "web/app/page.tsx",
-      "kind": "type",
-      "summary": "Демонстрационная модель вакансии с версией, статусом, профилем оценки и агрегатами кандидатов."
-    },
-    "BUSINESS_ASSISTANT_PROFILE": {
-      "file": "web/app/page.tsx",
-      "kind": "constant",
-      "summary": "Демонстрационный профиль вакансии бизнес-ассистента с образом результата и четырьмя ключевыми компетенциями."
-    },
-    "runTranscriptionPipeline": {
-      "file": "web/server/transcription/pipeline.ts",
-      "kind": "function",
-      "summary": "Извлекает аудио из видео, получает стенограмму AssemblyAI и сохраняет артефакты для последующего анализа."
-    },
-    "extractAudioTrack": {
-      "file": "web/server/transcription/extract-audio.ts",
-      "kind": "function",
-      "summary": "Извлекает первую аудиодорожку через FFmpeg с копированием AAC и резервным перекодированием."
-    },
-    "transcribeAudio": {
-      "file": "web/server/transcription/assemblyai-client.ts",
-      "kind": "function",
-      "summary": "Отправляет локальное аудио в AssemblyAI EU и ожидает русскую стенограмму с диаризацией."
-    },
-    "buildTranscriptionParams": {
-      "file": "web/server/transcription/assemblyai-client.ts",
-      "kind": "function",
-      "summary": "Формирует зафиксированный набор параметров AssemblyAI для русскоязычного интервью."
-    },
-    "createTranscriptArtifact": {
-      "file": "web/server/transcription/format-transcript.ts",
-      "kind": "function",
-      "summary": "Преобразует ответ AssemblyAI во внутреннюю версионируемую схему для последующих моделей."
-    },
-    "TranscriptArtifact": {
-      "file": "web/server/transcription/types.ts",
-      "kind": "type",
-      "summary": "Внутренний контракт schemaVersion 1: текст, реплики, слова, таймкоды, говорящие и уверенность."
+      "summary": "Создаёт allowlisted приватный 0700 temp-каталог для media/document work."
     }
   }
 }

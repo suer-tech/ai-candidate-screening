@@ -15,6 +15,16 @@ import {
   type VacancyFolderGateway,
 } from "./application.ts";
 import type { VacancyCreateInput, VacancyRecord } from "../../app/product-model.ts";
+import { CANONICAL_ABC_DIRECTIONS, VACANCY_GENERATION_SCHEMA_VERSION, vacancySnapshotHash, validateGeneratedVacancyProfile, type GeneratedVacancyProfile } from "./vacancy-generation.ts";
+
+test("LLM vacancy profile deterministically normalizes structured field values without HR fallback", () => {
+  const profile = validateGeneratedVacancyProfile({ schemaVersion: "vacancy-profile/v1", templateVersion: "generated-v1",
+    profile: { "Образ результата": { metric: "результат" }, "Компетенции": ["одна", "две"], "Стоп-факторы": ["фактор"], "Допуск к КЕ": { required: true } },
+    abcDirections: CANONICAL_ABC_DIRECTIONS.map((direction) => ({ name: direction.name, gradeA: "A", gradeB: "B", gradeC: "C" })), hrDecisionMarkers: [] });
+  assert.equal(profile.profile["Образ результата"], "Metric: результат");
+  assert.equal(profile.profile["Компетенции"], "• одна\n• две");
+  assert.equal(profile.profile["Допуск к КЕ"], "Required: true");
+});
 
 const input: VacancyCreateInput = {
   operationId: "op-1",
@@ -29,12 +39,23 @@ const input: VacancyCreateInput = {
   abcDirections: [{ id: "a", name: "Продуктивность", gradeA: "A", gradeB: "B", gradeC: "C", origin: "standard" }],
 };
 
+async function generatedInput(repository: InMemoryProductRepository, overrides: Partial<VacancyCreateInput> = {}) {
+  const value = { ...input, ...overrides };
+  const generationOperationId = `${value.operationId}:generation`;
+  await repository.beginGeneration({ operationId: generationOperationId, originalTitle: value.title, normalizedTitle: value.title.trim().replace(/\s+/g, " ").toLocaleLowerCase("ru-RU") });
+  const generatedProfile: GeneratedVacancyProfile = { schemaVersion: VACANCY_GENERATION_SCHEMA_VERSION, templateVersion: value.templateVersion, profile: value.profile, abcDirections: value.abcDirections, hrDecisionMarkers: [] };
+  const snapshotHash = await vacancySnapshotHash(value);
+  await repository.completeGeneration({ operationId: generationOperationId, attemptCount: 1, profile: generatedProfile, snapshotHash });
+  return { ...value, generationOperationId, confirmedSnapshotHash: snapshotHash };
+}
+
 function vacancy(): VacancyRecord {
   return {
     id: "vac-0001",
     title: "Бизнес ассистент",
     normalizedTitle: "бизнес ассистент",
     active: true,
+    archived: false,
     version: 1,
     templateVersion: "abc-standard-v1",
     driveFolderId: "folder-1",
@@ -90,10 +111,11 @@ class IdempotentFolderGateway implements VacancyFolderGateway {
 test("vacancy saga retries the same operation/folder and publishes once", async () => {
   const repository = new InMemoryProductRepository();
   const folders = new IdempotentFolderGateway();
-  await assert.rejects(createVacancy(repository, folders, input), /timeout/);
+  const generated = await generatedInput(repository);
+  await assert.rejects(createVacancy(repository, folders, generated), /timeout/);
   assert.equal(repository.vacancies.size, 0);
-  const created = await createVacancy(repository, folders, input);
-  const retry = await createVacancy(repository, folders, input);
+  const created = await createVacancy(repository, folders, generated);
+  const retry = await createVacancy(repository, folders, generated);
   assert.equal(created.active, true);
   assert.equal(created.driveFolderId, "folder-op-1");
   assert.equal(retry.id, created.id);
@@ -101,11 +123,21 @@ test("vacancy saga retries the same operation/folder and publishes once", async 
   assert.equal(folders.folders.size, 1);
 });
 
+test("new vacancy with no explicit directions receives five standard directions with empty grades", async () => {
+  const repository = new InMemoryProductRepository();
+  const folders: VacancyFolderGateway = { ensureVacancyFolder: async () => "folder-standard-empty" };
+  const created = await createVacancy(repository, folders, await generatedInput(repository, { operationId: "op-empty-abc", title: "Новая вакансия", abcDirections: [] }));
+  assert.deepEqual(created.abcDirections.map(({ id, name, origin }) => ({ id, name, origin })), CANONICAL_ABC_DIRECTIONS.map(({ id, name }) => ({ id, name, origin: "standard" })));
+  assert.ok(created.abcDirections.every(({ gradeA, gradeB, gradeC }) => gradeA === "" && gradeB === "" && gradeC === ""));
+});
+
 test("vacancy reservation enforces normalized uniqueness before external work", async () => {
   const repository = new InMemoryProductRepository();
   const folders: VacancyFolderGateway = { ensureVacancyFolder: async () => "folder-1" };
-  const first = createVacancy(repository, folders, input);
-  const second = createVacancy(repository, folders, { ...input, operationId: "op-2", title: "БИЗНЕС АССИСТЕНТ" });
+  const firstInput = await generatedInput(repository);
+  const secondInput = await generatedInput(repository, { operationId: "op-2", title: "БИЗНЕС АССИСТЕНТ" });
+  const first = createVacancy(repository, folders, firstInput);
+  const second = createVacancy(repository, folders, secondInput);
   await first;
   await assert.rejects(second, ProductConflictError);
   assert.equal(repository.vacancies.size, 1);

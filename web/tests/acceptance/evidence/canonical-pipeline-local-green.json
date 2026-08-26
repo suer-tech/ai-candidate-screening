@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAtUtc": "2026-08-20T08:42:11.795Z",
+  "classification": "product-conformance",
+  "evidenceScope": "local-controlled-conformance-only",
+  "productionLikeAcceptanceClaimed": false,
+  "fixtureSetId": "canonical-candidate-v1",
+  "adapter": {
+    "path": "server/candidate-pipeline/conformance.ts",
+    "available": true,
+    "callable": true
+  },
+  "counts": {
+    "total": 4,
+    "passed": 4,
+    "red": 0
+  },
+  "tests": [
+    {
+      "testId": "E2E-VAC-001",
+      "status": "PASSED",
+      "failures": []
+    },
+    {
+      "testId": "E2E-TRN-001",
+      "status": "PASSED",
+      "failures": []
+    },
+    {
+      "testId": "E2E-ABC-001",
+      "status": "PASSED",
+      "failures": []
+    },
+    {
+      "testId": "E2E-RESULT-001",
+      "status": "PASSED",
+      "failures": []
+    }
+  ],
+  "missingStages": [],
+  "cleanup": {
+    "attempted": true,
+    "complete": true,
+    "tombstone": "drive-folder-controlled-1"
+  }
+}

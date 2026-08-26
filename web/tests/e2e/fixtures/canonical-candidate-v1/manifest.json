@@ -1,0 +1,195 @@
+{
+  "schemaVersion": "1.1",
+  "fixtureSetId": "canonical-candidate-v1",
+  "dataClassification": "synthetic-no-pii-no-secrets",
+  "requirementsBasisRef": "../../requirements-basis.v1.json",
+  "description": "Canonical production-like control fixture for the four mandatory candidate E2E scenarios.",
+  "identity": {
+    "runPrefixPattern": "e2e-{utcEpoch}-{random8}",
+    "vacancyTitleTemplate": "{runPrefix} — Руководитель синтетической программы",
+    "candidateDisplayNameTemplate": "{runPrefix} — Кандидат Альфа",
+    "candidateCopyDisplayNameTemplate": "{runPrefix} — Кандидат Альфа Копия",
+    "hrActorRefs": [
+      "synthetic-hr-primary",
+      "synthetic-hr-secondary"
+    ],
+    "requiresFreshDriveFolderIds": true,
+    "requiresFreshInternalUuids": true,
+    "forbidNameOrPathAsIdentity": true
+  },
+  "googleMyDrive": {
+    "providerMode": "real",
+    "workspaceKind": "personal-google-my-drive-oauth",
+    "rootPath": "Найм",
+    "connectionRef": "durable-server-oauth-connection",
+    "permissions": {
+      "readInputs": true,
+      "createOutputs": true,
+      "manageMembers": false
+    },
+    "candidateFolderTemplate": "Найм/{vacancyFolder}/{candidateFolder}",
+    "inputAssets": [
+      {
+        "role": "resume-text-pdf",
+        "assetRef": "canonical-v1/resume-text.pdf",
+        "requiredLocatorOracle": ["fileId", "fileVersion", "fileName", "page", "section", "exactText"]
+      },
+      {
+        "role": "resume-scanned-pdf",
+        "assetRef": "canonical-v1/resume-scanned.pdf",
+        "requiredLocatorOracle": ["fileId", "fileVersion", "fileName", "page", "section", "bbox", "confidence", "exactText"]
+      },
+      {
+        "role": "resume-docx",
+        "assetRef": "canonical-v1/resume.docx",
+        "requiredLocatorOracle": ["fileId", "fileVersion", "fileName", "paragraph", "section", "exactText"]
+      },
+      {
+        "role": "interview",
+        "assetRef": "canonical-v1/two-speaker-interview.mp4",
+        "contentProbeRequired": true
+      }
+    ],
+    "negativeAssets": [
+      {
+        "role": "corrupt-resume",
+        "assetRef": "canonical-v1/corrupt-resume.pdf",
+        "expectedFailure": "FAILED_NO_RETRY"
+      },
+      {
+        "role": "unsupported-interview",
+        "assetRef": "canonical-v1/unsupported-interview.bin",
+        "expectedFailure": "FAILED_NO_RETRY"
+      }
+    ],
+    "identityScenarios": [
+      "rename-same-folder-id",
+      "move-same-folder-id",
+      "copy-new-folder-id",
+      "duplicate-scan-same-file-versions",
+      "tombstone-prevents-rediscovery",
+      "results-subtree-is-not-input"
+    ]
+  },
+  "controlledRouterAi": {
+    "transport": "openai-compatible",
+    "mode": "deterministic-test-gateway",
+    "serverSideOnly": true,
+    "fixtureRoutes": {
+      "vacancy-profile": "responses/vacancy-profile-current.json",
+      "ocr-page": "responses/ocr-current.json",
+      "speaker-role-map": "responses/speaker-map-current.json",
+      "vacancy-matrix-compiler": "responses/matrix-compiler-current.json",
+      "vacancy-matrix-critic": "responses/matrix-critic-current.json",
+      "transcript-claim-extraction": "responses/transcript-claims-current.json",
+      "global-conflicts": "responses/global-conflicts-current.json",
+      "matrix-row-assessment": "responses/matrix-rows-current.json",
+      "assess-unmapped-risk": "responses/unmapped-risk-current.json",
+      "verify-critical-risk": "responses/critical-risk-verification-current.json",
+      "candidate-assessment": "responses/assessment-current.json"
+    },
+    "assessmentRouting": "matrix-v2",
+    "matrixContract": {
+      "sharedPerProfileVersion": true,
+      "cleanCriticBeforePublish": true,
+      "boundedRepairAndRecritique": true,
+      "hardRequiredOnlyForStopFactorSourceRef": true,
+      "candidateScopedClaimsConflictsRowsAndUnmappedRisk": true,
+      "criticalUnmappedRiskRequiresIndependentVerification": true
+    },
+    "contractCases": [
+      "current-schema",
+      "known-old-schema-with-deterministic-migration",
+      "unknown-schema-unsupported",
+      "invalid-structure",
+      "timeout",
+      "http-429",
+      "http-5xx"
+    ],
+    "recommendationMatrix": [
+      "confirmed-stop-factor",
+      "required-item-insufficient",
+      "risk-without-stop-factor",
+      "fully-positive",
+      "abc-only-change",
+      "possible-stop-factor-required",
+      "possible-stop-factor-non-required"
+    ],
+    "rawResponsesImmutable": true,
+    "secretsForbiddenInBrowserAndEvidence": true
+  },
+  "assemblyAi": {
+    "providerMode": "real",
+    "endpoint": "https://api.eu.assemblyai.com",
+    "speechModel": "universal-2",
+    "languageCode": "ru",
+    "speakerLabels": true,
+    "speakersExpectedOmitted": true,
+    "mediaAssetRef": "canonical-v1/two-speaker-interview.mp4",
+    "knownSpeakerCount": 2,
+    "knownDurationMsRef": "oracle/interview-duration.json",
+    "controlPhraseOracleRef": "oracle/transcript-phrases.json",
+    "controlPhrasePositions": ["beginning", "middle", "end"],
+    "remoteTranscriptCleanupRequired": true,
+    "temporaryAudioCleanupRequired": true
+  },
+  "pdfPublication": {
+    "provider": "google-my-drive-oauth",
+    "resultDirectoryTemplate": "Результаты/v{analysisVersion4}",
+    "userDocumentCount": 2,
+    "documents": [
+      {
+        "type": "abc-test",
+        "fileNameTemplate": "ABC-тест — {candidateDisplayName} — v{analysisVersion4}.pdf"
+      },
+      {
+        "type": "candidate-results",
+        "fileNameTemplate": "Итоги по кандидату — {candidateDisplayName} — v{analysisVersion4}.pdf"
+      }
+    ],
+    "requiredMetadata": ["candidateId", "vacancyId", "profileVersion", "analysisVersion"],
+    "requiresPdfParseAndContentValidation": true,
+    "requiresSha256": true,
+    "sameVersionSameChecksumReusesFileIds": true,
+    "occupiedPathDifferentChecksum": "REPORT_VERSION_CONFLICT"
+  },
+  "telegram": {
+    "botCount": 1,
+    "baseRecipientRefs": ["synthetic-recipient-primary"],
+    "deliveryMatrixRecipientRefs": ["synthetic-recipient-primary", "synthetic-recipient-secondary"],
+    "recipientIdsComeFromServerConfiguration": true,
+    "groupChatForbidden": true,
+    "startRegistrationForbidden": true,
+    "successAndTerminalErrorTemplatesRequired": true,
+    "directResultPdfLinkRequired": true,
+    "recipientIdsForbiddenInEvidence": true,
+    "tokenForbiddenInEvidence": true,
+    "sentDeliveryMustNotRepeat": true,
+    "failedRecipientRetryIsIndependent": true,
+    "terminalFailureAfterReadyKeepsReady": true
+  },
+  "cleanup": {
+    "requiresExplicitDestructiveTestOptIn": true,
+    "alwaysRun": true,
+    "archiveIsNotCleanup": true,
+    "remove": [
+      "source-drive-folder",
+      "internal-candidate-card",
+      "transcripts",
+      "ocr-artifacts",
+      "raw-and-normalized-ai-responses",
+      "evidence-fragments",
+      "embeddings",
+      "user-pdfs",
+      "technical-json",
+      "temporary-files",
+      "provider-artifacts",
+      "notification-deliveries"
+    ],
+    "minimalTombstoneAllowedFields": ["driveFolderIdOrIrreversibleEquivalent", "deletedAtUtc", "cleanupState"],
+    "requiresSourceFolderAbsent": true,
+    "requiresDerivedArtifactsAbsent": true,
+    "requiresProviderArtifactsAbsent": true,
+    "requiresCleanupCompleteAttestation": true
+  }
+}

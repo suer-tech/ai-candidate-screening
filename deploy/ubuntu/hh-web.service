@@ -1,0 +1,30 @@
+[Unit]
+Description=HH Node web and API
+After=network-online.target postgresql.service
+Wants=network-online.target
+Requires=postgresql.service
+
+[Service]
+Type=simple
+User=hh-agent
+Group=hh-agent
+WorkingDirectory=/opt/hh-agent/current/web
+Environment=HH_RUNTIME_CONFIG_ROOT=/etc/hh-agent
+ExecStart=/usr/bin/npm run start
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=35
+KillSignal=SIGTERM
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+ReadWritePaths=/var/lib/hh-agent /var/log/hh-agent /tmp
+LimitNOFILE=65536
+MemoryMax=2G
+
+[Install]
+WantedBy=multi-user.target

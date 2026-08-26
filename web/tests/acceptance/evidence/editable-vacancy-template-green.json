@@ -1,0 +1,39 @@
+{
+  "schemaVersion": "editable-vacancy-prompts-acceptance-evidence/v1",
+  "change": "add-editable-vacancy-prompts",
+  "generatedAtUtc": "2026-08-24T05:43:00.357Z",
+  "phase": "GREEN",
+  "author": "/root/prompt_acceptance",
+  "executor": "/root/prompt_acceptance",
+  "independenceDeclared": true,
+  "productionCodeChangedByAuthor": false,
+  "command": "node tests/editable-vacancy-prompts.evidence.mjs --scenario VAC-040-server-rendered-visible-generation-template --output tests/acceptance/evidence/editable-vacancy-template-green.json",
+  "junit": "tests/acceptance/evidence/editable-vacancy-template-green.junit.xml",
+  "safety": {
+    "fixtureSetId": "editable-vacancy-prompts-synthetic-v1",
+    "scenarioFilter": "VAC-040-server-rendered-visible-generation-template",
+    "syntheticOnly": true,
+    "containsSecrets": false,
+    "containsRealPersonalData": false,
+    "providerCallsAllowed": false
+  },
+  "summary": {
+    "total": 1,
+    "green": 1,
+    "red": 0,
+    "infrastructureErrors": 0
+  },
+  "results": [
+    {
+      "scenarioId": "VAC-040-server-rendered-visible-generation-template",
+      "requirements": [
+        "VAC-040",
+        "TST-086"
+      ],
+      "title": "full server-rendered generation template exposes role assumptions, all sections and structured title isolation",
+      "status": "GREEN",
+      "classification": "product-contract",
+      "mismatches": []
+    }
+  ]
+}

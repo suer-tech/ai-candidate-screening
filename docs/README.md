@@ -8,6 +8,7 @@
 
 1. [Архитектура и потоки](ARCHITECTURE.md)
 2. [Машиночитаемый индекс компонентов](index.json)
+3. [Полная настройка Google Drive OAuth](GOOGLE-DRIVE-SETUP.md)
 
 ## Нормативные спецификации
 

@@ -9,7 +9,7 @@ const REACT_DOUBLE = String.raw`
 let slots = [];
 let cursor = 0;
 export const Fragment = Symbol.for("acceptance.react.fragment");
-export function __reset() { slots = []; cursor = 0; }
+export function __reset(initialSlots = []) { slots = [...initialSlots]; cursor = 0; }
 export function __begin() { cursor = 0; }
 export function useState(initialValue) {
   const slot = cursor++;
@@ -44,12 +44,12 @@ async function resolveModule(importer, specifier) {
   throw new Error(`Cannot resolve ${specifier} from ${importer}`);
 }
 
-async function compileGraph({ sourcePath, sourceRoot, outputRoot, entry = false, seen = new Map() }) {
+async function compileGraph({ sourcePath, sourceRoot, outputRoot, entry = false, entryExports = "ProductApp, Dashboard, Vacancies, VacancyCandidates, Candidates, CreateVacancy, CandidateDetail, CandidateProgress, TranscriptTab, MaterialsPanel, PdfPreview", seen = new Map() }) {
   if (seen.has(sourcePath)) return seen.get(sourcePath);
   const outputPath = path.join(outputRoot, path.relative(sourceRoot, sourcePath)).replace(/\.tsx?$/i, ".mjs");
   seen.set(sourcePath, outputPath);
   let source = await readFile(sourcePath, "utf8");
-  if (entry) source += "\nexport { Dashboard, Vacancies, CreateVacancy, CandidateDetail, MaterialsPanel, PdfPreview };\n";
+  if (entry) source += `\nexport { ${entryExports} };\n`;
 
   const replacements = new Map();
   for (const specifier of [...source.matchAll(RELATIVE_IMPORT)].map((match) => match[1])) {
@@ -85,10 +85,50 @@ export async function loadProductUiHarness() {
     import(pathToFileURL(path.join(outputRoot, "react-double.mjs")).href),
   ]);
   return {
-    create(name, props) {
+    create(name, props, initialState = []) {
       assert.equal(typeof components[name], "function", `${name} is an observable UI component`);
-      react.__reset();
+      react.__reset(initialState);
       return { render: () => { react.__begin(); return components[name](props); } };
+    },
+    cleanup: () => rm(outputRoot, { recursive: true, force: true }),
+  };
+}
+
+export async function loadPostgresAssessmentProjectionHarness() {
+  const sourceRoot = path.resolve(import.meta.dirname, "../..");
+  const outputRoot = await mkdtemp(path.join(sourceRoot, ".postgres-assessment-projection-"));
+  await writeFile(path.join(outputRoot, "react-double.mjs"), REACT_DOUBLE, "utf8");
+  const entry = await compileGraph({
+    sourcePath: path.join(sourceRoot, "server/product/postgres-repository.ts"),
+    sourceRoot,
+    outputRoot,
+    entry: true,
+    entryExports: "projectAssessment",
+  });
+  const module = await import(pathToFileURL(entry).href);
+  return {
+    project(snapshot, evidence = { facts: [] }) {
+      return module.projectAssessment(snapshot, evidence);
+    },
+    cleanup: () => rm(outputRoot, { recursive: true, force: true }),
+  };
+}
+
+export async function loadDashboardProjectionHarness() {
+  const sourceRoot = path.resolve(import.meta.dirname, "../..");
+  const outputRoot = await mkdtemp(path.join(os.tmpdir(), "dashboard-projection-"));
+  await writeFile(path.join(outputRoot, "react-double.mjs"), REACT_DOUBLE, "utf8");
+  const entry = await compileGraph({
+    sourcePath: path.join(sourceRoot, "server/candidate-pipeline/dashboard-projection.ts"),
+    sourceRoot,
+    outputRoot,
+    entry: true,
+    entryExports: "projectCandidate",
+  });
+  const module = await import(pathToFileURL(entry).href);
+  return {
+    projectCandidate(candidate, runtime, report) {
+      return module.projectCandidate(candidate, runtime, report);
     },
     cleanup: () => rm(outputRoot, { recursive: true, force: true }),
   };
@@ -124,7 +164,7 @@ async function sourceFiles(root) {
   const entries = await readdir(root, { withFileTypes: true });
   const files = [];
   for (const entry of entries) {
-    if (["tests", "node_modules", ".next", ".vinext", ".wrangler", "dist"].includes(entry.name)) continue;
+    if (["tests", "node_modules", ".next", ".output", ".vinext", ".wrangler", ".runtime", "dist"].includes(entry.name)) continue;
     const absolute = path.join(root, entry.name);
     if (entry.isDirectory()) files.push(...await sourceFiles(absolute));
     else if (!/\.test\.[^.]+$/i.test(entry.name) && /\.(?:ts|tsx|js|mjs|json)$/i.test(entry.name)) files.push(absolute);

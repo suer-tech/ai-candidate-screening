@@ -11,13 +11,6 @@ export type AbcProfileDirection = {
   readonly origin: AbcDirectionOrigin;
 };
 
-type CollectionValidationError = {
-  readonly code: "abc-directions.required";
-  readonly level: "collection";
-  readonly field: "collection";
-  readonly message: string;
-};
-
 type DirectionValidationError = {
   readonly code: "abc-direction.name.duplicate";
   readonly level: "direction";
@@ -28,16 +21,15 @@ type DirectionValidationError = {
 };
 
 type FieldValidationError = {
-  readonly code: "abc-direction.field.required";
+  readonly code: "abc-direction.field.required" | "abc-direction.id.duplicate" | "abc-direction.origin.invalid";
   readonly level: "field";
   readonly directionId: string;
   readonly directionIndex: number;
-  readonly field: AbcDirectionField;
+  readonly field: AbcDirectionField | "id" | "origin";
   readonly message: string;
 };
 
 export type AbcProfileValidationError =
-  | CollectionValidationError
   | DirectionValidationError
   | FieldValidationError;
 
@@ -60,24 +52,17 @@ export function normalizeAbcDirectionName(name: string): string {
 export function validateAbcProfile(
   directions: readonly AbcProfileDirection[],
 ): AbcProfileValidationResult {
-  if (directions.length === 0) {
-    return {
-      valid: false,
-      errors: [{
-        code: "abc-directions.required",
-        level: "collection",
-        field: "collection",
-        message: "Добавьте хотя бы одно ABC-направление.",
-      }],
-    };
-  }
-
   const errors: AbcProfileValidationError[] = [];
-  const normalizedNames = directions.map((direction) => normalizeAbcDirectionName(direction.name));
+  const normalizedNames = directions.map((direction) => normalizeAbcDirectionName(typeof direction?.name === "string" ? direction.name : ""));
+  const idIndexes = new Map<string, number[]>();
 
   directions.forEach((direction, directionIndex) => {
-    (["name", "gradeA", "gradeB", "gradeC"] as const).forEach((field) => {
-      if (direction[field].trim().length > 0) return;
+    const id = typeof direction?.id === "string" ? direction.id.trim() : "";
+    if (!id) errors.push({ code: "abc-direction.field.required", level: "field", directionId: id, directionIndex, field: "id", message: `Не задан идентификатор ABC-направления ${directionIndex + 1}.` });
+    else idIndexes.set(id, [...(idIndexes.get(id) ?? []), directionIndex]);
+    if (direction?.origin !== "standard" && direction?.origin !== "custom") errors.push({ code: "abc-direction.origin.invalid", level: "field", directionId: id, directionIndex, field: "origin", message: `Некорректный источник ABC-направления ${directionIndex + 1}.` });
+    (["name"] as const).forEach((field) => {
+      if (typeof direction?.[field] === "string" && direction[field].trim().length > 0) return;
       errors.push({
         code: "abc-direction.field.required",
         level: "field",
@@ -87,6 +72,11 @@ export function validateAbcProfile(
         message: `Заполните ${FIELD_LABELS[field]} для ABC-направления ${directionIndex + 1}.`,
       });
     });
+  });
+
+  idIndexes.forEach((indexes, id) => {
+    if (indexes.length < 2) return;
+    indexes.forEach((directionIndex) => errors.push({ code: "abc-direction.id.duplicate", level: "field", directionId: id, directionIndex, field: "id", message: `Идентификатор ABC-направления «${id}» повторяется.` }));
   });
 
   const indexesByName = new Map<string, number[]>();

@@ -1,0 +1,37 @@
+{
+  "schemaVersion": "1.0",
+  "change": "revise-vacancy-creation-flow",
+  "runId": "vacancy-creation-red-20260820T081052Z",
+  "timestampUtc": "2026-08-20T08:10:52.9895951Z",
+  "command": "npm run test:vacancy-creation:red",
+  "result": "FAILED_EXPECTED_RED",
+  "counts": {
+    "tests": 14,
+    "passed": 0,
+    "failed": 14,
+    "skipped": 0,
+    "cancelled": 0
+  },
+  "failureClasses": [
+    {
+      "kind": "OLD_MANUAL_NON_LLM_UI",
+      "expected": "Сформировать вакансию",
+      "actualButtons": ["×", "Отмена", "Продолжить"]
+    },
+    {
+      "kind": "LLM_CONFORMANCE_NOT_IMPLEMENTED",
+      "module": "server/product/application.ts",
+      "missingExport": "runVacancyCreationConformanceScenario"
+    }
+  ],
+  "integrity": {
+    "syntaxErrors": 0,
+    "importErrors": 0,
+    "fixtureErrors": 0,
+    "syntheticDataOnly": true,
+    "containsSecrets": false,
+    "containsRawProviderResponse": false,
+    "containsRealPersonalData": false
+  },
+  "junit": "revise-vacancy-creation-flow-red.junit.xml"
+}

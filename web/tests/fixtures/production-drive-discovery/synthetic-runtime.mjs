@@ -1,0 +1,51 @@
+export const CANONICAL_TASK_IDS = Object.freeze([
+  "drive-discovery",
+  "stability-and-input-version",
+  "material-completeness",
+  "document-extraction",
+  "routerai-ocr",
+  "media-probe-and-audio",
+  "assemblyai-transcription",
+  "speaker-role-mapping",
+  "fact-and-evidence-extraction",
+  "profile-assessment",
+  "deterministic-recommendation",
+  "validation-gates",
+  "pdf-pair-render-and-validate",
+  "personal-drive-publication",
+  "telegram-outbox",
+  "metrics-and-eta",
+  "archive-delete-and-cleanup",
+]);
+
+export const productionDiscoveryFixture = Object.freeze({
+  scenarioId: "PROD-DRIVE-DISCOVERY-001",
+  environment: "local",
+  discoveryIntervalMs: 15_000,
+  stabilityIntervalMs: 15_000,
+  clockStartUtc: "2026-08-21T12:00:00.000Z",
+  vacancy: {
+    id: "vacancy-synthetic-1",
+    folderId: "drive-vacancy-synthetic-1",
+    profileVersion: "profile-v1",
+  },
+  candidateFolder: {
+    folderId: "drive-candidate-synthetic-1",
+    vacancyFolderId: "drive-vacancy-synthetic-1",
+    displayName: "Кандидат Синтетический",
+    parentPath: "Найм/Синтетическая вакансия/Кандидат Синтетический",
+  },
+  stableChildren: [
+    { fileId: "resume-synthetic-1", version: "1", name: "resume.pdf", mimeType: "application/pdf", size: 2048 },
+    { fileId: "interview-synthetic-1", version: "1", name: "interview.mp4", mimeType: "video/mp4", size: 8192 },
+  ],
+  driveTickOutcomes: ["ERROR", "SUCCESS_NEW_FOLDER", "SUCCESS_UNCHANGED"],
+  stableComparisons: 4,
+  canonicalTaskIds: CANONICAL_TASK_IDS,
+  evidence: {
+    synthetic: true,
+    containsRealPersonalData: false,
+    containsCredentials: false,
+    containsProviderTokens: false,
+  },
+});

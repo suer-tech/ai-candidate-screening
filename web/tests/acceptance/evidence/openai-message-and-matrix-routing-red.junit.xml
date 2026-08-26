@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="canonical goal graph is registered against durable runtime tools" time="0.002065" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\server\candidate-pipeline\pipeline.test.ts"/>
+	<testcase name="LLM-TRANSPORT-RED-001: object-valued message content is JSON-stringified before OpenAI-compatible fetch" time="0.026147" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\openai-message-and-matrix-routing.acceptance.test.ts" failure="Expected values to be strictly equal:&#10;+ actual - expected&#10;&#10;+ {&#10;+   candidateId: 'candidate-synthetic-transport',&#10;+   evidence: {&#10;+     criterionIds: [&#10;+       'criterion-1'&#10;+     ],&#10;+     locatorIds: [&#10;+       'locator-synthetic-1'&#10;+     ]&#10;+   }&#10;+ }&#10;- '{&amp;quot;candidateId&amp;quot;:&amp;quot;candidate-synthetic-transport&amp;quot;,&amp;quot;evidence&amp;quot;:{&amp;quot;criterionIds&amp;quot;:[&amp;quot;criterion-1&amp;quot;],&amp;quot;locatorIds&amp;quot;:[&amp;quot;locator-synthetic-1&amp;quot;]}}'&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly equal:&#10;+ actual - expected&#10;&#10;+ {&#10;+   candidateId: 'candidate-synthetic-transport',&#10;+   evidence: {&#10;+     criterionIds: [&#10;+       'criterion-1'&#10;+     ],&#10;+     locatorIds: [&#10;+       'locator-synthetic-1'&#10;+     ]&#10;+   }&#10;+ }&#10;- '{&amp;quot;candidateId&amp;quot;:&amp;quot;candidate-synthetic-transport&amp;quot;,&amp;quot;evidence&amp;quot;:{&amp;quot;criterionIds&amp;quot;:[&amp;quot;criterion-1&amp;quot;],&amp;quot;locatorIds&amp;quot;:[&amp;quot;locator-synthetic-1&amp;quot;]}}'">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly equal:
++ actual - expected
+
++ {
++   candidateId: 'candidate-synthetic-transport',
++   evidence: {
++     criterionIds: [
++       'criterion-1'
++     ],
++     locatorIds: [
++       'locator-synthetic-1'
++     ]
++   }
++ }
+- '{"candidateId":"candidate-synthetic-transport","evidence":{"criterionIds":["criterion-1"],"locatorIds":["locator-synthetic-1"]}}'
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + {
+  +   candidateId: 'candidate-synthetic-transport',
+  +   evidence: {
+  +     criterionIds: [
+  +       'criterion-1'
+  +     ],
+  +     locatorIds: [
+  +       'locator-synthetic-1'
+  +     ]
+  +   }
+  + }
+  - '{"candidateId":"candidate-synthetic-transport","evidence":{"criterionIds":["criterion-1"],"locatorIds":["locator-synthetic-1"]}}'
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\openai-message-and-matrix-routing.acceptance.test.ts:62:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { candidateId: 'candidate-synthetic-transport', evidence: [Object] },
+    expected: '{"candidateId":"candidate-synthetic-transport","evidence":{"criterionIds":["criterion-1"],"locatorIds":["locator-synthetic-1"]}}',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="LLM-TRANSPORT-002: string-valued message content reaches OpenAI-compatible fetch unchanged" time="0.000770" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\openai-message-and-matrix-routing.acceptance.test.ts"/>
+	<testcase name="LLM-TRANSPORT-003: array-valued message content reaches OpenAI-compatible fetch unchanged" time="0.001489" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\openai-message-and-matrix-routing.acceptance.test.ts"/>
+	<testcase name="MATRIX-ROUTING-004: production discovery pins matrix-v2 as the primary run" time="0.031983" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\openai-message-and-matrix-routing.acceptance.test.ts"/>
+	<testcase name="MATRIX-ROUTING-005: shadow discovery keeps legacy primary and creates a matrix-v2-shadow run" time="0.005500" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\openai-message-and-matrix-routing.acceptance.test.ts"/>
+	<!-- tests 6 -->
+	<!-- suites 0 -->
+	<!-- pass 5 -->
+	<!-- fail 1 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 1031.7682 -->
+</testsuites>

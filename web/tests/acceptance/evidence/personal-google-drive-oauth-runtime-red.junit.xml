@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="TST-120 TST-120-A: OAuth is the only backend and service-account configuration is rejected" time="0.076129" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\personal-google-drive-oauth.acceptance.test.mjs"/>
+	<testcase name="TST-120 TST-120-B: anonymous connect and callback requests cannot create OAuth operations" time="0.005549" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\personal-google-drive-oauth.acceptance.test.mjs"/>
+	<testcase name="TST-120 TST-120-C: state, PKCE and redirect are one-time, expiring and server-bound" time="0.005826" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\personal-google-drive-oauth.acceptance.test.mjs"/>
+	<testcase name="TST-120 TST-120-D: refresh token is encrypted and credentials never enter observable surfaces" time="0.001906" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\personal-google-drive-oauth.acceptance.test.mjs"/>
+	<testcase name="TST-120 TST-120-E: testing is local-only and production-personal is the durable gate" time="0.000336" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\personal-google-drive-oauth.acceptance.test.mjs"/>
+	<testcase name="TST-120 TST-120-F: worker restart refreshes from durable encrypted grant and resumes once" time="0.001358" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\personal-google-drive-oauth.acceptance.test.mjs"/>
+	<testcase name="TST-120 TST-120-G: manual files under Найм are discovered while unrelated IDs fail before Drive API" time="0.022031" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\personal-google-drive-oauth.acceptance.test.mjs"/>
+	<testcase name="TST-120 TST-120-H: publication reconciles timeout, preserves source files and cleans synthetic outputs" time="0.005343" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\personal-google-drive-oauth.acceptance.test.mjs"/>
+	<testcase name="TST-120 TST-120-I: invalid_grant becomes actionable WAITING_FOR_HUMAN instead of FAILED" time="0.002518" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\personal-google-drive-oauth.acceptance.test.mjs"/>
+	<testcase name="TST-120 TST-120-J: expected account reconnect resumes without duplicates and mismatch is blocked" time="0.005450" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\personal-google-drive-oauth.acceptance.test.mjs"/>
+	<testcase name="TST-120 TST-120-K: disconnect removes local grant but preserves product records and Drive files" time="0.001449" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\personal-google-drive-oauth.acceptance.test.mjs"/>
+	<testcase name="TST-120 TST-120-M: runtime requires registered root ancestry and a matching scoped tool grant before Drive API" time="0.000769" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\personal-google-drive-oauth.acceptance.test.mjs" failure="status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;FAILED&amp;quot;&#10;authorizedDriveApiCalls: expected 1; actual=undefined&#10;missingGrantDeniedBeforeApi: expected true; actual=undefined&#10;wrongRootGrantDeniedBeforeApi: expected true; actual=undefined&#10;wrongOperationGrantDeniedBeforeApi: expected true; actual=undefined&#10;unregisteredClientIdDeniedBeforeApi: expected true; actual=undefined&#10;connectionRootCandidateInputAndOperationMatched: expected true; actual=undefined&#10;&#10;7 !== 0&#10;">
+		<failure type="testCodeFailure" message="status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;FAILED&amp;quot;&#10;authorizedDriveApiCalls: expected 1; actual=undefined&#10;missingGrantDeniedBeforeApi: expected true; actual=undefined&#10;wrongRootGrantDeniedBeforeApi: expected true; actual=undefined&#10;wrongOperationGrantDeniedBeforeApi: expected true; actual=undefined&#10;unregisteredClientIdDeniedBeforeApi: expected true; actual=undefined&#10;connectionRootCandidateInputAndOperationMatched: expected true; actual=undefined&#10;&#10;7 !== 0">
+[Error [ERR_TEST_FAILURE]: status: expected "SUCCEEDED"; actual="FAILED"
+authorizedDriveApiCalls: expected 1; actual=undefined
+missingGrantDeniedBeforeApi: expected true; actual=undefined
+wrongRootGrantDeniedBeforeApi: expected true; actual=undefined
+wrongOperationGrantDeniedBeforeApi: expected true; actual=undefined
+unregisteredClientIdDeniedBeforeApi: expected true; actual=undefined
+connectionRootCandidateInputAndOperationMatched: expected true; actual=undefined
+
+7 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: status: expected "SUCCEEDED"; actual="FAILED"
+  authorizedDriveApiCalls: expected 1; actual=undefined
+  missingGrantDeniedBeforeApi: expected true; actual=undefined
+  wrongRootGrantDeniedBeforeApi: expected true; actual=undefined
+  wrongOperationGrantDeniedBeforeApi: expected true; actual=undefined
+  unregisteredClientIdDeniedBeforeApi: expected true; actual=undefined
+  connectionRootCandidateInputAndOperationMatched: expected true; actual=undefined
+  
+  7 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/personal-google-drive-oauth.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 7,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TST-120 TST-120-N: durable Drive executor wires OAuth token provider and MyDrive adapter behind grant, budget, checkpoint and outbox" time="0.000212" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\personal-google-drive-oauth.acceptance.test.mjs" failure="status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;FAILED&amp;quot;&#10;durableExecutorUsed: expected true; actual=undefined&#10;oauthTokenProviderUsed: expected true; actual=undefined&#10;myDriveAdapterUsed: expected true; actual=undefined&#10;grantCheckedBeforeTokenResolution: expected true; actual=undefined&#10;budgetReservedBeforeEffect: expected true; actual=undefined&#10;checkpointPersistedBeforeEffect: expected true; actual=undefined&#10;outboxIntentPersistedBeforeEffect: expected true; actual=undefined&#10;externalEffects: expected 1; actual=undefined&#10;&#10;9 !== 0&#10;">
+		<failure type="testCodeFailure" message="status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;FAILED&amp;quot;&#10;durableExecutorUsed: expected true; actual=undefined&#10;oauthTokenProviderUsed: expected true; actual=undefined&#10;myDriveAdapterUsed: expected true; actual=undefined&#10;grantCheckedBeforeTokenResolution: expected true; actual=undefined&#10;budgetReservedBeforeEffect: expected true; actual=undefined&#10;checkpointPersistedBeforeEffect: expected true; actual=undefined&#10;outboxIntentPersistedBeforeEffect: expected true; actual=undefined&#10;externalEffects: expected 1; actual=undefined&#10;&#10;9 !== 0">
+[Error [ERR_TEST_FAILURE]: status: expected "SUCCEEDED"; actual="FAILED"
+durableExecutorUsed: expected true; actual=undefined
+oauthTokenProviderUsed: expected true; actual=undefined
+myDriveAdapterUsed: expected true; actual=undefined
+grantCheckedBeforeTokenResolution: expected true; actual=undefined
+budgetReservedBeforeEffect: expected true; actual=undefined
+checkpointPersistedBeforeEffect: expected true; actual=undefined
+outboxIntentPersistedBeforeEffect: expected true; actual=undefined
+externalEffects: expected 1; actual=undefined
+
+9 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: status: expected "SUCCEEDED"; actual="FAILED"
+  durableExecutorUsed: expected true; actual=undefined
+  oauthTokenProviderUsed: expected true; actual=undefined
+  myDriveAdapterUsed: expected true; actual=undefined
+  grantCheckedBeforeTokenResolution: expected true; actual=undefined
+  budgetReservedBeforeEffect: expected true; actual=undefined
+  checkpointPersistedBeforeEffect: expected true; actual=undefined
+  outboxIntentPersistedBeforeEffect: expected true; actual=undefined
+  externalEffects: expected 1; actual=undefined
+  
+  9 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/personal-google-drive-oauth.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 9,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TST-120 TST-120-O: invalid_grant creates durable typed escalation and blocks every later Drive effect" time="0.000145" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\personal-google-drive-oauth.acceptance.test.mjs" failure="status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;FAILED&amp;quot;&#10;connectionState: expected &amp;quot;REAUTH_REQUIRED&amp;quot;; actual=undefined&#10;taskState: expected &amp;quot;WAITING_FOR_HUMAN&amp;quot;; actual=undefined&#10;runState: expected &amp;quot;WAITING_FOR_HUMAN&amp;quot;; actual=undefined&#10;escalationObstacle: expected &amp;quot;GOOGLE_OAUTH_INVALID_GRANT&amp;quot;; actual=undefined&#10;escalationAction: expected &amp;quot;Переподключить Google Drive&amp;quot;; actual=undefined&#10;driveEffectsAfterRevocation: expected 0; actual=undefined&#10;terminalFailed: expected false; actual=undefined&#10;checkpointPreserved: expected true; actual=undefined&#10;&#10;9 !== 0&#10;">
+		<failure type="testCodeFailure" message="status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;FAILED&amp;quot;&#10;connectionState: expected &amp;quot;REAUTH_REQUIRED&amp;quot;; actual=undefined&#10;taskState: expected &amp;quot;WAITING_FOR_HUMAN&amp;quot;; actual=undefined&#10;runState: expected &amp;quot;WAITING_FOR_HUMAN&amp;quot;; actual=undefined&#10;escalationObstacle: expected &amp;quot;GOOGLE_OAUTH_INVALID_GRANT&amp;quot;; actual=undefined&#10;escalationAction: expected &amp;quot;Переподключить Google Drive&amp;quot;; actual=undefined&#10;driveEffectsAfterRevocation: expected 0; actual=undefined&#10;terminalFailed: expected false; actual=undefined&#10;checkpointPreserved: expected true; actual=undefined&#10;&#10;9 !== 0">
+[Error [ERR_TEST_FAILURE]: status: expected "SUCCEEDED"; actual="FAILED"
+connectionState: expected "REAUTH_REQUIRED"; actual=undefined
+taskState: expected "WAITING_FOR_HUMAN"; actual=undefined
+runState: expected "WAITING_FOR_HUMAN"; actual=undefined
+escalationObstacle: expected "GOOGLE_OAUTH_INVALID_GRANT"; actual=undefined
+escalationAction: expected "Переподключить Google Drive"; actual=undefined
+driveEffectsAfterRevocation: expected 0; actual=undefined
+terminalFailed: expected false; actual=undefined
+checkpointPreserved: expected true; actual=undefined
+
+9 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: status: expected "SUCCEEDED"; actual="FAILED"
+  connectionState: expected "REAUTH_REQUIRED"; actual=undefined
+  taskState: expected "WAITING_FOR_HUMAN"; actual=undefined
+  runState: expected "WAITING_FOR_HUMAN"; actual=undefined
+  escalationObstacle: expected "GOOGLE_OAUTH_INVALID_GRANT"; actual=undefined
+  escalationAction: expected "Переподключить Google Drive"; actual=undefined
+  driveEffectsAfterRevocation: expected 0; actual=undefined
+  terminalFailed: expected false; actual=undefined
+  checkpointPreserved: expected true; actual=undefined
+  
+  9 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/personal-google-drive-oauth.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 9,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TST-120 TST-120-P: expected-account reconnect emits one durable resume and reconciles unknown outcome before retry" time="0.000115" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\personal-google-drive-oauth.acceptance.test.mjs" failure="status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;FAILED&amp;quot;&#10;durableResumeEvents: expected 1; actual=undefined&#10;resumedOriginalRun: expected true; actual=undefined&#10;timelineOrder: expected [&amp;quot;GOOGLE_DRIVE_OAUTH_RECONNECTED&amp;quot;,&amp;quot;DRIVE_RESUME_PUBLISHED&amp;quot;,&amp;quot;UNKNOWN_OUTCOME_RECONCILED&amp;quot;,&amp;quot;DRIVE_EFFECT_RETRY_OR_REUSE&amp;quot;]; actual=undefined&#10;reconcileBeforeRetry: expected true; actual=undefined&#10;duplicateCandidates: expected 0; actual=undefined&#10;duplicateFolders: expected 0; actual=undefined&#10;duplicateResultVersions: expected 0; actual=undefined&#10;duplicatePdfs: expected 0; actual=undefined&#10;&#10;9 !== 0&#10;">
+		<failure type="testCodeFailure" message="status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;FAILED&amp;quot;&#10;durableResumeEvents: expected 1; actual=undefined&#10;resumedOriginalRun: expected true; actual=undefined&#10;timelineOrder: expected [&amp;quot;GOOGLE_DRIVE_OAUTH_RECONNECTED&amp;quot;,&amp;quot;DRIVE_RESUME_PUBLISHED&amp;quot;,&amp;quot;UNKNOWN_OUTCOME_RECONCILED&amp;quot;,&amp;quot;DRIVE_EFFECT_RETRY_OR_REUSE&amp;quot;]; actual=undefined&#10;reconcileBeforeRetry: expected true; actual=undefined&#10;duplicateCandidates: expected 0; actual=undefined&#10;duplicateFolders: expected 0; actual=undefined&#10;duplicateResultVersions: expected 0; actual=undefined&#10;duplicatePdfs: expected 0; actual=undefined&#10;&#10;9 !== 0">
+[Error [ERR_TEST_FAILURE]: status: expected "SUCCEEDED"; actual="FAILED"
+durableResumeEvents: expected 1; actual=undefined
+resumedOriginalRun: expected true; actual=undefined
+timelineOrder: expected ["GOOGLE_DRIVE_OAUTH_RECONNECTED","DRIVE_RESUME_PUBLISHED","UNKNOWN_OUTCOME_RECONCILED","DRIVE_EFFECT_RETRY_OR_REUSE"]; actual=undefined
+reconcileBeforeRetry: expected true; actual=undefined
+duplicateCandidates: expected 0; actual=undefined
+duplicateFolders: expected 0; actual=undefined
+duplicateResultVersions: expected 0; actual=undefined
+duplicatePdfs: expected 0; actual=undefined
+
+9 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: status: expected "SUCCEEDED"; actual="FAILED"
+  durableResumeEvents: expected 1; actual=undefined
+  resumedOriginalRun: expected true; actual=undefined
+  timelineOrder: expected ["GOOGLE_DRIVE_OAUTH_RECONNECTED","DRIVE_RESUME_PUBLISHED","UNKNOWN_OUTCOME_RECONCILED","DRIVE_EFFECT_RETRY_OR_REUSE"]; actual=undefined
+  reconcileBeforeRetry: expected true; actual=undefined
+  duplicateCandidates: expected 0; actual=undefined
+  duplicateFolders: expected 0; actual=undefined
+  duplicateResultVersions: expected 0; actual=undefined
+  duplicatePdfs: expected 0; actual=undefined
+  
+  9 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/personal-google-drive-oauth.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 9,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TST-120 TST-120-Q: production readiness requires config, decrypt, active owner and real root read/write probes" time="0.000127" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\personal-google-drive-oauth.acceptance.test.mjs" failure="status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;FAILED&amp;quot;&#10;healthyReady: expected true; actual=undefined&#10;configProbePassed: expected true; actual=undefined&#10;decryptProbePassed: expected true; actual=undefined&#10;activeOwnerProbePassed: expected true; actual=undefined&#10;rootReadProbePassed: expected true; actual=undefined&#10;rootWriteProbePassed: expected true; actual=undefined&#10;missingConfigBlocked: expected true; actual=undefined&#10;decryptFailureBlocked: expected true; actual=undefined&#10;missingOwnerBlocked: expected true; actual=undefined&#10;rootReadFailureBlocked: expected true; actual=undefined&#10;rootWriteFailureBlocked: expected true; actual=undefined&#10;testingProductionCode: expected &amp;quot;GOOGLE_OAUTH_TESTING_GRANT_NOT_DURABLE&amp;quot;; actual=undefined&#10;staticConfigurationAloneAccepted: expected false; actual=undefined&#10;&#10;14 !== 0&#10;">
+		<failure type="testCodeFailure" message="status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;FAILED&amp;quot;&#10;healthyReady: expected true; actual=undefined&#10;configProbePassed: expected true; actual=undefined&#10;decryptProbePassed: expected true; actual=undefined&#10;activeOwnerProbePassed: expected true; actual=undefined&#10;rootReadProbePassed: expected true; actual=undefined&#10;rootWriteProbePassed: expected true; actual=undefined&#10;missingConfigBlocked: expected true; actual=undefined&#10;decryptFailureBlocked: expected true; actual=undefined&#10;missingOwnerBlocked: expected true; actual=undefined&#10;rootReadFailureBlocked: expected true; actual=undefined&#10;rootWriteFailureBlocked: expected true; actual=undefined&#10;testingProductionCode: expected &amp;quot;GOOGLE_OAUTH_TESTING_GRANT_NOT_DURABLE&amp;quot;; actual=undefined&#10;staticConfigurationAloneAccepted: expected false; actual=undefined&#10;&#10;14 !== 0">
+[Error [ERR_TEST_FAILURE]: status: expected "SUCCEEDED"; actual="FAILED"
+healthyReady: expected true; actual=undefined
+configProbePassed: expected true; actual=undefined
+decryptProbePassed: expected true; actual=undefined
+activeOwnerProbePassed: expected true; actual=undefined
+rootReadProbePassed: expected true; actual=undefined
+rootWriteProbePassed: expected true; actual=undefined
+missingConfigBlocked: expected true; actual=undefined
+decryptFailureBlocked: expected true; actual=undefined
+missingOwnerBlocked: expected true; actual=undefined
+rootReadFailureBlocked: expected true; actual=undefined
+rootWriteFailureBlocked: expected true; actual=undefined
+testingProductionCode: expected "GOOGLE_OAUTH_TESTING_GRANT_NOT_DURABLE"; actual=undefined
+staticConfigurationAloneAccepted: expected false; actual=undefined
+
+14 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: status: expected "SUCCEEDED"; actual="FAILED"
+  healthyReady: expected true; actual=undefined
+  configProbePassed: expected true; actual=undefined
+  decryptProbePassed: expected true; actual=undefined
+  activeOwnerProbePassed: expected true; actual=undefined
+  rootReadProbePassed: expected true; actual=undefined
+  rootWriteProbePassed: expected true; actual=undefined
+  missingConfigBlocked: expected true; actual=undefined
+  decryptFailureBlocked: expected true; actual=undefined
+  missingOwnerBlocked: expected true; actual=undefined
+  rootReadFailureBlocked: expected true; actual=undefined
+  rootWriteFailureBlocked: expected true; actual=undefined
+  testingProductionCode: expected "GOOGLE_OAUTH_TESTING_GRANT_NOT_DURABLE"; actual=undefined
+  staticConfigurationAloneAccepted: expected false; actual=undefined
+  
+  14 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/personal-google-drive-oauth.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 14,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 16 -->
+	<!-- suites 0 -->
+	<!-- pass 11 -->
+	<!-- fail 5 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 237.5761 -->
+</testsuites>

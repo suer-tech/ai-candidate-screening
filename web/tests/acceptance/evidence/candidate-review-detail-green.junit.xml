@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="TST-079 full: candidate review preserves the complete semantic result and current PDF pair" time="0.209748" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\candidate-review-detail.acceptance.test.mjs"/>
+	<testcase name="TST-079 negative: unknown evidence keys use a neutral label and missing locator metadata is not invented" time="0.102432" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\candidate-review-detail.acceptance.test.mjs"/>
+	<testcase name="TST-079 state: completed sections without applicable facts say none found" time="0.100012" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\candidate-review-detail.acceptance.test.mjs"/>
+	<testcase name="TST-079 state: processing retains the normative sections without a false empty result" time="0.084339" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\candidate-review-detail.acceptance.test.mjs"/>
+	<testcase name="TST-079 state: projection error is user-facing and distinct from processing and none-found" time="0.087784" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\candidate-review-detail.acceptance.test.mjs"/>
+	<testcase name="TST-079 responsive: desktop grid becomes a complete narrow flow without horizontal overflow" time="0.077800" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\candidate-review-detail.acceptance.test.mjs"/>
+	<!-- tests 6 -->
+	<!-- suites 0 -->
+	<!-- pass 6 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 918.9194 -->
+</testsuites>

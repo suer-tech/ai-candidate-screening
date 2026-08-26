@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { archiveCandidate, beginManualReprocess, buildDashboardSnapshot, createVacancyAtomically, normalizeVacancyTitle, validateResultPair, type CandidateRecord, type VacancyCreateInput } from "./product-model";
+import { archiveCandidate, beginManualReprocess, buildDashboardSnapshot, createVacancyAtomically, mergeCandidateLifecycleProjection, normalizeVacancyTitle, validateResultPair, type CandidateRecord, type VacancyCreateInput } from "./product-model";
 
 const profile = { "Образ результата": "Результат", "Компетенции": "Правила и признаки", "Стоп-факторы": "Условие и доказательство", "Допуск к КЕ": "Обязательный пункт" };
 const input: VacancyCreateInput = { operationId: "op-1", title: "  Бизнес   ассистент ", profile, templateVersion: "abc-standard-v1", abcDirections: [{ id: "a", name: "Продуктивность", gradeA: "A", gradeB: "B", gradeC: "C", origin: "standard" }] };
@@ -20,6 +20,34 @@ test("processing candidate cannot be archived and ready reprocess hides result",
   const ready = { ...candidate, status: "READY", result: { version: 1, completedAt: new Date().toISOString(), summary: "Итог", recommendation: "Рекомендовать", documents: [{ id: "r1", type: "candidate-results", fileName: "Итоги.pdf", version: 1, candidateId: 1, vacancyId: "vac-1", published: true, valid: true }, { id: "r2", type: "abc-test", fileName: "ABC.pdf", version: 1, candidateId: 1, vacancyId: "vac-1", published: true, valid: true }] } } satisfies CandidateRecord;
   assert.equal(validateResultPair(ready), true);
   assert.equal(beginManualReprocess(ready).result, null);
+});
+
+test("new vacancy write contract has no requirements while legacy records remain readable", () => {
+  const current = createVacancyAtomically({ vacancies: [], operationBindings: {} }, input).vacancy;
+  assert.equal(current.requirements, undefined);
+  const legacy = { ...current, requirements: [{ id: "req-1", text: "Старое требование", required: true, hardRequired: true }] };
+  assert.equal(legacy.requirements[0]?.hardRequired, true);
+});
+
+test("archive and restore responses cannot erase an already projected published result", () => {
+  const current = {
+    id: 7, name: "Архивный", initials: "А", vacancyId: "vac-1", vacancy: "Тест", archived: true, status: "READY",
+    stageStartedAt: "2026-08-19T08:00:00.000Z", elapsedMinutes: 18, etaMinutes: 0, progressPercent: 100, progressMilestone: "Результат опубликован",
+    result: { version: 2, completedAt: "2026-08-19T08:18:00.000Z", summary: "Итог", recommendation: "Рекомендовать", documents: [
+      { id: "r1", type: "candidate-results", fileName: "Итоги.pdf", version: 2, candidateId: 7, vacancyId: "vac-1", published: true, valid: true },
+      { id: "r2", type: "abc-test", fileName: "ABC.pdf", version: 2, candidateId: 7, vacancyId: "vac-1", published: true, valid: true },
+    ] },
+  } satisfies CandidateRecord;
+  const sparseRestore = { ...current, archived: false, result: null, progressPercent: undefined, progressMilestone: undefined } satisfies CandidateRecord;
+  const restored = mergeCandidateLifecycleProjection(current, sparseRestore, "restore");
+  assert.equal(restored.archived, false);
+  assert.equal(restored.status, "READY");
+  assert.equal(restored.progressPercent, 100);
+  assert.equal(restored.result?.version, 2);
+
+  const reprocessed = mergeCandidateLifecycleProjection(current, { ...sparseRestore, status: "WAITING_FOR_STABILITY" }, "reprocess");
+  assert.equal(reprocessed.status, "WAITING_FOR_STABILITY");
+  assert.equal(reprocessed.result, null);
 });
 
 test("dashboard excludes archived and latest failed result", () => {

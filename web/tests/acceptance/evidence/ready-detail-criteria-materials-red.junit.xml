@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="VIS-DEMO A/B/C badges use success, warning and risk semantics in detail and matching aside" time="0.287926" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs"/>
+	<testcase name="VIS-DEMO detailed assessment renders only criteria with genuinely linked evidence" time="0.146322" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs"/>
+	<testcase name="VIS-DEMO fact disclosure summary hides the native marker and keeps only the text arrow" time="0.138292" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs" failure="The input did not match the regular expression /list-style\s*:\s*none/. Input:&#10;&#10;'color:#168cff;font-size:11px;cursor:pointer;white-space:nowrap'&#10;">
+		<failure type="testCodeFailure" message="The input did not match the regular expression /list-style\s*:\s*none/. Input:&#10;&#10;'color:#168cff;font-size:11px;cursor:pointer;white-space:nowrap'">
+[Error [ERR_TEST_FAILURE]: The input did not match the regular expression /list-style\s*:\s*none/. Input:
+
+'color:#168cff;font-size:11px;cursor:pointer;white-space:nowrap'
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: The input did not match the regular expression /list-style\s*:\s*none/. Input:
+  
+  'color:#168cff;font-size:11px;cursor:pointer;white-space:nowrap'
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/demo-interface-visual-parity.acceptance.test.mjs:449:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'color:#168cff;font-size:11px;cursor:pointer;white-space:nowrap',
+    expected: /list-style\s*:\s*none/,
+    operator: 'match',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="VIS-DEMO detailed assessment separates ABC and additional criteria without the legacy evidence heading" time="0.119148" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs"/>
+	<testcase name="VIS-DEMO materials eyebrow is exactly Google Drive and cannot wrap" time="0.120738" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs"/>
+	<testcase name="VIS-DEMO projectAssessment maps storage KE criterion/conclusion into the READY overview" time="0.384461" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs" failure="The input did not match the regular expression /Вывод по критерию 8/. Input:&#10;&#10;'Допуск к КЕ6 из 8 условий✓Критерий допуска 1Подтверждено✓Критерий допуска 2Подтверждено✓Критерий допуска 3Подтверждено✓Критерий допуска 4Подтверждено✓Критерий допуска 5Подтверждено✓Критерий допуска 6Подтверждено?Критерий допуска 7Требует уточнения?Критерий допуска 8Требует уточнения'&#10;">
+		<failure type="testCodeFailure" message="The input did not match the regular expression /Вывод по критерию 8/. Input:&#10;&#10;'Допуск к КЕ6 из 8 условий✓Критерий допуска 1Подтверждено✓Критерий допуска 2Подтверждено✓Критерий допуска 3Подтверждено✓Критерий допуска 4Подтверждено✓Критерий допуска 5Подтверждено✓Критерий допуска 6Подтверждено?Критерий допуска 7Требует уточнения?Критерий допуска 8Требует уточнения'">
+[Error [ERR_TEST_FAILURE]: The input did not match the regular expression /Вывод по критерию 8/. Input:
+
+'Допуск к КЕ6 из 8 условий✓Критерий допуска 1Подтверждено✓Критерий допуска 2Подтверждено✓Критерий допуска 3Подтверждено✓Критерий допуска 4Подтверждено✓Критерий допуска 5Подтверждено✓Критерий допуска 6Подтверждено?Критерий допуска 7Требует уточнения?Критерий допуска 8Требует уточнения'
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: The input did not match the regular expression /Вывод по критерию 8/. Input:
+  
+  'Допуск к КЕ6 из 8 условий✓Критерий допуска 1Подтверждено✓Критерий допуска 2Подтверждено✓Критерий допуска 3Подтверждено✓Критерий допуска 4Подтверждено✓Критерий допуска 5Подтверждено✓Критерий допуска 6Подтверждено?Критерий допуска 7Требует уточнения?Критерий допуска 8Требует уточнения'
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/demo-interface-visual-parity.acceptance.test.mjs:488:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'Допуск к КЕ6 из 8 условий✓Критерий допуска 1Подтверждено✓Критерий допуска 2Подтверждено✓Критерий допуска 3Подтверждено✓Критерий допуска 4Подтверждено✓Критерий допуска 5Подтверждено✓Критерий допуска 6Подтверждено?Критерий допуска 7Требует уточнения?Критерий допуска 8Требует уточнения',
+    expected: /Вывод по критерию 8/,
+    operator: 'match',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="VIS-DEMO KE region keeps a subject-specific empty state" time="0.125167" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs"/>
+	<!-- tests 7 -->
+	<!-- suites 0 -->
+	<!-- pass 5 -->
+	<!-- fail 2 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 1775.8282 -->
+</testsuites>

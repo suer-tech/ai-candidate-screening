@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="accepts an empty ABC profile" time="0.001734" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\app\abc-profile-validation.test.ts"/>
+	<testcase name="localizes a trimmed-empty name error to its direction and field" time="0.000664" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\app\abc-profile-validation.test.ts"/>
+	<testcase name="localizes a trimmed-empty name error to its direction and field" time="0.000189" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\app\abc-profile-validation.test.ts"/>
+	<testcase name="accepts empty A, B and C descriptions" time="0.000209" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\app\abc-profile-validation.test.ts"/>
+	<testcase name="rejects missing or duplicate ids and an invalid origin" time="0.000261" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\app\abc-profile-validation.test.ts"/>
+	<testcase name="normalizes names only for trim and case-insensitive comparison" time="0.000143" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\app\abc-profile-validation.test.ts"/>
+	<testcase name="reports every direction participating in a normalized duplicate" time="0.000518" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\app\abc-profile-validation.test.ts"/>
+	<testcase name="accepts a complete profile and does not mutate values, identities or order" time="0.000326" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\app\abc-profile-validation.test.ts"/>
+	<testcase name="LLM vacancy profile deterministically normalizes structured field values without HR fallback" time="0.003371" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\server\product\application.test.ts"/>
+	<testcase name="vacancy saga retries the same operation/folder and publishes once" time="0.023752" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\server\product\application.test.ts"/>
+	<testcase name="new vacancy with no explicit directions receives five standard directions with empty grades" time="0.002260" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\server\product\application.test.ts"/>
+	<testcase name="vacancy reservation enforces normalized uniqueness before external work" time="0.001022" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\server\product\application.test.ts"/>
+	<testcase name="lifecycle commands are optimistic, audited and delete app data only" time="0.000792" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\server\product\application.test.ts"/>
+	<testcase name="processing candidate archive is rejected and audited" time="0.000204" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\server\product\application.test.ts"/>
+	<testcase name="preview returns the current immutable PDF without audit; download audits the selected file" time="0.000476" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\server\product\application.test.ts"/>
+	<testcase name="result access rejects stale versions and corrupt bytes without fallback" time="0.000208" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\server\product\application.test.ts"/>
+	<testcase name="READY publication commits only a complete same-version PDF pair" time="0.000423" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\server\product\application.test.ts"/>
+	<testcase name="dashboard query uses one repository snapshot and current-result semantics" time="0.006719" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\server\product\application.test.ts"/>
+	<testcase name="VAC-040/TST-086: generation action opens a prompt modal, confirms separately, shows progress and completes safely" time="0.017770" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\editable-vacancy-prompts.acceptance.test.mjs"/>
+	<testcase name="VAC-040/SEC-011/TST-086: confirmed generation sends one normalized immutable snapshot through the protected API" time="0.000317" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\editable-vacancy-prompts.acceptance.test.mjs"/>
+	<testcase name="VAC-041/TST-086: analysis prompt is a local sixth settings section with reset, validation and explicit save" time="0.000151" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\editable-vacancy-prompts.acceptance.test.mjs"/>
+	<testcase name="VAC-041/ASM-062/TST-086: analysis prompt is versioned and every run keeps its exact immutable prompt snapshot" time="0.000171" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\editable-vacancy-prompts.acceptance.test.mjs"/>
+	<testcase name="ASM-062/TST-086: untrusted analysis instructions cannot override evidence or schema constraints" time="0.000233" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\editable-vacancy-prompts.acceptance.test.mjs"/>
+	<testcase name="SEC-011/TST-086: prompt access, limits, audit metadata and ordinary logs fail closed without content leaks" time="0.000290" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\editable-vacancy-prompts.acceptance.test.mjs"/>
+	<testcase name="VAC-040/TST-086: full server-rendered generation template exposes role assumptions, all sections and structured title isolation" time="0.000799" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\editable-vacancy-prompts.acceptance.test.mjs"/>
+	<testcase name="VAC-041/TST-086: user clarification: settings use the exact Russian label and a readable structured Russian default prompt" time="0.002353" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\editable-vacancy-prompts.acceptance.test.mjs"/>
+	<testcase name="VAC-041/ASM-062/TST-086: user clarification: two vacancies persist different prompts and new runs pin the selected vacancy version" time="0.000625" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\editable-vacancy-prompts.acceptance.test.mjs"/>
+	<testcase name="ASM-062/TST-086: user clarification: candidate assessment request contains the pinned vacancy prompt and earlier stages never receive it" time="0.000412" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\editable-vacancy-prompts.acceptance.test.mjs"/>
+	<testcase name="VAC-041/TST-086: user clarification real VacancySettings renders exact analysis-prompt copy" time="0.587633" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\editable-vacancy-prompts.acceptance.test.mjs"/>
+	<testcase name="ASM-062/TST-086: user clarification real prompt contracts and production boundary route the pinned prompt only to assessment" time="0.003056" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\editable-vacancy-prompts.acceptance.test.mjs"/>
+	<testcase name="VacancySettings analysis-prompt section does not expose the result schema" time="0.187138" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\editable-vacancy-prompts.acceptance.test.mjs"/>
+	<testcase name="vacancy version badge contract: settings heading contains only the vacancy title" time="0.160978" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\editable-vacancy-prompts.acceptance.test.mjs"/>
+	<testsuite name="vacancy version badge contract: header keeps version beside activity and removes old Drive/version copy" time="0.143562" disabled="0" errors="0" tests="3" failures="0" skipped="0" hostname="WIN-4E9RD0TRUH1">
+		<testcase name="shows a separate profile-version badge beside activity" time="0.000392" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\editable-vacancy-prompts.acceptance.test.mjs"/>
+		<testcase name="removes the old standalone version copy" time="0.000140" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\editable-vacancy-prompts.acceptance.test.mjs"/>
+		<testcase name="removes Google Drive linkage copy" time="0.000108" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\editable-vacancy-prompts.acceptance.test.mjs"/>
+	</testsuite>
+	<testcase name="VAC-042: each empty profile field generates once into the unsaved draft and preserves state on error" time="0.022498" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\field-level-vacancy-generation.acceptance.test.mjs"/>
+	<testcase name="VAC-043: five operation prompts are Russian structured vacancy-scoped snapshots used exactly by the LLM request" time="0.001247" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\field-level-vacancy-generation.acceptance.test.mjs"/>
+	<testcase name="VAC-044: one ABC request preserves exact actual standard/custom/reduced composition and skips zero directions" time="0.000360" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\field-level-vacancy-generation.acceptance.test.mjs"/>
+	<testcase name="VAC-045: all-generation warns that every populated section is overwritten and cancellation has no effects" time="0.000202" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\field-level-vacancy-generation.acceptance.test.mjs"/>
+	<testcase name="VAC-046: one dirty guard covers settings, internal navigation and beforeunload with discard, save and close semantics" time="0.000234" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\field-level-vacancy-generation.acceptance.test.mjs"/>
+	<testsuite name="VAC-042/VAC-043 real VacancySettings offers generate and editable prompt controls only for each empty supported field" time="0.539546" disabled="0" errors="0" tests="4" failures="0" skipped="0" hostname="WIN-4E9RD0TRUH1">
+		<testcase name="Образ результата" time="0.000998" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\field-level-vacancy-generation.acceptance.test.mjs"/>
+		<testcase name="Компетенции" time="0.000350" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\field-level-vacancy-generation.acceptance.test.mjs"/>
+		<testcase name="Стоп-факторы" time="0.000276" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\field-level-vacancy-generation.acceptance.test.mjs"/>
+		<testcase name="Допуск к КЕ" time="0.000328" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\field-level-vacancy-generation.acceptance.test.mjs"/>
+	</testsuite>
+	<testcase name="VAC-044 real VacancySettings exposes one ABC generation action only for the actual non-empty composition" time="0.218149" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\field-level-vacancy-generation.acceptance.test.mjs"/>
+	<testcase name="VAC-045 real all-generation cancellation warns about overwriting all populated sections and sends no generation API request" time="0.200197" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\field-level-vacancy-generation.acceptance.test.mjs"/>
+	<testcase name="VAC-046 real VacancySettings opens the three-action dirty guard before changing settings section" time="0.138780" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\field-level-vacancy-generation.acceptance.test.mjs"/>
+	<testcase name="VAC-042: generated profile accepts exactly five canonical ABC directions in canonical order" time="0.002890" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\generated-vacancy-profile.acceptance.test.ts"/>
+	<testcase name="VAC-042: random, missing, extra, duplicate and reordered ABC sets are rejected" time="0.000813" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\generated-vacancy-profile.acceptance.test.ts"/>
+	<testcase name="VAC-042/VAC-043 regression: actual RouterAI field names and canonical question suffixes are normalized" time="0.002064" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\generated-vacancy-profile.acceptance.test.ts"/>
+	<testcase name="VAC-044: actual RouterAI resultImage uses deterministic Russian layout grammar" time="0.001129" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\generated-vacancy-profile.acceptance.test.ts"/>
+	<testcase name="VAC-043: arrays and nested objects become deterministic readable multiline text" time="0.001642" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\generated-vacancy-profile.acceptance.test.ts"/>
+	<testcase name="VAC-043: vacancy settings editor preserves newlines and wraps long generated content" time="0.564879" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\generated-vacancy-profile.acceptance.test.ts"/>
+	<testsuite name="ACC-VAC-ABC-001: VAC-017/VAC-019 save boundary" time="0.594086" disabled="0" errors="0" tests="7" failures="0" skipped="0" hostname="WIN-4E9RD0TRUH1">
+		<testcase name="environment control: component renders and exposes the real save action" time="0.003124" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\vacancy-abc-profile.acceptance.test.mjs"/>
+		<testcase name="accepts a profile with no ABC directions" time="0.001008" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\vacancy-abc-profile.acceptance.test.mjs"/>
+		<testcase name="rejects &amp;quot;&amp;quot; direction name after trim" time="0.002577" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\vacancy-abc-profile.acceptance.test.mjs"/>
+		<testcase name="rejects &amp;quot; \t &amp;quot; direction name after trim" time="0.000909" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\vacancy-abc-profile.acceptance.test.mjs"/>
+		<testcase name="accepts directions with empty A, B and C descriptions" time="0.000684" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\vacancy-abc-profile.acceptance.test.mjs"/>
+		<testcase name="rejects names equal after trim and case-insensitive comparison" time="0.000822" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\vacancy-abc-profile.acceptance.test.mjs"/>
+		<testcase name="one valid save increments version exactly once and confirms version 8" time="0.000653" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\vacancy-abc-profile.acceptance.test.mjs"/>
+	</testsuite>
+	<testsuite name="VacancySettings shows persistent accessible ABC validation feedback" time="0.595589" disabled="0" errors="0" tests="2" failures="0" skipped="0" hostname="WIN-4E9RD0TRUH1">
+		<testcase name="shows a non-blocking empty state when no direction exists" time="0.003008" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\vacancy-abc-profile.ui.test.mjs"/>
+		<testcase name="links a field error to the invalid direction name and clears it after correction" time="0.001967" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\vacancy-abc-profile.ui.test.mjs"/>
+	</testsuite>
+	<!-- tests 66 -->
+	<!-- suites 0 -->
+	<!-- pass 66 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 1945.4035 -->
+</testsuites>

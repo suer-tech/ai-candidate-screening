@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="ATDD-VPSPG-001: production dependency graph and readiness contain PostgreSQL/Node only, with no Cloudflare path" time="0.041998" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\vps-postgres-runtime.acceptance.test.mjs"/>
+	<testcase name="ATDD-VPSPG-002: PostgreSQL 16 clean and supported-upgrade migrations preserve identities and transactional invariants" time="3.415039" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\vps-postgres-runtime.acceptance.test.mjs"/>
+	<testcase name="ATDD-VPSPG-003: concurrent claim/fencing, outbox reconcile, and immutable bounded blob contracts hold" time="3.470253" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\vps-postgres-runtime.acceptance.test.mjs"/>
+	<testcase name="ATDD-VPSPG-004: Nitro builds and starts a Node target and authenticated routes work without Cloudflare bindings" time="0.017407" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\vps-postgres-runtime.acceptance.test.mjs"/>
+	<testcase name="ATDD-VPSPG-005: one runtime env and one credential allowlist reject inline, unknown, escaped, corporate Google, and Cloudflare settings" time="0.015834" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\vps-postgres-runtime.acceptance.test.mjs"/>
+	<testcase name="ATDD-VPSPG-006: private benchmark enforces consent, role/deny isolation, offline hard oracle, and unconditional cleanup using synthetic fixtures only" time="0.000653" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\vps-postgres-runtime.acceptance.test.mjs"/>
+	<testcase name="ATDD-VPSPG-007: dashboard and candidate list render the same server-derived 55 percent milestone in accessible progress bars" time="0.237831" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\vps-postgres-runtime.acceptance.test.mjs"/>
+	<testcase name="ATDD-VPSPG-008: frozen HR-approved profile snapshot is the only profile basis and missing approval, checksum mismatch, or implicit regeneration fail closed before pipeline input reads and provider calls" time="0.000774" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\vps-postgres-runtime.acceptance.test.mjs"/>
+	<testcase name="ATDD-VPSPG-009: reference ABC/result and extracted anchors never create or mutate the profile and never reach provider payload, Drive snapshot, or blob store" time="0.000821" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\vps-postgres-runtime.acceptance.test.mjs"/>
+	<testcase name="ATDD-VPSPG-010: exactly two owner-only generated PDFs are retained privately until review/deadline, then deletion is proven and incomplete cleanup is terminal RED" time="0.006062" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\vps-postgres-runtime.acceptance.test.mjs"/>
+	<testcase name="ATDD-VPSPG-011: four canonical E2E run through the assembled Node web/worker and durable PostgreSQL on one build/config/fixture identity, not via in-memory/SQLite controller" time="0.000853" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\vps-postgres-runtime.acceptance.test.mjs"/>
+	<!-- tests 11 -->
+	<!-- suites 0 -->
+	<!-- pass 11 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 7539.8869 -->
+</testsuites>

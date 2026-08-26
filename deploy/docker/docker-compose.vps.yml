@@ -1,0 +1,86 @@
+# VPS docker-compose override.
+#
+# Монтирует production config root (/etc/hh-agent) как HH_RUNTIME_CONFIG_ROOT и
+# добавляет nginx reverse proxy + certbot для HTTPS. systemd-юниты на хосте
+# больше не требуются; приложение целиком поднимается docker compose.
+#
+# Перед запуском на VPS:
+#   1. docker и docker compose plugin установлены.
+#   2. /etc/hh-agent/runtime.env и /etc/hh-agent/credentials/ заполнены
+#      (см. deploy/ubuntu/runtime.env.example и install.sh).
+#   3. Первый active HR создан интерактивной командой auth:create.
+#   4. HH_DOMAIN, HH_POSTGRES_PASSWORD, E2E_FIXTURE_CONTROL_TOKEN заданы в .env.docker.
+#
+# Запуск:
+#   docker compose -f deploy/docker/docker-compose.yml -f deploy/docker/docker-compose.vps.yml up -d --build
+#   docker compose exec certbot certbot renew   (или системный таймер)
+
+services:
+  postgres:
+    ports: []
+
+  web:
+    expose:
+      - "3000"
+    environment:
+      APP_ORIGIN: https://${HH_DOMAIN:?set HH_DOMAIN in .env}
+      GOOGLE_OAUTH_REDIRECT_URI: https://${HH_DOMAIN}/api/integrations/google-drive/oauth/callback
+      E2E_ENVIRONMENT: production
+      AGENT_RUNTIME_ENVIRONMENT: production
+
+  worker:
+    environment:
+      APP_ORIGIN: https://${HH_DOMAIN}
+      E2E_ENVIRONMENT: production
+      AGENT_RUNTIME_ENVIRONMENT: production
+
+  media-processor:
+    environment:
+      APP_ORIGIN: https://${HH_DOMAIN}
+      E2E_ENVIRONMENT: production
+
+  document-processor:
+    environment:
+      APP_ORIGIN: https://${HH_DOMAIN}
+      E2E_ENVIRONMENT: production
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf.template:/etc/nginx/templates/hh-web.conf.template:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - certbot-webroot:/var/www/certbot:rw
+    environment:
+      HH_DOMAIN: ${HH_DOMAIN}
+    depends_on:
+      web:
+        condition: service_started
+    security_opt:
+      - no-new-privileges:true
+
+  certbot:
+    image: certbot/certbot:latest
+    restart: unless-stopped
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:rw
+      - certbot-webroot:/var/www/certbot:rw
+    entrypoint: ["/bin/sh", "-c"]
+    command: >
+      trap exit TERM; while :; do
+        certbot renew --webroot -w /var/www/certbot;
+        sleep 12h & wait $${!};
+      done
+
+volumes:
+  config-root:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${HH_CONFIG_ROOT:-/etc/hh-agent}
+
+  certbot-webroot:

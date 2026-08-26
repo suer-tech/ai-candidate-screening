@@ -1,0 +1,63 @@
+{
+  "schemaVersion": "editable-vacancy-prompts-acceptance-evidence/v1",
+  "change": "add-editable-vacancy-prompts",
+  "generatedAtUtc": "2026-08-25T05:15:36.788Z",
+  "phase": "GREEN",
+  "author": "/root/analysis_prompt_acceptance",
+  "executor": "/root/analysis_prompt_acceptance",
+  "independenceDeclared": true,
+  "productionCodeChangedByAuthor": false,
+  "command": "node tests/editable-vacancy-prompts.evidence.mjs --scenario-prefix \"user clarification\" --author /root/analysis_prompt_acceptance --output tests/acceptance/evidence/editable-vacancy-prompts-user-clarification-green.json",
+  "junit": "tests/acceptance/evidence/editable-vacancy-prompts-user-clarification-green.junit.xml",
+  "safety": {
+    "fixtureSetId": "editable-vacancy-prompts-synthetic-v1",
+    "scenarioFilter": null,
+    "scenarioPrefix": "user clarification",
+    "syntheticOnly": true,
+    "containsSecrets": false,
+    "containsRealPersonalData": false,
+    "providerCallsAllowed": false
+  },
+  "summary": {
+    "total": 3,
+    "green": 3,
+    "red": 0,
+    "infrastructureErrors": 0
+  },
+  "results": [
+    {
+      "scenarioId": "VAC-041-russian-analysis-prompt-ui-copy",
+      "requirements": [
+        "VAC-041",
+        "TST-086"
+      ],
+      "title": "user clarification: settings use the exact Russian label and a readable structured Russian default prompt",
+      "status": "GREEN",
+      "classification": "product-contract",
+      "mismatches": []
+    },
+    {
+      "scenarioId": "VAC-041-ASM-062-vacancy-specific-prompt-snapshots",
+      "requirements": [
+        "VAC-041",
+        "ASM-062",
+        "TST-086"
+      ],
+      "title": "user clarification: two vacancies persist different prompts and new runs pin the selected vacancy version",
+      "status": "GREEN",
+      "classification": "product-contract",
+      "mismatches": []
+    },
+    {
+      "scenarioId": "ASM-062-assessment-request-vacancy-prompt-routing",
+      "requirements": [
+        "ASM-062",
+        "TST-086"
+      ],
+      "title": "user clarification: candidate assessment request contains the pinned vacancy prompt and earlier stages never receive it",
+      "status": "GREEN",
+      "classification": "product-contract",
+      "mismatches": []
+    }
+  ]
+}

@@ -12,6 +12,13 @@ an LLM vendor, model, deployment product, or protected-storage implementation.
   an explicit fallback policy.
 - Configuration is validated with `validateRuntimeConfiguration` at process
   startup. A changed configuration is activated by a controlled process restart.
+- Every provider profile used by a schema-bearing capability must explicitly set
+  `supportsStructuredOutputs: true`. Every resolved response artifact is checked
+  recursively against the supported strict JSON Schema subset before readiness.
+- The gateway, not a prompt caller, derives Chat Completions
+  `response_format: { type: "json_schema", json_schema: { strict: true, ... } }`
+  from the exact resolved artifact. Generic generation parameters cannot override
+  it, and there is no automatic downgrade to `json_object` or a prompt-embedded schema.
 - Every attempt records the immutable effective configuration snapshot returned
   by `RuntimeConfiguration.resolve`.
 
@@ -33,6 +40,11 @@ runtime environment/secret name. `loadRuntimeConfiguration` rejects missing,
 partial, secretless, or implicit-fallback configuration before a caller can
 resolve a capability.
 
+The configured RouterAI model must advertise and be operationally verified for
+Structured Outputs before `supportsStructuredOutputs` is enabled. A refusal,
+missing structured content, or truncated completion is a typed failed attempt,
+not an empty successful result.
+
 ## Protected trace storage
 
 Production must provide `ProtectedTracePersistence` and enforce technical-admin
@@ -40,8 +52,10 @@ access around `AdminOnlyProtectedTraceStore`. Each LLM attempt is a separate,
 self-contained trace containing its exact functional exchange and material
 snapshots. Traces expire exactly 30 days after creation and remain independent
 from application-level candidate deletion.
+The request projection includes the effective strict response format while the
+effective configuration records response artifact id, version, and hash.
 
-The included `R2ProtectedTracePersistence` uses the dedicated
+The included `PostgresProtectedTracePersistence` uses the protected PostgreSQL blob store and
 `PROTECTED_LLM_TRACES` binding. Application routes do not expose that binding;
 retention maintenance must call `purgeExpired` at least daily and monitor its
 result. A deployment may replace this adapter without changing the trace

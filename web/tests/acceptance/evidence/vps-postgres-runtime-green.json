@@ -1,0 +1,705 @@
+{
+  "schemaVersion": "vps-postgres-runtime-acceptance-evidence/v1",
+  "change": "migrate-to-vps-postgres-runtime",
+  "generatedAt": "2026-08-21T06:47:14.045Z",
+  "expectedPhase": "GREEN",
+  "normativeNote": "This is change-scoped acceptance for the proposed PostgreSQL/Node/personal-My-Drive delta. Conflicting Cloudflare D1/R2 and corporate Shared Drive/service-account statements in main specs remain normative until the explicit post-GREEN sync task; this baseline does not modify or silently replace them.",
+  "mainSpecSyncPending": true,
+  "command": "node tests/vps-postgres-runtime.evidence.mjs",
+  "junitCommand": "node --test --test-reporter=junit --test-reporter-destination=tests/acceptance/evidence/vps-postgres-runtime-green.junit.xml tests/vps-postgres-runtime.acceptance.test.mjs",
+  "safety": {
+    "fixtureSetId": "vps-postgres-runtime-synthetic-v1",
+    "syntheticOnly": true,
+    "realPii": false,
+    "realSecrets": false,
+    "providerExpense": false,
+    "privateCandidateFolderRead": false
+  },
+  "summary": {
+    "total": 11,
+    "green": 11,
+    "red": 0,
+    "productRed": 0,
+    "infrastructureErrors": 0
+  },
+  "results": [
+    {
+      "scenarioId": "ATDD-VPSPG-001",
+      "requirements": [
+        "vps-postgres-runtime: no Cloudflare dependency/readiness",
+        "quality-gates: production dependency contract"
+      ],
+      "purpose": "Forbid Cloudflare Workers, D1, R2, Miniflare, Wrangler, and Sites from the production graph and readiness.",
+      "preconditions": [
+        "synthetic fixture set only",
+        "no provider expense",
+        "private candidate folder access forbidden"
+      ],
+      "steps": [
+        "production-graph"
+      ],
+      "expected": {
+        "status": "SUCCEEDED",
+        "forbiddenProductionReferences": 0,
+        "readinessChecks": [
+          "identity",
+          "postgresql",
+          "blob",
+          "drive",
+          "llm",
+          "stt"
+        ],
+        "cloudflareReadyPath": false
+      },
+      "actual": {
+        "scenarioId": "ATDD-VPSPG-001",
+        "status": "SUCCEEDED",
+        "safeCode": "POSTGRES_READINESS_CONTRACT_MISSING",
+        "forbiddenProductionReferences": 0,
+        "readinessChecks": [
+          "identity",
+          "postgresql",
+          "blob",
+          "drive",
+          "llm",
+          "stt"
+        ],
+        "cloudflareReadyPath": false,
+        "violationCategories": [],
+        "violationFiles": [],
+        "evidence": {
+          "fixtureSetId": "vps-postgres-runtime-synthetic-v1",
+          "synthetic": true,
+          "containsRealPii": false,
+          "containsSecrets": false,
+          "providerExpense": false,
+          "privateCandidateFolderRead": false,
+          "credentialSentinelLeaks": 0,
+          "piiSentinelLeaks": 0
+        }
+      },
+      "cleanup": {
+        "temporaryHarnessResourcesRemoved": true
+      },
+      "status": "GREEN",
+      "classification": "accepted",
+      "safeFailureCode": "POSTGRES_READINESS_CONTRACT_MISSING",
+      "mismatches": [],
+      "startedAt": "2026-08-21T06:47:06.749Z",
+      "finishedAt": "2026-08-21T06:47:06.791Z"
+    },
+    {
+      "scenarioId": "ATDD-VPSPG-002",
+      "requirements": [
+        "vps-postgres-runtime: PostgreSQL 16 clean/upgrade schema",
+        "data-and-security: transactional integrity"
+      ],
+      "purpose": "Exercise clean and supported-upgrade migration contracts without production data.",
+      "preconditions": [
+        "synthetic fixture set only",
+        "no provider expense",
+        "private candidate folder access forbidden"
+      ],
+      "steps": [
+        "postgres-16-clean-migrate",
+        "seed-supported-previous-schema",
+        "upgrade-current",
+        "verify-identities-revisions-encrypted-envelope-checksums",
+        "transaction-rollback"
+      ],
+      "expected": {
+        "status": "SUCCEEDED",
+        "backend": "postgresql-16",
+        "cleanSchema": true,
+        "upgradeSchema": true,
+        "transactionAtomic": true,
+        "preservedIdentityCount": 6,
+        "migrationLock": "advisory"
+      },
+      "actual": {
+        "scenarioId": "ATDD-VPSPG-002",
+        "status": "SUCCEEDED",
+        "backend": "postgresql-16",
+        "cleanSchema": true,
+        "upgradeSchema": true,
+        "transactionAtomic": true,
+        "preservedIdentityCount": 6,
+        "migrationLock": "advisory",
+        "evidence": {
+          "fixtureSetId": "vps-postgres-runtime-synthetic-v1",
+          "synthetic": true,
+          "containsRealPii": false,
+          "containsSecrets": false,
+          "providerExpense": false,
+          "privateCandidateFolderRead": false,
+          "credentialSentinelLeaks": 0,
+          "piiSentinelLeaks": 0
+        }
+      },
+      "cleanup": {
+        "temporaryHarnessResourcesRemoved": true
+      },
+      "status": "GREEN",
+      "classification": "accepted",
+      "safeFailureCode": null,
+      "mismatches": [],
+      "startedAt": "2026-08-21T06:47:06.791Z",
+      "finishedAt": "2026-08-21T06:47:10.218Z"
+    },
+    {
+      "scenarioId": "ATDD-VPSPG-003",
+      "requirements": [
+        "vps-postgres-runtime: concurrent claim/fencing/outbox/blob",
+        "candidate-workflow: durable effects"
+      ],
+      "purpose": "Prove single claim, stale-worker fencing, reconciliation, atomic outbox, and bounded immutable blobs.",
+      "preconditions": [
+        "synthetic fixture set only",
+        "no provider expense",
+        "private candidate folder access forbidden"
+      ],
+      "steps": [
+        "two-worker-simultaneous-claim",
+        "late-fenced-outcome",
+        "timeout-after-effect",
+        "outbox-reconcile-before-retry",
+        "immutable-bounded-blob"
+      ],
+      "expected": {
+        "status": "SUCCEEDED",
+        "uniqueClaims": 1,
+        "lateWorkerRejected": true,
+        "reconcileBeforeRetry": true,
+        "duplicateEffects": 0,
+        "outboxIntentAtomic": true,
+        "blobChecksumVerified": true,
+        "oversizeBlobRejectedWithoutPartialWrite": true,
+        "inlineBlobBytesInEventsOrLogs": 0
+      },
+      "actual": {
+        "scenarioId": "ATDD-VPSPG-003",
+        "status": "SUCCEEDED",
+        "uniqueClaims": 1,
+        "lateWorkerRejected": true,
+        "reconcileBeforeRetry": true,
+        "duplicateEffects": 0,
+        "outboxIntentAtomic": true,
+        "blobChecksumVerified": true,
+        "oversizeBlobRejectedWithoutPartialWrite": true,
+        "inlineBlobBytesInEventsOrLogs": 0,
+        "evidence": {
+          "fixtureSetId": "vps-postgres-runtime-synthetic-v1",
+          "synthetic": true,
+          "containsRealPii": false,
+          "containsSecrets": false,
+          "providerExpense": false,
+          "privateCandidateFolderRead": false,
+          "credentialSentinelLeaks": 0,
+          "piiSentinelLeaks": 0
+        }
+      },
+      "cleanup": {
+        "temporaryHarnessResourcesRemoved": true
+      },
+      "status": "GREEN",
+      "classification": "accepted",
+      "safeFailureCode": null,
+      "mismatches": [],
+      "startedAt": "2026-08-21T06:47:10.218Z",
+      "finishedAt": "2026-08-21T06:47:13.792Z"
+    },
+    {
+      "scenarioId": "ATDD-VPSPG-004",
+      "requirements": [
+        "vps-postgres-runtime: Node/Nitro boundary",
+        "integrations-and-operations: authenticated short routes"
+      ],
+      "purpose": "Require a Node target, authenticated route semantics, and background-only long work without Cloudflare bindings.",
+      "preconditions": [
+        "synthetic fixture set only",
+        "no provider expense",
+        "private candidate folder access forbidden"
+      ],
+      "steps": [
+        "build-node-target",
+        "start-node-output",
+        "unauthenticated-route",
+        "authenticated-route",
+        "short-request-publishes-postgres-task"
+      ],
+      "expected": {
+        "status": "SUCCEEDED",
+        "target": "node-nitro",
+        "nodeEntrypointExists": true,
+        "cloudflareBindingsUsed": false,
+        "unauthorizedStatus": 401,
+        "authenticatedStatus": 200,
+        "longRunningWorkInRequest": false
+      },
+      "actual": {
+        "scenarioId": "ATDD-VPSPG-004",
+        "status": "SUCCEEDED",
+        "unauthorizedStatus": 401,
+        "authenticatedStatus": 200,
+        "longRunningWorkInRequest": false,
+        "evidence": {
+          "fixtureSetId": "vps-postgres-runtime-synthetic-v1",
+          "synthetic": true,
+          "containsRealPii": false,
+          "containsSecrets": false,
+          "providerExpense": false,
+          "privateCandidateFolderRead": false,
+          "credentialSentinelLeaks": 0,
+          "piiSentinelLeaks": 0
+        },
+        "target": "node-nitro",
+        "nodeEntrypointExists": true,
+        "cloudflareBindingsUsed": false,
+        "safeCode": "NODE_NITRO_RUNTIME_NOT_READY"
+      },
+      "cleanup": {
+        "temporaryHarnessResourcesRemoved": true
+      },
+      "status": "GREEN",
+      "classification": "accepted",
+      "safeFailureCode": "NODE_NITRO_RUNTIME_NOT_READY",
+      "mismatches": [],
+      "startedAt": "2026-08-21T06:47:13.792Z",
+      "finishedAt": "2026-08-21T06:47:13.812Z"
+    },
+    {
+      "scenarioId": "ATDD-VPSPG-005",
+      "requirements": [
+        "vps-postgres-runtime: unified configuration",
+        "data-and-security: credential allowlist"
+      ],
+      "purpose": "Require one env file and one exact credential directory; reject inline, unknown, escaped, corporate Google, and Cloudflare settings.",
+      "preconditions": [
+        "synthetic fixture set only",
+        "no provider expense",
+        "private candidate folder access forbidden"
+      ],
+      "steps": [
+        "configuration-allowlist"
+      ],
+      "expected": {
+        "status": "SUCCEEDED",
+        "runtimeEnvCount": 1,
+        "credentialDirectoryCount": 1,
+        "allowlistExact": true,
+        "inlineSecretsRejected": true,
+        "unknownCredentialsRejected": true,
+        "pathEscapeRejected": true,
+        "legacySettingsRejected": 6,
+        "readinessLeaks": 0
+      },
+      "actual": {
+        "scenarioId": "ATDD-VPSPG-005",
+        "status": "SUCCEEDED",
+        "allowlistExact": true,
+        "inlineSecretsRejected": true,
+        "unknownCredentialsRejected": true,
+        "pathEscapeRejected": true,
+        "readinessLeaks": 0,
+        "evidence": {
+          "fixtureSetId": "vps-postgres-runtime-synthetic-v1",
+          "synthetic": true,
+          "containsRealPii": false,
+          "containsSecrets": false,
+          "providerExpense": false,
+          "privateCandidateFolderRead": false,
+          "credentialSentinelLeaks": 0,
+          "piiSentinelLeaks": 0
+        },
+        "safeCode": "UNIFIED_CONFIGURATION_NOT_READY",
+        "runtimeEnvCount": 1,
+        "credentialDirectoryCount": 1,
+        "legacySettingsRejected": 6
+      },
+      "cleanup": {
+        "temporaryHarnessResourcesRemoved": true
+      },
+      "status": "GREEN",
+      "classification": "accepted",
+      "safeFailureCode": "UNIFIED_CONFIGURATION_NOT_READY",
+      "mismatches": [],
+      "startedAt": "2026-08-21T06:47:13.812Z",
+      "finishedAt": "2026-08-21T06:47:13.823Z"
+    },
+    {
+      "scenarioId": "ATDD-VPSPG-006",
+      "requirements": [
+        "private-candidate-benchmark: isolated offline oracle",
+        "quality-gates: cleanup and deny-set audit"
+      ],
+      "purpose": "Prove consent-first role isolation, deny-checksum audit, offline hard oracle, and unconditional cleanup using synthetic fixtures only.",
+      "preconditions": [
+        "synthetic fixture set only",
+        "no provider expense",
+        "private candidate folder access forbidden"
+      ],
+      "steps": [
+        "private-benchmark"
+      ],
+      "expected": {
+        "status": "SUCCEEDED",
+        "consentCheckedBeforeInputRead": true,
+        "roleClassificationUnambiguous": true,
+        "referenceChecksumsReachedNetwork": 0,
+        "referenceChecksumsReachedDriveSnapshot": 0,
+        "referenceChecksumsReachedBlobs": 0,
+        "offlineOracleOnly": true,
+        "hardOracleStatus": "RED",
+        "cleanupAttemptedAfterRed": true,
+        "cleanupComplete": true,
+        "privateCandidateFolderReads": 0,
+        "profileChecksumMatched": true,
+        "reviewRetentionExpectedCount": 2,
+        "reviewRetentionDaysExpected": 7
+      },
+      "actual": {
+        "scenarioId": "ATDD-VPSPG-006",
+        "status": "SUCCEEDED",
+        "consentCheckedBeforeInputRead": true,
+        "referenceChecksumsReachedNetwork": 0,
+        "profileChecksumMatched": true,
+        "oracleProfileTitle": "Синтетическая вакансия",
+        "oracleProfileApprovedBy": "local-operator",
+        "referenceChecksumsReachedDriveSnapshot": 0,
+        "referenceChecksumsReachedBlobs": 0,
+        "reviewRetentionExpectedCount": 2,
+        "reviewRetentionDaysExpected": 7,
+        "cleanupAttemptedAfterRed": true,
+        "cleanupComplete": true,
+        "privateCandidateFolderReads": 0,
+        "evidence": {
+          "fixtureSetId": "vps-postgres-runtime-synthetic-v1",
+          "synthetic": true,
+          "containsRealPii": false,
+          "containsSecrets": false,
+          "providerExpense": false,
+          "privateCandidateFolderRead": false,
+          "credentialSentinelLeaks": 0,
+          "piiSentinelLeaks": 0
+        },
+        "safeCode": "PRIVATE_BENCHMARK_RUNTIME_NOT_IMPLEMENTED",
+        "roleClassificationUnambiguous": true,
+        "offlineOracleOnly": true,
+        "hardOracleStatus": "RED"
+      },
+      "cleanup": {
+        "requiredAfterAnyOutcome": true,
+        "complete": true
+      },
+      "status": "GREEN",
+      "classification": "accepted",
+      "safeFailureCode": "PRIVATE_BENCHMARK_RUNTIME_NOT_IMPLEMENTED",
+      "mismatches": [],
+      "startedAt": "2026-08-21T06:47:13.823Z",
+      "finishedAt": "2026-08-21T06:47:13.824Z"
+    },
+    {
+      "scenarioId": "ATDD-VPSPG-007",
+      "requirements": [
+        "candidate-workflow: server-derived progress",
+        "quality-gates: rendered dashboard/list parity"
+      ],
+      "purpose": "Render the same server-provided 55 percent milestone in accessible dashboard and list progress bars.",
+      "preconditions": [
+        "synthetic fixture set only",
+        "no provider expense",
+        "private candidate folder access forbidden"
+      ],
+      "steps": [
+        "rendered-progress-ui"
+      ],
+      "expected": {
+        "status": "SUCCEEDED",
+        "dashboardProgressBars": 1,
+        "listProgressBars": 1,
+        "dashboardPercent": 55,
+        "listPercent": 55,
+        "dashboardMilestone": "Доказательства собраны",
+        "listMilestone": "Доказательства собраны",
+        "ariaMin": 0,
+        "ariaMax": 100,
+        "browserInferredProgress": false
+      },
+      "actual": {
+        "scenarioId": "ATDD-VPSPG-007",
+        "status": "SUCCEEDED",
+        "safeCode": "PROGRESS_UI_CONTRACT_MISSING",
+        "dashboardProgressBars": 1,
+        "listProgressBars": 1,
+        "dashboardPercent": 55,
+        "listPercent": 55,
+        "dashboardMilestone": "Доказательства собраны",
+        "listMilestone": "Доказательства собраны",
+        "ariaMin": 0,
+        "ariaMax": 100,
+        "browserInferredProgress": false,
+        "evidence": {
+          "fixtureSetId": "vps-postgres-runtime-synthetic-v1",
+          "synthetic": true,
+          "containsRealPii": false,
+          "containsSecrets": false,
+          "providerExpense": false,
+          "privateCandidateFolderRead": false,
+          "credentialSentinelLeaks": 0,
+          "piiSentinelLeaks": 0
+        }
+      },
+      "cleanup": {
+        "temporaryHarnessResourcesRemoved": true
+      },
+      "status": "GREEN",
+      "classification": "accepted",
+      "safeFailureCode": "PROGRESS_UI_CONTRACT_MISSING",
+      "mismatches": [],
+      "startedAt": "2026-08-21T06:47:13.824Z",
+      "finishedAt": "2026-08-21T06:47:14.039Z"
+    },
+    {
+      "scenarioId": "ATDD-VPSPG-008",
+      "requirements": [
+        "private-candidate-benchmark: frozen HR-approved profile checksum",
+        "private-candidate-benchmark: fail-closed approval gate",
+        "quality-gates: no implicit profile regeneration"
+      ],
+      "purpose": "Require the benchmark to use only the explicitly approved immutable profile snapshot and fail closed on missing approval, checksum mismatch, or implicit regeneration before reading pipeline inputs or calling providers.",
+      "preconditions": [
+        "synthetic fixture set only",
+        "no provider expense",
+        "private candidate folder access forbidden"
+      ],
+      "steps": [
+        "frozen-profile-approval"
+      ],
+      "expected": {
+        "status": "SUCCEEDED",
+        "profileApprovalFailClosed": true,
+        "failClosedProbesPassed": 3,
+        "failClosedBeforePipelineInputRead": true,
+        "failClosedBeforeProviderCalls": true,
+        "pipelineInputsRead": 0,
+        "providerCallsMade": 0,
+        "implicitProfileRegenerationBlocked": true,
+        "profileSnapshotImmutable": true,
+        "profileFingerprintInEvidence": true,
+        "referenceDerivedProfileMutation": false
+      },
+      "actual": {
+        "scenarioId": "ATDD-VPSPG-008",
+        "status": "SUCCEEDED",
+        "safeCode": null,
+        "profileApprovalFailClosed": true,
+        "failClosedProbesPassed": 3,
+        "failClosedBeforePipelineInputRead": true,
+        "failClosedBeforeProviderCalls": true,
+        "pipelineInputsRead": 0,
+        "providerCallsMade": 0,
+        "implicitProfileRegenerationBlocked": true,
+        "profileSnapshotImmutable": true,
+        "profileFingerprintInEvidence": true,
+        "referenceDerivedProfileMutation": false,
+        "evidence": {
+          "fixtureSetId": "vps-postgres-runtime-synthetic-v1",
+          "synthetic": true,
+          "containsRealPii": false,
+          "containsSecrets": false,
+          "providerExpense": false,
+          "privateCandidateFolderRead": false,
+          "credentialSentinelLeaks": 0,
+          "piiSentinelLeaks": 0
+        }
+      },
+      "cleanup": {
+        "temporaryHarnessResourcesRemoved": true
+      },
+      "status": "GREEN",
+      "classification": "accepted",
+      "safeFailureCode": null,
+      "mismatches": [],
+      "startedAt": "2026-08-21T06:47:14.039Z",
+      "finishedAt": "2026-08-21T06:47:14.040Z"
+    },
+    {
+      "scenarioId": "ATDD-VPSPG-009",
+      "requirements": [
+        "private-candidate-benchmark: reference isolation",
+        "private-candidate-benchmark: deny-checksum firewall",
+        "private-candidate-benchmark: no reference-derived profile"
+      ],
+      "purpose": "Prove reference ABC/result and extracted anchors never create or mutate the profile and never reach provider payload, Drive snapshot, or blob store; the profile fingerprint stays independent of reference content.",
+      "preconditions": [
+        "synthetic fixture set only",
+        "no provider expense",
+        "private candidate folder access forbidden"
+      ],
+      "steps": [
+        "reference-derived-profile"
+      ],
+      "expected": {
+        "status": "SUCCEEDED",
+        "referenceChecksumsReachedNetwork": 0,
+        "referenceChecksumsReachedDriveSnapshot": 0,
+        "referenceChecksumsReachedBlobs": 0,
+        "referenceDerivedAnchorsReachedProvider": 0,
+        "profileDerivedFromReferenceBlocked": true,
+        "profileChecksumReferenceIndependent": true,
+        "referenceContentProfileMutationPrevented": true,
+        "profileFingerprintUnchangedByReference": true
+      },
+      "actual": {
+        "scenarioId": "ATDD-VPSPG-009",
+        "status": "SUCCEEDED",
+        "safeCode": null,
+        "referenceChecksumsReachedNetwork": 0,
+        "referenceChecksumsReachedDriveSnapshot": 0,
+        "referenceChecksumsReachedBlobs": 0,
+        "referenceDerivedAnchorsReachedProvider": 0,
+        "profileDerivedFromReferenceBlocked": true,
+        "profileChecksumReferenceIndependent": true,
+        "referenceContentProfileMutationPrevented": true,
+        "profileFingerprintUnchangedByReference": true,
+        "evidence": {
+          "fixtureSetId": "vps-postgres-runtime-synthetic-v1",
+          "synthetic": true,
+          "containsRealPii": false,
+          "containsSecrets": false,
+          "providerExpense": false,
+          "privateCandidateFolderRead": false,
+          "credentialSentinelLeaks": 0,
+          "piiSentinelLeaks": 0
+        }
+      },
+      "cleanup": {
+        "temporaryHarnessResourcesRemoved": true
+      },
+      "status": "GREEN",
+      "classification": "accepted",
+      "safeFailureCode": null,
+      "mismatches": [],
+      "startedAt": "2026-08-21T06:47:14.040Z",
+      "finishedAt": "2026-08-21T06:47:14.040Z"
+    },
+    {
+      "scenarioId": "ATDD-VPSPG-010",
+      "requirements": [
+        "private-candidate-benchmark: private PDF review/retention/deletion",
+        "private-candidate-benchmark: owner-only evidence retention",
+        "quality-gates: cleanup and evidence gate"
+      ],
+      "purpose": "Require exactly two owner-only generated PDFs retained privately until review/deadline, proven deletion with aggregated evidence, and terminal RED when any cleanup phase is incomplete.",
+      "preconditions": [
+        "synthetic fixture set only",
+        "no provider expense",
+        "private candidate folder access forbidden"
+      ],
+      "steps": [
+        "private-pdf-retention"
+      ],
+      "expected": {
+        "status": "SUCCEEDED",
+        "retentionCount": 2,
+        "ownerOnlyPermissions": "0600",
+        "retentionDeadline": true,
+        "reviewOrDeadlineTriggeredCleanup": true,
+        "deletionProven": true,
+        "deletionEvidenceSaved": true,
+        "incompleteCleanupTerminalRed": true
+      },
+      "actual": {
+        "scenarioId": "ATDD-VPSPG-010",
+        "status": "SUCCEEDED",
+        "safeCode": null,
+        "retentionCount": 2,
+        "ownerOnlyPermissions": "0600",
+        "retentionDeadline": true,
+        "reviewOrDeadlineTriggeredCleanup": true,
+        "deletionProven": true,
+        "deletionEvidenceSaved": true,
+        "incompleteCleanupTerminalRed": true,
+        "cleanupSucceeded": true,
+        "evidence": {
+          "fixtureSetId": "vps-postgres-runtime-synthetic-v1",
+          "synthetic": true,
+          "containsRealPii": false,
+          "containsSecrets": false,
+          "providerExpense": false,
+          "privateCandidateFolderRead": false,
+          "credentialSentinelLeaks": 0,
+          "piiSentinelLeaks": 0
+        }
+      },
+      "cleanup": {
+        "temporaryHarnessResourcesRemoved": true
+      },
+      "status": "GREEN",
+      "classification": "accepted",
+      "safeFailureCode": null,
+      "mismatches": [],
+      "startedAt": "2026-08-21T06:47:14.040Z",
+      "finishedAt": "2026-08-21T06:47:14.045Z"
+    },
+    {
+      "scenarioId": "ATDD-VPSPG-011",
+      "requirements": [
+        "quality-gates: QG-055 local canonical E2E via PostgreSQL runtime",
+        "quality-gates: application-boundary evidence"
+      ],
+      "purpose": "Require E2E-VAC-001/TRN-001/ABC-001/RESULT-001 through the assembled Node web/worker and durable PostgreSQL on one build/config/fixture identity; direct in-memory pipeline or SQLite fixture state does not close the gate.",
+      "preconditions": [
+        "synthetic fixture set only",
+        "no provider expense",
+        "private candidate folder access forbidden"
+      ],
+      "steps": [
+        "local-canonical-e2e"
+      ],
+      "expected": {
+        "status": "SUCCEEDED",
+        "fourCanonicalE2eThroughNodePostgres": true,
+        "viaApplicationBoundary": true,
+        "evidenceFromDurablePostgresState": true,
+        "sqliteFixtureControllerUsed": false,
+        "inMemoryCanonicalPipelineUsed": false,
+        "productionLikeAcceptanceClaimed": false,
+        "buildConfigFixtureFingerprintsMatch": true,
+        "controlledProviderMarked": true
+      },
+      "actual": {
+        "scenarioId": "ATDD-VPSPG-011",
+        "status": "SUCCEEDED",
+        "safeCode": null,
+        "fourCanonicalE2eThroughNodePostgres": true,
+        "viaApplicationBoundary": true,
+        "evidenceFromDurablePostgresState": true,
+        "sqliteFixtureControllerUsed": false,
+        "inMemoryCanonicalPipelineUsed": false,
+        "productionLikeAcceptanceClaimed": false,
+        "buildConfigFixtureFingerprintsMatch": true,
+        "controlledProviderMarked": true,
+        "evidence": {
+          "fixtureSetId": "vps-postgres-runtime-synthetic-v1",
+          "synthetic": true,
+          "containsRealPii": false,
+          "containsSecrets": false,
+          "providerExpense": false,
+          "privateCandidateFolderRead": false,
+          "credentialSentinelLeaks": 0,
+          "piiSentinelLeaks": 0
+        }
+      },
+      "cleanup": {
+        "temporaryHarnessResourcesRemoved": true
+      },
+      "status": "GREEN",
+      "classification": "accepted",
+      "safeFailureCode": null,
+      "mismatches": [],
+      "startedAt": "2026-08-21T06:47:14.045Z",
+      "finishedAt": "2026-08-21T06:47:14.045Z"
+    }
+  ]
+}

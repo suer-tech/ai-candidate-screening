@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="VAC-041/TST-086: user clarification: settings use the exact Russian label and a readable structured Russian default prompt" time="0.019719" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\editable-vacancy-prompts.acceptance.test.mjs" failure="Acceptance scenario is not implemented: VAC-041-russian-analysis-prompt-ui-copy&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;navigationLabel: expected &amp;quot;Промпт для анализа&amp;quot;; actual=undefined&#10;sectionHeading: expected &amp;quot;Промпт для анализа&amp;quot;; actual=undefined&#10;legacyLabelVisible: expected false; actual=undefined&#10;removedIntroVisible: expected false; actual=undefined&#10;removedVersionNoticeVisible: expected false; actual=undefined&#10;defaultPrompt.artifactId: expected &amp;quot;candidate-assessment/v1&amp;quot;; actual=undefined&#10;defaultPrompt.language: expected &amp;quot;ru&amp;quot;; actual=undefined&#10;defaultPrompt.structured: expected true; actual=undefined&#10;defaultPrompt.multiline: expected true; actual=undefined&#10;defaultPrompt.sectionHeadings: expected exact [&amp;quot;Цель анализа&amp;quot;,&amp;quot;Порядок анализа&amp;quot;,&amp;quot;Требования к доказательствам&amp;quot;,&amp;quot;Формат результата&amp;quot;]; actual=undefined&#10;defaultPrompt.bulletListPresent: expected true; actual=undefined&#10;&#10;13 !== 0&#10;">
+		<failure type="testCodeFailure" message="Acceptance scenario is not implemented: VAC-041-russian-analysis-prompt-ui-copy&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;navigationLabel: expected &amp;quot;Промпт для анализа&amp;quot;; actual=undefined&#10;sectionHeading: expected &amp;quot;Промпт для анализа&amp;quot;; actual=undefined&#10;legacyLabelVisible: expected false; actual=undefined&#10;removedIntroVisible: expected false; actual=undefined&#10;removedVersionNoticeVisible: expected false; actual=undefined&#10;defaultPrompt.artifactId: expected &amp;quot;candidate-assessment/v1&amp;quot;; actual=undefined&#10;defaultPrompt.language: expected &amp;quot;ru&amp;quot;; actual=undefined&#10;defaultPrompt.structured: expected true; actual=undefined&#10;defaultPrompt.multiline: expected true; actual=undefined&#10;defaultPrompt.sectionHeadings: expected exact [&amp;quot;Цель анализа&amp;quot;,&amp;quot;Порядок анализа&amp;quot;,&amp;quot;Требования к доказательствам&amp;quot;,&amp;quot;Формат результата&amp;quot;]; actual=undefined&#10;defaultPrompt.bulletListPresent: expected true; actual=undefined&#10;&#10;13 !== 0">
+[Error [ERR_TEST_FAILURE]: Acceptance scenario is not implemented: VAC-041-russian-analysis-prompt-ui-copy
+status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+navigationLabel: expected "Промпт для анализа"; actual=undefined
+sectionHeading: expected "Промпт для анализа"; actual=undefined
+legacyLabelVisible: expected false; actual=undefined
+removedIntroVisible: expected false; actual=undefined
+removedVersionNoticeVisible: expected false; actual=undefined
+defaultPrompt.artifactId: expected "candidate-assessment/v1"; actual=undefined
+defaultPrompt.language: expected "ru"; actual=undefined
+defaultPrompt.structured: expected true; actual=undefined
+defaultPrompt.multiline: expected true; actual=undefined
+defaultPrompt.sectionHeadings: expected exact ["Цель анализа","Порядок анализа","Требования к доказательствам","Формат результата"]; actual=undefined
+defaultPrompt.bulletListPresent: expected true; actual=undefined
+
+13 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Acceptance scenario is not implemented: VAC-041-russian-analysis-prompt-ui-copy
+  status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+  navigationLabel: expected "Промпт для анализа"; actual=undefined
+  sectionHeading: expected "Промпт для анализа"; actual=undefined
+  legacyLabelVisible: expected false; actual=undefined
+  removedIntroVisible: expected false; actual=undefined
+  removedVersionNoticeVisible: expected false; actual=undefined
+  defaultPrompt.artifactId: expected "candidate-assessment/v1"; actual=undefined
+  defaultPrompt.language: expected "ru"; actual=undefined
+  defaultPrompt.structured: expected true; actual=undefined
+  defaultPrompt.multiline: expected true; actual=undefined
+  defaultPrompt.sectionHeadings: expected exact ["Цель анализа","Порядок анализа","Требования к доказательствам","Формат результата"]; actual=undefined
+  defaultPrompt.bulletListPresent: expected true; actual=undefined
+  
+  13 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/editable-vacancy-prompts.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 13,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="VAC-041/ASM-062/TST-086: user clarification: two vacancies persist different prompts and new runs pin the selected vacancy version" time="0.000276" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\editable-vacancy-prompts.acceptance.test.mjs" failure="Acceptance scenario is not implemented: VAC-041-ASM-062-vacancy-specific-prompt-snapshots&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;vacancyPromptsStoredSeparately: expected true; actual=undefined&#10;promptHashesDiffer: expected true; actual=undefined&#10;exactPromptTextPreservedPerVacancy: expected true; actual=undefined&#10;runBindings: expected exact [{&amp;quot;runId&amp;quot;:&amp;quot;candidate-run-alpha-001&amp;quot;,&amp;quot;vacancyId&amp;quot;:&amp;quot;vacancy-prompt-alpha-001&amp;quot;,&amp;quot;profileVersion&amp;quot;:2,&amp;quot;usesOwnVacancyPrompt&amp;quot;:true},{&amp;quot;runId&amp;quot;:&amp;quot;candidate-run-beta-002&amp;quot;,&amp;quot;vacancyId&amp;quot;:&amp;quot;vacancy-prompt-beta-002&amp;quot;,&amp;quot;profileVersion&amp;quot;:4,&amp;quot;usesOwnVacancyPrompt&amp;quot;:true}]; actual=undefined&#10;crossVacancyPromptLeak: expected false; actual=undefined&#10;runSnapshotsImmutable: expected true; actual=undefined&#10;&#10;8 !== 0&#10;">
+		<failure type="testCodeFailure" message="Acceptance scenario is not implemented: VAC-041-ASM-062-vacancy-specific-prompt-snapshots&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;vacancyPromptsStoredSeparately: expected true; actual=undefined&#10;promptHashesDiffer: expected true; actual=undefined&#10;exactPromptTextPreservedPerVacancy: expected true; actual=undefined&#10;runBindings: expected exact [{&amp;quot;runId&amp;quot;:&amp;quot;candidate-run-alpha-001&amp;quot;,&amp;quot;vacancyId&amp;quot;:&amp;quot;vacancy-prompt-alpha-001&amp;quot;,&amp;quot;profileVersion&amp;quot;:2,&amp;quot;usesOwnVacancyPrompt&amp;quot;:true},{&amp;quot;runId&amp;quot;:&amp;quot;candidate-run-beta-002&amp;quot;,&amp;quot;vacancyId&amp;quot;:&amp;quot;vacancy-prompt-beta-002&amp;quot;,&amp;quot;profileVersion&amp;quot;:4,&amp;quot;usesOwnVacancyPrompt&amp;quot;:true}]; actual=undefined&#10;crossVacancyPromptLeak: expected false; actual=undefined&#10;runSnapshotsImmutable: expected true; actual=undefined&#10;&#10;8 !== 0">
+[Error [ERR_TEST_FAILURE]: Acceptance scenario is not implemented: VAC-041-ASM-062-vacancy-specific-prompt-snapshots
+status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+vacancyPromptsStoredSeparately: expected true; actual=undefined
+promptHashesDiffer: expected true; actual=undefined
+exactPromptTextPreservedPerVacancy: expected true; actual=undefined
+runBindings: expected exact [{"runId":"candidate-run-alpha-001","vacancyId":"vacancy-prompt-alpha-001","profileVersion":2,"usesOwnVacancyPrompt":true},{"runId":"candidate-run-beta-002","vacancyId":"vacancy-prompt-beta-002","profileVersion":4,"usesOwnVacancyPrompt":true}]; actual=undefined
+crossVacancyPromptLeak: expected false; actual=undefined
+runSnapshotsImmutable: expected true; actual=undefined
+
+8 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Acceptance scenario is not implemented: VAC-041-ASM-062-vacancy-specific-prompt-snapshots
+  status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+  vacancyPromptsStoredSeparately: expected true; actual=undefined
+  promptHashesDiffer: expected true; actual=undefined
+  exactPromptTextPreservedPerVacancy: expected true; actual=undefined
+  runBindings: expected exact [{"runId":"candidate-run-alpha-001","vacancyId":"vacancy-prompt-alpha-001","profileVersion":2,"usesOwnVacancyPrompt":true},{"runId":"candidate-run-beta-002","vacancyId":"vacancy-prompt-beta-002","profileVersion":4,"usesOwnVacancyPrompt":true}]; actual=undefined
+  crossVacancyPromptLeak: expected false; actual=undefined
+  runSnapshotsImmutable: expected true; actual=undefined
+  
+  8 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/editable-vacancy-prompts.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 8,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="ASM-062/TST-086: user clarification: candidate assessment request contains the pinned vacancy prompt and earlier stages never receive it" time="0.000262" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\editable-vacancy-prompts.acceptance.test.mjs" failure="Acceptance scenario is not implemented: ASM-062-assessment-request-vacancy-prompt-routing&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;snapshotSource.vacancyId: expected &amp;quot;vacancy-prompt-routing-001&amp;quot;; actual=undefined&#10;snapshotSource.profileVersion: expected 3; actual=undefined&#10;snapshotSource.runId: expected &amp;quot;candidate-run-routing-001&amp;quot;; actual=undefined&#10;assessmentLlmRequestContainsExactPrompt: expected true; actual=undefined&#10;assessmentLlmRequestContainsPromptOnce: expected true; actual=undefined&#10;documentExtractionReceivesPrompt: expected false; actual=undefined&#10;transcriptionReceivesPrompt: expected false; actual=undefined&#10;factExtractionReceivesPrompt: expected false; actual=undefined&#10;assessmentReceivesPrompt: expected true; actual=undefined&#10;&#10;11 !== 0&#10;">
+		<failure type="testCodeFailure" message="Acceptance scenario is not implemented: ASM-062-assessment-request-vacancy-prompt-routing&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;snapshotSource.vacancyId: expected &amp;quot;vacancy-prompt-routing-001&amp;quot;; actual=undefined&#10;snapshotSource.profileVersion: expected 3; actual=undefined&#10;snapshotSource.runId: expected &amp;quot;candidate-run-routing-001&amp;quot;; actual=undefined&#10;assessmentLlmRequestContainsExactPrompt: expected true; actual=undefined&#10;assessmentLlmRequestContainsPromptOnce: expected true; actual=undefined&#10;documentExtractionReceivesPrompt: expected false; actual=undefined&#10;transcriptionReceivesPrompt: expected false; actual=undefined&#10;factExtractionReceivesPrompt: expected false; actual=undefined&#10;assessmentReceivesPrompt: expected true; actual=undefined&#10;&#10;11 !== 0">
+[Error [ERR_TEST_FAILURE]: Acceptance scenario is not implemented: ASM-062-assessment-request-vacancy-prompt-routing
+status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+snapshotSource.vacancyId: expected "vacancy-prompt-routing-001"; actual=undefined
+snapshotSource.profileVersion: expected 3; actual=undefined
+snapshotSource.runId: expected "candidate-run-routing-001"; actual=undefined
+assessmentLlmRequestContainsExactPrompt: expected true; actual=undefined
+assessmentLlmRequestContainsPromptOnce: expected true; actual=undefined
+documentExtractionReceivesPrompt: expected false; actual=undefined
+transcriptionReceivesPrompt: expected false; actual=undefined
+factExtractionReceivesPrompt: expected false; actual=undefined
+assessmentReceivesPrompt: expected true; actual=undefined
+
+11 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Acceptance scenario is not implemented: ASM-062-assessment-request-vacancy-prompt-routing
+  status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+  snapshotSource.vacancyId: expected "vacancy-prompt-routing-001"; actual=undefined
+  snapshotSource.profileVersion: expected 3; actual=undefined
+  snapshotSource.runId: expected "candidate-run-routing-001"; actual=undefined
+  assessmentLlmRequestContainsExactPrompt: expected true; actual=undefined
+  assessmentLlmRequestContainsPromptOnce: expected true; actual=undefined
+  documentExtractionReceivesPrompt: expected false; actual=undefined
+  transcriptionReceivesPrompt: expected false; actual=undefined
+  factExtractionReceivesPrompt: expected false; actual=undefined
+  assessmentReceivesPrompt: expected true; actual=undefined
+  
+  11 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/editable-vacancy-prompts.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 11,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 3 -->
+	<!-- suites 0 -->
+	<!-- pass 0 -->
+	<!-- fail 3 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 175.1535 -->
+</testsuites>

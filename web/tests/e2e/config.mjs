@@ -1,5 +1,28 @@
-import { existsSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
+
+const requirementsBasisUrl = new URL("./requirements-basis.v1.json", import.meta.url);
+
+function loadRequirementsBasis() {
+  const bytes = readFileSync(requirementsBasisUrl);
+  return {
+    value: JSON.parse(bytes.toString("utf8")),
+    digest: createHash("sha256").update(bytes).digest("hex"),
+  };
+}
+
+function assertSynchronizedRequirementsBasis(basis) {
+  if (basis?.value?.schemaVersion !== "1.0" || typeof basis?.value?.basisId !== "string") {
+    throw new Error("E2E_REQUIREMENTS_BASIS_INVALID");
+  }
+  if (basis.value.status !== "SYNCHRONIZED" || basis.value.productionAcceptanceAllowed !== true) {
+    throw new Error(`E2E_REQUIREMENTS_BASIS_UNSYNCHRONIZED:${basis.value.basisId}`);
+  }
+  if (basis.value.normativeSource !== "openspec/specs" || basis.value.productEvidence !== false) {
+    throw new Error("E2E_REQUIREMENTS_BASIS_INVALID");
+  }
+}
 
 const REQUIRED = [
   "E2E_BASE_URL",
@@ -42,6 +65,8 @@ export function readE2eConfig(environment = process.env, options = {}) {
   if (required(environment, "E2E_ALLOW_DESTRUCTIVE_CLEANUP") !== "true") {
     throw new Error("E2E_ALLOW_DESTRUCTIVE_CLEANUP=true is required for isolated test-data cleanup");
   }
+  const requirementsBasis = options.requirementsBasis ?? loadRequirementsBasis();
+  assertSynchronizedRequirementsBasis(requirementsBasis);
   const storageState = path.resolve(required(environment, "E2E_AUTH_STORAGE_STATE"));
   const fileExists = options.fileExists ?? existsSync;
   if (!fileExists(storageState)) throw new Error("E2E_AUTH_STORAGE_STATE does not exist");
@@ -54,5 +79,11 @@ export function readE2eConfig(environment = process.env, options = {}) {
     fixtureSetId: required(environment, "E2E_FIXTURE_SET_ID"),
     buildId: required(environment, "E2E_BUILD_ID"),
     environment: targetEnvironment,
+    requirementsBasis: Object.freeze({
+      basisId: requirementsBasis.value.basisId,
+      status: requirementsBasis.value.status,
+      digest: requirementsBasis.digest,
+      normativeSource: requirementsBasis.value.normativeSource,
+    }),
   });
 }

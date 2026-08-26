@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="VIS-DEMO criterion titles use a dedicated theme-safe accent token" time="0.005052" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs" failure="light theme declares --criterion-accent">
+		<failure type="testCodeFailure" message="light theme declares --criterion-accent">
+[Error [ERR_TEST_FAILURE]: light theme declares --criterion-accent] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: light theme declares --criterion-accent
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/demo-interface-visual-parity.acceptance.test.mjs:667:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: '',
+    expected: '',
+    operator: 'notStrictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="VIS-DEMO disclosed evidence headings use a dedicated verified color in both themes" time="0.002175" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs" failure="light theme declares --evidence-verified-ink">
+		<failure type="testCodeFailure" message="light theme declares --evidence-verified-ink">
+[Error [ERR_TEST_FAILURE]: light theme declares --evidence-verified-ink] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: light theme declares --evidence-verified-ink
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/demo-interface-visual-parity.acceptance.test.mjs:680:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: '',
+    expected: '',
+    operator: 'notStrictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="VIS-DEMO grouped evidence rows use an accessible document-check SVG and a specific purpose" time="0.253027" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs" failure="grouped row has one stable inline document-check icon&#10;&#10;0 !== 1&#10;">
+		<failure type="testCodeFailure" message="grouped row has one stable inline document-check icon&#10;&#10;0 !== 1">
+[Error [ERR_TEST_FAILURE]: grouped row has one stable inline document-check icon
+
+0 !== 1
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: grouped row has one stable inline document-check icon
+  
+  0 !== 1
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/demo-interface-visual-parity.acceptance.test.mjs:734:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 3 -->
+	<!-- suites 0 -->
+	<!-- pass 0 -->
+	<!-- fail 3 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 544.3103 -->
+</testsuites>

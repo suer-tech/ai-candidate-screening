@@ -1,0 +1,25 @@
+{
+  "version": "local-agent-runtime-v1",
+  "budgets": {
+    "wallTimeMs": 14400000,
+    "taskAttempts": 27,
+    "repairAttempts": 2,
+    "replans": 2,
+    "llmCalls": 12,
+    "tokens": 120000,
+    "costMicrounits": 5000000,
+    "externalRequests": 200
+  },
+  "leaseMs": 30000,
+  "pollingMs": 1000,
+  "heartbeatMs": 10000,
+  "flags": {
+    "synthetic": false,
+    "shadow": true,
+    "acceptNewGoals": true,
+    "toolRouting": {
+      "candidate-analysis/v1": "agent",
+      "candidate-cleanup/v1": "agent"
+    }
+  }
+}

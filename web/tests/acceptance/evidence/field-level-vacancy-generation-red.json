@@ -1,0 +1,172 @@
+{
+  "schemaVersion": "field-level-vacancy-generation-acceptance-evidence/v1",
+  "change": "add-field-level-vacancy-generation",
+  "generatedAtUtc": "2026-08-25T07:45:22.296Z",
+  "phase": "RED",
+  "author": "/root/analysis_prompt_acceptance",
+  "executor": "/root/analysis_prompt_acceptance",
+  "independenceDeclared": true,
+  "productionCodeChangedByAuthor": false,
+  "command": "node tests/field-level-vacancy-generation.evidence.mjs --output tests/acceptance/evidence/field-level-vacancy-generation-red.json",
+  "junit": "tests/acceptance/evidence/field-level-vacancy-generation-red.junit.xml",
+  "safety": {
+    "fixtureSetId": "field-level-vacancy-generation-synthetic-v1",
+    "syntheticOnly": true,
+    "containsSecrets": false,
+    "containsRealPersonalData": false,
+    "providerCallsAllowed": false
+  },
+  "summary": {
+    "total": 5,
+    "green": 0,
+    "red": 5,
+    "infrastructureErrors": 0
+  },
+  "results": [
+    {
+      "scenarioId": "VAC-042-field-generation",
+      "requirements": [
+        "VAC-042"
+      ],
+      "title": "each empty profile field generates once into the unsaved draft and preserves state on error",
+      "status": "RED",
+      "classification": "product-contract",
+      "mismatches": [
+        "Field-level vacancy generation conformance boundary is absent: export runFieldLevelVacancyGenerationConformanceScenario(fixture) from server/product/application.ts",
+        "status: expected \"SUCCEEDED\"; actual=\"NOT_IMPLEMENTED\"",
+        "supportedFields: expected exact [\"Образ результата\",\"Компетенции\",\"Стоп-факторы\",\"Допуск к КЕ\"]; actual=undefined",
+        "confirmationRequired: expected true; actual=undefined",
+        "callsBeforeConfirmation: expected 0; actual=undefined",
+        "callsAfterCancelledConfirmation: expected 0; actual=undefined",
+        "confirmedProviderCalls: expected 1; actual=undefined",
+        "spinnerVisible: expected true; actual=undefined",
+        "repeatedLaunchBlocked: expected true; actual=undefined",
+        "selectedFieldOnlyChanged: expected true; actual=undefined",
+        "otherFieldsUnchanged: expected true; actual=undefined",
+        "abcUnchanged: expected true; actual=undefined",
+        "pageReloads: expected 0; actual=undefined",
+        "versionsCreated: expected 0; actual=undefined",
+        "actionHiddenAfterFill: expected true; actual=undefined",
+        "actionHiddenForInitiallyFilledField: expected true; actual=undefined",
+        "errorPreservesEntireDraft: expected true; actual=undefined",
+        "errorVisible: expected true; actual=undefined",
+        "retryAvailable: expected true; actual=undefined"
+      ]
+    },
+    {
+      "scenarioId": "VAC-043-vacancy-operation-prompt-isolation",
+      "requirements": [
+        "VAC-043"
+      ],
+      "title": "five operation prompts are Russian structured vacancy-scoped snapshots used exactly by the LLM request",
+      "status": "RED",
+      "classification": "product-contract",
+      "mismatches": [
+        "Field-level vacancy generation conformance boundary is absent: export runFieldLevelVacancyGenerationConformanceScenario(fixture) from server/product/application.ts",
+        "status: expected \"SUCCEEDED\"; actual=\"NOT_IMPLEMENTED\"",
+        "operationPrompts: expected exact [\"Образ результата\",\"Компетенции\",\"Стоп-факторы\",\"Допуск к КЕ\",\"ABC-критерии\"]; actual=undefined",
+        "defaultsRussian: expected true; actual=undefined",
+        "defaultsStructured: expected true; actual=undefined",
+        "defaultsContainExactVacancyTitle: expected true; actual=undefined",
+        "promptsStoredSeparatelyByOperation: expected true; actual=undefined",
+        "promptsStoredSeparatelyByVacancy: expected true; actual=undefined",
+        "editedPromptPersisted: expected true; actual=undefined",
+        "unrelatedPromptsUnchanged: expected true; actual=undefined",
+        "nextLlmRequestContainsExactSavedPrompt: expected true; actual=undefined",
+        "promptOccurrencesInRequest: expected 1; actual=undefined",
+        "requestVacancyIdMatches: expected true; actual=undefined"
+      ]
+    },
+    {
+      "scenarioId": "VAC-044-actual-abc-composition",
+      "requirements": [
+        "VAC-044"
+      ],
+      "title": "one ABC request preserves exact actual standard/custom/reduced composition and skips zero directions",
+      "status": "RED",
+      "classification": "product-contract",
+      "mismatches": [
+        "Field-level vacancy generation conformance boundary is absent: export runFieldLevelVacancyGenerationConformanceScenario(fixture) from server/product/application.ts",
+        "status: expected \"SUCCEEDED\"; actual=\"NOT_IMPLEMENTED\"",
+        "confirmedRequestsPerNonEmptyComposition: expected 1; actual=undefined",
+        "spinnerVisible: expected true; actual=undefined",
+        "repeatedLaunchBlocked: expected true; actual=undefined",
+        "pageReloads: expected 0; actual=undefined",
+        "versionsCreated: expected 0; actual=undefined",
+        "mixed.idsPreserved: expected true; actual=undefined",
+        "mixed.namesPreserved: expected true; actual=undefined",
+        "mixed.originsPreserved: expected true; actual=undefined",
+        "mixed.orderPreserved: expected true; actual=undefined",
+        "mixed.countPreserved: expected true; actual=undefined",
+        "mixed.gradesFilledAtomically: expected true; actual=undefined",
+        "reduced.idsPreserved: expected true; actual=undefined",
+        "reduced.namesPreserved: expected true; actual=undefined",
+        "reduced.originsPreserved: expected true; actual=undefined",
+        "reduced.orderPreserved: expected true; actual=undefined",
+        "reduced.countPreserved: expected true; actual=undefined",
+        "reduced.gradesFilledAtomically: expected true; actual=undefined",
+        "zero.providerCalls: expected 0; actual=undefined",
+        "zero.explainsAddDirectionFirst: expected true; actual=undefined",
+        "responseMismatchApplied: expected false; actual=undefined"
+      ]
+    },
+    {
+      "scenarioId": "VAC-045-all-generation-overwrite-warning",
+      "requirements": [
+        "VAC-045"
+      ],
+      "title": "all-generation warns that every populated section is overwritten and cancellation has no effects",
+      "status": "RED",
+      "classification": "product-contract",
+      "mismatches": [
+        "Field-level vacancy generation conformance boundary is absent: export runFieldLevelVacancyGenerationConformanceScenario(fixture) from server/product/application.ts",
+        "status: expected \"SUCCEEDED\"; actual=\"NOT_IMPLEMENTED\"",
+        "actionStillAvailable: expected true; actual=undefined",
+        "warningBeforeApi: expected true; actual=undefined",
+        "warningMentionsAllSections: expected true; actual=undefined",
+        "warningMentionsOverwriteExistingValues: expected true; actual=undefined",
+        "cancelled.apiCalls: expected 0; actual=undefined",
+        "cancelled.providerCalls: expected 0; actual=undefined",
+        "cancelled.draftChanged: expected false; actual=undefined",
+        "cancelled.versionsCreated: expected 0; actual=undefined",
+        "confirmed.apiCalls: expected 1; actual=undefined",
+        "confirmed.spinnerVisible: expected true; actual=undefined",
+        "confirmed.structuredDraftApplied: expected true; actual=undefined",
+        "confirmed.versionsCreated: expected 0; actual=undefined"
+      ]
+    },
+    {
+      "scenarioId": "VAC-046-unified-dirty-navigation-guard",
+      "requirements": [
+        "VAC-046"
+      ],
+      "title": "one dirty guard covers settings, internal navigation and beforeunload with discard, save and close semantics",
+      "status": "RED",
+      "classification": "product-contract",
+      "mismatches": [
+        "Field-level vacancy generation conformance boundary is absent: export runFieldLevelVacancyGenerationConformanceScenario(fixture) from server/product/application.ts",
+        "status: expected \"SUCCEEDED\"; actual=\"NOT_IMPLEMENTED\"",
+        "manualEditMarksDirty: expected true; actual=undefined",
+        "generatedEditMarksDirty: expected true; actual=undefined",
+        "guardedTransitions: expected exact [\"settings-section\",\"internal-page\"]; actual=undefined",
+        "beforeUnloadOnlyWhenDirty: expected true; actual=undefined",
+        "dialog.discardLabel: expected \"Не сохранять\"; actual=undefined",
+        "dialog.discardColor: expected \"red\"; actual=undefined",
+        "dialog.saveLabel: expected \"Сохранить изменения\"; actual=undefined",
+        "dialog.saveColor: expected \"blue\"; actual=undefined",
+        "dialog.closeControl: expected true; actual=undefined",
+        "close.transitionPerformed: expected false; actual=undefined",
+        "close.draftPreserved: expected true; actual=undefined",
+        "discard.savedSnapshotRestored: expected true; actual=undefined",
+        "discard.transitionPerformed: expected true; actual=undefined",
+        "discard.versionsCreated: expected 0; actual=undefined",
+        "saveSuccess.versionsCreated: expected 1; actual=undefined",
+        "saveSuccess.waitsForSave: expected true; actual=undefined",
+        "saveSuccess.transitionPerformedAfterSave: expected true; actual=undefined",
+        "saveFailure.transitionPerformed: expected false; actual=undefined",
+        "saveFailure.draftPreserved: expected true; actual=undefined",
+        "saveFailure.errorVisible: expected true; actual=undefined"
+      ]
+    }
+  ]
+}

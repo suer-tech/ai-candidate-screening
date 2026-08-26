@@ -1,0 +1,14 @@
+[Unit]
+Description=Isolated HH PostgreSQL backup restore test
+After=postgresql.service
+Requires=postgresql.service
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/usr/local/sbin/hh-postgres-restore-test
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadOnlyPaths=/var/backups/hh-agent /etc/hh-agent

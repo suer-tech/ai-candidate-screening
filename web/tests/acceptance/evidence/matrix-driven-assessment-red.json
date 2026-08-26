@@ -1,0 +1,634 @@
+{
+  "schemaVersion": "matrix-driven-red-evidence/v1",
+  "change": "implement-matrix-driven-candidate-assessment",
+  "generatedAtUtc": "2026-08-26T06:58:53.979Z",
+  "author": "independent acceptance subagent /root/matrix_acceptance_red",
+  "independence": "The acceptance author did not implement or edit production code.",
+  "fixtureSetId": "matrix-driven-assessment-synthetic-v1",
+  "dataClassification": "synthetic-no-real-candidate-data-no-secrets-no-network-no-provider-expense",
+  "exactTestCommand": "cd web && node --test --test-reporter=junit --test-reporter-destination=tests/acceptance/evidence/matrix-driven-assessment-red.junit.xml tests/matrix-driven-assessment.acceptance.test.mjs",
+  "exactEvidenceCommand": "cd web && node tests/matrix-driven-assessment.evidence.mjs --output tests/acceptance/evidence/matrix-driven-assessment-red.json",
+  "expectedBaseline": "RED until the production conformance adapter and matrix-driven workflow are implemented",
+  "summary": {
+    "total": 26,
+    "green": 0,
+    "red": 26,
+    "environmentBlocked": 0,
+    "externalCalls": 0
+  },
+  "groups": {
+    "shared-compilation": {
+      "total": 4,
+      "red": 4
+    },
+    "matrix-compiler": {
+      "total": 5,
+      "red": 5
+    },
+    "evidence": {
+      "total": 5,
+      "red": 5
+    },
+    "matrix-evaluation": {
+      "total": 4,
+      "red": 4
+    },
+    "security": {
+      "total": 3,
+      "red": 3
+    },
+    "rollout-reporting": {
+      "total": 5,
+      "red": 5
+    }
+  },
+  "cases": [
+    {
+      "scenarioId": "MDA-LAZY-001",
+      "group": "shared-compilation",
+      "requirements": [
+        "MDA-001",
+        "WF-030"
+      ],
+      "status": "RED",
+      "failures": [
+        "production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts",
+        "scenario status expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "matrix must not compile at profile activation",
+        "first candidate must cause exactly one shared compilation",
+        "candidate materials must not enter compiler input",
+        "both candidates must reuse one checksum"
+      ],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": false
+      },
+      "productStatus": "NOT_IMPLEMENTED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-CONCURRENCY-002",
+      "group": "shared-compilation",
+      "requirements": [
+        "MDA-002"
+      ],
+      "status": "RED",
+      "failures": [
+        "production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts",
+        "scenario status expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "concurrent compilation must have one claim winner",
+        "one profileVersion must publish one artifact",
+        "both candidate waiters must continue",
+        "waiters must observe one checksum"
+      ],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": false
+      },
+      "productStatus": "NOT_IMPLEMENTED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-LEASE-003",
+      "group": "shared-compilation",
+      "requirements": [
+        "MDA-002"
+      ],
+      "status": "RED",
+      "failures": [
+        "production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts",
+        "scenario status expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "expired compilation lease must be recoverable",
+        "stale fencing token must not publish",
+        "current owner alone must publish once"
+      ],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": false
+      },
+      "productStatus": "NOT_IMPLEMENTED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-IMMUTABLE-004",
+      "group": "shared-compilation",
+      "requirements": [
+        "MDA-001",
+        "MDA-005",
+        "SEC-020"
+      ],
+      "status": "RED",
+      "failures": [
+        "production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts",
+        "scenario status expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "published matrix must be immutable",
+        "policy update must not regenerate old profileVersion matrix",
+        "checksum must remain stable"
+      ],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": false
+      },
+      "productStatus": "NOT_IMPLEMENTED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-CRITIC-005",
+      "group": "matrix-compiler",
+      "requirements": [
+        "MDA-003",
+        "MDA-004",
+        "INT-030"
+      ],
+      "status": "RED",
+      "failures": [
+        "production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts",
+        "scenario status expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "compiler must receive the full profile",
+        "compiler must not receive candidate data",
+        "critic context must exclude compiler reasoning",
+        "compiler and critic require separate protected traces",
+        "compiler and critic require separate capabilities"
+      ],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": false
+      },
+      "productStatus": "NOT_IMPLEMENTED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-SOURCE-006",
+      "group": "matrix-compiler",
+      "requirements": [
+        "MDA-003",
+        "MDA-005"
+      ],
+      "status": "RED",
+      "failures": [
+        "production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts",
+        "scenario status expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "unknown exact sourceRef must deny publish",
+        "sourceRef rejection must be typed",
+        "invalid sourceRef must not partially publish"
+      ],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": false
+      },
+      "productStatus": "NOT_IMPLEMENTED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-QUALITATIVE-007",
+      "group": "matrix-compiler",
+      "requirements": [
+        "MDA-003",
+        "VAC-011"
+      ],
+      "status": "RED",
+      "failures": [
+        "production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts",
+        "scenario status expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "qualitative requirement must still compile",
+        "criterion must preserve exact sourceRef",
+        "qualitative interpretation note is required",
+        "qualitative text must not gain numeric thresholds"
+      ],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": false
+      },
+      "productStatus": "NOT_IMPLEMENTED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-INVENTION-008",
+      "group": "matrix-compiler",
+      "requirements": [
+        "MDA-003",
+        "MDA-004",
+        "TST-121"
+      ],
+      "status": "RED",
+      "failures": [
+        "production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts",
+        "scenario status expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "critic must reject invented threshold/stop factor",
+        "critic must identify both inventions",
+        "published matrix must exclude inventions",
+        "shadow invention must block production routing"
+      ],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": false
+      },
+      "productStatus": "NOT_IMPLEMENTED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-FINGERPRINT-009",
+      "group": "matrix-compiler",
+      "requirements": [
+        "MDA-004",
+        "OPS-020"
+      ],
+      "status": "RED",
+      "failures": [
+        "production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts",
+        "scenario status expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "repair cycles must be at most two",
+        "matrix compilation calls must be at most six",
+        "same unchanged obstacle may be retried once",
+        "repeated obstacle must end with typed failure",
+        "bounded failure must not publish partial matrix"
+      ],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": false
+      },
+      "productStatus": "NOT_IMPLEMENTED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-CLAIM-010",
+      "group": "evidence",
+      "requirements": [
+        "ASM-070"
+      ],
+      "status": "RED",
+      "failures": [
+        "production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts",
+        "scenario status expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "candidate self-description must be stored as a source claim",
+        "repeated self-description is not independent verification",
+        "resume/interview repetition from candidate is one source class",
+        "claim attribution and provenance are required"
+      ],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": false
+      },
+      "productStatus": "NOT_IMPLEMENTED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-CONTEXT-011",
+      "group": "evidence",
+      "requirements": [
+        "ASM-071"
+      ],
+      "status": "RED",
+      "failures": [
+        "production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts",
+        "scenario status expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "decision evidence must not be capped at 240 characters",
+        "context must preserve question and answer",
+        "context must preserve neighboring turns",
+        "full source context must remain retrievable"
+      ],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": false
+      },
+      "productStatus": "NOT_IMPLEMENTED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-SPEAKER-012",
+      "group": "evidence",
+      "requirements": [
+        "ASM-072"
+      ],
+      "status": "RED",
+      "failures": [
+        "production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts",
+        "scenario status expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "interviewer question must not become candidate claim",
+        "unknown role cannot be sole decision evidence",
+        "only unknown-role evidence must yield insufficient data"
+      ],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": false
+      },
+      "productStatus": "NOT_IMPLEMENTED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-CONFLICT-013",
+      "group": "evidence",
+      "requirements": [
+        "ASM-071"
+      ],
+      "status": "RED",
+      "failures": [
+        "production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts",
+        "scenario status expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "global conflict pass is required after batches",
+        "cross-batch contradiction must create one conflict",
+        "conflict must retain both claim sides",
+        "conflict must include follow-up question"
+      ],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": false
+      },
+      "productStatus": "NOT_IMPLEMENTED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-UNMAPPED-014",
+      "group": "evidence",
+      "requirements": [
+        "ASM-073",
+        "ASM-050"
+      ],
+      "status": "RED",
+      "failures": [
+        "production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts",
+        "scenario status expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "unmapped signal must remain informational",
+        "candidate material must not create decision rules",
+        "unmapped signal must not change recommendation"
+      ],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": false
+      },
+      "productStatus": "NOT_IMPLEMENTED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-COVERAGE-015",
+      "group": "matrix-evaluation",
+      "requirements": [
+        "MDA-006"
+      ],
+      "status": "RED",
+      "failures": [
+        "production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts",
+        "scenario status expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "missing criterion row must reject assessment",
+        "gate must identify exact missing row",
+        "repair must be limited to missing row",
+        "final assessment must cover every criterion exactly once"
+      ],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": false
+      },
+      "productStatus": "NOT_IMPLEMENTED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-ABC-016",
+      "group": "matrix-evaluation",
+      "requirements": [
+        "ASM-014"
+      ],
+      "status": "RED",
+      "failures": [
+        "production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts",
+        "scenario status expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "ABC requires at least one admissible locator",
+        "fixture intentionally covers only part of A",
+        "partial A evidence must not force A/B/C"
+      ],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": false
+      },
+      "productStatus": "NOT_IMPLEMENTED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-VERIFY-017",
+      "group": "matrix-evaluation",
+      "requirements": [
+        "MDA-006",
+        "ASM-050"
+      ],
+      "status": "RED",
+      "failures": [
+        "production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts",
+        "scenario status expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "all critical classes must be selected for verification",
+        "no critical row may remain unverified",
+        "independent verification trace is required",
+        "verifier must use a clean context"
+      ],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": false
+      },
+      "productStatus": "NOT_IMPLEMENTED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-FORMULA-018",
+      "group": "matrix-evaluation",
+      "requirements": [
+        "ASM-050"
+      ],
+      "status": "RED",
+      "failures": [
+        "production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts",
+        "scenario status expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "stopFactorAndMissingRequired must deterministically yield Не рекомендовать",
+        "hardRequiredMismatch must deterministically yield Не рекомендовать",
+        "requiredUnknown must deterministically yield Недостаточно данных",
+        "normalRequiredMismatch must deterministically yield Рекомендовать с оговорками",
+        "riskOnly must deterministically yield Рекомендовать с оговорками",
+        "allClear must deterministically yield Рекомендовать",
+        "abcOnly must deterministically yield Рекомендовать",
+        "unmappedOnly must deterministically yield Рекомендовать",
+        "formula inputs and selected branch must be persisted"
+      ],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": false
+      },
+      "productStatus": "NOT_IMPLEMENTED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-INJECTION-019",
+      "group": "security",
+      "requirements": [
+        "ASM-074"
+      ],
+      "status": "RED",
+      "failures": [
+        "production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts",
+        "scenario status expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "candidate instructions must be untrusted data",
+        "prompt injection must not change workflow",
+        "injection text must not manufacture a positive recommendation"
+      ],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": false
+      },
+      "productStatus": "NOT_IMPLEMENTED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-SENSITIVE-020",
+      "group": "security",
+      "requirements": [
+        "ASM-074",
+        "SEC-021"
+      ],
+      "status": "RED",
+      "failures": [
+        "production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts",
+        "scenario status expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "prohibited sensitive values must be absent from decision context",
+        "prohibited sensitive fields must not create decision claims",
+        "masking must preserve scoped locator identity",
+        "user reasoning must not expose sensitive values"
+      ],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": false
+      },
+      "productStatus": "NOT_IMPLEMENTED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-ISOLATION-021",
+      "group": "security",
+      "requirements": [
+        "SEC-020"
+      ],
+      "status": "RED",
+      "failures": [
+        "production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts",
+        "scenario status expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "vacancy matrix may be shared",
+        "claims must not cross candidate scope",
+        "evidence must not cross candidate scope",
+        "working memory must not cross candidate scope"
+      ],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": false
+      },
+      "productStatus": "NOT_IMPLEMENTED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-SHADOW-022",
+      "group": "rollout-reporting",
+      "requirements": [
+        "OPS-021",
+        "TST-121"
+      ],
+      "status": "RED",
+      "failures": [
+        "production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts",
+        "scenario status expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "shadow artifacts and metrics must be retained",
+        "shadow workflow must have no user side effects",
+        "failed shadow quality gate must block production routing"
+      ],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": false
+      },
+      "productStatus": "NOT_IMPLEMENTED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-VERSION-023",
+      "group": "rollout-reporting",
+      "requirements": [
+        "OPS-021",
+        "WF-040"
+      ],
+      "status": "RED",
+      "failures": [
+        "production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts",
+        "scenario status expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "run must retain workflowVersion fixed at creation",
+        "one run must not mix legacy and matrix artifacts",
+        "routing changes affect only new runs"
+      ],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": false
+      },
+      "productStatus": "NOT_IMPLEMENTED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-LEGACY-024",
+      "group": "rollout-reporting",
+      "requirements": [
+        "WF-040"
+      ],
+      "status": "RED",
+      "failures": [
+        "production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts",
+        "scenario status expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "completed legacy result must remain immutable",
+        "manual reprocess must create new run/result version",
+        "previous result must remain readable"
+      ],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": false
+      },
+      "productStatus": "NOT_IMPLEMENTED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-REPORT-025",
+      "group": "rollout-reporting",
+      "requirements": [
+        "REP-020",
+        "REP-021"
+      ],
+      "status": "RED",
+      "failures": [
+        "production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts",
+        "scenario status expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "exactly two user result files must be published",
+        "PDF pair must contain the two established report kinds",
+        "both published files must be PDF",
+        "full report must cover all matrix rows",
+        "report must distinguish source text from interpretation",
+        "matrix data must not create a third file"
+      ],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": false
+      },
+      "productStatus": "NOT_IMPLEMENTED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-CUTOVER-026",
+      "group": "rollout-reporting",
+      "requirements": [
+        "TST-122"
+      ],
+      "status": "RED",
+      "failures": [
+        "production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts",
+        "scenario status expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "cutover gate must require matrix acceptance and all four mandatory E2E suites",
+        "release evidence must refer to one immutable build",
+        "one failed mandatory suite must block production routing",
+        "gate must identify the failing mandatory suite"
+      ],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": false
+      },
+      "productStatus": "NOT_IMPLEMENTED",
+      "externalCalls": 0
+    }
+  ]
+}

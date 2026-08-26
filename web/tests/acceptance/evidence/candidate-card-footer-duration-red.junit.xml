@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="VIS-DEMO READY candidate card footer separates actual processing duration from recommendation" time="0.258883" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs" failure="completed card exposes a semantic footer region">
+		<failure type="testCodeFailure" message="completed card exposes a semantic footer region">
+[Error [ERR_TEST_FAILURE]: completed card exposes a semantic footer region] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: completed card exposes a semantic footer region
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/demo-interface-visual-parity.acceptance.test.mjs:419:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="VIS-DEMO candidate progress track keeps at least 12px before the footer border" time="0.002207" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs" failure="progress-to-footer gap is at least 12px, received 2px">
+		<failure type="testCodeFailure" message="progress-to-footer gap is at least 12px, received 2px">
+[Error [ERR_TEST_FAILURE]: progress-to-footer gap is at least 12px, received 2px] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: progress-to-footer gap is at least 12px, received 2px
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/demo-interface-visual-parity.acceptance.test.mjs:437:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 2 -->
+	<!-- suites 0 -->
+	<!-- pass 0 -->
+	<!-- fail 2 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 536.7739 -->
+</testsuites>

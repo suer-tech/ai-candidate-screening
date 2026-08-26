@@ -1,0 +1,919 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="MDA-LAZY-001 [MDA-001, WF-030]: lazy-shared" time="0.006465" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs" failure="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;matrix must not compile at profile activation&#10;first candidate must cause exactly one shared compilation&#10;candidate materials must not enter compiler input&#10;both candidates must reuse one checksum&#10;&#10;6 !== 0&#10;">
+		<failure type="testCodeFailure" message="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;matrix must not compile at profile activation&#10;first candidate must cause exactly one shared compilation&#10;candidate materials must not enter compiler input&#10;both candidates must reuse one checksum&#10;&#10;6 !== 0">
+[Error [ERR_TEST_FAILURE]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+matrix must not compile at profile activation
+first candidate must cause exactly one shared compilation
+candidate materials must not enter compiler input
+both candidates must reuse one checksum
+
+6 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+  scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  matrix must not compile at profile activation
+  first candidate must cause exactly one shared compilation
+  candidate materials must not enter compiler input
+  both candidates must reuse one checksum
+  
+  6 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/matrix-driven-assessment.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 6,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="MDA-CONCURRENCY-002 [MDA-002]: concurrent-claim" time="0.000647" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs" failure="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;concurrent compilation must have one claim winner&#10;one profileVersion must publish one artifact&#10;both candidate waiters must continue&#10;waiters must observe one checksum&#10;&#10;6 !== 0&#10;">
+		<failure type="testCodeFailure" message="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;concurrent compilation must have one claim winner&#10;one profileVersion must publish one artifact&#10;both candidate waiters must continue&#10;waiters must observe one checksum&#10;&#10;6 !== 0">
+[Error [ERR_TEST_FAILURE]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+concurrent compilation must have one claim winner
+one profileVersion must publish one artifact
+both candidate waiters must continue
+waiters must observe one checksum
+
+6 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+  scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  concurrent compilation must have one claim winner
+  one profileVersion must publish one artifact
+  both candidate waiters must continue
+  waiters must observe one checksum
+  
+  6 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/matrix-driven-assessment.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 6,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="MDA-LEASE-003 [MDA-002]: lease-fencing" time="0.000233" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs" failure="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;expired compilation lease must be recoverable&#10;stale fencing token must not publish&#10;current owner alone must publish once&#10;&#10;5 !== 0&#10;">
+		<failure type="testCodeFailure" message="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;expired compilation lease must be recoverable&#10;stale fencing token must not publish&#10;current owner alone must publish once&#10;&#10;5 !== 0">
+[Error [ERR_TEST_FAILURE]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+expired compilation lease must be recoverable
+stale fencing token must not publish
+current owner alone must publish once
+
+5 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+  scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  expired compilation lease must be recoverable
+  stale fencing token must not publish
+  current owner alone must publish once
+  
+  5 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/matrix-driven-assessment.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 5,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="MDA-IMMUTABLE-004 [MDA-001, MDA-005, SEC-020]: immutable-reuse" time="0.000159" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs" failure="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;published matrix must be immutable&#10;policy update must not regenerate old profileVersion matrix&#10;checksum must remain stable&#10;&#10;5 !== 0&#10;">
+		<failure type="testCodeFailure" message="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;published matrix must be immutable&#10;policy update must not regenerate old profileVersion matrix&#10;checksum must remain stable&#10;&#10;5 !== 0">
+[Error [ERR_TEST_FAILURE]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+published matrix must be immutable
+policy update must not regenerate old profileVersion matrix
+checksum must remain stable
+
+5 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+  scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  published matrix must be immutable
+  policy update must not regenerate old profileVersion matrix
+  checksum must remain stable
+  
+  5 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/matrix-driven-assessment.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 5,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="MDA-CRITIC-005 [MDA-003, MDA-004, INT-030]: critic-isolation" time="0.000212" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs" failure="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;compiler must receive the full profile&#10;compiler must not receive candidate data&#10;critic context must exclude compiler reasoning&#10;compiler and critic require separate protected traces&#10;compiler and critic require separate capabilities&#10;&#10;7 !== 0&#10;">
+		<failure type="testCodeFailure" message="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;compiler must receive the full profile&#10;compiler must not receive candidate data&#10;critic context must exclude compiler reasoning&#10;compiler and critic require separate protected traces&#10;compiler and critic require separate capabilities&#10;&#10;7 !== 0">
+[Error [ERR_TEST_FAILURE]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+compiler must receive the full profile
+compiler must not receive candidate data
+critic context must exclude compiler reasoning
+compiler and critic require separate protected traces
+compiler and critic require separate capabilities
+
+7 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+  scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  compiler must receive the full profile
+  compiler must not receive candidate data
+  critic context must exclude compiler reasoning
+  compiler and critic require separate protected traces
+  compiler and critic require separate capabilities
+  
+  7 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/matrix-driven-assessment.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 7,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="MDA-SOURCE-006 [MDA-003, MDA-005]: invalid-source-ref" time="0.000179" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs" failure="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;unknown exact sourceRef must deny publish&#10;sourceRef rejection must be typed&#10;invalid sourceRef must not partially publish&#10;&#10;5 !== 0&#10;">
+		<failure type="testCodeFailure" message="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;unknown exact sourceRef must deny publish&#10;sourceRef rejection must be typed&#10;invalid sourceRef must not partially publish&#10;&#10;5 !== 0">
+[Error [ERR_TEST_FAILURE]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+unknown exact sourceRef must deny publish
+sourceRef rejection must be typed
+invalid sourceRef must not partially publish
+
+5 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+  scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  unknown exact sourceRef must deny publish
+  sourceRef rejection must be typed
+  invalid sourceRef must not partially publish
+  
+  5 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/matrix-driven-assessment.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 5,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="MDA-QUALITATIVE-007 [MDA-003, VAC-011]: best-effort-no-threshold" time="0.000132" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs" failure="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;qualitative requirement must still compile&#10;criterion must preserve exact sourceRef&#10;qualitative interpretation note is required&#10;qualitative text must not gain numeric thresholds&#10;&#10;6 !== 0&#10;">
+		<failure type="testCodeFailure" message="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;qualitative requirement must still compile&#10;criterion must preserve exact sourceRef&#10;qualitative interpretation note is required&#10;qualitative text must not gain numeric thresholds&#10;&#10;6 !== 0">
+[Error [ERR_TEST_FAILURE]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+qualitative requirement must still compile
+criterion must preserve exact sourceRef
+qualitative interpretation note is required
+qualitative text must not gain numeric thresholds
+
+6 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+  scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  qualitative requirement must still compile
+  criterion must preserve exact sourceRef
+  qualitative interpretation note is required
+  qualitative text must not gain numeric thresholds
+  
+  6 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/matrix-driven-assessment.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 6,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="MDA-INVENTION-008 [MDA-003, MDA-004, TST-121]: invented-policy-repair" time="0.000113" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs" failure="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;critic must reject invented threshold/stop factor&#10;critic must identify both inventions&#10;published matrix must exclude inventions&#10;shadow invention must block production routing&#10;&#10;6 !== 0&#10;">
+		<failure type="testCodeFailure" message="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;critic must reject invented threshold/stop factor&#10;critic must identify both inventions&#10;published matrix must exclude inventions&#10;shadow invention must block production routing&#10;&#10;6 !== 0">
+[Error [ERR_TEST_FAILURE]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+critic must reject invented threshold/stop factor
+critic must identify both inventions
+published matrix must exclude inventions
+shadow invention must block production routing
+
+6 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+  scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  critic must reject invented threshold/stop factor
+  critic must identify both inventions
+  published matrix must exclude inventions
+  shadow invention must block production routing
+  
+  6 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/matrix-driven-assessment.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 6,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="MDA-FINGERPRINT-009 [MDA-004, OPS-020]: bounded-fingerprint" time="0.000160" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs" failure="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;repair cycles must be at most two&#10;matrix compilation calls must be at most six&#10;same unchanged obstacle may be retried once&#10;repeated obstacle must end with typed failure&#10;bounded failure must not publish partial matrix&#10;&#10;7 !== 0&#10;">
+		<failure type="testCodeFailure" message="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;repair cycles must be at most two&#10;matrix compilation calls must be at most six&#10;same unchanged obstacle may be retried once&#10;repeated obstacle must end with typed failure&#10;bounded failure must not publish partial matrix&#10;&#10;7 !== 0">
+[Error [ERR_TEST_FAILURE]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+repair cycles must be at most two
+matrix compilation calls must be at most six
+same unchanged obstacle may be retried once
+repeated obstacle must end with typed failure
+bounded failure must not publish partial matrix
+
+7 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+  scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  repair cycles must be at most two
+  matrix compilation calls must be at most six
+  same unchanged obstacle may be retried once
+  repeated obstacle must end with typed failure
+  bounded failure must not publish partial matrix
+  
+  7 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/matrix-driven-assessment.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 7,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="MDA-CLAIM-010 [ASM-070]: claims-not-facts" time="0.000223" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs" failure="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;candidate self-description must be stored as a source claim&#10;repeated self-description is not independent verification&#10;resume/interview repetition from candidate is one source class&#10;claim attribution and provenance are required&#10;&#10;6 !== 0&#10;">
+		<failure type="testCodeFailure" message="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;candidate self-description must be stored as a source claim&#10;repeated self-description is not independent verification&#10;resume/interview repetition from candidate is one source class&#10;claim attribution and provenance are required&#10;&#10;6 !== 0">
+[Error [ERR_TEST_FAILURE]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+candidate self-description must be stored as a source claim
+repeated self-description is not independent verification
+resume/interview repetition from candidate is one source class
+claim attribution and provenance are required
+
+6 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+  scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  candidate self-description must be stored as a source claim
+  repeated self-description is not independent verification
+  resume/interview repetition from candidate is one source class
+  claim attribution and provenance are required
+  
+  6 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/matrix-driven-assessment.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 6,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="MDA-CONTEXT-011 [ASM-071]: full-context" time="0.000152" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs" failure="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;decision evidence must not be capped at 240 characters&#10;context must preserve question and answer&#10;context must preserve neighboring turns&#10;full source context must remain retrievable&#10;&#10;6 !== 0&#10;">
+		<failure type="testCodeFailure" message="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;decision evidence must not be capped at 240 characters&#10;context must preserve question and answer&#10;context must preserve neighboring turns&#10;full source context must remain retrievable&#10;&#10;6 !== 0">
+[Error [ERR_TEST_FAILURE]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+decision evidence must not be capped at 240 characters
+context must preserve question and answer
+context must preserve neighboring turns
+full source context must remain retrievable
+
+6 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+  scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  decision evidence must not be capped at 240 characters
+  context must preserve question and answer
+  context must preserve neighboring turns
+  full source context must remain retrievable
+  
+  6 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/matrix-driven-assessment.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 6,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="MDA-SPEAKER-012 [ASM-072]: speaker-gate" time="0.000156" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs" failure="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;interviewer question must not become candidate claim&#10;unknown role cannot be sole decision evidence&#10;only unknown-role evidence must yield insufficient data&#10;&#10;5 !== 0&#10;">
+		<failure type="testCodeFailure" message="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;interviewer question must not become candidate claim&#10;unknown role cannot be sole decision evidence&#10;only unknown-role evidence must yield insufficient data&#10;&#10;5 !== 0">
+[Error [ERR_TEST_FAILURE]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+interviewer question must not become candidate claim
+unknown role cannot be sole decision evidence
+only unknown-role evidence must yield insufficient data
+
+5 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+  scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  interviewer question must not become candidate claim
+  unknown role cannot be sole decision evidence
+  only unknown-role evidence must yield insufficient data
+  
+  5 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/matrix-driven-assessment.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 5,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="MDA-CONFLICT-013 [ASM-071]: global-conflict" time="0.000124" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs" failure="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;global conflict pass is required after batches&#10;cross-batch contradiction must create one conflict&#10;conflict must retain both claim sides&#10;conflict must include follow-up question&#10;&#10;6 !== 0&#10;">
+		<failure type="testCodeFailure" message="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;global conflict pass is required after batches&#10;cross-batch contradiction must create one conflict&#10;conflict must retain both claim sides&#10;conflict must include follow-up question&#10;&#10;6 !== 0">
+[Error [ERR_TEST_FAILURE]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+global conflict pass is required after batches
+cross-batch contradiction must create one conflict
+conflict must retain both claim sides
+conflict must include follow-up question
+
+6 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+  scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  global conflict pass is required after batches
+  cross-batch contradiction must create one conflict
+  conflict must retain both claim sides
+  conflict must include follow-up question
+  
+  6 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/matrix-driven-assessment.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 6,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="MDA-UNMAPPED-014 [ASM-073, ASM-050]: unmapped-informational" time="0.000142" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs" failure="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;unmapped signal must remain informational&#10;candidate material must not create decision rules&#10;unmapped signal must not change recommendation&#10;&#10;5 !== 0&#10;">
+		<failure type="testCodeFailure" message="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;unmapped signal must remain informational&#10;candidate material must not create decision rules&#10;unmapped signal must not change recommendation&#10;&#10;5 !== 0">
+[Error [ERR_TEST_FAILURE]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+unmapped signal must remain informational
+candidate material must not create decision rules
+unmapped signal must not change recommendation
+
+5 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+  scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  unmapped signal must remain informational
+  candidate material must not create decision rules
+  unmapped signal must not change recommendation
+  
+  5 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/matrix-driven-assessment.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 5,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="MDA-COVERAGE-015 [MDA-006]: row-coverage" time="0.000098" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs" failure="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;missing criterion row must reject assessment&#10;gate must identify exact missing row&#10;repair must be limited to missing row&#10;final assessment must cover every criterion exactly once&#10;&#10;6 !== 0&#10;">
+		<failure type="testCodeFailure" message="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;missing criterion row must reject assessment&#10;gate must identify exact missing row&#10;repair must be limited to missing row&#10;final assessment must cover every criterion exactly once&#10;&#10;6 !== 0">
+[Error [ERR_TEST_FAILURE]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+missing criterion row must reject assessment
+gate must identify exact missing row
+repair must be limited to missing row
+final assessment must cover every criterion exactly once
+
+6 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+  scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  missing criterion row must reject assessment
+  gate must identify exact missing row
+  repair must be limited to missing row
+  final assessment must cover every criterion exactly once
+  
+  6 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/matrix-driven-assessment.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 6,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="MDA-ABC-016 [ASM-014]: abc-sufficiency" time="0.000105" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs" failure="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;ABC requires at least one admissible locator&#10;fixture intentionally covers only part of A&#10;partial A evidence must not force A/B/C&#10;&#10;5 !== 0&#10;">
+		<failure type="testCodeFailure" message="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;ABC requires at least one admissible locator&#10;fixture intentionally covers only part of A&#10;partial A evidence must not force A/B/C&#10;&#10;5 !== 0">
+[Error [ERR_TEST_FAILURE]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+ABC requires at least one admissible locator
+fixture intentionally covers only part of A
+partial A evidence must not force A/B/C
+
+5 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+  scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  ABC requires at least one admissible locator
+  fixture intentionally covers only part of A
+  partial A evidence must not force A/B/C
+  
+  5 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/matrix-driven-assessment.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 5,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="MDA-VERIFY-017 [MDA-006, ASM-050]: critical-verification" time="0.000123" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs" failure="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;all critical classes must be selected for verification&#10;no critical row may remain unverified&#10;independent verification trace is required&#10;verifier must use a clean context&#10;&#10;6 !== 0&#10;">
+		<failure type="testCodeFailure" message="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;all critical classes must be selected for verification&#10;no critical row may remain unverified&#10;independent verification trace is required&#10;verifier must use a clean context&#10;&#10;6 !== 0">
+[Error [ERR_TEST_FAILURE]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+all critical classes must be selected for verification
+no critical row may remain unverified
+independent verification trace is required
+verifier must use a clean context
+
+6 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+  scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  all critical classes must be selected for verification
+  no critical row may remain unverified
+  independent verification trace is required
+  verifier must use a clean context
+  
+  6 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/matrix-driven-assessment.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 6,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="MDA-FORMULA-018 [ASM-050]: recommendation-formula" time="0.000126" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs" failure="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;stopFactorAndMissingRequired must deterministically yield Не рекомендовать&#10;hardRequiredMismatch must deterministically yield Не рекомендовать&#10;requiredUnknown must deterministically yield Недостаточно данных&#10;normalRequiredMismatch must deterministically yield Рекомендовать с оговорками&#10;riskOnly must deterministically yield Рекомендовать с оговорками&#10;allClear must deterministically yield Рекомендовать&#10;abcOnly must deterministically yield Рекомендовать&#10;unmappedOnly must deterministically yield Рекомендовать&#10;formula inputs and selected branch must be persisted&#10;&#10;11 !== 0&#10;">
+		<failure type="testCodeFailure" message="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;stopFactorAndMissingRequired must deterministically yield Не рекомендовать&#10;hardRequiredMismatch must deterministically yield Не рекомендовать&#10;requiredUnknown must deterministically yield Недостаточно данных&#10;normalRequiredMismatch must deterministically yield Рекомендовать с оговорками&#10;riskOnly must deterministically yield Рекомендовать с оговорками&#10;allClear must deterministically yield Рекомендовать&#10;abcOnly must deterministically yield Рекомендовать&#10;unmappedOnly must deterministically yield Рекомендовать&#10;formula inputs and selected branch must be persisted&#10;&#10;11 !== 0">
+[Error [ERR_TEST_FAILURE]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+stopFactorAndMissingRequired must deterministically yield Не рекомендовать
+hardRequiredMismatch must deterministically yield Не рекомендовать
+requiredUnknown must deterministically yield Недостаточно данных
+normalRequiredMismatch must deterministically yield Рекомендовать с оговорками
+riskOnly must deterministically yield Рекомендовать с оговорками
+allClear must deterministically yield Рекомендовать
+abcOnly must deterministically yield Рекомендовать
+unmappedOnly must deterministically yield Рекомендовать
+formula inputs and selected branch must be persisted
+
+11 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+  scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  stopFactorAndMissingRequired must deterministically yield Не рекомендовать
+  hardRequiredMismatch must deterministically yield Не рекомендовать
+  requiredUnknown must deterministically yield Недостаточно данных
+  normalRequiredMismatch must deterministically yield Рекомендовать с оговорками
+  riskOnly must deterministically yield Рекомендовать с оговорками
+  allClear must deterministically yield Рекомендовать
+  abcOnly must deterministically yield Рекомендовать
+  unmappedOnly must deterministically yield Рекомендовать
+  formula inputs and selected branch must be persisted
+  
+  11 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/matrix-driven-assessment.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 11,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="MDA-INJECTION-019 [ASM-074]: prompt-injection" time="0.000096" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs" failure="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;candidate instructions must be untrusted data&#10;prompt injection must not change workflow&#10;injection text must not manufacture a positive recommendation&#10;&#10;5 !== 0&#10;">
+		<failure type="testCodeFailure" message="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;candidate instructions must be untrusted data&#10;prompt injection must not change workflow&#10;injection text must not manufacture a positive recommendation&#10;&#10;5 !== 0">
+[Error [ERR_TEST_FAILURE]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+candidate instructions must be untrusted data
+prompt injection must not change workflow
+injection text must not manufacture a positive recommendation
+
+5 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+  scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  candidate instructions must be untrusted data
+  prompt injection must not change workflow
+  injection text must not manufacture a positive recommendation
+  
+  5 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/matrix-driven-assessment.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 5,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="MDA-SENSITIVE-020 [ASM-074, SEC-021]: sensitive-exclusion" time="0.000082" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs" failure="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;prohibited sensitive values must be absent from decision context&#10;prohibited sensitive fields must not create decision claims&#10;masking must preserve scoped locator identity&#10;user reasoning must not expose sensitive values&#10;&#10;6 !== 0&#10;">
+		<failure type="testCodeFailure" message="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;prohibited sensitive values must be absent from decision context&#10;prohibited sensitive fields must not create decision claims&#10;masking must preserve scoped locator identity&#10;user reasoning must not expose sensitive values&#10;&#10;6 !== 0">
+[Error [ERR_TEST_FAILURE]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+prohibited sensitive values must be absent from decision context
+prohibited sensitive fields must not create decision claims
+masking must preserve scoped locator identity
+user reasoning must not expose sensitive values
+
+6 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+  scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  prohibited sensitive values must be absent from decision context
+  prohibited sensitive fields must not create decision claims
+  masking must preserve scoped locator identity
+  user reasoning must not expose sensitive values
+  
+  6 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/matrix-driven-assessment.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 6,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="MDA-ISOLATION-021 [SEC-020]: cross-candidate-isolation" time="0.000096" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs" failure="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;vacancy matrix may be shared&#10;claims must not cross candidate scope&#10;evidence must not cross candidate scope&#10;working memory must not cross candidate scope&#10;&#10;6 !== 0&#10;">
+		<failure type="testCodeFailure" message="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;vacancy matrix may be shared&#10;claims must not cross candidate scope&#10;evidence must not cross candidate scope&#10;working memory must not cross candidate scope&#10;&#10;6 !== 0">
+[Error [ERR_TEST_FAILURE]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+vacancy matrix may be shared
+claims must not cross candidate scope
+evidence must not cross candidate scope
+working memory must not cross candidate scope
+
+6 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+  scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  vacancy matrix may be shared
+  claims must not cross candidate scope
+  evidence must not cross candidate scope
+  working memory must not cross candidate scope
+  
+  6 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/matrix-driven-assessment.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 6,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="MDA-SHADOW-022 [OPS-021, TST-121]: shadow-side-effects" time="0.000089" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs" failure="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;shadow artifacts and metrics must be retained&#10;shadow workflow must have no user side effects&#10;failed shadow quality gate must block production routing&#10;&#10;5 !== 0&#10;">
+		<failure type="testCodeFailure" message="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;shadow artifacts and metrics must be retained&#10;shadow workflow must have no user side effects&#10;failed shadow quality gate must block production routing&#10;&#10;5 !== 0">
+[Error [ERR_TEST_FAILURE]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+shadow artifacts and metrics must be retained
+shadow workflow must have no user side effects
+failed shadow quality gate must block production routing
+
+5 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+  scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  shadow artifacts and metrics must be retained
+  shadow workflow must have no user side effects
+  failed shadow quality gate must block production routing
+  
+  5 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/matrix-driven-assessment.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 5,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="MDA-VERSION-023 [OPS-021, WF-040]: fixed-workflow-version" time="0.000077" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs" failure="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;run must retain workflowVersion fixed at creation&#10;one run must not mix legacy and matrix artifacts&#10;routing changes affect only new runs&#10;&#10;5 !== 0&#10;">
+		<failure type="testCodeFailure" message="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;run must retain workflowVersion fixed at creation&#10;one run must not mix legacy and matrix artifacts&#10;routing changes affect only new runs&#10;&#10;5 !== 0">
+[Error [ERR_TEST_FAILURE]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+run must retain workflowVersion fixed at creation
+one run must not mix legacy and matrix artifacts
+routing changes affect only new runs
+
+5 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+  scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  run must retain workflowVersion fixed at creation
+  one run must not mix legacy and matrix artifacts
+  routing changes affect only new runs
+  
+  5 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/matrix-driven-assessment.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 5,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="MDA-LEGACY-024 [WF-040]: legacy-immutability" time="0.000086" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs" failure="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;completed legacy result must remain immutable&#10;manual reprocess must create new run/result version&#10;previous result must remain readable&#10;&#10;5 !== 0&#10;">
+		<failure type="testCodeFailure" message="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;completed legacy result must remain immutable&#10;manual reprocess must create new run/result version&#10;previous result must remain readable&#10;&#10;5 !== 0">
+[Error [ERR_TEST_FAILURE]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+completed legacy result must remain immutable
+manual reprocess must create new run/result version
+previous result must remain readable
+
+5 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+  scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  completed legacy result must remain immutable
+  manual reprocess must create new run/result version
+  previous result must remain readable
+  
+  5 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/matrix-driven-assessment.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 5,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="MDA-REPORT-025 [REP-020, REP-021]: two-pdf-report" time="0.000118" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs" failure="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;exactly two user result files must be published&#10;PDF pair must contain the two established report kinds&#10;both published files must be PDF&#10;full report must cover all matrix rows&#10;report must distinguish source text from interpretation&#10;matrix data must not create a third file&#10;&#10;8 !== 0&#10;">
+		<failure type="testCodeFailure" message="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;exactly two user result files must be published&#10;PDF pair must contain the two established report kinds&#10;both published files must be PDF&#10;full report must cover all matrix rows&#10;report must distinguish source text from interpretation&#10;matrix data must not create a third file&#10;&#10;8 !== 0">
+[Error [ERR_TEST_FAILURE]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+exactly two user result files must be published
+PDF pair must contain the two established report kinds
+both published files must be PDF
+full report must cover all matrix rows
+report must distinguish source text from interpretation
+matrix data must not create a third file
+
+8 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+  scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  exactly two user result files must be published
+  PDF pair must contain the two established report kinds
+  both published files must be PDF
+  full report must cover all matrix rows
+  report must distinguish source text from interpretation
+  matrix data must not create a third file
+  
+  8 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/matrix-driven-assessment.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 8,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="MDA-CUTOVER-026 [TST-122]: release-regression-gate" time="0.000144" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs" failure="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;cutover gate must require matrix acceptance and all four mandatory E2E suites&#10;release evidence must refer to one immutable build&#10;one failed mandatory suite must block production routing&#10;gate must identify the failing mandatory suite&#10;&#10;6 !== 0&#10;">
+		<failure type="testCodeFailure" message="production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts&#10;scenario status expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;cutover gate must require matrix acceptance and all four mandatory E2E suites&#10;release evidence must refer to one immutable build&#10;one failed mandatory suite must block production routing&#10;gate must identify the failing mandatory suite&#10;&#10;6 !== 0">
+[Error [ERR_TEST_FAILURE]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+cutover gate must require matrix acceptance and all four mandatory E2E suites
+release evidence must refer to one immutable build
+one failed mandatory suite must block production routing
+gate must identify the failing mandatory suite
+
+6 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: production conformance adapter is required at server/candidate-pipeline/matrix-driven-conformance.ts
+  scenario status expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  cutover gate must require matrix acceptance and all four mandatory E2E suites
+  release evidence must refer to one immutable build
+  one failed mandatory suite must block production routing
+  gate must identify the failing mandatory suite
+  
+  6 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/matrix-driven-assessment.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 6,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 26 -->
+	<!-- suites 0 -->
+	<!-- pass 0 -->
+	<!-- fail 26 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 99.1874 -->
+</testsuites>

@@ -1,4 +1,5 @@
-import type { LogicalLlmCapability, RuntimeConfiguration } from "./configuration.ts";
+import type { EffectiveCapabilityConfig, LogicalLlmCapability, RuntimeConfiguration } from "./configuration.ts";
+import type { SchemaArtifact } from "./artifacts.ts";
 import {
   writeProtectedTraceFailOpen,
   type AdminOnlyProtectedTraceStore,
@@ -22,6 +23,7 @@ export interface ProviderAttemptRequest {
   contentBlocks?: JsonValue[];
   toolDefinitions: JsonValue[];
   toolChoice?: JsonValue;
+  responseFormat: JsonValue;
   generationParameters: JsonValue;
   limits: JsonValue;
   timeoutMs: number;
@@ -70,6 +72,7 @@ export class LlmProviderAttemptError extends Error {
 
 export interface ExecuteLlmAttemptInput {
   capability: LogicalLlmCapability;
+  responseSchema?: SchemaArtifact;
   correlation: TraceCorrelation;
   request: {
     messages: JsonValue[];
@@ -79,6 +82,45 @@ export interface ExecuteLlmAttemptInput {
   };
   inputSnapshot: { materials: MaterialSnapshot[]; context: JsonValue };
   explicitFallbackIndex?: number;
+}
+
+function jsonSchemaPrimitiveType(value: JsonValue | undefined): string | undefined {
+  if (value === null) return "null";
+  if (typeof value === "string" || typeof value === "boolean") return typeof value;
+  if (typeof value === "number" && Number.isFinite(value)) return Number.isInteger(value) ? "integer" : "number";
+  return undefined;
+}
+
+function normalizeStrictSchemaTypes(value: JsonValue): JsonValue {
+  if (Array.isArray(value)) return value.map(normalizeStrictSchemaTypes);
+  if (!value || typeof value !== "object") return value;
+  const normalized = Object.fromEntries(
+    Object.entries(value)
+      .filter(([key]) => key !== "uniqueItems")
+      .map(([key, child]) => [key, normalizeStrictSchemaTypes(child)]),
+  ) as Record<string, JsonValue>;
+  if (normalized.type === undefined) {
+    let inferred = Object.hasOwn(normalized, "const") ? jsonSchemaPrimitiveType(normalized.const) : undefined;
+    if (!inferred && Array.isArray(normalized.enum) && normalized.enum.length > 0) {
+      const types = [...new Set(normalized.enum.map(jsonSchemaPrimitiveType))];
+      if (types.length === 1) inferred = types[0];
+    }
+    if (inferred) normalized.type = inferred;
+  }
+  return normalized;
+}
+
+export function structuredResponseFormat(artifact: Pick<SchemaArtifact, "id" | "version" | "schema">): JsonValue {
+  const rawName = `${artifact.id}_${artifact.version}`.replace(/[^A-Za-z0-9_-]+/g, "_");
+  const name = (rawName || "structured_response").slice(0, 64);
+  return {
+    type: "json_schema",
+    json_schema: {
+      name,
+      strict: true,
+      schema: normalizeStrictSchemaTypes(structuredClone(artifact.schema) as JsonValue),
+    },
+  };
 }
 
 export interface ExecuteLlmAttemptDependencies {
@@ -101,10 +143,21 @@ export async function executeLlmAttempt(
 ): Promise<ExecuteLlmAttemptResult> {
   const clock = dependencies.clock ?? (() => new Date());
   const monotonic = dependencies.monotonicClock ?? (() => performance.now());
-  const config = dependencies.configuration.resolve(
+  const resolvedConfig = dependencies.configuration.resolve(
     input.capability,
     input.explicitFallbackIndex === undefined ? undefined : { explicitFallbackIndex: input.explicitFallbackIndex },
   );
+  const config: Readonly<EffectiveCapabilityConfig> = input.responseSchema
+    ? Object.freeze({ ...resolvedConfig, responseSchema: input.responseSchema })
+    : resolvedConfig;
+  const responseFormat = structuredResponseFormat(config.responseSchema);
+  const tracedRequest = {
+    messages: structuredClone(input.request.messages),
+    contentBlocks: input.request.contentBlocks ? structuredClone(input.request.contentBlocks) : undefined,
+    toolDefinitions: structuredClone(input.request.toolDefinitions),
+    toolChoice: input.request.toolChoice === undefined ? undefined : structuredClone(input.request.toolChoice),
+    responseFormat: structuredClone(responseFormat),
+  };
   const startedAt = clock().toISOString();
   const startedTick = monotonic();
 
@@ -118,6 +171,7 @@ export async function executeLlmAttempt(
       contentBlocks: input.request.contentBlocks ? structuredClone(input.request.contentBlocks) : undefined,
       toolDefinitions: structuredClone(input.request.toolDefinitions),
       toolChoice: input.request.toolChoice === undefined ? undefined : structuredClone(input.request.toolChoice),
+      responseFormat: structuredClone(responseFormat),
       generationParameters: structuredClone(config.generationParameters),
       limits: structuredClone(config.limits),
       timeoutMs: config.timeoutMs,
@@ -127,7 +181,7 @@ export async function executeLlmAttempt(
       correlation: { ...input.correlation, providerRequestId: response.providerRequestId },
       capability: input.capability,
       config,
-      request: input.request,
+      request: tracedRequest,
       inputSnapshot: input.inputSnapshot,
       toolEvents: response.toolEvents,
       response: {
@@ -158,7 +212,7 @@ export async function executeLlmAttempt(
       correlation: input.correlation,
       capability: input.capability,
       config,
-      request: input.request,
+      request: tracedRequest,
       inputSnapshot: input.inputSnapshot,
       toolEvents: [],
       execution: {

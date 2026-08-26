@@ -1,0 +1,193 @@
+
+> site-creator-vinext-starter@0.1.0 test:editable-vacancy-prompts
+> node --import tsx --test tests/editable-vacancy-prompts.acceptance.test.mjs
+
+✖ VAC-040/TST-086: generation action opens a prompt modal, confirms separately, shows progress and completes safely (15.0953ms)
+✖ VAC-040/SEC-011/TST-086: confirmed generation sends one normalized immutable snapshot through the protected API (0.2575ms)
+✖ VAC-041/TST-086: analysis prompt is a local sixth settings section with reset, validation and explicit save (0.2582ms)
+✖ VAC-041/ASM-062/TST-086: analysis prompt is versioned and every run keeps its exact immutable prompt snapshot (0.1326ms)
+✖ ASM-062/TST-086: untrusted analysis instructions cannot override evidence or schema constraints (0.1423ms)
+✖ SEC-011/TST-086: prompt access, limits, audit metadata and ordinary logs fail closed without content leaks (0.1384ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 0
+ℹ fail 6
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 161.7574
+
+✖ failing tests:
+
+test at tests\editable-vacancy-prompts.acceptance.test.mjs:7:3
+✖ VAC-040/TST-086: generation action opens a prompt modal, confirms separately, shows progress and completes safely (15.0953ms)
+  AssertionError [ERR_ASSERTION]: Editable vacancy prompts conformance boundary is absent: export runEditableVacancyPromptsConformanceScenario(fixture) from server/product/application.ts
+  status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+  headerActions: expected exact ["Сгенерировать описание","Настройки","Архив"]; actual=undefined
+  modal.title: expected "Сгенерировать описание вакансии"; actual=undefined
+  modal.fieldLabel: expected "Инструкция для генерации"; actual=undefined
+  modal.defaultArtifactId: expected "vacancy-profile/v1"; actual=undefined
+  modal.resetAvailable: expected true; actual=undefined
+  llmCalls.afterHeaderClick: expected 0; actual=undefined
+  llmCalls.beforeConfirmation: expected 0; actual=undefined
+  llmCalls.afterCancelledConfirmation: expected 0; actual=undefined
+  llmCalls.afterConfirmedDoubleClick: expected 1; actual=undefined
+  pending.generateDisabled: expected true; actual=undefined
+  pending.spinnerVisible: expected true; actual=undefined
+  pending.parallelLaunchPrevented: expected true; actual=undefined
+  completion.filledSections: expected exact ["Образ результата","ABC-критерии","Компетенции","Стоп-факторы","Доступ к КЕ"]; actual=undefined
+  completion.modalClosed: expected true; actual=undefined
+  completion.toastVisible: expected true; actual=undefined
+  completion.audioAttempted: expected true; actual=undefined
+  completion.audioFailureIgnored: expected true; actual=undefined
+  
+  19 !== 0
+  
+      at TestContext.<anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/editable-vacancy-prompts.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 19,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\editable-vacancy-prompts.acceptance.test.mjs:7:3
+✖ VAC-040/SEC-011/TST-086: confirmed generation sends one normalized immutable snapshot through the protected API (0.2575ms)
+  AssertionError [ERR_ASSERTION]: Editable vacancy prompts conformance boundary is absent: export runEditableVacancyPromptsConformanceScenario(fixture) from server/product/application.ts
+  status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+  acceptedPrompt: expected "Учитывай измеримый результат.\nНе выдумывай отсутствующие сведения."; actual=undefined
+  promptArtifactId: expected "vacancy-profile/v1"; actual=undefined
+  promptHashAlgorithm: expected "SHA-256"; actual=undefined
+  operationCount: expected 1; actual=undefined
+  providerCalls: expected 1; actual=undefined
+  csrfRequired: expected true; actual=undefined
+  vacancyAccessRequired: expected true; actual=undefined
+  mismatchedOperationHashCode: expected "VACANCY_GENERATION_OPERATION_CONFLICT"; actual=undefined
+  invalidPromptProviderCalls: expected 0; actual=undefined
+  
+  11 !== 0
+  
+      at TestContext.<anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/editable-vacancy-prompts.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 11,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\editable-vacancy-prompts.acceptance.test.mjs:7:3
+✖ VAC-041/TST-086: analysis prompt is a local sixth settings section with reset, validation and explicit save (0.2582ms)
+  AssertionError [ERR_ASSERTION]: Editable vacancy prompts conformance boundary is absent: export runEditableVacancyPromptsConformanceScenario(fixture) from server/product/application.ts
+  status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+  settingsSections: expected exact ["Образ результата","ABC-критерии","Компетенции","Стоп-факторы","Допуск к КЕ","Промпт анализа"]; actual=undefined
+  defaultArtifactId: expected "candidate-assessment/v1"; actual=undefined
+  explainsNewRunsOnly: expected true; actual=undefined
+  resetAvailable: expected true; actual=undefined
+  saveAvailable: expected true; actual=undefined
+  invalidSaveCreatesVersions: expected 0; actual=undefined
+  failedSavePreservesDraft: expected true; actual=undefined
+  
+  9 !== 0
+  
+      at TestContext.<anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/editable-vacancy-prompts.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 9,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\editable-vacancy-prompts.acceptance.test.mjs:7:3
+✖ VAC-041/ASM-062/TST-086: analysis prompt is versioned and every run keeps its exact immutable prompt snapshot (0.1326ms)
+  AssertionError [ERR_ASSERTION]: Editable vacancy prompts conformance boundary is absent: export runEditableVacancyPromptsConformanceScenario(fixture) from server/product/application.ts
+  status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+  versionsCreatedBySave: expected 1; actual=undefined
+  oldVersionPreserved: expected true; actual=undefined
+  normalizedTextStored: expected true; actual=undefined
+  artifactIdStored: expected "candidate-assessment/v1"; actual=undefined
+  hashAlgorithm: expected "SHA-256"; actual=undefined
+  historicalFallbackArtifactId: expected "candidate-assessment/v1"; actual=undefined
+  runningRunUsesOldPrompt: expected true; actual=undefined
+  subsequentRunUsesNewPrompt: expected true; actual=undefined
+  runSnapshotImmutable: expected true; actual=undefined
+  extractionReceivesAnalysisPrompt: expected false; actual=undefined
+  transcriptionReceivesAnalysisPrompt: expected false; actual=undefined
+  factExtractionReceivesAnalysisPrompt: expected false; actual=undefined
+  
+  14 !== 0
+  
+      at TestContext.<anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/editable-vacancy-prompts.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 14,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\editable-vacancy-prompts.acceptance.test.mjs:7:3
+✖ ASM-062/TST-086: untrusted analysis instructions cannot override evidence or schema constraints (0.1423ms)
+  AssertionError [ERR_ASSERTION]: Editable vacancy prompts conformance boundary is absent: export runEditableVacancyPromptsConformanceScenario(fixture) from server/product/application.ts
+  status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+  compositionOrder: expected exact ["immutable-server-envelope","untrusted-business-instruction","structured-candidate-input"]; actual=undefined
+  evidenceRulesStillRequired: expected true; actual=undefined
+  responseSchemaStillRequired: expected true; actual=undefined
+  inventedFactIdsAccepted: expected false; actual=undefined
+  inventedPercentagesAccepted: expected false; actual=undefined
+  nonconformingResponseCode: expected "ASSESSMENT_RESPONSE_INVALID"; actual=undefined
+  missingSnapshotCode: expected "ASSESSMENT_PROMPT_SNAPSHOT_MISSING"; actual=undefined
+  tamperedSnapshotCode: expected "ASSESSMENT_PROMPT_INTEGRITY_MISMATCH"; actual=undefined
+  currentPromptFallbackOnTamper: expected false; actual=undefined
+  
+  11 !== 0
+  
+      at TestContext.<anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/editable-vacancy-prompts.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 11,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\editable-vacancy-prompts.acceptance.test.mjs:7:3
+✖ SEC-011/TST-086: prompt access, limits, audit metadata and ordinary logs fail closed without content leaks (0.1384ms)
+  AssertionError [ERR_ASSERTION]: Editable vacancy prompts conformance boundary is absent: export runEditableVacancyPromptsConformanceScenario(fixture) from server/product/application.ts
+  status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+  inaccessibleReadCode: expected "VACANCY_NOT_FOUND"; actual=undefined
+  inaccessibleWriteCode: expected "VACANCY_NOT_FOUND"; actual=undefined
+  inaccessibleMetadataExposed: expected false; actual=undefined
+  oversizeRejectedBeforeProvider: expected true; actual=undefined
+  auditFields: expected exact ["actorId","vacancyId","action","artifactId","beforeHash","afterHash","timestamp"]; actual=undefined
+  auditContainsFullPrompt: expected false; actual=undefined
+  technicalLogContainsFullPrompt: expected false; actual=undefined
+  publicErrorContainsFullPrompt: expected false; actual=undefined
+  technicalLogContainsSecrets: expected false; actual=undefined
+  publicErrorContainsSecrets: expected false; actual=undefined
+  safeErrorHasTraceId: expected true; actual=undefined
+  
+  13 !== 0
+  
+      at TestContext.<anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/editable-vacancy-prompts.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 13,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

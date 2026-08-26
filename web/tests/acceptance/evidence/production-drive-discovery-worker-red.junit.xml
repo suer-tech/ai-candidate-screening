@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="PROD-DISC-001: local/VPS worker entry starts the production Drive discovery runtime" time="0.006717" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\production-drive-discovery-worker.acceptance.test.mjs" failure="the production worker imports its Drive discovery runtime wiring">
+		<failure type="testCodeFailure" message="the production worker imports its Drive discovery runtime wiring">
+[Error [ERR_TEST_FAILURE]: the production worker imports its Drive discovery runtime wiring] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: the production worker imports its Drive discovery runtime wiring
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/production-drive-discovery-worker.acceptance.test.mjs:24:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'import { AgentRuntimeConsumer, loadRuntimeConsumerConfig } from "./consumer.ts";\nimport { createHttpToolAdapters } from "./http-tool-adapter.ts";\n\nconst required = (name: string) => {\n  const value = process.env[name]?.trim();\n  if (!value) throw new Error(`${name} is required`);\n  return value;\n};\nconst environment = (process.env.AGENT_RUNTIME_ENVIRONMENT ?? "local") as "local" | "staging" | "preproduction" | "production";\nif (!(["local", "staging", "preproduction", "production"] as const).includes(environment)) throw new Error("AGENT_RUNTIME_ENVIRONMENT is invalid");\nconst config = loadRuntimeConsumerConfig();\nconst adapters = createHttpToolAdapters({ endpoint: required("CANDIDATE_TOOL_ENDPOINT"), token: required("CANDIDATE_TOOL_INTERNAL_TOKEN"), environment });\nconst consumer = new AgentRuntimeConsumer(config, adapters);\nawait consumer.start();\n',
+    expected: /production-discovery/,
+    operator: 'match',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="PROD-DISC-002: 15-second loop survives Drive errors and enqueues a stable candidate goal durably" time="0.002368" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\production-drive-discovery-worker.acceptance.test.mjs" failure="Production discovery conformance boundary is absent: export runProductionDriveDiscoveryWorkerConformanceScenario(fixture) from server/candidate-pipeline/production-discovery.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;loop.discoveryIntervalMs: expected 15000; actual=undefined&#10;loop.stabilityIntervalMs: expected 60000; actual=undefined&#10;loop.started: expected true; actual=undefined&#10;loop.stoppedAfterDriveError: expected false; actual=undefined&#10;loop.tickCount: expected 3; actual=undefined&#10;loop.logEvents: expected to include [&amp;quot;drive-discovery.tick&amp;quot;,&amp;quot;drive-discovery.success&amp;quot;,&amp;quot;drive-discovery.error&amp;quot;]; actual=undefined&#10;loop.error.safe: expected true; actual=undefined&#10;loop.error.containsCredentials: expected false; actual=undefined&#10;loop.error.containsProviderToken: expected false; actual=undefined&#10;loop.timeline: an error tick is followed by another successful tick; actual=undefined&#10;candidate.registeredDurably: expected true; actual=undefined&#10;candidate.driveFolderId: expected &amp;quot;drive-candidate-synthetic-1&amp;quot;; actual=undefined&#10;candidate.duplicateRegistrations: expected 0; actual=undefined&#10;stability.fullMinuteComparisons: expected 3; actual=undefined&#10;stability.materialsReady: expected true; actual=undefined&#10;inputVersion.immutable: expected true; actual=undefined&#10;goal.createdDurably: expected true; actual=undefined&#10;goal.automaticFirstRun: expected true; actual=undefined&#10;goal.queued: expected true; actual=undefined&#10;goal.candidateDriveFolderId: expected &amp;quot;drive-candidate-synthetic-1&amp;quot;; actual=undefined&#10;goal.profileVersion: expected &amp;quot;profile-v1&amp;quot;; actual=undefined&#10;goal.taskIds: expected [&amp;quot;drive-discovery&amp;quot;,&amp;quot;stability-and-input-version&amp;quot;,&amp;quot;material-completeness&amp;quot;,&amp;quot;document-extraction&amp;quot;,&amp;quot;routerai-ocr&amp;quot;,&amp;quot;media-probe-and-audio&amp;quot;,&amp;quot;assemblyai-transcription&amp;quot;,&amp;quot;speaker-role-mapping&amp;quot;,&amp;quot;fact-and-evidence-extraction&amp;quot;,&amp;quot;profile-assessment&amp;quot;,&amp;quot;deterministic-recommendation&amp;quot;,&amp;quot;validation-gates&amp;quot;,&amp;quot;pdf-pair-render-and-validate&amp;quot;,&amp;quot;personal-drive-publication&amp;quot;,&amp;quot;telegram-outbox&amp;quot;,&amp;quot;metrics-and-eta&amp;quot;,&amp;quot;archive-delete-and-cleanup&amp;quot;]; actual=undefined&#10;goal.tasks: every canonical task is durable and initially queueable; actual=undefined&#10;&#10;25 !== 0&#10;">
+		<failure type="testCodeFailure" message="Production discovery conformance boundary is absent: export runProductionDriveDiscoveryWorkerConformanceScenario(fixture) from server/candidate-pipeline/production-discovery.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;loop.discoveryIntervalMs: expected 15000; actual=undefined&#10;loop.stabilityIntervalMs: expected 60000; actual=undefined&#10;loop.started: expected true; actual=undefined&#10;loop.stoppedAfterDriveError: expected false; actual=undefined&#10;loop.tickCount: expected 3; actual=undefined&#10;loop.logEvents: expected to include [&amp;quot;drive-discovery.tick&amp;quot;,&amp;quot;drive-discovery.success&amp;quot;,&amp;quot;drive-discovery.error&amp;quot;]; actual=undefined&#10;loop.error.safe: expected true; actual=undefined&#10;loop.error.containsCredentials: expected false; actual=undefined&#10;loop.error.containsProviderToken: expected false; actual=undefined&#10;loop.timeline: an error tick is followed by another successful tick; actual=undefined&#10;candidate.registeredDurably: expected true; actual=undefined&#10;candidate.driveFolderId: expected &amp;quot;drive-candidate-synthetic-1&amp;quot;; actual=undefined&#10;candidate.duplicateRegistrations: expected 0; actual=undefined&#10;stability.fullMinuteComparisons: expected 3; actual=undefined&#10;stability.materialsReady: expected true; actual=undefined&#10;inputVersion.immutable: expected true; actual=undefined&#10;goal.createdDurably: expected true; actual=undefined&#10;goal.automaticFirstRun: expected true; actual=undefined&#10;goal.queued: expected true; actual=undefined&#10;goal.candidateDriveFolderId: expected &amp;quot;drive-candidate-synthetic-1&amp;quot;; actual=undefined&#10;goal.profileVersion: expected &amp;quot;profile-v1&amp;quot;; actual=undefined&#10;goal.taskIds: expected [&amp;quot;drive-discovery&amp;quot;,&amp;quot;stability-and-input-version&amp;quot;,&amp;quot;material-completeness&amp;quot;,&amp;quot;document-extraction&amp;quot;,&amp;quot;routerai-ocr&amp;quot;,&amp;quot;media-probe-and-audio&amp;quot;,&amp;quot;assemblyai-transcription&amp;quot;,&amp;quot;speaker-role-mapping&amp;quot;,&amp;quot;fact-and-evidence-extraction&amp;quot;,&amp;quot;profile-assessment&amp;quot;,&amp;quot;deterministic-recommendation&amp;quot;,&amp;quot;validation-gates&amp;quot;,&amp;quot;pdf-pair-render-and-validate&amp;quot;,&amp;quot;personal-drive-publication&amp;quot;,&amp;quot;telegram-outbox&amp;quot;,&amp;quot;metrics-and-eta&amp;quot;,&amp;quot;archive-delete-and-cleanup&amp;quot;]; actual=undefined&#10;goal.tasks: every canonical task is durable and initially queueable; actual=undefined&#10;&#10;25 !== 0">
+[Error [ERR_TEST_FAILURE]: Production discovery conformance boundary is absent: export runProductionDriveDiscoveryWorkerConformanceScenario(fixture) from server/candidate-pipeline/production-discovery.ts
+status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+loop.discoveryIntervalMs: expected 15000; actual=undefined
+loop.stabilityIntervalMs: expected 60000; actual=undefined
+loop.started: expected true; actual=undefined
+loop.stoppedAfterDriveError: expected false; actual=undefined
+loop.tickCount: expected 3; actual=undefined
+loop.logEvents: expected to include ["drive-discovery.tick","drive-discovery.success","drive-discovery.error"]; actual=undefined
+loop.error.safe: expected true; actual=undefined
+loop.error.containsCredentials: expected false; actual=undefined
+loop.error.containsProviderToken: expected false; actual=undefined
+loop.timeline: an error tick is followed by another successful tick; actual=undefined
+candidate.registeredDurably: expected true; actual=undefined
+candidate.driveFolderId: expected "drive-candidate-synthetic-1"; actual=undefined
+candidate.duplicateRegistrations: expected 0; actual=undefined
+stability.fullMinuteComparisons: expected 3; actual=undefined
+stability.materialsReady: expected true; actual=undefined
+inputVersion.immutable: expected true; actual=undefined
+goal.createdDurably: expected true; actual=undefined
+goal.automaticFirstRun: expected true; actual=undefined
+goal.queued: expected true; actual=undefined
+goal.candidateDriveFolderId: expected "drive-candidate-synthetic-1"; actual=undefined
+goal.profileVersion: expected "profile-v1"; actual=undefined
+goal.taskIds: expected ["drive-discovery","stability-and-input-version","material-completeness","document-extraction","routerai-ocr","media-probe-and-audio","assemblyai-transcription","speaker-role-mapping","fact-and-evidence-extraction","profile-assessment","deterministic-recommendation","validation-gates","pdf-pair-render-and-validate","personal-drive-publication","telegram-outbox","metrics-and-eta","archive-delete-and-cleanup"]; actual=undefined
+goal.tasks: every canonical task is durable and initially queueable; actual=undefined
+
+25 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Production discovery conformance boundary is absent: export runProductionDriveDiscoveryWorkerConformanceScenario(fixture) from server/candidate-pipeline/production-discovery.ts
+  status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+  loop.discoveryIntervalMs: expected 15000; actual=undefined
+  loop.stabilityIntervalMs: expected 60000; actual=undefined
+  loop.started: expected true; actual=undefined
+  loop.stoppedAfterDriveError: expected false; actual=undefined
+  loop.tickCount: expected 3; actual=undefined
+  loop.logEvents: expected to include ["drive-discovery.tick","drive-discovery.success","drive-discovery.error"]; actual=undefined
+  loop.error.safe: expected true; actual=undefined
+  loop.error.containsCredentials: expected false; actual=undefined
+  loop.error.containsProviderToken: expected false; actual=undefined
+  loop.timeline: an error tick is followed by another successful tick; actual=undefined
+  candidate.registeredDurably: expected true; actual=undefined
+  candidate.driveFolderId: expected "drive-candidate-synthetic-1"; actual=undefined
+  candidate.duplicateRegistrations: expected 0; actual=undefined
+  stability.fullMinuteComparisons: expected 3; actual=undefined
+  stability.materialsReady: expected true; actual=undefined
+  inputVersion.immutable: expected true; actual=undefined
+  goal.createdDurably: expected true; actual=undefined
+  goal.automaticFirstRun: expected true; actual=undefined
+  goal.queued: expected true; actual=undefined
+  goal.candidateDriveFolderId: expected "drive-candidate-synthetic-1"; actual=undefined
+  goal.profileVersion: expected "profile-v1"; actual=undefined
+  goal.taskIds: expected ["drive-discovery","stability-and-input-version","material-completeness","document-extraction","routerai-ocr","media-probe-and-audio","assemblyai-transcription","speaker-role-mapping","fact-and-evidence-extraction","profile-assessment","deterministic-recommendation","validation-gates","pdf-pair-render-and-validate","personal-drive-publication","telegram-outbox","metrics-and-eta","archive-delete-and-cleanup"]; actual=undefined
+  goal.tasks: every canonical task is durable and initially queueable; actual=undefined
+  
+  25 !== 0
+  
+      at accept (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/production-drive-discovery-worker.acceptance.test.mjs:15:10)
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/production-drive-discovery-worker.acceptance.test.mjs:31:3)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 25,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 2 -->
+	<!-- suites 0 -->
+	<!-- pass 0 -->
+	<!-- fail 2 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 112.3054 -->
+</testsuites>

@@ -1,0 +1,19 @@
+
+> site-creator-vinext-starter@0.1.0 test:editable-vacancy-prompts
+> node --import tsx --test tests/editable-vacancy-prompts.acceptance.test.mjs
+
+✔ VAC-040/TST-086: generation action opens a prompt modal, confirms separately, shows progress and completes safely (25.7636ms)
+✔ VAC-040/SEC-011/TST-086: confirmed generation sends one normalized immutable snapshot through the protected API (0.4684ms)
+✔ VAC-041/TST-086: analysis prompt is a local sixth settings section with reset, validation and explicit save (0.1766ms)
+✔ VAC-041/ASM-062/TST-086: analysis prompt is versioned and every run keeps its exact immutable prompt snapshot (0.2203ms)
+✔ ASM-062/TST-086: untrusted analysis instructions cannot override evidence or schema constraints (0.2903ms)
+✔ SEC-011/TST-086: prompt access, limits, audit metadata and ordinary logs fail closed without content leaks (0.1162ms)
+✔ VAC-040/TST-086: full server-rendered generation template exposes role assumptions, all sections and structured title isolation (0.6989ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 242.5704

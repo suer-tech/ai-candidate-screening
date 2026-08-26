@@ -1,0 +1,109 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAtUtc": "2026-08-20T08:30:35.563Z",
+  "classification": "product-conformance",
+  "evidenceScope": "local-controlled-conformance-only",
+  "productionLikeAcceptanceClaimed": false,
+  "fixtureSetId": "canonical-candidate-v1",
+  "adapter": {
+    "path": "server/candidate-pipeline/conformance.ts",
+    "available": false
+  },
+  "counts": {
+    "total": 4,
+    "passed": 0,
+    "red": 4
+  },
+  "tests": [
+    {
+      "testId": "E2E-VAC-001",
+      "status": "RED",
+      "failures": [
+        "pipeline status: expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "drive-discovery: expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "drive-discovery: reproducible evidence is required",
+        "stability-and-input-version: expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "stability-and-input-version: reproducible evidence is required",
+        "material-completeness: expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "material-completeness: reproducible evidence is required",
+        "metrics-and-eta: expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "metrics-and-eta: reproducible evidence is required"
+      ]
+    },
+    {
+      "testId": "E2E-TRN-001",
+      "status": "RED",
+      "failures": [
+        "pipeline status: expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "media-probe-and-audio: expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "media-probe-and-audio: reproducible evidence is required",
+        "assemblyai-transcription: expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "assemblyai-transcription: reproducible evidence is required",
+        "speaker-role-mapping: expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "speaker-role-mapping: reproducible evidence is required"
+      ]
+    },
+    {
+      "testId": "E2E-ABC-001",
+      "status": "RED",
+      "failures": [
+        "pipeline status: expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "document-extraction: expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "document-extraction: reproducible evidence is required",
+        "routerai-ocr: expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "routerai-ocr: reproducible evidence is required",
+        "fact-and-evidence-extraction: expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "fact-and-evidence-extraction: reproducible evidence is required",
+        "profile-assessment: expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "profile-assessment: reproducible evidence is required",
+        "validation-gates: expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "validation-gates: reproducible evidence is required",
+        "pdf-pair-render-and-validate: expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "pdf-pair-render-and-validate: reproducible evidence is required"
+      ]
+    },
+    {
+      "testId": "E2E-RESULT-001",
+      "status": "RED",
+      "failures": [
+        "pipeline status: expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "deterministic-recommendation: expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "deterministic-recommendation: reproducible evidence is required",
+        "validation-gates: expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "validation-gates: reproducible evidence is required",
+        "pdf-pair-render-and-validate: expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "pdf-pair-render-and-validate: reproducible evidence is required",
+        "shared-drive-publication: expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "shared-drive-publication: reproducible evidence is required",
+        "telegram-outbox: expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "telegram-outbox: reproducible evidence is required",
+        "archive-delete-and-cleanup: expected SUCCEEDED; actual=\"NOT_IMPLEMENTED\"",
+        "archive-delete-and-cleanup: reproducible evidence is required",
+        "full synthetic cleanup must complete"
+      ]
+    }
+  ],
+  "missingStages": [
+    "drive-discovery",
+    "stability-and-input-version",
+    "material-completeness",
+    "document-extraction",
+    "routerai-ocr",
+    "media-probe-and-audio",
+    "assemblyai-transcription",
+    "speaker-role-mapping",
+    "fact-and-evidence-extraction",
+    "profile-assessment",
+    "deterministic-recommendation",
+    "validation-gates",
+    "pdf-pair-render-and-validate",
+    "shared-drive-publication",
+    "telegram-outbox",
+    "metrics-and-eta",
+    "archive-delete-and-cleanup"
+  ],
+  "cleanup": {
+    "attempted": false,
+    "complete": false
+  }
+}

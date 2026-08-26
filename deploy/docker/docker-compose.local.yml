@@ -1,0 +1,57 @@
+# Локальный docker-compose override.
+#
+# Монтирует существующий локальный config root (web/.runtime) как HH_RUNTIME_CONFIG_ROOT,
+# публикует web на 127.0.0.1:3000 и postgres на 127.0.0.1:54329 (как в compose.postgres.yml).
+#
+# Запуск из корня репозитория:
+#   docker compose -f deploy/docker/docker-compose.yml -f deploy/docker/docker-compose.local.yml up -d --build
+#   docker compose -f deploy/docker/docker-compose.yml -f deploy/docker/docker-compose.local.yml down
+
+services:
+  postgres:
+    ports:
+      - "127.0.0.1:54329:5432"
+
+  web:
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      APP_ORIGIN: http://localhost:3000
+      GOOGLE_OAUTH_REDIRECT_URI: http://localhost:3000/api/integrations/google-drive/oauth/callback
+      E2E_ENVIRONMENT: local
+
+  worker:
+    environment:
+      APP_ORIGIN: http://localhost:3000
+      E2E_ENVIRONMENT: local
+
+  media-processor:
+    ports:
+      - "127.0.0.1:4311:4311"
+    environment:
+      APP_ORIGIN: http://localhost:3000
+      E2E_ENVIRONMENT: local
+
+  document-processor:
+    ports:
+      - "127.0.0.1:4312:4312"
+    environment:
+      APP_ORIGIN: http://localhost:3000
+      E2E_ENVIRONMENT: local
+
+  fixture-controller:
+    profiles: ["e2e", "local"]
+    ports:
+      - "127.0.0.1:4077:4077"
+    environment:
+      APP_ORIGIN: http://localhost:3000
+      GOOGLE_OAUTH_REDIRECT_URI: http://localhost:3000/api/integrations/google-drive/oauth/callback
+      E2E_ENVIRONMENT: local
+
+volumes:
+  config-root:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${HH_CONFIG_ROOT:-./web/.runtime}

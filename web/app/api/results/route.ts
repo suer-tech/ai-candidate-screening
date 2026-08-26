@@ -1,26 +1,28 @@
 import { ProductNotFoundError, readCurrentResult } from "../../../server/product/application.ts";
 import type { ResultDocumentType } from "../../product-model.ts";
+import { requestPrincipal } from "../../../server/auth/request-principal.ts";
 
 const DOCUMENTS = new Set<ResultDocumentType>(["candidate-results", "abc-test"]);
 const PRIVATE_HEADERS = { "cache-control": "private, no-store" };
 
 export async function GET(request: Request) {
-  const principalId = request.headers.get("oai-authenticated-user-id");
+  const principalId = await requestPrincipal(request);
   if (!principalId) return Response.json({ error: "Требуется авторизация" }, { status: 401, headers: PRIVATE_HEADERS });
   const url = new URL(request.url);
-  const candidateId = Number(url.searchParams.get("candidate"));
+  const candidateRaw = url.searchParams.get("candidate")?.trim() ?? "";
+  const candidateId = /^\d+$/.test(candidateRaw) ? Number(candidateRaw) : candidateRaw;
   const version = Number(url.searchParams.get("version"));
   const type = url.searchParams.get("type") as ResultDocumentType | null;
-  if (!Number.isInteger(candidateId) || candidateId < 1 || !Number.isInteger(version) || version < 1 || !type || !DOCUMENTS.has(type)) {
+  const validCandidate = typeof candidateId === "number" ? Number.isInteger(candidateId) && candidateId > 0 : /^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(candidateId);
+  if (!validCandidate || !Number.isInteger(version) || version < 1 || !type || !DOCUMENTS.has(type)) {
     return Response.json({ error: "Недопустимый идентификатор документа" }, { status: 400, headers: PRIVATE_HEADERS });
   }
   try {
     const mode = url.searchParams.get("download") === "1" ? "download" : "preview";
-    const [{ productRepository }, { DriveResultArtifactGateway }] = await Promise.all([
-      import("../../../server/product/runtime-bindings.ts"),
-      import("../../../server/product/drive-adapters.ts"),
-    ]);
-    const result = await readCurrentResult(productRepository(), new DriveResultArtifactGateway(), {
+    const { productRepository } = await import("../../../server/product/runtime-bindings.ts");
+    const repository = await productRepository();
+    const { DriveResultArtifactGateway } = await import("../../../server/product/drive-adapters.ts");
+    const result = await readCurrentResult(repository, new DriveResultArtifactGateway(), {
       principalId,
       candidateId,
       version,

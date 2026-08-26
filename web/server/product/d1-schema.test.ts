@@ -12,6 +12,14 @@ async function migratedDatabase() {
   return database;
 }
 
+async function vacancyGenerationDatabase() {
+  const database = await migratedDatabase();
+  const migration = await readFile(new URL("../../drizzle/0002_unique_paibok.sql", import.meta.url), "utf8");
+  database.exec("PRAGMA foreign_keys = ON");
+  for (const statement of migration.split("--> statement-breakpoint").map((value) => value.trim()).filter(Boolean)) database.exec(statement);
+  return database;
+}
+
 test("D1 migration creates every product persistence boundary", async () => {
   const database = await migratedDatabase();
   try {
@@ -34,4 +42,19 @@ test("D1 migration enforces normalized vacancy and result identities", async () 
   } finally {
     database.close();
   }
+});
+
+test("vacancy generation migration persists bounded operations, attempts and safe audit", async () => {
+  const database = await vacancyGenerationDatabase();
+  try {
+    const tables = database.prepare("SELECT name FROM sqlite_master WHERE type = 'table'").all().map((row) => row.name);
+    for (const table of ["vacancy_generation_operations", "vacancy_generation_attempts", "vacancy_audit_events"]) assert.ok(tables.includes(table));
+    database.prepare("INSERT INTO vacancy_generation_operations (operation_id, original_title, normalized_title, state, attempt_count, created_at, updated_at) VALUES (?, ?, ?, 'PENDING', 0, ?, ?)")
+      .run("generation-1", " Бизнес  ассистент ", "бизнес ассистент", "2026-08-20T00:00:00Z", "2026-08-20T00:00:00Z");
+    database.prepare("INSERT INTO vacancy_generation_attempts (operation_id, attempt_number, outcome, created_at) VALUES (?, 1, 'started', ?)")
+      .run("generation-1", "2026-08-20T00:00:00Z");
+    assert.throws(() => database.prepare("UPDATE vacancy_generation_operations SET attempt_count = 5 WHERE operation_id = ?").run("generation-1"), /CHECK/);
+    database.prepare("DELETE FROM vacancy_generation_operations WHERE operation_id = ?").run("generation-1");
+    assert.equal(database.prepare("SELECT COUNT(*) AS count FROM vacancy_generation_attempts").get()!.count, 0);
+  } finally { database.close(); }
 });

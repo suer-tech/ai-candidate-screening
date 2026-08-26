@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { findAll, findButton, loadProductUiHarness, readProductSource, textContent } from "./helpers/product-acceptance-harness.mjs";
 
+process.env.ROUTERAI_STRUCTURED_OUTPUTS = "true";
+
 const model = await import("../app/product-model.ts");
 const resultsRoute = await import("../app/api/results/route.ts");
 

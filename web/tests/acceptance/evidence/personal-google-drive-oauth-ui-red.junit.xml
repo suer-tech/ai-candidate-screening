@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="TST-120-L: browser status projection does not invent Google publishing status or grant expiry" time="0.002202" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\personal-google-drive-oauth-ui.acceptance.test.mjs" failure="browser projection must not expose a locally calculated testingExpiresAt&#10;&#10;true !== false&#10;">
+		<failure type="testCodeFailure" message="browser projection must not expose a locally calculated testingExpiresAt&#10;&#10;true !== false">
+[Error [ERR_TEST_FAILURE]: browser projection must not expose a locally calculated testingExpiresAt
+
+true !== false
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: browser projection must not expose a locally calculated testingExpiresAt
+  
+  true !== false
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/personal-google-drive-oauth-ui.acceptance.test.mjs:42:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TST-120-L: HR UI ignores unverified testing status and calculated seven-day date" time="0.291958" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\personal-google-drive-oauth-ui.acceptance.test.mjs" failure="UI must not present the operator flag as verified Google Publishing status">
+		<failure type="testCodeFailure" message="UI must not present the operator flag as verified Google Publishing status">
+[Error [ERR_TEST_FAILURE]: UI must not present the operator flag as verified Google Publishing status] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: UI must not present the operator flag as verified Google Publishing status
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/personal-google-drive-oauth-ui.acceptance.test.mjs:73:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'Рабочее пространство / Дашборд Добрый день , Алсу! Текущее состояние обработки, вакансий и опубликованных результатов.  Google Drive:  Подключён synthetic.ui.owner@example.invalid  ·  Найм Тестовый OAuth: доступ может истечь  27.08.2026  Открыть папку Отключить  Контроль очереди Вся очередь →  Загружаем актуальную очередь… Недостаточно материалов — Текущий workflow status Транскрибация — Текущий workflow status AI-анализ — Текущий workflow status Проверка результатов — Текущий workflow status Готово — Текущий workflow status Ошибка — Текущий workflow status Архив — Архивированные кандидаты Актуальные результаты Поток кандидатов 7 дней 30 дней 90 дней  Период:  7  дней Результаты анализа ',
+    expected: /Тестовый OAuth/i,
+    operator: 'doesNotMatch',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 2 -->
+	<!-- suites 0 -->
+	<!-- pass 0 -->
+	<!-- fail 2 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 701.4232 -->
+</testsuites>

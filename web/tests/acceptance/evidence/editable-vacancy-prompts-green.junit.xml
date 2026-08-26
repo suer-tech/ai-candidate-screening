@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="VAC-040/TST-086: generation action opens a prompt modal, confirms separately, shows progress and completes safely" time="0.031391" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\editable-vacancy-prompts.acceptance.test.mjs"/>
+	<testcase name="VAC-040/SEC-011/TST-086: confirmed generation sends one normalized immutable snapshot through the protected API" time="0.000831" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\editable-vacancy-prompts.acceptance.test.mjs"/>
+	<testcase name="VAC-041/TST-086: analysis prompt is a local sixth settings section with reset, validation and explicit save" time="0.000211" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\editable-vacancy-prompts.acceptance.test.mjs"/>
+	<testcase name="VAC-041/ASM-062/TST-086: analysis prompt is versioned and every run keeps its exact immutable prompt snapshot" time="0.000216" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\editable-vacancy-prompts.acceptance.test.mjs"/>
+	<testcase name="ASM-062/TST-086: untrusted analysis instructions cannot override evidence or schema constraints" time="0.000266" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\editable-vacancy-prompts.acceptance.test.mjs"/>
+	<testcase name="SEC-011/TST-086: prompt access, limits, audit metadata and ordinary logs fail closed without content leaks" time="0.000143" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\editable-vacancy-prompts.acceptance.test.mjs"/>
+	<!-- tests 6 -->
+	<!-- suites 0 -->
+	<!-- pass 6 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 327.9297 -->
+</testsuites>

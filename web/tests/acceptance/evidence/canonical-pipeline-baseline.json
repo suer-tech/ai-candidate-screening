@@ -1,0 +1,95 @@
+{
+  "schemaVersion": "1.0",
+  "change": "implement-canonical-candidate-pipeline",
+  "recordedAtUtc": "2026-08-20T08:30:35.563Z",
+  "independence": {
+    "author": "Codex independent subagent /root/canonical_pipeline_red",
+    "executor": "Codex independent subagent /root/canonical_pipeline_red",
+    "productionImplementationParticipation": false
+  },
+  "fixtureSetId": "canonical-candidate-v1",
+  "dataClassification": "synthetic-no-pii-no-secrets",
+  "openSpecProgress": { "complete": 3, "total": 63, "remaining": 60 },
+  "productionLikeE2e": {
+    "status": "BLOCKED",
+    "productionAcceptanceClaimed": false,
+    "counts": { "total": 4, "passed": 0, "failed": 0, "blocked": 4 },
+    "tests": [
+      { "id": "E2E-VAC-001", "status": "BLOCKED_ENVIRONMENT" },
+      { "id": "E2E-TRN-001", "status": "BLOCKED_ENVIRONMENT" },
+      { "id": "E2E-ABC-001", "status": "BLOCKED_ENVIRONMENT" },
+      { "id": "E2E-RESULT-001", "status": "BLOCKED_ENVIRONMENT" }
+    ],
+    "blockers": [
+      "E2E_BASE_URL",
+      "E2E_AUTH_STORAGE_STATE",
+      "E2E_PREFLIGHT_TOKEN",
+      "E2E_CONTROL_URL",
+      "E2E_CONTROL_TOKEN",
+      "E2E_FIXTURE_SET_ID",
+      "E2E_BUILD_ID",
+      "E2E_ENVIRONMENT",
+      "E2E_ALLOW_DESTRUCTIVE_CLEANUP"
+    ],
+    "unverifiedProvisionedResources": [
+      "authenticated staging/preproduction HR identity",
+      "exact deployed build and configuration identity",
+      "D1 and protected R2 bindings",
+      "corporate Google Shared Drive and scoped service account",
+      "controlled RouterAI gateway",
+      "real RouterAI smoke",
+      "real AssemblyAI EU smoke",
+      "PDF publication boundary",
+      "server-side Telegram bot recipients",
+      "external E2E control plane and provider cleanup"
+    ]
+  },
+  "localControlledConformance": {
+    "status": "RED",
+    "productionLikeAcceptanceClaimed": false,
+    "counts": { "total": 4, "passed": 0, "red": 4 },
+    "adapter": "server/candidate-pipeline/conformance.ts",
+    "adapterAvailable": false,
+    "missingStageCount": 17,
+    "missingStages": [
+      "drive-discovery",
+      "stability-and-input-version",
+      "material-completeness",
+      "document-extraction",
+      "routerai-ocr",
+      "media-probe-and-audio",
+      "assemblyai-transcription",
+      "speaker-role-mapping",
+      "fact-and-evidence-extraction",
+      "profile-assessment",
+      "deterministic-recommendation",
+      "validation-gates",
+      "pdf-pair-render-and-validate",
+      "shared-drive-publication",
+      "telegram-outbox",
+      "metrics-and-eta",
+      "archive-delete-and-cleanup"
+    ]
+  },
+  "testInfrastructure": {
+    "status": "PASSED",
+    "counts": { "total": 9, "passed": 9, "failed": 0 },
+    "syntaxChecksPassed": 5
+  },
+  "commands": [
+    { "command": "npm run test:e2e-harness", "exitCode": 0, "classification": "TEST_INFRASTRUCTURE_GREEN" },
+    { "command": "npm run e2e:preflight -- --json-output tests/acceptance/evidence/canonical-pipeline-environment-blocked.json", "exitCode": 1, "classification": "ENVIRONMENT_BLOCKED" },
+    { "command": "npm run e2e:required", "exitCode": 1, "classification": "ENVIRONMENT_BLOCKED_BEFORE_CHROMIUM" },
+    { "command": "npm run e2e:canonical:local-red", "exitCode": 1, "classification": "PRODUCT_RED_LOCAL_CONTROLLED" },
+    { "command": "node --test --test-reporter=junit --test-reporter-destination=tests/acceptance/evidence/canonical-pipeline-local-red.junit.xml tests/canonical-candidate-pipeline.acceptance.test.mjs", "exitCode": 1, "classification": "PRODUCT_RED_JUNIT" },
+    { "command": "node --check canonical E2E helpers/specs", "exitCode": 0, "classification": "TEST_INFRASTRUCTURE_GREEN" },
+    { "command": "npx eslint canonical E2E helpers/specs", "exitCode": 0, "classification": "TEST_INFRASTRUCTURE_GREEN" },
+    { "command": "openspec validate implement-canonical-candidate-pipeline --type change --strict --json --no-interactive", "exitCode": 0, "classification": "OPENSPEC_VALID" }
+  ],
+  "evidence": [
+    "canonical-pipeline-environment-blocked.json",
+    "canonical-pipeline-local-red.json",
+    "canonical-pipeline-local-red.junit.xml",
+    "canonical-pipeline-red-blocked.md"
+  ]
+}

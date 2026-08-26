@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="VIS-DEMO whole criterion row toggles a directly adjacent full-width evidence area" time="0.276404" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs" failure="there is no separate disclosure text or button">
+		<failure type="testCodeFailure" message="there is no separate disclosure text or button">
+[Error [ERR_TEST_FAILURE]: there is no separate disclosure text or button] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: there is no separate disclosure text or button
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/demo-interface-visual-parity.acceptance.test.mjs:500:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'Критерии и фактыДетальная оценкаABC-критерииAABC с фактом AЕсть факт A1 доказательствОткрыть факты →Основание ABC-оценкиСвязанный факт AИнтервью.mp4 · 00:01:00CABC с фактом CЕсть факт C1 доказательствОткрыть факты →Основание ABC-оценкиСвязанный факт CРезюме.pdf · стр. 2Дополнительные критерии✓Дополнительный критерий с фактомЕсть связанный факт1 доказательствОткрыть факты →Подтверждение компетенцииСвязанный факт компетенцииИнтервью.mp4 · 00:03:00+Общий анализДополнительные подтверждающие материалы1 доказательствОткрыть факты →Доказательство · Общий анализНесвязанное доказательствоЗаметки.docx',
+    expected: /Открыть факты/,
+    operator: 'doesNotMatch',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="VIS-DEMO criterion evidence open state is full-width, separated and reduced-motion safe" time="0.002275" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs" failure="open state is visually explicit and scoped to the selected item">
+		<failure type="testCodeFailure" message="open state is visually explicit and scoped to the selected item">
+[Error [ERR_TEST_FAILURE]: open state is visually explicit and scoped to the selected item] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: open state is visually explicit and scoped to the selected item
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/demo-interface-visual-parity.acceptance.test.mjs:534:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: '',
+    expected: /(?:border|background|box-shadow)\s*:/,
+    operator: 'match',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 2 -->
+	<!-- suites 0 -->
+	<!-- pass 0 -->
+	<!-- fail 2 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 576.3699 -->
+</testsuites>

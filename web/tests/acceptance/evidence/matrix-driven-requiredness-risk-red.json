@@ -1,0 +1,190 @@
+{
+  "schemaVersion": "matrix-driven-red-evidence/v1",
+  "change": "implement-matrix-driven-candidate-assessment",
+  "generatedAtUtc": "2026-08-26T08:00:57.163Z",
+  "author": "independent acceptance subagent /root/matrix_acceptance_red",
+  "independence": "The acceptance author did not implement or edit production code.",
+  "fixtureSetId": "matrix-driven-assessment-synthetic-v1",
+  "dataClassification": "synthetic-no-real-candidate-data-no-secrets-no-network-no-provider-expense",
+  "exactTestCommand": "cd web && node --test --test-name-pattern=MDA-REVISED --test-reporter=junit --test-reporter-destination=tests/acceptance/evidence/matrix-driven-requiredness-risk-red.junit.xml tests/matrix-driven-assessment.acceptance.test.mjs",
+  "exactEvidenceCommand": "cd web && node tests/matrix-driven-assessment.evidence.mjs --scenario-prefix MDA-REVISED --output tests/acceptance/evidence/matrix-driven-requiredness-risk-red.json",
+  "expectedBaseline": "RED until revised requiredness and independently verified critical-risk behavior is implemented",
+  "summary": {
+    "total": 6,
+    "green": 0,
+    "red": 6,
+    "environmentBlocked": 0,
+    "externalCalls": 0
+  },
+  "groups": {
+    "revised-requiredness-risk": {
+      "total": 6,
+      "red": 6
+    }
+  },
+  "cases": [
+    {
+      "scenarioId": "MDA-REVISED-REQUIREDNESS-027",
+      "group": "revised-requiredness-risk",
+      "requirements": [
+        "VAC-011",
+        "MDA-003",
+        "TST-121"
+      ],
+      "status": "RED",
+      "failures": [
+        "scenario status expected SUCCEEDED; actual=\"ADAPTER_ERROR\"",
+        "vacancy write contract must not expose a separate requirements field",
+        "vacancy UI/API must not require required or hardRequired toggles",
+        "LLM matrix compiler must assign semantic requiredness",
+        "compiler result must include both required and optional semantic examples",
+        "semantically mandatory criterion must compile as required",
+        "optional preference must not compile as required",
+        "every requiredness decision needs an explanation",
+        "independent critic must verify requiredness in a clean context"
+      ],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": true,
+        "callable": true,
+        "safeError": "Error"
+      },
+      "productStatus": "ADAPTER_ERROR",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-REVISED-HARD-STOP-028",
+      "group": "revised-requiredness-risk",
+      "requirements": [
+        "VAC-012",
+        "MDA-003",
+        "TST-121"
+      ],
+      "status": "RED",
+      "failures": [
+        "scenario status expected SUCCEEDED; actual=\"ADAPTER_ERROR\"",
+        "every stop-factor source criterion must have hardRequired=true",
+        "non-stop-factor criterion must have hardRequired=false",
+        "both directions of hardRequired/source-section mismatch must be rejected",
+        "hardRequired correspondence rejection must be typed",
+        "shadow gate must block inaccurate hardRequired mapping"
+      ],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": true,
+        "callable": true,
+        "safeError": "Error"
+      },
+      "productStatus": "ADAPTER_ERROR",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-REVISED-REQUIRED-MISMATCH-029",
+      "group": "revised-requiredness-risk",
+      "requirements": [
+        "ASM-050"
+      ],
+      "status": "RED",
+      "failures": [
+        "scenario status expected SUCCEEDED; actual=\"ADAPTER_ERROR\"",
+        "fixture must reach a proven required mismatch",
+        "required mismatch needs admissible evidence",
+        "proven required mismatch must produce rejection",
+        "formula must persist the required-mismatch branch"
+      ],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": true,
+        "callable": true,
+        "safeError": "Error"
+      },
+      "productStatus": "ADAPTER_ERROR",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-REVISED-CRITICAL-RISK-030",
+      "group": "revised-requiredness-risk",
+      "requirements": [
+        "ASM-050",
+        "ASM-073",
+        "MDA-008",
+        "INT-030"
+      ],
+      "status": "RED",
+      "failures": [
+        "scenario status expected SUCCEEDED; actual=\"ADAPTER_ERROR\"",
+        "open pass alone must remain informational",
+        "separate risk skill must propose criticality",
+        "independent verification must confirm criticality",
+        "assessment and verification require distinct protected traces",
+        "critical-risk verifier must receive a clean context",
+        "verified risk requires candidate-scoped admissible locators",
+        "candidate risk must not mutate the shared matrix or create a stop factor",
+        "independently verified critical risk must produce rejection",
+        "snapshot must retain risk provenance and formula branch"
+      ],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": true,
+        "callable": true,
+        "safeError": "Error"
+      },
+      "productStatus": "ADAPTER_ERROR",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-REVISED-RISK-UNVERIFIED-031",
+      "group": "revised-requiredness-risk",
+      "requirements": [
+        "ASM-050",
+        "ASM-073",
+        "MDA-008"
+      ],
+      "status": "RED",
+      "failures": [
+        "scenario status expected SUCCEEDED; actual=\"ADAPTER_ERROR\"",
+        "failed verification must leave signal informational",
+        "failed verification cannot reject the candidate",
+        "verified noncritical risk may only become a caveat",
+        "noncritical risk must use caveat recommendation branch",
+        "shadow gate must block a rejection based on unverified risk"
+      ],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": true,
+        "callable": true,
+        "safeError": "Error"
+      },
+      "productStatus": "ADAPTER_ERROR",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-REVISED-RISK-SENSITIVE-032",
+      "group": "revised-requiredness-risk",
+      "requirements": [
+        "ASM-074",
+        "SEC-021",
+        "MDA-008",
+        "TST-121"
+      ],
+      "status": "RED",
+      "failures": [
+        "scenario status expected SUCCEEDED; actual=\"ADAPTER_ERROR\"",
+        "sensitive content must be filtered while the irrelevant synthetic signal remains auditable",
+        "risk skills must not receive prohibited sensitive values",
+        "sensitive signal cannot enter critical assessment",
+        "role-irrelevant signal cannot become critical",
+        "sensitive or irrelevant signals cannot cause rejection",
+        "filtered signals must not mutate the matrix"
+      ],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": true,
+        "callable": true,
+        "safeError": "Error"
+      },
+      "productStatus": "ADAPTER_ERROR",
+      "externalCalls": 0
+    }
+  ]
+}

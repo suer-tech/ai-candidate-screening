@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="E2E-RESULT-001: `Итоги` is a compact one-page-like executive report without raw evidence dump" time="1.640718" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\executive-report-and-result-readthrough.acceptance.test.ts" failure="report does not expose raw evidence JSON/dump">
+		<failure type="testCodeFailure" message="report does not expose raw evidence JSON/dump">
+[Error [ERR_TEST_FAILURE]: report does not expose raw evidence JSON/dump] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: report does not expose raw evidence JSON/dump
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\executive-report-and-result-readthrough.acceptance.test.ts:45:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'Итоги по кандидату Кандидат: Зотов Александр [candidate-550e8400-e29b-41d4-a716-446655440000]\nВакансия: Юрист [vacancy-550e8400-e29b-41d4-a716-446655440001] Профиль: profile-internal-v17; анализ: v0017; UTC: 2026-08-24T09:00:00Z Рекомендация для HR: Рекомендовать с оговорками\nКандидат Краткий вывод: кандидат. Рекомендация Краткий вывод: рекомендация. Стоп-факторы Краткий вывод: стоп-факторы. Критические несоответствия Краткий вывод: критические несоответствия. Сильные стороны Краткий вывод: сильные стороны. Ограничения Краткий вывод: ограничения. Риски Краткий вывод: риски. ABC-профиль Продуктивность: B\nИнициатива: B\nСамообучаемость: B\nКорпоративные ценности: B\nАвтономность: B Компетенции Краткий вывод: компетенции. Подтверждённые результаты Краткий вывод: подтверждённые результаты. Противоречия При появлении противоречия требуют решения HR. Что проверить Краткий вывод: что проверить. Качество интервью Краткий вывод: качество интервью. Допуск к КЕ Краткий вывод: допуск к ке. Вопросы КЕ Краткий вывод: вопросы ке. Качество транскрипции Краткий вывод: качество транскрипции. Основания Краткие основания доступны в карточке; run-550e8400-e29b-41d4-a716-446655440002 artifact:assessment:private-123\nfile-drive-private-456',
+    expected: /exactText|artifact:|\{\s*"(?:facts|evidence|locator)"/i,
+    operator: 'doesNotMatch',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="E2E-ABC-001/E2E-RESULT-001: neither PDF exposes internal identities or forbidden explanatory copy" time="0.152793" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\executive-report-and-result-readthrough.acceptance.test.ts" failure="abc-test hides internal marker">
+		<failure type="testCodeFailure" message="abc-test hides internal marker">
+[Error [ERR_TEST_FAILURE]: abc-test hides internal marker] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: abc-test hides internal marker
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\executive-report-and-result-readthrough.acceptance.test.ts:51:51)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'ABC-тест кандидата Кандидат: Зотов Александр [candidate-550e8400-e29b-41d4-a716-446655440000]\nВакансия: Юрист [vacancy-550e8400-e29b-41d4-a716-446655440001] Профиль: profile-internal-v17; анализ: v0017; UTC: 2026-08-24T09:00:00Z Рекомендация для HR: Рекомендовать с оговорками\nКандидат Краткий вывод: кандидат. Шкала оценки A — выше ожиданий; B — соответствует; C — не соответствует. ABC-профиль Продуктивность: B\nИнициатива: B\nСамообучаемость: B\nКорпоративные ценности: B\nАвтономность: B Основания Краткие основания доступны в карточке; run-550e8400-e29b-41d4-a716-446655440002 artifact:assessment:private-123\nfile-drive-private-456 Противоречия При появлении противоречия требуют решения HR. Сильные стороны Краткий вывод: сильные стороны. Ограничения Краткий вывод: ограничения. Вопросы HR Краткий вывод: вопросы hr.',
+    expected: /candidate-550e8400-e29b-41d4-a716-446655440000/,
+    operator: 'doesNotMatch',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="E2E-ABC-001: ABC profile prints the five canonical Russian direction names" time="0.072486" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\executive-report-and-result-readthrough.acceptance.test.ts"/>
+	<testcase name="E2E-ABC-001/E2E-RESULT-001: preview and download read through immutable artifact when published Drive file is unavailable" time="0.001836" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\executive-report-and-result-readthrough.acceptance.test.ts" failure="Drive read failure safely falls back to immutable artifact or reconciliation">
+		<failure type="testCodeFailure" message="Drive read failure safely falls back to immutable artifact or reconciliation">
+[Error [ERR_TEST_FAILURE]: Drive read failure safely falls back to immutable artifact or reconciliation] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Drive read failure safely falls back to immutable artifact or reconciliation
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\executive-report-and-result-readthrough.acceptance.test.ts:72:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'export async function readCurrentResult(\r\n  repository: ProductRepository,\r\n  artifacts: ResultArtifactGateway,\r\n  input: { principalId: string; candidateId: CandidateId; type: ResultDocumentType; version: number; mode: "preview" | "download" },\n) {\r\n  const descriptor = await repository.findCurrentResult(input.principalId, input.candidateId, input.type, input.version);\r\n  if (!descriptor || !descriptor.published || !descriptor.valid) {\r\n    throw new ProductNotFoundError("Документ недоступен или не соответствует актуальной версии");\r\n  }\r\n  const bytes = await artifacts.readPdf(descriptor.storageId);\r\n  if (!isPdf(bytes)) throw new ProductNotFoundError("Документ недоступен или повреждён");\r\n  if (input.mode === "download") {\r\n    await repository.appendAudit({\r\n      action: "export",\r\n      actor: input.principalId,\r\n      candidateId: input.candidateId,\r\n      timestamp: new Date().toISOString(),\r\n      outcome: "success",\r\n      details: `${descriptor.type}:v${String(descriptor.version).padStart(4, "0")}`,\r\n    });\r\n  }\r\n  return { descriptor, bytes };\r\n}\r\n\r\n',
+    expected: /(?:catch[\s\S]{0,500}(?:artifact|blob)|read[- ]?through|reconcile)/i,
+    operator: 'match',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 4 -->
+	<!-- suites 0 -->
+	<!-- pass 1 -->
+	<!-- fail 3 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 2083.0425 -->
+</testsuites>

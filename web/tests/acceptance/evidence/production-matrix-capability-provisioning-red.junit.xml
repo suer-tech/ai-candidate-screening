@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="MATRIX-CAPABILITY-PROVISIONING-RED-001: production tool execution provisions every legacy and matrix-v2 LLM capability it invokes" time="0.006156" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\production-matrix-capability-provisioning.acceptance.test.ts" failure="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;+ [&#10;+   'required production capability is not provisioned: matrix_compiler',&#10;+   'required production capability is not provisioned: matrix_critic',&#10;+   'required production capability is not provisioned: matrix_repair',&#10;+   'required production capability is not provisioned: criterion_claim_extraction',&#10;+   'required production capability is not provisioned: unmapped_signal_discovery',&#10;+   'required production capability is not provisioned: unmapped_risk_assessment',&#10;+   'required production capability is not provisioned: critical_risk_verification',&#10;+   'required production capability is not provisioned: evidence_consolidation',&#10;+   'required production capability is not provisioned: global_conflict_detection',&#10;+   'required production capability is not provisioned: matrix_row_evaluation',&#10;+   'required production capability is not provisioned: abc_matrix_assessment',&#10;+   'required production capability is not provisioned: critical_row_verification',&#10;+   'required production capability is not provisioned: invalid_row_repair',&#10;+   'production runtime invokes an unprovisioned capability: matrix_compiler',&#10;+   'production runtime invokes an unprovisioned capability: matrix_critic',&#10;+   'production runtime invokes an unprovisioned capability: matrix_repair',&#10;+   'production runtime invokes an unprovisioned capability: criterion_claim_extraction',&#10;+   'production runtime invokes an unprovisioned capability: unmapped_signal_discovery',&#10;+   'production runtime invokes an unprovisioned capability: evidence_consolidation',&#10;+   'production runtime invokes an unprovisioned capability: global_conflict_detection',&#10;+   'production runtime invokes an unprovisioned capability: matrix_row_evaluation',&#10;+   'production runtime invokes an unprovisioned capability: abc_matrix_assessment',&#10;+   'production runtime invokes an unprovisioned capability: invalid_row_repair',&#10;+   'production runtime invokes an unprovisioned capability: critical_row_verification',&#10;+   'production runtime invokes an unprovisioned capability: unmapped_risk_assessment',&#10;+   'production runtime invokes an unprovisioned capability: critical_risk_verification'&#10;+ ]&#10;- []&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;+ [&#10;+   'required production capability is not provisioned: matrix_compiler',&#10;+   'required production capability is not provisioned: matrix_critic',&#10;+   'required production capability is not provisioned: matrix_repair',&#10;+   'required production capability is not provisioned: criterion_claim_extraction',&#10;+   'required production capability is not provisioned: unmapped_signal_discovery',&#10;+   'required production capability is not provisioned: unmapped_risk_assessment',&#10;+   'required production capability is not provisioned: critical_risk_verification',&#10;+   'required production capability is not provisioned: evidence_consolidation',&#10;+   'required production capability is not provisioned: global_conflict_detection',&#10;+   'required production capability is not provisioned: matrix_row_evaluation',&#10;+   'required production capability is not provisioned: abc_matrix_assessment',&#10;+   'required production capability is not provisioned: critical_row_verification',&#10;+   'required production capability is not provisioned: invalid_row_repair',&#10;+   'production runtime invokes an unprovisioned capability: matrix_compiler',&#10;+   'production runtime invokes an unprovisioned capability: matrix_critic',&#10;+   'production runtime invokes an unprovisioned capability: matrix_repair',&#10;+   'production runtime invokes an unprovisioned capability: criterion_claim_extraction',&#10;+   'production runtime invokes an unprovisioned capability: unmapped_signal_discovery',&#10;+   'production runtime invokes an unprovisioned capability: evidence_consolidation',&#10;+   'production runtime invokes an unprovisioned capability: global_conflict_detection',&#10;+   'production runtime invokes an unprovisioned capability: matrix_row_evaluation',&#10;+   'production runtime invokes an unprovisioned capability: abc_matrix_assessment',&#10;+   'production runtime invokes an unprovisioned capability: invalid_row_repair',&#10;+   'production runtime invokes an unprovisioned capability: critical_row_verification',&#10;+   'production runtime invokes an unprovisioned capability: unmapped_risk_assessment',&#10;+   'production runtime invokes an unprovisioned capability: critical_risk_verification'&#10;+ ]&#10;- []">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly deep-equal:
++ actual - expected
+
++ [
++   'required production capability is not provisioned: matrix_compiler',
++   'required production capability is not provisioned: matrix_critic',
++   'required production capability is not provisioned: matrix_repair',
++   'required production capability is not provisioned: criterion_claim_extraction',
++   'required production capability is not provisioned: unmapped_signal_discovery',
++   'required production capability is not provisioned: unmapped_risk_assessment',
++   'required production capability is not provisioned: critical_risk_verification',
++   'required production capability is not provisioned: evidence_consolidation',
++   'required production capability is not provisioned: global_conflict_detection',
++   'required production capability is not provisioned: matrix_row_evaluation',
++   'required production capability is not provisioned: abc_matrix_assessment',
++   'required production capability is not provisioned: critical_row_verification',
++   'required production capability is not provisioned: invalid_row_repair',
++   'production runtime invokes an unprovisioned capability: matrix_compiler',
++   'production runtime invokes an unprovisioned capability: matrix_critic',
++   'production runtime invokes an unprovisioned capability: matrix_repair',
++   'production runtime invokes an unprovisioned capability: criterion_claim_extraction',
++   'production runtime invokes an unprovisioned capability: unmapped_signal_discovery',
++   'production runtime invokes an unprovisioned capability: evidence_consolidation',
++   'production runtime invokes an unprovisioned capability: global_conflict_detection',
++   'production runtime invokes an unprovisioned capability: matrix_row_evaluation',
++   'production runtime invokes an unprovisioned capability: abc_matrix_assessment',
++   'production runtime invokes an unprovisioned capability: invalid_row_repair',
++   'production runtime invokes an unprovisioned capability: critical_row_verification',
++   'production runtime invokes an unprovisioned capability: unmapped_risk_assessment',
++   'production runtime invokes an unprovisioned capability: critical_risk_verification'
++ ]
+- []
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + [
+  +   'required production capability is not provisioned: matrix_compiler',
+  +   'required production capability is not provisioned: matrix_critic',
+  +   'required production capability is not provisioned: matrix_repair',
+  +   'required production capability is not provisioned: criterion_claim_extraction',
+  +   'required production capability is not provisioned: unmapped_signal_discovery',
+  +   'required production capability is not provisioned: unmapped_risk_assessment',
+  +   'required production capability is not provisioned: critical_risk_verification',
+  +   'required production capability is not provisioned: evidence_consolidation',
+  +   'required production capability is not provisioned: global_conflict_detection',
+  +   'required production capability is not provisioned: matrix_row_evaluation',
+  +   'required production capability is not provisioned: abc_matrix_assessment',
+  +   'required production capability is not provisioned: critical_row_verification',
+  +   'required production capability is not provisioned: invalid_row_repair',
+  +   'production runtime invokes an unprovisioned capability: matrix_compiler',
+  +   'production runtime invokes an unprovisioned capability: matrix_critic',
+  +   'production runtime invokes an unprovisioned capability: matrix_repair',
+  +   'production runtime invokes an unprovisioned capability: criterion_claim_extraction',
+  +   'production runtime invokes an unprovisioned capability: unmapped_signal_discovery',
+  +   'production runtime invokes an unprovisioned capability: evidence_consolidation',
+  +   'production runtime invokes an unprovisioned capability: global_conflict_detection',
+  +   'production runtime invokes an unprovisioned capability: matrix_row_evaluation',
+  +   'production runtime invokes an unprovisioned capability: abc_matrix_assessment',
+  +   'production runtime invokes an unprovisioned capability: invalid_row_repair',
+  +   'production runtime invokes an unprovisioned capability: critical_row_verification',
+  +   'production runtime invokes an unprovisioned capability: unmapped_risk_assessment',
+  +   'production runtime invokes an unprovisioned capability: critical_risk_verification'
+  + ]
+  - []
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\production-matrix-capability-provisioning.acceptance.test.ts:23:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'required production capability is not provisioned: matrix_compiler', 'required production capability is not provisioned: matrix_critic', 'required production capability is not provisioned: matrix_repair', 'required production capability is not provisioned: criterion_claim_extraction', 'required production capability is not provisioned: unmapped_signal_discovery', 'required production capability is not provisioned: unmapped_risk_assessment', 'required production capability is not provisioned: critical_risk_verification', 'required production capability is not provisioned: evidence_consolidation', 'required production capability is not provisioned: global_conflict_detection', 'required production capability is not provisioned: matrix_row_evaluation', 'required production capability is not provisioned: abc_matrix_assessment', 'required production capability is not provisioned: critical_row_verification', 'required production capability is not provisioned: invalid_row_repair', 'production runtime invokes an unprovisioned capability: matrix_compiler', 'production runtime invokes an unprovisioned capability: matrix_critic', 'production runtime invokes an unprovisioned capability: matrix_repair', 'production runtime invokes an unprovisioned capability: criterion_claim_extraction', 'production runtime invokes an unprovisioned capability: unmapped_signal_discovery', 'production runtime invokes an unprovisioned capability: evidence_consolidation', 'production runtime invokes an unprovisioned capability: global_conflict_detection', 'production runtime invokes an unprovisioned capability: matrix_row_evaluation', 'production runtime invokes an unprovisioned capability: abc_matrix_assessment', 'production runtime invokes an unprovisioned capability: invalid_row_repair', 'production runtime invokes an unprovisioned capability: critical_row_verification', 'production runtime invokes an unprovisioned capability: unmapped_risk_assessment', 'production runtime invokes an unprovisioned capability: critical_risk_verification' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 1 -->
+	<!-- suites 0 -->
+	<!-- pass 0 -->
+	<!-- fail 1 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 198.1509 -->
+</testsuites>

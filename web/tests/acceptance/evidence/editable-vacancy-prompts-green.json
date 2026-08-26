@@ -1,0 +1,95 @@
+{
+  "schemaVersion": "editable-vacancy-prompts-acceptance-evidence/v1",
+  "change": "add-editable-vacancy-prompts",
+  "generatedAtUtc": "2026-08-24T05:06:14.494Z",
+  "phase": "GREEN",
+  "author": "/root/prompt_acceptance",
+  "executor": "/root/prompt_acceptance",
+  "independenceDeclared": true,
+  "productionCodeChangedByAuthor": false,
+  "command": "node tests/editable-vacancy-prompts.evidence.mjs --output tests/acceptance/evidence/editable-vacancy-prompts-green.json",
+  "junit": "tests/acceptance/evidence/editable-vacancy-prompts-green.junit.xml",
+  "safety": {
+    "fixtureSetId": "editable-vacancy-prompts-synthetic-v1",
+    "syntheticOnly": true,
+    "containsSecrets": false,
+    "containsRealPersonalData": false,
+    "providerCallsAllowed": false
+  },
+  "summary": {
+    "total": 6,
+    "green": 6,
+    "red": 0,
+    "infrastructureErrors": 0
+  },
+  "results": [
+    {
+      "scenarioId": "VAC-040-generation-confirmation-ui",
+      "requirements": [
+        "VAC-040",
+        "TST-086"
+      ],
+      "title": "generation action opens a prompt modal, confirms separately, shows progress and completes safely",
+      "status": "GREEN",
+      "classification": "product-contract",
+      "mismatches": []
+    },
+    {
+      "scenarioId": "VAC-040-generation-api-snapshot",
+      "requirements": [
+        "VAC-040",
+        "SEC-011",
+        "TST-086"
+      ],
+      "title": "confirmed generation sends one normalized immutable snapshot through the protected API",
+      "status": "GREEN",
+      "classification": "product-contract",
+      "mismatches": []
+    },
+    {
+      "scenarioId": "VAC-041-analysis-prompt-ui",
+      "requirements": [
+        "VAC-041",
+        "TST-086"
+      ],
+      "title": "analysis prompt is a local sixth settings section with reset, validation and explicit save",
+      "status": "GREEN",
+      "classification": "product-contract",
+      "mismatches": []
+    },
+    {
+      "scenarioId": "VAC-041-ASM-062-versioned-analysis-prompt",
+      "requirements": [
+        "VAC-041",
+        "ASM-062",
+        "TST-086"
+      ],
+      "title": "analysis prompt is versioned and every run keeps its exact immutable prompt snapshot",
+      "status": "GREEN",
+      "classification": "product-contract",
+      "mismatches": []
+    },
+    {
+      "scenarioId": "ASM-062-protected-runtime-composition",
+      "requirements": [
+        "ASM-062",
+        "TST-086"
+      ],
+      "title": "untrusted analysis instructions cannot override evidence or schema constraints",
+      "status": "GREEN",
+      "classification": "product-contract",
+      "mismatches": []
+    },
+    {
+      "scenarioId": "SEC-011-prompt-access-audit-log-safety",
+      "requirements": [
+        "SEC-011",
+        "TST-086"
+      ],
+      "title": "prompt access, limits, audit metadata and ordinary logs fail closed without content leaks",
+      "status": "GREEN",
+      "classification": "product-contract",
+      "mismatches": []
+    }
+  ]
+}

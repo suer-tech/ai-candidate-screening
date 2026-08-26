@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="VAC-042: generated profile accepts exactly five canonical ABC directions in canonical order" time="0.001504" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\generated-vacancy-profile.acceptance.test.ts"/>
+	<testcase name="VAC-042: random, missing, extra, duplicate and reordered ABC sets are rejected" time="0.001255" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\generated-vacancy-profile.acceptance.test.ts" failure="Missing expected exception: random names must be rejected before an editor or persisted profile is created">
+		<failure type="testCodeFailure" message="Missing expected exception: random names must be rejected before an editor or persisted profile is created">
+[Error [ERR_TEST_FAILURE]: Missing expected exception: random names must be rejected before an editor or persisted profile is created] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Missing expected exception: random names must be rejected before an editor or persisted profile is created
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\generated-vacancy-profile.acceptance.test.ts:58:12)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /invalid structured response/i,
+    operator: 'throws',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="VAC-043: arrays and nested objects become deterministic readable multiline text" time="0.000894" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\generated-vacancy-profile.acceptance.test.ts" failure="Образ результата must not be flattened with semicolon separators">
+		<failure type="testCodeFailure" message="Образ результата must not be flattened with semicolon separators">
+[Error [ERR_TEST_FAILURE]: Образ результата must not be flattened with semicolon separators] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Образ результата must not be flattened with semicolon separators
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\generated-vacancy-profile.acceptance.test.ts:100:12)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'Цель: Стабилизировать операционный контур; Ожидаемые результаты: Срок цикла сокращён; Ошибки измеримо снижены; Измеримость: Метрика: Не более двух дней; Масштаб: Три подразделения',
+    expected: /; /,
+    operator: 'doesNotMatch',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="VAC-043: vacancy settings editor preserves newlines and wraps long generated content" time="0.229445" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\generated-vacancy-profile.acceptance.test.ts" failure="the profile editor explicitly wraps long lines&#10;+ actual - expected&#10;&#10;+ undefined&#10;- 'soft'&#10;">
+		<failure type="testCodeFailure" message="the profile editor explicitly wraps long lines&#10;+ actual - expected&#10;&#10;+ undefined&#10;- 'soft'">
+[Error [ERR_TEST_FAILURE]: the profile editor explicitly wraps long lines
++ actual - expected
+
++ undefined
+- 'soft'
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: the profile editor explicitly wraps long lines
+  + actual - expected
+  
+  + undefined
+  - 'soft'
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\generated-vacancy-profile.acceptance.test.ts:131:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: 'soft',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 4 -->
+	<!-- suites 0 -->
+	<!-- pass 1 -->
+	<!-- fail 3 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 922.7349 -->
+</testsuites>

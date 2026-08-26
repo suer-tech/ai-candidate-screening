@@ -1,39 +1,54 @@
 ## Context
 
-Current UI persists editor state only in browser and main specs still describe RouterAI generation plus draft/preview/activation. The target flow crosses server validation, profile versioning and Google Drive provisioning, so partial success must not become externally active.
+Main specs уже требуют ручного запуска создания, серверной RouterAI-генерации и редактирования результата HR. Текущая реализация открывает ручной editor с non-LLM шаблоном, поэтому change должен восстановить LLM как обязательный источник первоначального наполнения и сохранить принятые требования к уникальному названию, отсутствию persistent draft и Google Drive binding.
 
 ## Goals / Non-Goals
 
 **Goals:**
-- One server-authoritative create operation with idempotent retries.
-- Manual editor initialized from a versioned non-LLM template.
-- No persisted unsaved draft or hidden activation state.
+- Один явный пользовательский запуск генерации по вручную введённому названию.
+- Автоматическое восстановление после временных и исправимых ошибок LLM без участия HR.
+- Редактирование только успешно сгенерированного структурированного профиля.
+- Один подтверждённый и идемпотентный финальный commit вакансии, версии 1 и Drive binding.
 
 **Non-Goals:**
-- Changing edit/version behavior of already active vacancies beyond compatibility with the new first version.
-- Choosing a database, queue, Drive client library or frontend form framework.
-- Removing LLM from other product capabilities.
+- Автоматически создавать вакансии без действия HR.
+- Предлагать ручное заполнение пустого профиля или non-LLM template как fallback генерации.
+- Выбирать конкретную модель, base URL, очередь, базу данных или frontend framework.
+- Менять редактирование последующих версий уже существующих вакансий.
 
 ## Decisions
 
-1. **Two UI steps, one persistence commit.** Step 1 validates normalized title; step 2 edits the complete profile. Only final save persists product objects. Alternative autosave was rejected because it recreates a hidden draft lifecycle.
-2. **Versioned template snapshot.** The editor receives a copy of the approved standard ABC template and records its template version with the save operation. User changes never mutate the source template.
-3. **Server repeats all validation.** Client feedback is advisory; title uniqueness, full profile rules and logical consistency are authoritative at save.
-4. **Externally atomic saga.** The operation has a stable operation ID and internal recoverable states, but no vacancy is exposed as active until version persistence and Drive binding both succeed. Compensating or retry logic is implementation-specific.
-5. **Idempotency by operation and binding identity.** Retry resolves the same vacancy/folder binding instead of relying on folder names.
-6. **No generation compatibility path.** Legacy generation controls and endpoints are removed rather than left disabled.
+1. **Создание отделено от генерации.** Первый commit принимает только уникальное название, создаёт active vacancy версии 1 с пустыми параметрами и idempotent Drive binding. LLM при этом не вызывается.
+2. **Генерация — отдельное действие внутри вакансии.** `Сгенерировать описание` создаёт idempotent generation operation для существующей vacancy. Валидный RouterAI snapshot заполняет editor, но сохраняется как новая версия только после действия HR `Сохранить`. Пустые поля до генерации доступны для ручного заполнения.
+3. **Ограниченный автоматический retry loop.** После первоначального вызова разрешены максимум три автоматических повтора для timeout, network error, HTTP 429/5xx и невалидного структурированного ответа. Повторы используют тот же generation operation ID и название, фиксируют номер попытки и применяют конфигурационную задержку. Ошибки авторизации или конфигурации, которые повтором не исправляются, завершаются сразу с понятной безопасной причиной.
+4. **Terminal generation error не повреждает вакансию.** После неуспешных повторов vacancy и текущая версия остаются доступными; editor показывает прежние значения, а UI разрешает повторить генерацию. Raw provider error и секреты не раскрываются.
+5. **Preview и явное утверждение обязательны.** После редактирования HR видит правила оценки и структуру отчёта, затем выполняет `Сохранить и активировать`. Подтверждение относится к точному snapshot профиля; изменение после preview требует повторного подтверждения.
+6. **Externally atomic create saga.** Создание по названию имеет устойчивый ID. Vacancy становится active после сохранения минимальной версии 1 и Google Drive binding; повтор не создаёт duplicate vacancy/version/folder. Генерация и сохранение описания являются отдельными последующими operations.
+7. **Сервер повторяет все проверки.** Клиентская проверка вспомогательна; уникальность нормализованного названия, целостность generated snapshot, полнота профиля, подтверждение HR и логические ограничения проверяются на серверной границе.
+8. **Каноническая структура generated profile.** Structured-output contract требует ровно пять исходных ABC-направлений в порядке `Продуктивность`, `Инициатива`, `Самообучаемость`, `Корпоративные ценности`, `Автономность`. Ответ с иными, пропущенными, повторяющимися или переставленными направлениями считается невалидным и проходит обычный bounded retry. После получения валидного snapshot HR может редактировать направления по действующим правилам профиля.
+9. **Читаемая нормализация разделов.** Structured значения четырёх профильных разделов нормализуются в многострочный текст: один смысловой пункт на строку, вложенные признаки сохраняют короткую метку. UI использует многострочный editor с переносом строк. `Образ результата` описывает цель и измеримые результаты; `Компетенции` — 2–3 критических навыка и наблюдаемые признаки; `Стоп-факторы` — условие срабатывания и доказательство; `Допуск к КЕ` — обязательные проверки, признаки готовности и источник результата.
+10. **Форматирование не делегируется модели.** RouterAI возвращает semantic JSON по версии схемы и получает пример структуры, но окончательное пользовательское представление строит серверный formatter. Formatter использует allowlist-словарь русских подписей, преобразует camelCase только как безопасный fallback, отделяет верхнеуровневые блоки пустой строкой, оформляет массивы маркерами и сохраняет вложенность. Исходная structured response остаётся в protected trace; persisted profile получает детерминированное редактируемое представление.
+11. **Минутное окно стабильности.** Для новой папки worker делает четыре полных снимка за одну минуту примерно на отметках 0/15/30/45 секунд. Сравниваются устойчивые File ID, количество и размер каждого файла. Любое изменение сбрасывает окно; четыре одинаковых полных снимка создают immutable input version и automatic first run.
+12. **Безопасный polling loop.** Discovery и stability ticks не перекрываются, ошибка отдельного Drive-вызова логируется безопасным кодом и не останавливает следующие тики. Goal создаётся идемпотентно по Folder ID и input version.
+13. **FFmpeg является runtime dependency.** Docker build устанавливает системный либо проверенный bundled FFmpeg и fail-closed проверяет executable в build/runtime. Media health выполняет безопасный `ffmpeg -version`; отсутствие или невозможность запуска возвращает not-ready.
 
 ## Risks / Trade-offs
 
-- [Drive outage delays an otherwise valid save] -> Preserve editor values in the current session and provide idempotent retry; do not publish partial success.
-- [Concurrent normalized titles race] -> Enforce uniqueness atomically at persistence boundary, not only during step 1.
-- [Long manual form is lost on reload] -> Warn on in-app navigation; accepted trade-off of the explicit no-draft decision.
-- [Existing tests assume preview/activation] -> Replace them with independent RED acceptance before implementation and run full regression.
+- [LLM временно недоступна] -> До трёх автоматических повторов, понятная terminal error и явный повтор позже без ручного fallback.
+- [Невалидный ответ повторяется] -> Строгая schema validation, сохранение безопасных trace metadata и запрет открыть editor до валидного ответа.
+- [Повтор создаёт несколько запросов или объектов] -> Stable operation ID и idempotency на generation и final-save boundaries.
+- [Drive outage задерживает валидную вакансию] -> Safe retry финальной operation; до binding vacancy не публикуется как active.
+- [Concurrent normalized titles race] -> Уникальность проверяется атомарно при финальном сохранении, а не только перед генерацией.
+- [Текущие tests подтверждают противоположное поведение] -> После согласования независимый субагент сначала заменяет acceptance expectations и фиксирует RED.
+- [LLM перефразировал название ABC-направления] -> Строгая проверка канонического набора и bounded retry вместо сохранения случайной структуры.
+- [Структурированный ответ превратился в длинную строку] -> Детерминированная рекурсивная нормализация по строкам и acceptance-проверка читаемого представления.
+- [Модель вернула технические ключи либо непоследовательные пробелы] -> Версионированный словарь подписей и серверная layout grammar; prompt example улучшает форму ответа, но не является единственной гарантией оформления.
 
 ## Migration Plan
 
-1. Add the new server contract and data constraints behind a disabled route/feature boundary.
-2. Add independent acceptance tests and migrate the UI to the manual flow.
-3. Remove generation endpoints/controls after no consumer remains.
-4. Verify existing active vacancies and profile versions remain readable.
-5. Rollback restores the prior UI only if no new-format create operation is in flight; persisted active versions remain compatible.
+1. Согласовать delta specs и заменить независимые acceptance tests, зафиксировав ожидаемый RED на manual non-LLM реализации.
+2. Добавить generation operation, structured-output validation, retry loop и безопасную terminal error за feature boundary.
+3. Перевести UI на title -> generation -> editable result -> preview -> confirm flow.
+4. Связать подтверждённый snapshot с идемпотентной final-save/Drive operation.
+5. Удалить manual non-LLM fallback после отсутствия потребителей и выполнить обязательный полный регрессионный набор.
+6. Rollback отключает новый route до незавершённых операций; уже сохранённые версии остаются совместимыми.

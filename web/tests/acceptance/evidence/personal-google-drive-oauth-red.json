@@ -1,0 +1,178 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAtUtc": "2026-08-20T11:21:39.435Z",
+  "change": "support-personal-google-drive-oauth",
+  "requirement": "TST-120",
+  "fixtureSetId": "personal-google-drive-oauth-synthetic-v1",
+  "evidenceScope": "local-controlled-conformance-only",
+  "productionLikeAcceptanceClaimed": false,
+  "author": "/root/personal_drive_oauth_red",
+  "executor": "/root/personal_drive_oauth_red",
+  "independenceDeclared": true,
+  "containsSecrets": false,
+  "containsRealPersonalData": false,
+  "counts": {
+    "total": 11,
+    "passed": 0,
+    "red": 11
+  },
+  "results": [
+    {
+      "testId": "TST-120-A",
+      "title": "OAuth is the only backend and service-account configuration is rejected",
+      "status": "RED",
+      "safeCode": "GOOGLE_DRIVE_OAUTH_CONFORMANCE_ADAPTER_MISSING",
+      "failures": [
+        "Personal Google Drive OAuth conformance adapter is absent at C:\\Users\\user2\\Documents\\Cursor\\hh\\web\\server\\google-drive-oauth\\conformance.ts",
+        "status: expected \"SUCCEEDED\"; actual=\"NOT_IMPLEMENTED\"",
+        "oauthOnlyReady: expected true; actual=undefined",
+        "serviceAccountRejectedCode: expected \"GOOGLE_DRIVE_BACKEND_UNSUPPORTED\"; actual=undefined"
+      ]
+    },
+    {
+      "testId": "TST-120-B",
+      "title": "anonymous connect and callback requests cannot create OAuth operations",
+      "status": "RED",
+      "safeCode": "GOOGLE_DRIVE_OAUTH_CONFORMANCE_ADAPTER_MISSING",
+      "failures": [
+        "Personal Google Drive OAuth conformance adapter is absent at C:\\Users\\user2\\Documents\\Cursor\\hh\\web\\server\\google-drive-oauth\\conformance.ts",
+        "status: expected \"SUCCEEDED\"; actual=\"NOT_IMPLEMENTED\"",
+        "anonymousConnectDenied: expected true; actual=undefined",
+        "anonymousCallbackDenied: expected true; actual=undefined",
+        "anonymousOperationsCreated: expected 0; actual=undefined"
+      ]
+    },
+    {
+      "testId": "TST-120-C",
+      "title": "state, PKCE and redirect are one-time, expiring and server-bound",
+      "status": "RED",
+      "safeCode": "GOOGLE_DRIVE_OAUTH_CONFORMANCE_ADAPTER_MISSING",
+      "failures": [
+        "Personal Google Drive OAuth conformance adapter is absent at C:\\Users\\user2\\Documents\\Cursor\\hh\\web\\server\\google-drive-oauth\\conformance.ts",
+        "status: expected \"SUCCEEDED\"; actual=\"NOT_IMPLEMENTED\"",
+        "successfulConnections: expected 1; actual=undefined",
+        "exchanges: expected 1; actual=undefined",
+        "replayRejected: expected true; actual=undefined",
+        "expiryRejected: expected true; actual=undefined",
+        "pkceMismatchRejected: expected true; actual=undefined",
+        "redirectPoisoningRejected: expected true; actual=undefined"
+      ]
+    },
+    {
+      "testId": "TST-120-D",
+      "title": "refresh token is encrypted and credentials never enter observable surfaces",
+      "status": "RED",
+      "safeCode": "GOOGLE_DRIVE_OAUTH_CONFORMANCE_ADAPTER_MISSING",
+      "failures": [
+        "Personal Google Drive OAuth conformance adapter is absent at C:\\Users\\user2\\Documents\\Cursor\\hh\\web\\server\\google-drive-oauth\\conformance.ts",
+        "status: expected \"SUCCEEDED\"; actual=\"NOT_IMPLEMENTED\"",
+        "refreshTokenEncrypted: expected true; actual=undefined",
+        "plaintextTokenColumns: expected 0; actual=undefined",
+        "credentialLeaks: expected 0; actual=undefined",
+        "tamperRejected: expected true; actual=undefined"
+      ]
+    },
+    {
+      "testId": "TST-120-E",
+      "title": "testing is local-only and production-personal is the durable gate",
+      "status": "RED",
+      "safeCode": "GOOGLE_DRIVE_OAUTH_CONFORMANCE_ADAPTER_MISSING",
+      "failures": [
+        "Personal Google Drive OAuth conformance adapter is absent at C:\\Users\\user2\\Documents\\Cursor\\hh\\web\\server\\google-drive-oauth\\conformance.ts",
+        "status: expected \"SUCCEEDED\"; actual=\"NOT_IMPLEMENTED\"",
+        "localTestingAllowed: expected true; actual=undefined",
+        "testingProductionCode: expected \"GOOGLE_OAUTH_TESTING_GRANT_NOT_DURABLE\"; actual=undefined",
+        "productionPersonalReady: expected true; actual=undefined"
+      ]
+    },
+    {
+      "testId": "TST-120-F",
+      "title": "worker restart refreshes from durable encrypted grant and resumes once",
+      "status": "RED",
+      "safeCode": "GOOGLE_DRIVE_OAUTH_CONFORMANCE_ADAPTER_MISSING",
+      "failures": [
+        "Personal Google Drive OAuth conformance adapter is absent at C:\\Users\\user2\\Documents\\Cursor\\hh\\web\\server\\google-drive-oauth\\conformance.ts",
+        "status: expected \"SUCCEEDED\"; actual=\"NOT_IMPLEMENTED\"",
+        "refreshCalls: expected 1; actual=undefined",
+        "accessTokenPersisted: expected false; actual=undefined",
+        "checkpointResumed: expected true; actual=undefined",
+        "duplicateExternalEffects: expected 0; actual=undefined"
+      ]
+    },
+    {
+      "testId": "TST-120-G",
+      "title": "manual files under Найм are discovered while unrelated IDs fail before Drive API",
+      "status": "RED",
+      "safeCode": "GOOGLE_DRIVE_OAUTH_CONFORMANCE_ADAPTER_MISSING",
+      "failures": [
+        "Personal Google Drive OAuth conformance adapter is absent at C:\\Users\\user2\\Documents\\Cursor\\hh\\web\\server\\google-drive-oauth\\conformance.ts",
+        "status: expected \"SUCCEEDED\"; actual=\"NOT_IMPLEMENTED\"",
+        "manualFileDiscovered: expected true; actual=undefined",
+        "registeredDescendantRead: expected true; actual=undefined",
+        "unrelatedReadDeniedBeforeApi: expected true; actual=undefined",
+        "unrelatedWriteDeniedBeforeApi: expected true; actual=undefined"
+      ]
+    },
+    {
+      "testId": "TST-120-H",
+      "title": "publication reconciles timeout, preserves source files and cleans synthetic outputs",
+      "status": "RED",
+      "safeCode": "GOOGLE_DRIVE_OAUTH_CONFORMANCE_ADAPTER_MISSING",
+      "failures": [
+        "Personal Google Drive OAuth conformance adapter is absent at C:\\Users\\user2\\Documents\\Cursor\\hh\\web\\server\\google-drive-oauth\\conformance.ts",
+        "status: expected \"SUCCEEDED\"; actual=\"NOT_IMPLEMENTED\"",
+        "visiblePdfCount: expected 2; actual=undefined",
+        "duplicatePdfCount: expected 0; actual=undefined",
+        "reconciledBeforeRetry: expected true; actual=undefined",
+        "sourceFilesPreserved: expected true; actual=undefined",
+        "cleanupComplete: expected true; actual=undefined"
+      ]
+    },
+    {
+      "testId": "TST-120-I",
+      "title": "invalid_grant becomes actionable WAITING_FOR_HUMAN instead of FAILED",
+      "status": "RED",
+      "safeCode": "GOOGLE_DRIVE_OAUTH_CONFORMANCE_ADAPTER_MISSING",
+      "failures": [
+        "Personal Google Drive OAuth conformance adapter is absent at C:\\Users\\user2\\Documents\\Cursor\\hh\\web\\server\\google-drive-oauth\\conformance.ts",
+        "status: expected \"SUCCEEDED\"; actual=\"NOT_IMPLEMENTED\"",
+        "connectionState: expected \"REAUTH_REQUIRED\"; actual=undefined",
+        "taskState: expected \"WAITING_FOR_HUMAN\"; actual=undefined",
+        "action: expected \"Переподключить Google Drive\"; actual=undefined",
+        "terminalFailed: expected false; actual=undefined",
+        "blockedDriveEffects: expected 1; actual=undefined"
+      ]
+    },
+    {
+      "testId": "TST-120-J",
+      "title": "expected account reconnect resumes without duplicates and mismatch is blocked",
+      "status": "RED",
+      "safeCode": "GOOGLE_DRIVE_OAUTH_CONFORMANCE_ADAPTER_MISSING",
+      "failures": [
+        "Personal Google Drive OAuth conformance adapter is absent at C:\\Users\\user2\\Documents\\Cursor\\hh\\web\\server\\google-drive-oauth\\conformance.ts",
+        "status: expected \"SUCCEEDED\"; actual=\"NOT_IMPLEMENTED\"",
+        "expectedAccountResumed: expected true; actual=undefined",
+        "accountMismatchBlocked: expected true; actual=undefined",
+        "candidateCount: expected 1; actual=undefined",
+        "candidateFolderCount: expected 1; actual=undefined",
+        "resultVersionCount: expected 1; actual=undefined",
+        "visiblePdfCount: expected 2; actual=undefined",
+        "duplicateExternalEffects: expected 0; actual=undefined"
+      ]
+    },
+    {
+      "testId": "TST-120-K",
+      "title": "disconnect removes local grant but preserves product records and Drive files",
+      "status": "RED",
+      "safeCode": "GOOGLE_DRIVE_OAUTH_CONFORMANCE_ADAPTER_MISSING",
+      "failures": [
+        "Personal Google Drive OAuth conformance adapter is absent at C:\\Users\\user2\\Documents\\Cursor\\hh\\web\\server\\google-drive-oauth\\conformance.ts",
+        "status: expected \"SUCCEEDED\"; actual=\"NOT_IMPLEMENTED\"",
+        "connectionState: expected \"DISCONNECTED\"; actual=undefined",
+        "durableRefreshTokenPresent: expected false; actual=undefined",
+        "productRecordsPreserved: expected true; actual=undefined",
+        "driveFilesPreserved: expected true; actual=undefined"
+      ]
+    }
+  ]
+}

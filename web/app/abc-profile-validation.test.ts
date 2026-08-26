@@ -25,23 +25,14 @@ const validDirections = (): AbcProfileDirection[] => [
   },
 ];
 
-test("returns a collection-level error for an empty ABC profile", () => {
-  assert.deepEqual(validateAbcProfile([]), {
-    valid: false,
-    errors: [{
-      code: "abc-directions.required",
-      level: "collection",
-      field: "collection",
-      message: "Добавьте хотя бы одно ABC-направление.",
-    }],
-  });
+test("accepts an empty ABC profile", () => {
+  assert.deepEqual(validateAbcProfile([]), { valid: true, errors: [] });
 });
 
-for (const field of ["name", "gradeA", "gradeB", "gradeC"] as const) {
-  for (const blankValue of ["", " \t "]) {
-    test(`localizes a trimmed-empty ${field} error to its direction and field`, () => {
+for (const blankValue of ["", " \t "]) {
+    test("localizes a trimmed-empty name error to its direction and field", () => {
       const directions = validDirections();
-      directions[1] = { ...directions[1], [field]: blankValue };
+      directions[1] = { ...directions[1], name: blankValue };
 
       const result = validateAbcProfile(directions);
 
@@ -54,14 +45,27 @@ for (const field of ["name", "gradeA", "gradeB", "gradeC"] as const) {
           level: "field",
           directionId: "custom-teamwork",
           directionIndex: 1,
-          field,
+          field: "name",
           message: undefined,
         },
       );
-      assert.match(result.errors[0].message, field === "name" ? /название/i : new RegExp(field.at(-1) ?? ""));
+      assert.match(result.errors[0].message, /название/i);
     });
-  }
 }
+
+test("accepts empty A, B and C descriptions", () => {
+  const directions = validDirections().map((direction) => ({ ...direction, gradeA: "", gradeB: "", gradeC: "" }));
+  assert.deepEqual(validateAbcProfile(directions), { valid: true, errors: [] });
+});
+
+test("rejects missing or duplicate ids and an invalid origin", () => {
+  const directions = validDirections();
+  directions[0] = { ...directions[0], id: "same" };
+  directions[1] = { ...directions[1], id: "same", origin: "external" as "custom" };
+  const result = validateAbcProfile(directions);
+  assert.equal(result.valid, false);
+  assert.deepEqual(result.errors.map((error) => error.code).sort(), ["abc-direction.id.duplicate", "abc-direction.id.duplicate", "abc-direction.origin.invalid"].sort());
+});
 
 test("normalizes names only for trim and case-insensitive comparison", () => {
   assert.equal(normalizeAbcDirectionName("  Инициатива\t"), "инициатива");

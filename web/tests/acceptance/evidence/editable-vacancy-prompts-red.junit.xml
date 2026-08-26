@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="VAC-040/TST-086: generation action opens a prompt modal, confirms separately, shows progress and completes safely" time="0.016768" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\editable-vacancy-prompts.acceptance.test.mjs" failure="Editable vacancy prompts conformance boundary is absent: export runEditableVacancyPromptsConformanceScenario(fixture) from server/product/application.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;headerActions: expected exact [&amp;quot;Сгенерировать описание&amp;quot;,&amp;quot;Настройки&amp;quot;,&amp;quot;Архив&amp;quot;]; actual=undefined&#10;modal.title: expected &amp;quot;Сгенерировать описание вакансии&amp;quot;; actual=undefined&#10;modal.fieldLabel: expected &amp;quot;Инструкция для генерации&amp;quot;; actual=undefined&#10;modal.defaultArtifactId: expected &amp;quot;vacancy-profile/v1&amp;quot;; actual=undefined&#10;modal.resetAvailable: expected true; actual=undefined&#10;llmCalls.afterHeaderClick: expected 0; actual=undefined&#10;llmCalls.beforeConfirmation: expected 0; actual=undefined&#10;llmCalls.afterCancelledConfirmation: expected 0; actual=undefined&#10;llmCalls.afterConfirmedDoubleClick: expected 1; actual=undefined&#10;pending.generateDisabled: expected true; actual=undefined&#10;pending.spinnerVisible: expected true; actual=undefined&#10;pending.parallelLaunchPrevented: expected true; actual=undefined&#10;completion.filledSections: expected exact [&amp;quot;Образ результата&amp;quot;,&amp;quot;ABC-критерии&amp;quot;,&amp;quot;Компетенции&amp;quot;,&amp;quot;Стоп-факторы&amp;quot;,&amp;quot;Доступ к КЕ&amp;quot;]; actual=undefined&#10;completion.modalClosed: expected true; actual=undefined&#10;completion.toastVisible: expected true; actual=undefined&#10;completion.audioAttempted: expected true; actual=undefined&#10;completion.audioFailureIgnored: expected true; actual=undefined&#10;&#10;19 !== 0&#10;">
+		<failure type="testCodeFailure" message="Editable vacancy prompts conformance boundary is absent: export runEditableVacancyPromptsConformanceScenario(fixture) from server/product/application.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;headerActions: expected exact [&amp;quot;Сгенерировать описание&amp;quot;,&amp;quot;Настройки&amp;quot;,&amp;quot;Архив&amp;quot;]; actual=undefined&#10;modal.title: expected &amp;quot;Сгенерировать описание вакансии&amp;quot;; actual=undefined&#10;modal.fieldLabel: expected &amp;quot;Инструкция для генерации&amp;quot;; actual=undefined&#10;modal.defaultArtifactId: expected &amp;quot;vacancy-profile/v1&amp;quot;; actual=undefined&#10;modal.resetAvailable: expected true; actual=undefined&#10;llmCalls.afterHeaderClick: expected 0; actual=undefined&#10;llmCalls.beforeConfirmation: expected 0; actual=undefined&#10;llmCalls.afterCancelledConfirmation: expected 0; actual=undefined&#10;llmCalls.afterConfirmedDoubleClick: expected 1; actual=undefined&#10;pending.generateDisabled: expected true; actual=undefined&#10;pending.spinnerVisible: expected true; actual=undefined&#10;pending.parallelLaunchPrevented: expected true; actual=undefined&#10;completion.filledSections: expected exact [&amp;quot;Образ результата&amp;quot;,&amp;quot;ABC-критерии&amp;quot;,&amp;quot;Компетенции&amp;quot;,&amp;quot;Стоп-факторы&amp;quot;,&amp;quot;Доступ к КЕ&amp;quot;]; actual=undefined&#10;completion.modalClosed: expected true; actual=undefined&#10;completion.toastVisible: expected true; actual=undefined&#10;completion.audioAttempted: expected true; actual=undefined&#10;completion.audioFailureIgnored: expected true; actual=undefined&#10;&#10;19 !== 0">
+[Error [ERR_TEST_FAILURE]: Editable vacancy prompts conformance boundary is absent: export runEditableVacancyPromptsConformanceScenario(fixture) from server/product/application.ts
+status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+headerActions: expected exact ["Сгенерировать описание","Настройки","Архив"]; actual=undefined
+modal.title: expected "Сгенерировать описание вакансии"; actual=undefined
+modal.fieldLabel: expected "Инструкция для генерации"; actual=undefined
+modal.defaultArtifactId: expected "vacancy-profile/v1"; actual=undefined
+modal.resetAvailable: expected true; actual=undefined
+llmCalls.afterHeaderClick: expected 0; actual=undefined
+llmCalls.beforeConfirmation: expected 0; actual=undefined
+llmCalls.afterCancelledConfirmation: expected 0; actual=undefined
+llmCalls.afterConfirmedDoubleClick: expected 1; actual=undefined
+pending.generateDisabled: expected true; actual=undefined
+pending.spinnerVisible: expected true; actual=undefined
+pending.parallelLaunchPrevented: expected true; actual=undefined
+completion.filledSections: expected exact ["Образ результата","ABC-критерии","Компетенции","Стоп-факторы","Доступ к КЕ"]; actual=undefined
+completion.modalClosed: expected true; actual=undefined
+completion.toastVisible: expected true; actual=undefined
+completion.audioAttempted: expected true; actual=undefined
+completion.audioFailureIgnored: expected true; actual=undefined
+
+19 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Editable vacancy prompts conformance boundary is absent: export runEditableVacancyPromptsConformanceScenario(fixture) from server/product/application.ts
+  status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+  headerActions: expected exact ["Сгенерировать описание","Настройки","Архив"]; actual=undefined
+  modal.title: expected "Сгенерировать описание вакансии"; actual=undefined
+  modal.fieldLabel: expected "Инструкция для генерации"; actual=undefined
+  modal.defaultArtifactId: expected "vacancy-profile/v1"; actual=undefined
+  modal.resetAvailable: expected true; actual=undefined
+  llmCalls.afterHeaderClick: expected 0; actual=undefined
+  llmCalls.beforeConfirmation: expected 0; actual=undefined
+  llmCalls.afterCancelledConfirmation: expected 0; actual=undefined
+  llmCalls.afterConfirmedDoubleClick: expected 1; actual=undefined
+  pending.generateDisabled: expected true; actual=undefined
+  pending.spinnerVisible: expected true; actual=undefined
+  pending.parallelLaunchPrevented: expected true; actual=undefined
+  completion.filledSections: expected exact ["Образ результата","ABC-критерии","Компетенции","Стоп-факторы","Доступ к КЕ"]; actual=undefined
+  completion.modalClosed: expected true; actual=undefined
+  completion.toastVisible: expected true; actual=undefined
+  completion.audioAttempted: expected true; actual=undefined
+  completion.audioFailureIgnored: expected true; actual=undefined
+  
+  19 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/editable-vacancy-prompts.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 19,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="VAC-040/SEC-011/TST-086: confirmed generation sends one normalized immutable snapshot through the protected API" time="0.000251" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\editable-vacancy-prompts.acceptance.test.mjs" failure="Editable vacancy prompts conformance boundary is absent: export runEditableVacancyPromptsConformanceScenario(fixture) from server/product/application.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;acceptedPrompt: expected &amp;quot;Учитывай измеримый результат.\nНе выдумывай отсутствующие сведения.&amp;quot;; actual=undefined&#10;promptArtifactId: expected &amp;quot;vacancy-profile/v1&amp;quot;; actual=undefined&#10;promptHashAlgorithm: expected &amp;quot;SHA-256&amp;quot;; actual=undefined&#10;operationCount: expected 1; actual=undefined&#10;providerCalls: expected 1; actual=undefined&#10;csrfRequired: expected true; actual=undefined&#10;vacancyAccessRequired: expected true; actual=undefined&#10;mismatchedOperationHashCode: expected &amp;quot;VACANCY_GENERATION_OPERATION_CONFLICT&amp;quot;; actual=undefined&#10;invalidPromptProviderCalls: expected 0; actual=undefined&#10;&#10;11 !== 0&#10;">
+		<failure type="testCodeFailure" message="Editable vacancy prompts conformance boundary is absent: export runEditableVacancyPromptsConformanceScenario(fixture) from server/product/application.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;acceptedPrompt: expected &amp;quot;Учитывай измеримый результат.\nНе выдумывай отсутствующие сведения.&amp;quot;; actual=undefined&#10;promptArtifactId: expected &amp;quot;vacancy-profile/v1&amp;quot;; actual=undefined&#10;promptHashAlgorithm: expected &amp;quot;SHA-256&amp;quot;; actual=undefined&#10;operationCount: expected 1; actual=undefined&#10;providerCalls: expected 1; actual=undefined&#10;csrfRequired: expected true; actual=undefined&#10;vacancyAccessRequired: expected true; actual=undefined&#10;mismatchedOperationHashCode: expected &amp;quot;VACANCY_GENERATION_OPERATION_CONFLICT&amp;quot;; actual=undefined&#10;invalidPromptProviderCalls: expected 0; actual=undefined&#10;&#10;11 !== 0">
+[Error [ERR_TEST_FAILURE]: Editable vacancy prompts conformance boundary is absent: export runEditableVacancyPromptsConformanceScenario(fixture) from server/product/application.ts
+status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+acceptedPrompt: expected "Учитывай измеримый результат.\nНе выдумывай отсутствующие сведения."; actual=undefined
+promptArtifactId: expected "vacancy-profile/v1"; actual=undefined
+promptHashAlgorithm: expected "SHA-256"; actual=undefined
+operationCount: expected 1; actual=undefined
+providerCalls: expected 1; actual=undefined
+csrfRequired: expected true; actual=undefined
+vacancyAccessRequired: expected true; actual=undefined
+mismatchedOperationHashCode: expected "VACANCY_GENERATION_OPERATION_CONFLICT"; actual=undefined
+invalidPromptProviderCalls: expected 0; actual=undefined
+
+11 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Editable vacancy prompts conformance boundary is absent: export runEditableVacancyPromptsConformanceScenario(fixture) from server/product/application.ts
+  status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+  acceptedPrompt: expected "Учитывай измеримый результат.\nНе выдумывай отсутствующие сведения."; actual=undefined
+  promptArtifactId: expected "vacancy-profile/v1"; actual=undefined
+  promptHashAlgorithm: expected "SHA-256"; actual=undefined
+  operationCount: expected 1; actual=undefined
+  providerCalls: expected 1; actual=undefined
+  csrfRequired: expected true; actual=undefined
+  vacancyAccessRequired: expected true; actual=undefined
+  mismatchedOperationHashCode: expected "VACANCY_GENERATION_OPERATION_CONFLICT"; actual=undefined
+  invalidPromptProviderCalls: expected 0; actual=undefined
+  
+  11 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/editable-vacancy-prompts.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 11,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="VAC-041/TST-086: analysis prompt is a local sixth settings section with reset, validation and explicit save" time="0.000199" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\editable-vacancy-prompts.acceptance.test.mjs" failure="Editable vacancy prompts conformance boundary is absent: export runEditableVacancyPromptsConformanceScenario(fixture) from server/product/application.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;settingsSections: expected exact [&amp;quot;Образ результата&amp;quot;,&amp;quot;ABC-критерии&amp;quot;,&amp;quot;Компетенции&amp;quot;,&amp;quot;Стоп-факторы&amp;quot;,&amp;quot;Допуск к КЕ&amp;quot;,&amp;quot;Промпт анализа&amp;quot;]; actual=undefined&#10;defaultArtifactId: expected &amp;quot;candidate-assessment/v1&amp;quot;; actual=undefined&#10;explainsNewRunsOnly: expected true; actual=undefined&#10;resetAvailable: expected true; actual=undefined&#10;saveAvailable: expected true; actual=undefined&#10;invalidSaveCreatesVersions: expected 0; actual=undefined&#10;failedSavePreservesDraft: expected true; actual=undefined&#10;&#10;9 !== 0&#10;">
+		<failure type="testCodeFailure" message="Editable vacancy prompts conformance boundary is absent: export runEditableVacancyPromptsConformanceScenario(fixture) from server/product/application.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;settingsSections: expected exact [&amp;quot;Образ результата&amp;quot;,&amp;quot;ABC-критерии&amp;quot;,&amp;quot;Компетенции&amp;quot;,&amp;quot;Стоп-факторы&amp;quot;,&amp;quot;Допуск к КЕ&amp;quot;,&amp;quot;Промпт анализа&amp;quot;]; actual=undefined&#10;defaultArtifactId: expected &amp;quot;candidate-assessment/v1&amp;quot;; actual=undefined&#10;explainsNewRunsOnly: expected true; actual=undefined&#10;resetAvailable: expected true; actual=undefined&#10;saveAvailable: expected true; actual=undefined&#10;invalidSaveCreatesVersions: expected 0; actual=undefined&#10;failedSavePreservesDraft: expected true; actual=undefined&#10;&#10;9 !== 0">
+[Error [ERR_TEST_FAILURE]: Editable vacancy prompts conformance boundary is absent: export runEditableVacancyPromptsConformanceScenario(fixture) from server/product/application.ts
+status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+settingsSections: expected exact ["Образ результата","ABC-критерии","Компетенции","Стоп-факторы","Допуск к КЕ","Промпт анализа"]; actual=undefined
+defaultArtifactId: expected "candidate-assessment/v1"; actual=undefined
+explainsNewRunsOnly: expected true; actual=undefined
+resetAvailable: expected true; actual=undefined
+saveAvailable: expected true; actual=undefined
+invalidSaveCreatesVersions: expected 0; actual=undefined
+failedSavePreservesDraft: expected true; actual=undefined
+
+9 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Editable vacancy prompts conformance boundary is absent: export runEditableVacancyPromptsConformanceScenario(fixture) from server/product/application.ts
+  status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+  settingsSections: expected exact ["Образ результата","ABC-критерии","Компетенции","Стоп-факторы","Допуск к КЕ","Промпт анализа"]; actual=undefined
+  defaultArtifactId: expected "candidate-assessment/v1"; actual=undefined
+  explainsNewRunsOnly: expected true; actual=undefined
+  resetAvailable: expected true; actual=undefined
+  saveAvailable: expected true; actual=undefined
+  invalidSaveCreatesVersions: expected 0; actual=undefined
+  failedSavePreservesDraft: expected true; actual=undefined
+  
+  9 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/editable-vacancy-prompts.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 9,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="VAC-041/ASM-062/TST-086: analysis prompt is versioned and every run keeps its exact immutable prompt snapshot" time="0.000126" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\editable-vacancy-prompts.acceptance.test.mjs" failure="Editable vacancy prompts conformance boundary is absent: export runEditableVacancyPromptsConformanceScenario(fixture) from server/product/application.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;versionsCreatedBySave: expected 1; actual=undefined&#10;oldVersionPreserved: expected true; actual=undefined&#10;normalizedTextStored: expected true; actual=undefined&#10;artifactIdStored: expected &amp;quot;candidate-assessment/v1&amp;quot;; actual=undefined&#10;hashAlgorithm: expected &amp;quot;SHA-256&amp;quot;; actual=undefined&#10;historicalFallbackArtifactId: expected &amp;quot;candidate-assessment/v1&amp;quot;; actual=undefined&#10;runningRunUsesOldPrompt: expected true; actual=undefined&#10;subsequentRunUsesNewPrompt: expected true; actual=undefined&#10;runSnapshotImmutable: expected true; actual=undefined&#10;extractionReceivesAnalysisPrompt: expected false; actual=undefined&#10;transcriptionReceivesAnalysisPrompt: expected false; actual=undefined&#10;factExtractionReceivesAnalysisPrompt: expected false; actual=undefined&#10;&#10;14 !== 0&#10;">
+		<failure type="testCodeFailure" message="Editable vacancy prompts conformance boundary is absent: export runEditableVacancyPromptsConformanceScenario(fixture) from server/product/application.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;versionsCreatedBySave: expected 1; actual=undefined&#10;oldVersionPreserved: expected true; actual=undefined&#10;normalizedTextStored: expected true; actual=undefined&#10;artifactIdStored: expected &amp;quot;candidate-assessment/v1&amp;quot;; actual=undefined&#10;hashAlgorithm: expected &amp;quot;SHA-256&amp;quot;; actual=undefined&#10;historicalFallbackArtifactId: expected &amp;quot;candidate-assessment/v1&amp;quot;; actual=undefined&#10;runningRunUsesOldPrompt: expected true; actual=undefined&#10;subsequentRunUsesNewPrompt: expected true; actual=undefined&#10;runSnapshotImmutable: expected true; actual=undefined&#10;extractionReceivesAnalysisPrompt: expected false; actual=undefined&#10;transcriptionReceivesAnalysisPrompt: expected false; actual=undefined&#10;factExtractionReceivesAnalysisPrompt: expected false; actual=undefined&#10;&#10;14 !== 0">
+[Error [ERR_TEST_FAILURE]: Editable vacancy prompts conformance boundary is absent: export runEditableVacancyPromptsConformanceScenario(fixture) from server/product/application.ts
+status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+versionsCreatedBySave: expected 1; actual=undefined
+oldVersionPreserved: expected true; actual=undefined
+normalizedTextStored: expected true; actual=undefined
+artifactIdStored: expected "candidate-assessment/v1"; actual=undefined
+hashAlgorithm: expected "SHA-256"; actual=undefined
+historicalFallbackArtifactId: expected "candidate-assessment/v1"; actual=undefined
+runningRunUsesOldPrompt: expected true; actual=undefined
+subsequentRunUsesNewPrompt: expected true; actual=undefined
+runSnapshotImmutable: expected true; actual=undefined
+extractionReceivesAnalysisPrompt: expected false; actual=undefined
+transcriptionReceivesAnalysisPrompt: expected false; actual=undefined
+factExtractionReceivesAnalysisPrompt: expected false; actual=undefined
+
+14 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Editable vacancy prompts conformance boundary is absent: export runEditableVacancyPromptsConformanceScenario(fixture) from server/product/application.ts
+  status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+  versionsCreatedBySave: expected 1; actual=undefined
+  oldVersionPreserved: expected true; actual=undefined
+  normalizedTextStored: expected true; actual=undefined
+  artifactIdStored: expected "candidate-assessment/v1"; actual=undefined
+  hashAlgorithm: expected "SHA-256"; actual=undefined
+  historicalFallbackArtifactId: expected "candidate-assessment/v1"; actual=undefined
+  runningRunUsesOldPrompt: expected true; actual=undefined
+  subsequentRunUsesNewPrompt: expected true; actual=undefined
+  runSnapshotImmutable: expected true; actual=undefined
+  extractionReceivesAnalysisPrompt: expected false; actual=undefined
+  transcriptionReceivesAnalysisPrompt: expected false; actual=undefined
+  factExtractionReceivesAnalysisPrompt: expected false; actual=undefined
+  
+  14 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/editable-vacancy-prompts.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 14,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="ASM-062/TST-086: untrusted analysis instructions cannot override evidence or schema constraints" time="0.000142" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\editable-vacancy-prompts.acceptance.test.mjs" failure="Editable vacancy prompts conformance boundary is absent: export runEditableVacancyPromptsConformanceScenario(fixture) from server/product/application.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;compositionOrder: expected exact [&amp;quot;immutable-server-envelope&amp;quot;,&amp;quot;untrusted-business-instruction&amp;quot;,&amp;quot;structured-candidate-input&amp;quot;]; actual=undefined&#10;evidenceRulesStillRequired: expected true; actual=undefined&#10;responseSchemaStillRequired: expected true; actual=undefined&#10;inventedFactIdsAccepted: expected false; actual=undefined&#10;inventedPercentagesAccepted: expected false; actual=undefined&#10;nonconformingResponseCode: expected &amp;quot;ASSESSMENT_RESPONSE_INVALID&amp;quot;; actual=undefined&#10;missingSnapshotCode: expected &amp;quot;ASSESSMENT_PROMPT_SNAPSHOT_MISSING&amp;quot;; actual=undefined&#10;tamperedSnapshotCode: expected &amp;quot;ASSESSMENT_PROMPT_INTEGRITY_MISMATCH&amp;quot;; actual=undefined&#10;currentPromptFallbackOnTamper: expected false; actual=undefined&#10;&#10;11 !== 0&#10;">
+		<failure type="testCodeFailure" message="Editable vacancy prompts conformance boundary is absent: export runEditableVacancyPromptsConformanceScenario(fixture) from server/product/application.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;compositionOrder: expected exact [&amp;quot;immutable-server-envelope&amp;quot;,&amp;quot;untrusted-business-instruction&amp;quot;,&amp;quot;structured-candidate-input&amp;quot;]; actual=undefined&#10;evidenceRulesStillRequired: expected true; actual=undefined&#10;responseSchemaStillRequired: expected true; actual=undefined&#10;inventedFactIdsAccepted: expected false; actual=undefined&#10;inventedPercentagesAccepted: expected false; actual=undefined&#10;nonconformingResponseCode: expected &amp;quot;ASSESSMENT_RESPONSE_INVALID&amp;quot;; actual=undefined&#10;missingSnapshotCode: expected &amp;quot;ASSESSMENT_PROMPT_SNAPSHOT_MISSING&amp;quot;; actual=undefined&#10;tamperedSnapshotCode: expected &amp;quot;ASSESSMENT_PROMPT_INTEGRITY_MISMATCH&amp;quot;; actual=undefined&#10;currentPromptFallbackOnTamper: expected false; actual=undefined&#10;&#10;11 !== 0">
+[Error [ERR_TEST_FAILURE]: Editable vacancy prompts conformance boundary is absent: export runEditableVacancyPromptsConformanceScenario(fixture) from server/product/application.ts
+status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+compositionOrder: expected exact ["immutable-server-envelope","untrusted-business-instruction","structured-candidate-input"]; actual=undefined
+evidenceRulesStillRequired: expected true; actual=undefined
+responseSchemaStillRequired: expected true; actual=undefined
+inventedFactIdsAccepted: expected false; actual=undefined
+inventedPercentagesAccepted: expected false; actual=undefined
+nonconformingResponseCode: expected "ASSESSMENT_RESPONSE_INVALID"; actual=undefined
+missingSnapshotCode: expected "ASSESSMENT_PROMPT_SNAPSHOT_MISSING"; actual=undefined
+tamperedSnapshotCode: expected "ASSESSMENT_PROMPT_INTEGRITY_MISMATCH"; actual=undefined
+currentPromptFallbackOnTamper: expected false; actual=undefined
+
+11 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Editable vacancy prompts conformance boundary is absent: export runEditableVacancyPromptsConformanceScenario(fixture) from server/product/application.ts
+  status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+  compositionOrder: expected exact ["immutable-server-envelope","untrusted-business-instruction","structured-candidate-input"]; actual=undefined
+  evidenceRulesStillRequired: expected true; actual=undefined
+  responseSchemaStillRequired: expected true; actual=undefined
+  inventedFactIdsAccepted: expected false; actual=undefined
+  inventedPercentagesAccepted: expected false; actual=undefined
+  nonconformingResponseCode: expected "ASSESSMENT_RESPONSE_INVALID"; actual=undefined
+  missingSnapshotCode: expected "ASSESSMENT_PROMPT_SNAPSHOT_MISSING"; actual=undefined
+  tamperedSnapshotCode: expected "ASSESSMENT_PROMPT_INTEGRITY_MISMATCH"; actual=undefined
+  currentPromptFallbackOnTamper: expected false; actual=undefined
+  
+  11 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/editable-vacancy-prompts.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 11,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="SEC-011/TST-086: prompt access, limits, audit metadata and ordinary logs fail closed without content leaks" time="0.000124" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\editable-vacancy-prompts.acceptance.test.mjs" failure="Editable vacancy prompts conformance boundary is absent: export runEditableVacancyPromptsConformanceScenario(fixture) from server/product/application.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;inaccessibleReadCode: expected &amp;quot;VACANCY_NOT_FOUND&amp;quot;; actual=undefined&#10;inaccessibleWriteCode: expected &amp;quot;VACANCY_NOT_FOUND&amp;quot;; actual=undefined&#10;inaccessibleMetadataExposed: expected false; actual=undefined&#10;oversizeRejectedBeforeProvider: expected true; actual=undefined&#10;auditFields: expected exact [&amp;quot;actorId&amp;quot;,&amp;quot;vacancyId&amp;quot;,&amp;quot;action&amp;quot;,&amp;quot;artifactId&amp;quot;,&amp;quot;beforeHash&amp;quot;,&amp;quot;afterHash&amp;quot;,&amp;quot;timestamp&amp;quot;]; actual=undefined&#10;auditContainsFullPrompt: expected false; actual=undefined&#10;technicalLogContainsFullPrompt: expected false; actual=undefined&#10;publicErrorContainsFullPrompt: expected false; actual=undefined&#10;technicalLogContainsSecrets: expected false; actual=undefined&#10;publicErrorContainsSecrets: expected false; actual=undefined&#10;safeErrorHasTraceId: expected true; actual=undefined&#10;&#10;13 !== 0&#10;">
+		<failure type="testCodeFailure" message="Editable vacancy prompts conformance boundary is absent: export runEditableVacancyPromptsConformanceScenario(fixture) from server/product/application.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;inaccessibleReadCode: expected &amp;quot;VACANCY_NOT_FOUND&amp;quot;; actual=undefined&#10;inaccessibleWriteCode: expected &amp;quot;VACANCY_NOT_FOUND&amp;quot;; actual=undefined&#10;inaccessibleMetadataExposed: expected false; actual=undefined&#10;oversizeRejectedBeforeProvider: expected true; actual=undefined&#10;auditFields: expected exact [&amp;quot;actorId&amp;quot;,&amp;quot;vacancyId&amp;quot;,&amp;quot;action&amp;quot;,&amp;quot;artifactId&amp;quot;,&amp;quot;beforeHash&amp;quot;,&amp;quot;afterHash&amp;quot;,&amp;quot;timestamp&amp;quot;]; actual=undefined&#10;auditContainsFullPrompt: expected false; actual=undefined&#10;technicalLogContainsFullPrompt: expected false; actual=undefined&#10;publicErrorContainsFullPrompt: expected false; actual=undefined&#10;technicalLogContainsSecrets: expected false; actual=undefined&#10;publicErrorContainsSecrets: expected false; actual=undefined&#10;safeErrorHasTraceId: expected true; actual=undefined&#10;&#10;13 !== 0">
+[Error [ERR_TEST_FAILURE]: Editable vacancy prompts conformance boundary is absent: export runEditableVacancyPromptsConformanceScenario(fixture) from server/product/application.ts
+status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+inaccessibleReadCode: expected "VACANCY_NOT_FOUND"; actual=undefined
+inaccessibleWriteCode: expected "VACANCY_NOT_FOUND"; actual=undefined
+inaccessibleMetadataExposed: expected false; actual=undefined
+oversizeRejectedBeforeProvider: expected true; actual=undefined
+auditFields: expected exact ["actorId","vacancyId","action","artifactId","beforeHash","afterHash","timestamp"]; actual=undefined
+auditContainsFullPrompt: expected false; actual=undefined
+technicalLogContainsFullPrompt: expected false; actual=undefined
+publicErrorContainsFullPrompt: expected false; actual=undefined
+technicalLogContainsSecrets: expected false; actual=undefined
+publicErrorContainsSecrets: expected false; actual=undefined
+safeErrorHasTraceId: expected true; actual=undefined
+
+13 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Editable vacancy prompts conformance boundary is absent: export runEditableVacancyPromptsConformanceScenario(fixture) from server/product/application.ts
+  status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+  inaccessibleReadCode: expected "VACANCY_NOT_FOUND"; actual=undefined
+  inaccessibleWriteCode: expected "VACANCY_NOT_FOUND"; actual=undefined
+  inaccessibleMetadataExposed: expected false; actual=undefined
+  oversizeRejectedBeforeProvider: expected true; actual=undefined
+  auditFields: expected exact ["actorId","vacancyId","action","artifactId","beforeHash","afterHash","timestamp"]; actual=undefined
+  auditContainsFullPrompt: expected false; actual=undefined
+  technicalLogContainsFullPrompt: expected false; actual=undefined
+  publicErrorContainsFullPrompt: expected false; actual=undefined
+  technicalLogContainsSecrets: expected false; actual=undefined
+  publicErrorContainsSecrets: expected false; actual=undefined
+  safeErrorHasTraceId: expected true; actual=undefined
+  
+  13 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/editable-vacancy-prompts.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 13,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 6 -->
+	<!-- suites 0 -->
+	<!-- pass 0 -->
+	<!-- fail 6 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 210.3222 -->
+</testsuites>

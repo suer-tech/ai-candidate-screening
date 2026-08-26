@@ -1,0 +1,162 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="2300" viewBox="0 0 1600 2300" role="img" aria-labelledby="title desc">
+  <title id="title">UML-диаграмма процесса обработки кандидата</title>
+  <desc id="desc">Activity diagram канонического matrix-v2 процесса: обнаружение материалов, анализ, проверка, создание двух PDF, публикация и уведомление.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f8fafc"/>
+      <stop offset="1" stop-color="#eef2ff"/>
+    </linearGradient>
+    <linearGradient id="primary" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e0e7ff"/>
+      <stop offset="1" stop-color="#c7d2fe"/>
+    </linearGradient>
+    <linearGradient id="success" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#dcfce7"/>
+      <stop offset="1" stop-color="#bbf7d0"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="5" stdDeviation="8" flood-color="#0f172a" flood-opacity="0.12"/>
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#334155"/>
+    </marker>
+    <style>
+      .title { font: 700 42px 'Segoe UI', Arial, sans-serif; fill: #0f172a; }
+      .subtitle { font: 400 20px 'Segoe UI', Arial, sans-serif; fill: #475569; }
+      .lane-title { font: 700 21px 'Segoe UI', Arial, sans-serif; fill: #334155; letter-spacing: .8px; }
+      .node-title { font: 700 22px 'Segoe UI', Arial, sans-serif; fill: #0f172a; text-anchor: middle; }
+      .node-text { font: 400 17px 'Segoe UI', Arial, sans-serif; fill: #334155; text-anchor: middle; }
+      .small { font: 400 15px 'Segoe UI', Arial, sans-serif; fill: #475569; text-anchor: middle; }
+      .decision { font: 700 18px 'Segoe UI', Arial, sans-serif; fill: #0f172a; text-anchor: middle; }
+      .label { font: 700 16px 'Segoe UI', Arial, sans-serif; fill: #475569; }
+      .activity { fill: #fff; stroke: #64748b; stroke-width: 2.5; rx: 20; filter: url(#shadow); }
+      .primary { fill: url(#primary); stroke: #4f46e5; }
+      .success { fill: url(#success); stroke: #16a34a; }
+      .warning { fill: #fff7ed; stroke: #ea580c; }
+      .error { fill: #fef2f2; stroke: #dc2626; }
+      .decision-shape { fill: #fefce8; stroke: #ca8a04; stroke-width: 2.5; filter: url(#shadow); }
+      .flow { fill: none; stroke: #334155; stroke-width: 3; marker-end: url(#arrow); }
+      .branch { fill: none; stroke: #64748b; stroke-width: 2.5; marker-end: url(#arrow); }
+      .dash { stroke-dasharray: 10 8; }
+    </style>
+  </defs>
+
+  <rect width="1600" height="2300" fill="url(#background)"/>
+  <rect x="70" y="150" width="1460" height="2070" rx="34" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+
+  <text x="800" y="70" class="title" text-anchor="middle">Обработка кандидата · UML Activity Diagram</text>
+  <text x="800" y="108" class="subtitle" text-anchor="middle">Канонический workflow matrix-v2 · источник: OpenSpec и candidate-pipeline/goal.ts</text>
+
+  <text x="170" y="195" class="lane-title">ВХОД И КОНТРОЛЬ</text>
+  <line x1="100" y1="215" x2="1500" y2="215" stroke="#e2e8f0" stroke-width="2"/>
+
+  <circle cx="800" cy="255" r="24" fill="#0f172a"/>
+  <path class="flow" d="M800 279 V320"/>
+
+  <rect x="500" y="320" width="600" height="105" class="activity primary"/>
+  <text x="800" y="358" class="node-title">Обнаружить папку кандидата в My Drive</text>
+  <text x="800" y="388" class="node-text">Найм / Вакансия / Кандидат</text>
+  <text x="800" y="412" class="small">Каталог «Результаты» исключается из входных материалов</text>
+
+  <path class="flow" d="M800 425 V480"/>
+  <polygon points="800,480 955,555 800,630 645,555" class="decision-shape"/>
+  <text x="800" y="549" class="decision">Материалы стабильны</text>
+  <text x="800" y="573" class="decision">и вход валиден?</text>
+
+  <path class="branch" d="M645 555 H350 V505"/>
+  <text x="520" y="539" class="label">нет</text>
+  <rect x="125" y="400" width="450" height="105" class="activity warning"/>
+  <text x="350" y="440" class="node-title">WAITING_FOR_STABILITY</text>
+  <text x="350" y="472" class="node-text">Ожидать завершения загрузки</text>
+  <path class="branch dash" d="M350 400 V355 H500"/>
+
+  <text x="825" y="656" class="label">да</text>
+  <path class="flow" d="M800 630 V690"/>
+  <rect x="500" y="690" width="600" height="95" class="activity"/>
+  <text x="800" y="727" class="node-title">Зафиксировать входную версию</text>
+  <text x="800" y="758" class="node-text">Snapshot материалов + точная версия профиля вакансии</text>
+
+  <text x="170" y="855" class="lane-title">ПОДГОТОВКА КОНТЕКСТА</text>
+  <line x1="100" y1="875" x2="1500" y2="875" stroke="#e2e8f0" stroke-width="2"/>
+  <path class="flow" d="M800 785 V910"/>
+  <rect x="365" y="910" width="870" height="14" rx="7" fill="#334155"/>
+
+  <path class="branch" d="M520 924 V975"/>
+  <path class="branch" d="M1080 924 V975"/>
+  <rect x="250" y="975" width="540" height="120" class="activity primary"/>
+  <text x="520" y="1014" class="node-title">Обработать материалы кандидата</text>
+  <text x="520" y="1046" class="node-text">Документы → извлечение текста / OCR</text>
+  <text x="520" y="1074" class="node-text">Интервью → AssemblyAI / транскрипция</text>
+
+  <rect x="810" y="975" width="540" height="120" class="activity primary"/>
+  <text x="1080" y="1014" class="node-title">Скомпилировать матрицу вакансии</text>
+  <text x="1080" y="1046" class="node-text">Критерии, стоп-факторы, ABC, компетенции</text>
+  <text x="1080" y="1074" class="node-text">Матрица привязана к profileVersion</text>
+
+  <path class="branch" d="M520 1095 V1145"/>
+  <path class="branch" d="M1080 1095 V1145"/>
+  <rect x="365" y="1145" width="870" height="14" rx="7" fill="#334155"/>
+  <path class="flow" d="M800 1159 V1205"/>
+
+  <rect x="500" y="1205" width="600" height="105" class="activity"/>
+  <text x="800" y="1244" class="node-title">Построить decision-safe контекст</text>
+  <text x="800" y="1276" class="node-text">Поиск → полное чтение релевантных фрагментов</text>
+  <text x="800" y="1300" class="small">С точными цитатами и локаторами источников</text>
+
+  <text x="170" y="1375" class="lane-title">ДОКАЗАТЕЛЬНАЯ ОЦЕНКА</text>
+  <line x1="100" y1="1395" x2="1500" y2="1395" stroke="#e2e8f0" stroke-width="2"/>
+  <path class="flow" d="M800 1310 V1430"/>
+
+  <rect x="500" y="1430" width="600" height="100" class="activity"/>
+  <text x="800" y="1468" class="node-title">Сформировать claims и граф доказательств</text>
+  <text x="800" y="1500" class="node-text">Факты → источники → конфликты → недостаток данных</text>
+
+  <path class="flow" d="M800 1530 V1570"/>
+  <rect x="500" y="1570" width="600" height="100" class="activity"/>
+  <text x="800" y="1608" class="node-title">Заполнить строки матрицы кандидата</text>
+  <text x="800" y="1640" class="node-text">Состояния критериев без общего балла и ранжирования</text>
+
+  <path class="flow" d="M800 1670 V1710"/>
+  <rect x="500" y="1710" width="600" height="105" class="activity"/>
+  <text x="800" y="1748" class="node-title">Проверить критические выводы</text>
+  <text x="800" y="1780" class="node-text">Стоп-факторы, required-несоответствия, critical risk</text>
+  <text x="800" y="1804" class="small">Затем вычислить детерминированную рекомендацию</text>
+
+  <path class="flow" d="M800 1815 V1850"/>
+  <polygon points="800,1850 955,1920 800,1990 645,1920" class="decision-shape"/>
+  <text x="800" y="1914" class="decision">Результат и доказательства</text>
+  <text x="800" y="1938" class="decision">прошли валидацию?</text>
+
+  <path class="branch" d="M955 1920 H1260"/>
+  <text x="1080" y="1903" class="label">нет</text>
+  <rect x="1260" y="1855" width="250" height="130" class="activity error"/>
+  <text x="1385" y="1894" class="node-title">FAILED</text>
+  <text x="1385" y="1925" class="node-text">Типизированная ошибка</text>
+  <text x="1385" y="1952" class="small">retry / эскалация /</text>
+  <text x="1385" y="1974" class="small">ручной перезапуск</text>
+
+  <text x="170" y="2050" class="lane-title">ПУБЛИКАЦИЯ РЕЗУЛЬТАТА</text>
+  <line x1="100" y1="2070" x2="1500" y2="2070" stroke="#e2e8f0" stroke-width="2"/>
+  <text x="825" y="2015" class="label">да</text>
+  <path class="flow" d="M800 1990 V2100"/>
+
+  <rect x="185" y="2100" width="390" height="95" class="activity success"/>
+  <text x="380" y="2136" class="node-title">Создать и проверить 2 PDF</text>
+  <text x="380" y="2167" class="node-text">ABC-тест + Итоги по кандидату</text>
+
+  <path class="flow" d="M575 2147 H625"/>
+  <rect x="625" y="2100" width="350" height="95" class="activity success"/>
+  <text x="800" y="2136" class="node-title">Опубликовать атомарно</text>
+  <text x="800" y="2167" class="node-text">Результаты / vNNNN</text>
+
+  <path class="flow" d="M975 2147 H1025"/>
+  <rect x="1025" y="2100" width="390" height="95" class="activity success"/>
+  <text x="1220" y="2136" class="node-title">READY + Telegram</text>
+  <text x="1220" y="2167" class="node-text">Сбой уведомления не отменяет READY</text>
+
+  <path class="flow" d="M1220 2195 V2235"/>
+  <circle cx="1220" cy="2260" r="24" fill="#ffffff" stroke="#0f172a" stroke-width="4"/>
+  <circle cx="1220" cy="2260" r="14" fill="#0f172a"/>
+
+  <text x="105" y="2268" class="small" text-anchor="start">Обозначения: ● начало · ◎ завершение · ромб — контрольное решение · толстая линия — fork/join</text>
+</svg>

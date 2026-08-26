@@ -1,0 +1,24 @@
+services:
+  postgres:
+    image: postgres:16.10-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: hh_agent
+      POSTGRES_USER: hh_agent
+      POSTGRES_PASSWORD: ${HH_POSTGRES_PASSWORD:?set by scripts/local-postgres.ps1}
+    ports:
+      - "127.0.0.1:54329:5432"
+    volumes:
+      - ./.runtime/postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hh_agent -d hh_agent"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+      start_period: 5s
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
+      - /run/postgresql
+

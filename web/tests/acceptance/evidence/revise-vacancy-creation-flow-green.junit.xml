@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="TST-086: first step exposes manual title and explicit generation only" time="0.306511" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\revise-vacancy-creation-flow.acceptance.test.mjs"/>
+	<testcase name="TST-086: normalized uniqueness is enforced server-side before the first LLM call" time="0.085648" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\revise-vacancy-creation-flow.acceptance.test.mjs"/>
+	<testcase name="TST-086: valid structured output succeeds on attempts 1, 2, 3 and 4 with one operation ID" time="0.019735" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\revise-vacancy-creation-flow.acceptance.test.mjs"/>
+	<testcase name="TST-086: editor exists only after valid LLM output and reset/discard stay session-only" time="0.000280" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\revise-vacancy-creation-flow.acceptance.test.mjs"/>
+	<testcase name="TST-086: preview confirms the exact snapshot and any edit invalidates confirmation" time="0.000281" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\revise-vacancy-creation-flow.acceptance.test.mjs"/>
+	<testcase name="TST-087: timeout/network/429/5xx/invalid output use initial plus three retries" time="0.001718" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\revise-vacancy-creation-flow.acceptance.test.mjs"/>
+	<testcase name="TST-087: auth/config failure is immediate and safe" time="0.000755" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\revise-vacancy-creation-flow.acceptance.test.mjs"/>
+	<testcase name="TST-087: duplicate click joins one active generation operation" time="0.002722" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\revise-vacancy-creation-flow.acceptance.test.mjs"/>
+	<testcase name="TST-087: terminal generation failure has a safe retry action and no fallback or persistent artifacts" time="0.000742" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\revise-vacancy-creation-flow.acceptance.test.mjs"/>
+	<testcase name="TST-087: manual retry after terminal failure starts a new operation without reviving failed state" time="0.001995" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\revise-vacancy-creation-flow.acceptance.test.mjs"/>
+	<testcase name="TST-088: final save is idempotent and publishes one active v1 only after complete confirmation and binding" time="0.002872" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\revise-vacancy-creation-flow.acceptance.test.mjs"/>
+	<testcase name="TST-088: generation and all generation retries make zero Drive calls" time="0.000343" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\revise-vacancy-creation-flow.acceptance.test.mjs"/>
+	<testcase name="TST-088: timeout after folder creation recovers the same binding without duplicates" time="0.002278" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\revise-vacancy-creation-flow.acceptance.test.mjs"/>
+	<testcase name="TST-088: terminal Drive failure never exposes a partial active vacancy" time="0.001363" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\revise-vacancy-creation-flow.acceptance.test.mjs"/>
+	<!-- tests 14 -->
+	<!-- suites 0 -->
+	<!-- pass 14 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 758.0443 -->
+</testsuites>

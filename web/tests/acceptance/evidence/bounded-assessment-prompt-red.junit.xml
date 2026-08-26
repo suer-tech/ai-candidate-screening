@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="ASSESSMENT-PROMPT-001: oversized evidence is projected to a bounded provider payload without losing grounding identity" time="0.005617" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\bounded-assessment-prompt.acceptance.test.ts" failure="production exposes the deterministic assessment evidence projection used by the provider request&#10;+ actual - expected&#10;&#10;+ 'undefined'&#10;- 'function'&#10;">
+		<failure type="testCodeFailure" message="production exposes the deterministic assessment evidence projection used by the provider request&#10;+ actual - expected&#10;&#10;+ 'undefined'&#10;- 'function'">
+[Error [ERR_TEST_FAILURE]: production exposes the deterministic assessment evidence projection used by the provider request
++ actual - expected
+
++ 'undefined'
+- 'function'
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: production exposes the deterministic assessment evidence projection used by the provider request
+  + actual - expected
+  
+  + 'undefined'
+  - 'function'
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\bounded-assessment-prompt.acceptance.test.ts:29:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'undefined',
+    expected: 'function',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 1 -->
+	<!-- suites 0 -->
+	<!-- pass 0 -->
+	<!-- fail 1 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 271.5228 -->
+</testsuites>

@@ -1,0 +1,60 @@
+
+> site-creator-vinext-starter@0.1.0 test:editable-vacancy-prompts
+> node --import tsx --test tests/editable-vacancy-prompts.acceptance.test.mjs
+
+✔ VAC-040/TST-086: generation action opens a prompt modal, confirms separately, shows progress and completes safely (17.9867ms)
+✔ VAC-040/SEC-011/TST-086: confirmed generation sends one normalized immutable snapshot through the protected API (0.3383ms)
+✔ VAC-041/TST-086: analysis prompt is a local sixth settings section with reset, validation and explicit save (0.2257ms)
+✔ VAC-041/ASM-062/TST-086: analysis prompt is versioned and every run keeps its exact immutable prompt snapshot (0.1812ms)
+✔ ASM-062/TST-086: untrusted analysis instructions cannot override evidence or schema constraints (0.2784ms)
+✔ SEC-011/TST-086: prompt access, limits, audit metadata and ordinary logs fail closed without content leaks (0.1109ms)
+✖ VAC-040/TST-086: full server-rendered generation template exposes role assumptions, all sections and structured title isolation (0.8287ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 6
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 186.0075
+
+✖ failing tests:
+
+test at tests\editable-vacancy-prompts.acceptance.test.mjs:7:3
+✖ VAC-040/TST-086: full server-rendered generation template exposes role assumptions, all sections and structured title isolation (0.8287ms)
+  AssertionError [ERR_ASSERTION]: Acceptance scenario is not implemented: VAC-040-server-rendered-visible-generation-template
+  status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+  template.fullyVisible: expected true; actual=undefined
+  template.source: expected "server-rendered"; actual=undefined
+  template.clientTemplateCopyPresent: expected false; actual=undefined
+  template.artifactId: expected "vacancy-profile/v1"; actual=undefined
+  template.renderedTitle: expected "ACCEPT-TEMPLATE-20260824 — Руководитель отдела продаж"; actual=undefined
+  template.renderedHashMatchesExactText: expected true; actual=undefined
+  template.soleKnownFactDeclared: expected "Название вакансии"; actual=undefined
+  template.commonProfessionalInterpretationRequired: expected true; actual=undefined
+  template.companyAssumptionsAsFactsForbidden: expected true; actual=undefined
+  template.dependentValuesMarker: expected "Требует решения HR"; actual=undefined
+  template.immutableResultFormatExplained: expected true; actual=undefined
+  template.requiredSections: expected exact ["Образ результата","ABC-критерии","Компетенции","Стоп-факторы","Допуск к КЕ"]; actual=undefined
+  template.abcDirections: expected exact ["Продуктивность","Инициатива","Самообучаемость","Корпоративные ценности","Автономность"]; actual=undefined
+  template.keAdmission.meaning: expected "Готовность кандидата к собеседованию с собственником компании"; actual=undefined
+  template.keAdmission.requiredFields: expected exact ["Формулировка критерия","Обязательность","Правила и наблюдаемые признаки","Источник результата","Недостающие проверки"]; actual=undefined
+  reset.fetchedFromServer: expected true; actual=undefined
+  reset.textEqualsInitialRenderedTemplate: expected true; actual=undefined
+  reset.hashEqualsInitialRenderedTemplate: expected true; actual=undefined
+  reset.exactTitleRestored: expected true; actual=undefined
+  runtime.titleStructuredField: expected "ACCEPT-TEMPLATE-20260824 — Руководитель отдела продаж"; actual=undefined
+  runtime.titleIndependentOfEditedTextarea: expected true; actual=undefined
+  
+  23 !== 0
+  
+      at TestContext.<anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/editable-vacancy-prompts.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 23,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

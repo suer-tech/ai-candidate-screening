@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="MDA-003-PROMPT-RED: compiler contract prevents coarse or semantically drifting matrix drafts" time="0.003104" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-compiler-repair-prompt-contract.acceptance.test.ts" failure="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;+ [&#10;+   'atomic-conjunction-and-list-decomposition: explicitly decompose every conjunction and list into atomic child nodes while preserving ALL_OF/ANY_OF semantics',&#10;+   'existing-source-fragments-only: copy sourceRefs only from exact existing sourceFragments and never synthesize a locator',&#10;+   'unavailable-abc-is-omitted: omit unavailable/incomplete ABC grading rules instead of emitting a candidate assessment state',&#10;+   'required-implies-required-gap: map every non-stop required criterion coherently to decisionEffect=required-gap',&#10;+   'non-empty-cardinality: use AT_LEAST_N only with positive atLeast not exceeding a non-empty child set; otherwise keep atLeast null'&#10;+ ]&#10;- []&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;+ [&#10;+   'atomic-conjunction-and-list-decomposition: explicitly decompose every conjunction and list into atomic child nodes while preserving ALL_OF/ANY_OF semantics',&#10;+   'existing-source-fragments-only: copy sourceRefs only from exact existing sourceFragments and never synthesize a locator',&#10;+   'unavailable-abc-is-omitted: omit unavailable/incomplete ABC grading rules instead of emitting a candidate assessment state',&#10;+   'required-implies-required-gap: map every non-stop required criterion coherently to decisionEffect=required-gap',&#10;+   'non-empty-cardinality: use AT_LEAST_N only with positive atLeast not exceeding a non-empty child set; otherwise keep atLeast null'&#10;+ ]&#10;- []">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly deep-equal:
++ actual - expected
+
++ [
++   'atomic-conjunction-and-list-decomposition: explicitly decompose every conjunction and list into atomic child nodes while preserving ALL_OF/ANY_OF semantics',
++   'existing-source-fragments-only: copy sourceRefs only from exact existing sourceFragments and never synthesize a locator',
++   'unavailable-abc-is-omitted: omit unavailable/incomplete ABC grading rules instead of emitting a candidate assessment state',
++   'required-implies-required-gap: map every non-stop required criterion coherently to decisionEffect=required-gap',
++   'non-empty-cardinality: use AT_LEAST_N only with positive atLeast not exceeding a non-empty child set; otherwise keep atLeast null'
++ ]
+- []
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + [
+  +   'atomic-conjunction-and-list-decomposition: explicitly decompose every conjunction and list into atomic child nodes while preserving ALL_OF/ANY_OF semantics',
+  +   'existing-source-fragments-only: copy sourceRefs only from exact existing sourceFragments and never synthesize a locator',
+  +   'unavailable-abc-is-omitted: omit unavailable/incomplete ABC grading rules instead of emitting a candidate assessment state',
+  +   'required-implies-required-gap: map every non-stop required criterion coherently to decisionEffect=required-gap',
+  +   'non-empty-cardinality: use AT_LEAST_N only with positive atLeast not exceeding a non-empty child set; otherwise keep atLeast null'
+  + ]
+  - []
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-compiler-repair-prompt-contract.acceptance.test.ts:95:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'atomic-conjunction-and-list-decomposition: explicitly decompose every conjunction and list into atomic child nodes while preserving ALL_OF/ANY_OF semantics', 'existing-source-fragments-only: copy sourceRefs only from exact existing sourceFragments and never synthesize a locator', 'unavailable-abc-is-omitted: omit unavailable/incomplete ABC grading rules instead of emitting a candidate assessment state', 'required-implies-required-gap: map every non-stop required criterion coherently to decisionEffect=required-gap', 'non-empty-cardinality: use AT_LEAST_N only with positive atLeast not exceeding a non-empty child set; otherwise keep atLeast null' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="MDA-004-PROMPT-RED: each of at most two repairs is surgical, complete, topology-preserving and re-criticable" time="0.000637" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-compiler-repair-prompt-contract.acceptance.test.ts" failure="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;+ [&#10;+   'preserve-tree-topology: do not collapse, flatten, regroup or rebuild the criterion tree',&#10;+   'resolve-all-active-violations: resolve every listed active versioned violation in the returned successor',&#10;+   'recheck-no-new-semantic-drift: recheck the complete successor against the profile for newly introduced semantic drift before returning',&#10;+   'single-bounded-successor: return one complete successor for external re-critique; do not start an internal unbounded repair loop'&#10;+ ]&#10;- []&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;+ [&#10;+   'preserve-tree-topology: do not collapse, flatten, regroup or rebuild the criterion tree',&#10;+   'resolve-all-active-violations: resolve every listed active versioned violation in the returned successor',&#10;+   'recheck-no-new-semantic-drift: recheck the complete successor against the profile for newly introduced semantic drift before returning',&#10;+   'single-bounded-successor: return one complete successor for external re-critique; do not start an internal unbounded repair loop'&#10;+ ]&#10;- []">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly deep-equal:
++ actual - expected
+
++ [
++   'preserve-tree-topology: do not collapse, flatten, regroup or rebuild the criterion tree',
++   'resolve-all-active-violations: resolve every listed active versioned violation in the returned successor',
++   'recheck-no-new-semantic-drift: recheck the complete successor against the profile for newly introduced semantic drift before returning',
++   'single-bounded-successor: return one complete successor for external re-critique; do not start an internal unbounded repair loop'
++ ]
+- []
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + [
+  +   'preserve-tree-topology: do not collapse, flatten, regroup or rebuild the criterion tree',
+  +   'resolve-all-active-violations: resolve every listed active versioned violation in the returned successor',
+  +   'recheck-no-new-semantic-drift: recheck the complete successor against the profile for newly introduced semantic drift before returning',
+  +   'single-bounded-successor: return one complete successor for external re-critique; do not start an internal unbounded repair loop'
+  + ]
+  - []
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-compiler-repair-prompt-contract.acceptance.test.ts:102:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'preserve-tree-topology: do not collapse, flatten, regroup or rebuild the criterion tree', 'resolve-all-active-violations: resolve every listed active versioned violation in the returned successor', 'recheck-no-new-semantic-drift: recheck the complete successor against the profile for newly introduced semantic drift before returning', 'single-bounded-successor: return one complete successor for external re-critique; do not start an internal unbounded repair loop' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 2 -->
+	<!-- suites 0 -->
+	<!-- pass 0 -->
+	<!-- fail 2 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 291.2839 -->
+</testsuites>

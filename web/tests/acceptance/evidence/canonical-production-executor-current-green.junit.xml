@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="ATDD-PEX-001: production entry receives env D1 and personal OAuth runtime, enforces the exact grant, and derives the snapshot from the candidate folder" time="0.022244" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\canonical-production-executor.acceptance.test.mjs"/>
+	<testcase name="ATDD-PEX-002: shadow routing executes every non-visible stage through production provider ports without Drive publication or Telegram" time="0.010659" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\canonical-production-executor.acceptance.test.mjs"/>
+	<testcase name="ATDD-PEX-003: effectful routing requires matching release evidence and durable outbox, then publishes one idempotent report pair and Telegram event" time="0.005350" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\canonical-production-executor.acceptance.test.mjs"/>
+	<testcase name="ATDD-PEX-004: durable checkpoints survive restart, unknown effects reconcile before retry, and invalid_grant waits for a human" time="0.004208" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\canonical-production-executor.acceptance.test.mjs"/>
+	<testcase name="ATDD-PEX-005: large artifacts remain referenced outside D1/logs and no credential reaches result, D1 evidence, or logs" time="0.002593" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\canonical-production-executor.acceptance.test.mjs"/>
+	<!-- tests 5 -->
+	<!-- suites 0 -->
+	<!-- pass 5 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 433.6351 -->
+</testsuites>

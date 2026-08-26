@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="VIS-DEMO candidate progress track keeps spacing before a borderless footer" time="0.005817" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs" failure="candidate footer has no border separator">
+		<failure type="testCodeFailure" message="candidate footer has no border separator">
+[Error [ERR_TEST_FAILURE]: candidate footer has no border separator] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: candidate footer has no border separator
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/demo-interface-visual-parity.acceptance.test.mjs:462:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'border-top:1px solid #f0f1f3;padding-top:11px;display:flex;justify-content:space-between;font-size:11px;color:var(--muted)',
+    expected: /(?:^|;)\s*border(?:-top|-right|-bottom|-left)?\s*:/,
+    operator: 'doesNotMatch',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="VIS-DEMO READY candidate card shows Готово only in its status badge while processing keeps its stage" time="0.272428" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs" failure="Готово appears exactly once on the READY card&#10;&#10;3 !== 1&#10;">
+		<failure type="testCodeFailure" message="Готово appears exactly once on the READY card&#10;&#10;3 !== 1">
+[Error [ERR_TEST_FAILURE]: Готово appears exactly once on the READY card
+
+3 !== 1
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Готово appears exactly once on the READY card
+  
+  3 !== 1
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/demo-interface-visual-parity.acceptance.test.mjs:486:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 3,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 2 -->
+	<!-- suites 0 -->
+	<!-- pass 0 -->
+	<!-- fail 2 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 553.4378 -->
+</testsuites>

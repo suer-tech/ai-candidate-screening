@@ -1,0 +1,17 @@
+node_modules
+.output
+.next
+.vinext
+.runtime
+candidate
+test-results
+playwright-report
+.drizzle
+wrangler
+.wrangler
+.env
+.env.*
+*.storage-state.json
+tests/e2e/.auth
+docs
+*.tsbuildinfo

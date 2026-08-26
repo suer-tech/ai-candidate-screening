@@ -1,0 +1,77 @@
+{
+  "schemaVersion": "field-level-vacancy-generation-acceptance-evidence/v1",
+  "change": "add-field-level-vacancy-generation",
+  "generatedAtUtc": "2026-08-25T08:02:51.822Z",
+  "phase": "GREEN",
+  "author": "/root/analysis_prompt_acceptance",
+  "executor": "/root/analysis_prompt_acceptance",
+  "independenceDeclared": true,
+  "productionCodeChangedByAuthor": false,
+  "command": "node tests/field-level-vacancy-generation.evidence.mjs --output tests/acceptance/evidence/field-level-vacancy-generation-green.json",
+  "junit": "tests/acceptance/evidence/field-level-vacancy-generation-green.junit.xml",
+  "safety": {
+    "fixtureSetId": "field-level-vacancy-generation-synthetic-v1",
+    "syntheticOnly": true,
+    "containsSecrets": false,
+    "containsRealPersonalData": false,
+    "providerCallsAllowed": false
+  },
+  "summary": {
+    "total": 5,
+    "green": 5,
+    "red": 0,
+    "infrastructureErrors": 0
+  },
+  "results": [
+    {
+      "scenarioId": "VAC-042-field-generation",
+      "requirements": [
+        "VAC-042"
+      ],
+      "title": "each empty profile field generates once into the unsaved draft and preserves state on error",
+      "status": "GREEN",
+      "classification": "product-contract",
+      "mismatches": []
+    },
+    {
+      "scenarioId": "VAC-043-vacancy-operation-prompt-isolation",
+      "requirements": [
+        "VAC-043"
+      ],
+      "title": "five operation prompts are Russian structured vacancy-scoped snapshots used exactly by the LLM request",
+      "status": "GREEN",
+      "classification": "product-contract",
+      "mismatches": []
+    },
+    {
+      "scenarioId": "VAC-044-actual-abc-composition",
+      "requirements": [
+        "VAC-044"
+      ],
+      "title": "one ABC request preserves exact actual standard/custom/reduced composition and skips zero directions",
+      "status": "GREEN",
+      "classification": "product-contract",
+      "mismatches": []
+    },
+    {
+      "scenarioId": "VAC-045-all-generation-overwrite-warning",
+      "requirements": [
+        "VAC-045"
+      ],
+      "title": "all-generation warns that every populated section is overwritten and cancellation has no effects",
+      "status": "GREEN",
+      "classification": "product-contract",
+      "mismatches": []
+    },
+    {
+      "scenarioId": "VAC-046-unified-dirty-navigation-guard",
+      "requirements": [
+        "VAC-046"
+      ],
+      "title": "one dirty guard covers settings, internal navigation and beforeunload with discard, save and close semantics",
+      "status": "GREEN",
+      "classification": "product-contract",
+      "mismatches": []
+    }
+  ]
+}

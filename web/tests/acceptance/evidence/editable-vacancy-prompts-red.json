@@ -1,0 +1,178 @@
+{
+  "schemaVersion": "editable-vacancy-prompts-acceptance-evidence/v1",
+  "change": "add-editable-vacancy-prompts",
+  "generatedAtUtc": "2026-08-24T04:57:51.177Z",
+  "expectedPhase": "RED",
+  "author": "/root/prompt_acceptance",
+  "executor": "/root/prompt_acceptance",
+  "independenceDeclared": true,
+  "productionCodeChangedByAuthor": false,
+  "command": "npm run test:editable-vacancy-prompts:red",
+  "junit": "tests/acceptance/evidence/editable-vacancy-prompts-red.junit.xml",
+  "safety": {
+    "fixtureSetId": "editable-vacancy-prompts-synthetic-v1",
+    "syntheticOnly": true,
+    "containsSecrets": false,
+    "containsRealPersonalData": false,
+    "providerCallsAllowed": false
+  },
+  "summary": {
+    "total": 6,
+    "green": 0,
+    "red": 6,
+    "infrastructureErrors": 0
+  },
+  "results": [
+    {
+      "scenarioId": "VAC-040-generation-confirmation-ui",
+      "requirements": [
+        "VAC-040",
+        "TST-086"
+      ],
+      "title": "generation action opens a prompt modal, confirms separately, shows progress and completes safely",
+      "status": "RED",
+      "classification": "product-contract",
+      "mismatches": [
+        "Editable vacancy prompts conformance boundary is absent: export runEditableVacancyPromptsConformanceScenario(fixture) from server/product/application.ts",
+        "status: expected \"SUCCEEDED\"; actual=\"NOT_IMPLEMENTED\"",
+        "headerActions: expected exact [\"Сгенерировать описание\",\"Настройки\",\"Архив\"]; actual=undefined",
+        "modal.title: expected \"Сгенерировать описание вакансии\"; actual=undefined",
+        "modal.fieldLabel: expected \"Инструкция для генерации\"; actual=undefined",
+        "modal.defaultArtifactId: expected \"vacancy-profile/v1\"; actual=undefined",
+        "modal.resetAvailable: expected true; actual=undefined",
+        "llmCalls.afterHeaderClick: expected 0; actual=undefined",
+        "llmCalls.beforeConfirmation: expected 0; actual=undefined",
+        "llmCalls.afterCancelledConfirmation: expected 0; actual=undefined",
+        "llmCalls.afterConfirmedDoubleClick: expected 1; actual=undefined",
+        "pending.generateDisabled: expected true; actual=undefined",
+        "pending.spinnerVisible: expected true; actual=undefined",
+        "pending.parallelLaunchPrevented: expected true; actual=undefined",
+        "completion.filledSections: expected exact [\"Образ результата\",\"ABC-критерии\",\"Компетенции\",\"Стоп-факторы\",\"Доступ к КЕ\"]; actual=undefined",
+        "completion.modalClosed: expected true; actual=undefined",
+        "completion.toastVisible: expected true; actual=undefined",
+        "completion.audioAttempted: expected true; actual=undefined",
+        "completion.audioFailureIgnored: expected true; actual=undefined"
+      ]
+    },
+    {
+      "scenarioId": "VAC-040-generation-api-snapshot",
+      "requirements": [
+        "VAC-040",
+        "SEC-011",
+        "TST-086"
+      ],
+      "title": "confirmed generation sends one normalized immutable snapshot through the protected API",
+      "status": "RED",
+      "classification": "product-contract",
+      "mismatches": [
+        "Editable vacancy prompts conformance boundary is absent: export runEditableVacancyPromptsConformanceScenario(fixture) from server/product/application.ts",
+        "status: expected \"SUCCEEDED\"; actual=\"NOT_IMPLEMENTED\"",
+        "acceptedPrompt: expected \"Учитывай измеримый результат.\\nНе выдумывай отсутствующие сведения.\"; actual=undefined",
+        "promptArtifactId: expected \"vacancy-profile/v1\"; actual=undefined",
+        "promptHashAlgorithm: expected \"SHA-256\"; actual=undefined",
+        "operationCount: expected 1; actual=undefined",
+        "providerCalls: expected 1; actual=undefined",
+        "csrfRequired: expected true; actual=undefined",
+        "vacancyAccessRequired: expected true; actual=undefined",
+        "mismatchedOperationHashCode: expected \"VACANCY_GENERATION_OPERATION_CONFLICT\"; actual=undefined",
+        "invalidPromptProviderCalls: expected 0; actual=undefined"
+      ]
+    },
+    {
+      "scenarioId": "VAC-041-analysis-prompt-ui",
+      "requirements": [
+        "VAC-041",
+        "TST-086"
+      ],
+      "title": "analysis prompt is a local sixth settings section with reset, validation and explicit save",
+      "status": "RED",
+      "classification": "product-contract",
+      "mismatches": [
+        "Editable vacancy prompts conformance boundary is absent: export runEditableVacancyPromptsConformanceScenario(fixture) from server/product/application.ts",
+        "status: expected \"SUCCEEDED\"; actual=\"NOT_IMPLEMENTED\"",
+        "settingsSections: expected exact [\"Образ результата\",\"ABC-критерии\",\"Компетенции\",\"Стоп-факторы\",\"Допуск к КЕ\",\"Промпт анализа\"]; actual=undefined",
+        "defaultArtifactId: expected \"candidate-assessment/v1\"; actual=undefined",
+        "explainsNewRunsOnly: expected true; actual=undefined",
+        "resetAvailable: expected true; actual=undefined",
+        "saveAvailable: expected true; actual=undefined",
+        "invalidSaveCreatesVersions: expected 0; actual=undefined",
+        "failedSavePreservesDraft: expected true; actual=undefined"
+      ]
+    },
+    {
+      "scenarioId": "VAC-041-ASM-062-versioned-analysis-prompt",
+      "requirements": [
+        "VAC-041",
+        "ASM-062",
+        "TST-086"
+      ],
+      "title": "analysis prompt is versioned and every run keeps its exact immutable prompt snapshot",
+      "status": "RED",
+      "classification": "product-contract",
+      "mismatches": [
+        "Editable vacancy prompts conformance boundary is absent: export runEditableVacancyPromptsConformanceScenario(fixture) from server/product/application.ts",
+        "status: expected \"SUCCEEDED\"; actual=\"NOT_IMPLEMENTED\"",
+        "versionsCreatedBySave: expected 1; actual=undefined",
+        "oldVersionPreserved: expected true; actual=undefined",
+        "normalizedTextStored: expected true; actual=undefined",
+        "artifactIdStored: expected \"candidate-assessment/v1\"; actual=undefined",
+        "hashAlgorithm: expected \"SHA-256\"; actual=undefined",
+        "historicalFallbackArtifactId: expected \"candidate-assessment/v1\"; actual=undefined",
+        "runningRunUsesOldPrompt: expected true; actual=undefined",
+        "subsequentRunUsesNewPrompt: expected true; actual=undefined",
+        "runSnapshotImmutable: expected true; actual=undefined",
+        "extractionReceivesAnalysisPrompt: expected false; actual=undefined",
+        "transcriptionReceivesAnalysisPrompt: expected false; actual=undefined",
+        "factExtractionReceivesAnalysisPrompt: expected false; actual=undefined"
+      ]
+    },
+    {
+      "scenarioId": "ASM-062-protected-runtime-composition",
+      "requirements": [
+        "ASM-062",
+        "TST-086"
+      ],
+      "title": "untrusted analysis instructions cannot override evidence or schema constraints",
+      "status": "RED",
+      "classification": "product-contract",
+      "mismatches": [
+        "Editable vacancy prompts conformance boundary is absent: export runEditableVacancyPromptsConformanceScenario(fixture) from server/product/application.ts",
+        "status: expected \"SUCCEEDED\"; actual=\"NOT_IMPLEMENTED\"",
+        "compositionOrder: expected exact [\"immutable-server-envelope\",\"untrusted-business-instruction\",\"structured-candidate-input\"]; actual=undefined",
+        "evidenceRulesStillRequired: expected true; actual=undefined",
+        "responseSchemaStillRequired: expected true; actual=undefined",
+        "inventedFactIdsAccepted: expected false; actual=undefined",
+        "inventedPercentagesAccepted: expected false; actual=undefined",
+        "nonconformingResponseCode: expected \"ASSESSMENT_RESPONSE_INVALID\"; actual=undefined",
+        "missingSnapshotCode: expected \"ASSESSMENT_PROMPT_SNAPSHOT_MISSING\"; actual=undefined",
+        "tamperedSnapshotCode: expected \"ASSESSMENT_PROMPT_INTEGRITY_MISMATCH\"; actual=undefined",
+        "currentPromptFallbackOnTamper: expected false; actual=undefined"
+      ]
+    },
+    {
+      "scenarioId": "SEC-011-prompt-access-audit-log-safety",
+      "requirements": [
+        "SEC-011",
+        "TST-086"
+      ],
+      "title": "prompt access, limits, audit metadata and ordinary logs fail closed without content leaks",
+      "status": "RED",
+      "classification": "product-contract",
+      "mismatches": [
+        "Editable vacancy prompts conformance boundary is absent: export runEditableVacancyPromptsConformanceScenario(fixture) from server/product/application.ts",
+        "status: expected \"SUCCEEDED\"; actual=\"NOT_IMPLEMENTED\"",
+        "inaccessibleReadCode: expected \"VACANCY_NOT_FOUND\"; actual=undefined",
+        "inaccessibleWriteCode: expected \"VACANCY_NOT_FOUND\"; actual=undefined",
+        "inaccessibleMetadataExposed: expected false; actual=undefined",
+        "oversizeRejectedBeforeProvider: expected true; actual=undefined",
+        "auditFields: expected exact [\"actorId\",\"vacancyId\",\"action\",\"artifactId\",\"beforeHash\",\"afterHash\",\"timestamp\"]; actual=undefined",
+        "auditContainsFullPrompt: expected false; actual=undefined",
+        "technicalLogContainsFullPrompt: expected false; actual=undefined",
+        "publicErrorContainsFullPrompt: expected false; actual=undefined",
+        "technicalLogContainsSecrets: expected false; actual=undefined",
+        "publicErrorContainsSecrets: expected false; actual=undefined",
+        "safeErrorHasTraceId: expected true; actual=undefined"
+      ]
+    }
+  ]
+}

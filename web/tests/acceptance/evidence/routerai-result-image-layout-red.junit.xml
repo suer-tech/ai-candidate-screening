@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="VAC-044: actual RouterAI resultImage uses deterministic Russian layout grammar" time="0.002914" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\generated-vacancy-profile.acceptance.test.ts" failure="resultImage is formatted by one deterministic Russian layout grammar&#10;+ actual - expected&#10;&#10;+ 'positionGoal: Обеспечить    управляемый   рост\n' +&#10;+   'measurableResults:\n' +&#10;+   '  • result: Сократить   срок   цикла\n' +&#10;+   '  • metrics:\n' +&#10;+   '    • Срок   не более   двух дней\n' +&#10;+   '    • Ошибки   менее   одного процента\n' +&#10;+   '  • result: Увеличить    операционный охват\n' +&#10;+   '  • metrics: Три    подразделения\n' +&#10;+   'personalContribution:\n' +&#10;+   '  result: Лично   внедряет   изменения\n' +&#10;+   '  metrics: План    перехода   выполнен'&#10;- 'Цель должности: Обеспечить управляемый рост\n' +&#10;-   '\n' +&#10;-   'Измеримые результаты:\n' +&#10;-   '  • Результат: Сократить срок цикла\n' +&#10;-   '    Метрики:\n' +&#10;-   '      • Срок не более двух дней\n' +&#10;-   '      • Ошибки менее одного процента\n' +&#10;-   '  • Результат: Увеличить операционный охват\n' +&#10;-   '    Метрики:\n' +&#10;-   '      • Три подразделения\n' +&#10;-   '\n' +&#10;-   'Личный вклад:\n' +&#10;-   '  Результат: Лично внедряет изменения\n' +&#10;-   '  Метрики:\n' +&#10;-   '    • План перехода выполнен'&#10;">
+		<failure type="testCodeFailure" message="resultImage is formatted by one deterministic Russian layout grammar&#10;+ actual - expected&#10;&#10;+ 'positionGoal: Обеспечить    управляемый   рост\n' +&#10;+   'measurableResults:\n' +&#10;+   '  • result: Сократить   срок   цикла\n' +&#10;+   '  • metrics:\n' +&#10;+   '    • Срок   не более   двух дней\n' +&#10;+   '    • Ошибки   менее   одного процента\n' +&#10;+   '  • result: Увеличить    операционный охват\n' +&#10;+   '  • metrics: Три    подразделения\n' +&#10;+   'personalContribution:\n' +&#10;+   '  result: Лично   внедряет   изменения\n' +&#10;+   '  metrics: План    перехода   выполнен'&#10;- 'Цель должности: Обеспечить управляемый рост\n' +&#10;-   '\n' +&#10;-   'Измеримые результаты:\n' +&#10;-   '  • Результат: Сократить срок цикла\n' +&#10;-   '    Метрики:\n' +&#10;-   '      • Срок не более двух дней\n' +&#10;-   '      • Ошибки менее одного процента\n' +&#10;-   '  • Результат: Увеличить операционный охват\n' +&#10;-   '    Метрики:\n' +&#10;-   '      • Три подразделения\n' +&#10;-   '\n' +&#10;-   'Личный вклад:\n' +&#10;-   '  Результат: Лично внедряет изменения\n' +&#10;-   '  Метрики:\n' +&#10;-   '    • План перехода выполнен'">
+[Error [ERR_TEST_FAILURE]: resultImage is formatted by one deterministic Russian layout grammar
++ actual - expected
+
++ 'positionGoal: Обеспечить    управляемый   рост\n' +
++   'measurableResults:\n' +
++   '  • result: Сократить   срок   цикла\n' +
++   '  • metrics:\n' +
++   '    • Срок   не более   двух дней\n' +
++   '    • Ошибки   менее   одного процента\n' +
++   '  • result: Увеличить    операционный охват\n' +
++   '  • metrics: Три    подразделения\n' +
++   'personalContribution:\n' +
++   '  result: Лично   внедряет   изменения\n' +
++   '  metrics: План    перехода   выполнен'
+- 'Цель должности: Обеспечить управляемый рост\n' +
+-   '\n' +
+-   'Измеримые результаты:\n' +
+-   '  • Результат: Сократить срок цикла\n' +
+-   '    Метрики:\n' +
+-   '      • Срок не более двух дней\n' +
+-   '      • Ошибки менее одного процента\n' +
+-   '  • Результат: Увеличить операционный охват\n' +
+-   '    Метрики:\n' +
+-   '      • Три подразделения\n' +
+-   '\n' +
+-   'Личный вклад:\n' +
+-   '  Результат: Лично внедряет изменения\n' +
+-   '  Метрики:\n' +
+-   '    • План перехода выполнен'
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: resultImage is formatted by one deterministic Russian layout grammar
+  + actual - expected
+  
+  + 'positionGoal: Обеспечить    управляемый   рост\n' +
+  +   'measurableResults:\n' +
+  +   '  • result: Сократить   срок   цикла\n' +
+  +   '  • metrics:\n' +
+  +   '    • Срок   не более   двух дней\n' +
+  +   '    • Ошибки   менее   одного процента\n' +
+  +   '  • result: Увеличить    операционный охват\n' +
+  +   '  • metrics: Три    подразделения\n' +
+  +   'personalContribution:\n' +
+  +   '  result: Лично   внедряет   изменения\n' +
+  +   '  metrics: План    перехода   выполнен'
+  - 'Цель должности: Обеспечить управляемый рост\n' +
+  -   '\n' +
+  -   'Измеримые результаты:\n' +
+  -   '  • Результат: Сократить срок цикла\n' +
+  -   '    Метрики:\n' +
+  -   '      • Срок не более двух дней\n' +
+  -   '      • Ошибки менее одного процента\n' +
+  -   '  • Результат: Увеличить операционный охват\n' +
+  -   '    Метрики:\n' +
+  -   '      • Три подразделения\n' +
+  -   '\n' +
+  -   'Личный вклад:\n' +
+  -   '  Результат: Лично внедряет изменения\n' +
+  -   '  Метрики:\n' +
+  -   '    • План перехода выполнен'
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\generated-vacancy-profile.acceptance.test.ts:170:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'positionGoal: Обеспечить    управляемый   рост\nmeasurableResults:\n  • result: Сократить   срок   цикла\n  • metrics:\n    • Срок   не более   двух дней\n    • Ошибки   менее   одного процента\n  • result: Увеличить    операционный охват\n  • metrics: Три    подразделения\npersonalContribution:\n  result: Лично   внедряет   изменения\n  metrics: План    перехода   выполнен',
+    expected: 'Цель должности: Обеспечить управляемый рост\n\nИзмеримые результаты:\n  • Результат: Сократить срок цикла\n    Метрики:\n      • Срок не более двух дней\n      • Ошибки менее одного процента\n  • Результат: Увеличить операционный охват\n    Метрики:\n      • Три подразделения\n\nЛичный вклад:\n  Результат: Лично внедряет изменения\n  Метрики:\n    • План перехода выполнен',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 1 -->
+	<!-- suites 0 -->
+	<!-- pass 0 -->
+	<!-- fail 1 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 698.6374 -->
+</testsuites>

@@ -46,6 +46,7 @@ export interface AttemptTraceInput {
     contentBlocks?: JsonValue[];
     toolDefinitions: JsonValue[];
     toolChoice?: JsonValue;
+    responseFormat?: JsonValue;
   };
   inputSnapshot: {
     materials: MaterialSnapshot[];

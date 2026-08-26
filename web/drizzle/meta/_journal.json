@@ -8,6 +8,55 @@
       "when": 1787152103758,
       "tag": "0000_daily_skrulls",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1787210134061,
+      "tag": "0001_durable_agent_runtime",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1787213869298,
+      "tag": "0002_unique_paibok",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1787215028346,
+      "tag": "0003_nostalgic_gorilla_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1787216757279,
+      "tag": "0004_pale_moon_knight",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1787218189718,
+      "tag": "0005_reflective_roughhouse",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1787225368788,
+      "tag": "0006_organic_paibok",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1787233600000,
+      "tag": "0007_one_time_drive_link",
+      "breakpoints": true
     }
   ]
 }

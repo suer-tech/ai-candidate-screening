@@ -1,0 +1,186 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAtUtc": "2026-08-20T12:14:17.869Z",
+  "change": "support-personal-google-drive-oauth",
+  "requirement": "TST-120",
+  "fixtureSetId": "personal-google-drive-oauth-synthetic-v1",
+  "evidenceScope": "local-controlled-conformance-only",
+  "productionLikeAcceptanceClaimed": false,
+  "author": "/root/personal_drive_oauth_red",
+  "executor": "/root/personal_drive_oauth_red",
+  "independenceDeclared": true,
+  "containsSecrets": false,
+  "containsRealPersonalData": false,
+  "counts": {
+    "total": 16,
+    "passed": 11,
+    "red": 5
+  },
+  "results": [
+    {
+      "testId": "TST-120-A",
+      "title": "OAuth is the only backend and service-account configuration is rejected",
+      "status": "PASSED",
+      "safeCode": null,
+      "failures": []
+    },
+    {
+      "testId": "TST-120-B",
+      "title": "anonymous connect and callback requests cannot create OAuth operations",
+      "status": "PASSED",
+      "safeCode": null,
+      "failures": []
+    },
+    {
+      "testId": "TST-120-C",
+      "title": "state, PKCE and redirect are one-time, expiring and server-bound",
+      "status": "PASSED",
+      "safeCode": null,
+      "failures": []
+    },
+    {
+      "testId": "TST-120-D",
+      "title": "refresh token is encrypted and credentials never enter observable surfaces",
+      "status": "PASSED",
+      "safeCode": null,
+      "failures": []
+    },
+    {
+      "testId": "TST-120-E",
+      "title": "testing is local-only and production-personal is the durable gate",
+      "status": "PASSED",
+      "safeCode": null,
+      "failures": []
+    },
+    {
+      "testId": "TST-120-F",
+      "title": "worker restart refreshes from durable encrypted grant and resumes once",
+      "status": "PASSED",
+      "safeCode": null,
+      "failures": []
+    },
+    {
+      "testId": "TST-120-G",
+      "title": "manual files under Найм are discovered while unrelated IDs fail before Drive API",
+      "status": "PASSED",
+      "safeCode": null,
+      "failures": []
+    },
+    {
+      "testId": "TST-120-H",
+      "title": "publication reconciles timeout, preserves source files and cleans synthetic outputs",
+      "status": "PASSED",
+      "safeCode": null,
+      "failures": []
+    },
+    {
+      "testId": "TST-120-I",
+      "title": "invalid_grant becomes actionable WAITING_FOR_HUMAN instead of FAILED",
+      "status": "PASSED",
+      "safeCode": null,
+      "failures": []
+    },
+    {
+      "testId": "TST-120-J",
+      "title": "expected account reconnect resumes without duplicates and mismatch is blocked",
+      "status": "PASSED",
+      "safeCode": null,
+      "failures": []
+    },
+    {
+      "testId": "TST-120-K",
+      "title": "disconnect removes local grant but preserves product records and Drive files",
+      "status": "PASSED",
+      "safeCode": null,
+      "failures": []
+    },
+    {
+      "testId": "TST-120-M",
+      "title": "runtime requires registered root ancestry and a matching scoped tool grant before Drive API",
+      "status": "RED",
+      "safeCode": "GOOGLE_DRIVE_OAUTH_SCENARIO_UNKNOWN",
+      "failures": [
+        "status: expected \"SUCCEEDED\"; actual=\"FAILED\"",
+        "authorizedDriveApiCalls: expected 1; actual=undefined",
+        "missingGrantDeniedBeforeApi: expected true; actual=undefined",
+        "wrongRootGrantDeniedBeforeApi: expected true; actual=undefined",
+        "wrongOperationGrantDeniedBeforeApi: expected true; actual=undefined",
+        "unregisteredClientIdDeniedBeforeApi: expected true; actual=undefined",
+        "connectionRootCandidateInputAndOperationMatched: expected true; actual=undefined"
+      ]
+    },
+    {
+      "testId": "TST-120-N",
+      "title": "durable Drive executor wires OAuth token provider and MyDrive adapter behind grant, budget, checkpoint and outbox",
+      "status": "RED",
+      "safeCode": "GOOGLE_DRIVE_OAUTH_SCENARIO_UNKNOWN",
+      "failures": [
+        "status: expected \"SUCCEEDED\"; actual=\"FAILED\"",
+        "durableExecutorUsed: expected true; actual=undefined",
+        "oauthTokenProviderUsed: expected true; actual=undefined",
+        "myDriveAdapterUsed: expected true; actual=undefined",
+        "grantCheckedBeforeTokenResolution: expected true; actual=undefined",
+        "budgetReservedBeforeEffect: expected true; actual=undefined",
+        "checkpointPersistedBeforeEffect: expected true; actual=undefined",
+        "outboxIntentPersistedBeforeEffect: expected true; actual=undefined",
+        "externalEffects: expected 1; actual=undefined"
+      ]
+    },
+    {
+      "testId": "TST-120-O",
+      "title": "invalid_grant creates durable typed escalation and blocks every later Drive effect",
+      "status": "RED",
+      "safeCode": "GOOGLE_DRIVE_OAUTH_SCENARIO_UNKNOWN",
+      "failures": [
+        "status: expected \"SUCCEEDED\"; actual=\"FAILED\"",
+        "connectionState: expected \"REAUTH_REQUIRED\"; actual=undefined",
+        "taskState: expected \"WAITING_FOR_HUMAN\"; actual=undefined",
+        "runState: expected \"WAITING_FOR_HUMAN\"; actual=undefined",
+        "escalationObstacle: expected \"GOOGLE_OAUTH_INVALID_GRANT\"; actual=undefined",
+        "escalationAction: expected \"Переподключить Google Drive\"; actual=undefined",
+        "driveEffectsAfterRevocation: expected 0; actual=undefined",
+        "terminalFailed: expected false; actual=undefined",
+        "checkpointPreserved: expected true; actual=undefined"
+      ]
+    },
+    {
+      "testId": "TST-120-P",
+      "title": "expected-account reconnect emits one durable resume and reconciles unknown outcome before retry",
+      "status": "RED",
+      "safeCode": "GOOGLE_DRIVE_OAUTH_SCENARIO_UNKNOWN",
+      "failures": [
+        "status: expected \"SUCCEEDED\"; actual=\"FAILED\"",
+        "durableResumeEvents: expected 1; actual=undefined",
+        "resumedOriginalRun: expected true; actual=undefined",
+        "timelineOrder: expected [\"GOOGLE_DRIVE_OAUTH_RECONNECTED\",\"DRIVE_RESUME_PUBLISHED\",\"UNKNOWN_OUTCOME_RECONCILED\",\"DRIVE_EFFECT_RETRY_OR_REUSE\"]; actual=undefined",
+        "reconcileBeforeRetry: expected true; actual=undefined",
+        "duplicateCandidates: expected 0; actual=undefined",
+        "duplicateFolders: expected 0; actual=undefined",
+        "duplicateResultVersions: expected 0; actual=undefined",
+        "duplicatePdfs: expected 0; actual=undefined"
+      ]
+    },
+    {
+      "testId": "TST-120-Q",
+      "title": "production readiness requires config, decrypt, active owner and real root read/write probes",
+      "status": "RED",
+      "safeCode": "GOOGLE_DRIVE_OAUTH_SCENARIO_UNKNOWN",
+      "failures": [
+        "status: expected \"SUCCEEDED\"; actual=\"FAILED\"",
+        "healthyReady: expected true; actual=undefined",
+        "configProbePassed: expected true; actual=undefined",
+        "decryptProbePassed: expected true; actual=undefined",
+        "activeOwnerProbePassed: expected true; actual=undefined",
+        "rootReadProbePassed: expected true; actual=undefined",
+        "rootWriteProbePassed: expected true; actual=undefined",
+        "missingConfigBlocked: expected true; actual=undefined",
+        "decryptFailureBlocked: expected true; actual=undefined",
+        "missingOwnerBlocked: expected true; actual=undefined",
+        "rootReadFailureBlocked: expected true; actual=undefined",
+        "rootWriteFailureBlocked: expected true; actual=undefined",
+        "testingProductionCode: expected \"GOOGLE_OAUTH_TESTING_GRANT_NOT_DURABLE\"; actual=undefined",
+        "staticConfigurationAloneAccepted: expected false; actual=undefined"
+      ]
+    }
+  ]
+}

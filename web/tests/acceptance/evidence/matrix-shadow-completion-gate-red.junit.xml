@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="MATRIX-SHADOW-GATE-RED-001: shadow validation is the validated-assessment completion gate and the plan validates" time="0.002863" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-shadow-completion-gate.acceptance.test.ts" failure="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;+ [&#10;+   'validation completionGate expected validated-assessment; actual=undefined',&#10;+   'validatePlan must accept the shadow plan; actual=MISSING_COMPLETION_GATE'&#10;+ ]&#10;- []&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;+ [&#10;+   'validation completionGate expected validated-assessment; actual=undefined',&#10;+   'validatePlan must accept the shadow plan; actual=MISSING_COMPLETION_GATE'&#10;+ ]&#10;- []">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly deep-equal:
++ actual - expected
+
++ [
++   'validation completionGate expected validated-assessment; actual=undefined',
++   'validatePlan must accept the shadow plan; actual=MISSING_COMPLETION_GATE'
++ ]
+- []
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + [
+  +   'validation completionGate expected validated-assessment; actual=undefined',
+  +   'validatePlan must accept the shadow plan; actual=MISSING_COMPLETION_GATE'
+  + ]
+  - []
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-shadow-completion-gate.acceptance.test.ts:46:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'validation completionGate expected validated-assessment; actual=undefined', 'validatePlan must accept the shadow plan; actual=MISSING_COMPLETION_GATE' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 1 -->
+	<!-- suites 0 -->
+	<!-- pass 0 -->
+	<!-- fail 1 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 202.4206 -->
+</testsuites>

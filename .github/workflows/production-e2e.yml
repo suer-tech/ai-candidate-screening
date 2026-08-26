@@ -84,6 +84,8 @@ jobs:
           cache: npm
           cache-dependency-path: web/package-lock.json
       - run: npm ci
+      - name: Verify personal Google Drive OAuth focused acceptance
+        run: npm run test:personal-drive-oauth
       - run: npm run e2e:install -- --with-deps
       - name: Materialize protected HR identity
         env:
@@ -92,7 +94,7 @@ jobs:
           mkdir -p tests/e2e/.auth
           printf '%s' "$E2E_AUTH_STORAGE_STATE_B64" | base64 --decode > "$E2E_AUTH_STORAGE_STATE"
           chmod 600 "$E2E_AUTH_STORAGE_STATE"
-      - run: npm run e2e:preflight
+      - run: npm run e2e:preflight -- --json-output test-results/e2e-preflight.json
       - run: npm run e2e:required
       - name: Upload safe acceptance evidence
         if: always()

@@ -13,10 +13,18 @@ tmp/
 **/dist/
 **/coverage/
 **/tsconfig.tsbuildinfo
+/web/.output/
+/web/build-latest.log
+
+# Local QA renders and generated reports
+/.codex-qa/
+/.codex-qa-style/
+/output/
+/reports/
+/Отчет_по_срокам_создания_AI-агента.docx
 
 # Editor and OS metadata
 .DS_Store
 Thumbs.db
 .idea/
 .vscode/
-

@@ -42,6 +42,7 @@ yarn-error.log*
 /.wrangler/
 /outputs/
 /work/
+/.runtime/
 
 # local preview process files
 /.dev-*.log

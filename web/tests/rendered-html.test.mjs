@@ -29,10 +29,12 @@ test("client source contains reviewed MVP flows and excludes demo controls", asy
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
   ]);
-  for (const value of ["Новая вакансия", "Название вакансии", "Сохранить вакансию", "Сбросить настройки", "STANDARD_ABC_DIRECTIONS", "Добавить направление", "Повторная обработка", "Восстановить", "Удалить окончательно", "Итоги", "ABC-тест", "PdfPreview", "7 дней", "30 дней", "90 дней"]) assert.match(page, new RegExp(value));
+  for (const value of ["Новая вакансия", "Название вакансии", "Сгенерировать описание", "Сохраняем вакансию", "ABC-критерии", "STANDARD_ABC_DIRECTIONS", "Добавить направление", "Повторная обработка", "Восстановить", "Удалить", "Итоги", "ABC-тест", "PdfPreview", "7 дней", "30 дней", "90 дней"]) assert.match(page, new RegExp(value));
+  for (const removedStep of ["Предварительный просмотр", "Подтвердить профиль", "Подтвердить и создать вакансию", "Сохранить и активировать", "Сбросить изменения", "Шаг {step}"]) assert.doesNotMatch(page, new RegExp(removedStep.replace(/[{}]/g, "\\$&")));
+  assert.doesNotMatch(page, /без LLM-генерации/);
   for (const value of ["WORKFLOW_STATUS", "createVacancyAtomically", "completeCandidateStabilityCheck", "deleteArchivedCandidate", "buildDashboardSnapshot", "validateResultPair"]) assert.match(model, new RegExp(value));
   assert.match(route, /application\/pdf/);
-  assert.match(route, /oai-authenticated-user-id/);
+  assert.match(route, /requestPrincipal/);
   assert.doesNotMatch(page, />\s*Аналитика\s*</);
   assert.doesNotMatch(page, />\s*На следующий этап\s*</);
   assert.doesNotMatch(page, />[^<]*Скачать отчёт[^<]*</);
@@ -49,6 +51,23 @@ test("stacks ABC grade descriptions vertically", async () => {
   const rule = css.match(/\.abc-grade-grid\{([^}]*)\}/)?.[1] ?? "";
   assert.match(rule, /grid-template-columns\s*:\s*1fr/);
   assert.doesNotMatch(rule, /repeat\(3\s*,/);
+});
+
+test("sizes the desktop header brand column to its content", async () => {
+  const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  const topbarRule = css.match(/\.topbar\s*\{([^}]*)\}/)?.[1] ?? "";
+
+  assert.notEqual(topbarRule, "", "Base desktop .topbar rule is missing");
+  assert.match(
+    topbarRule,
+    /grid-template-columns\s*:\s*max-content\s+minmax\(/,
+    "The brand column must fit “Правильный выбор” and its subtitle instead of clipping them",
+  );
+  assert.doesNotMatch(
+    topbarRule,
+    /grid-template-columns\s*:[^;}]*\b205px\b/,
+    "The desktop brand column must not use the fixed 205px width",
+  );
 });
 
 test("production worker protects PDF and never falls back when storage is unavailable", async () => {

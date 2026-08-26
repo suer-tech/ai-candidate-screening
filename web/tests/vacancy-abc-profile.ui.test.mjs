@@ -38,7 +38,8 @@ function button(tree, label) {
 }
 
 function version(tree) {
-  return Number(textContent(tree).match(/Синтетическая вакансия · версия (\d+)/)?.[1]);
+  const settings = findAll(tree, (node) => node.props?.className === "settings-content")[0];
+  return Number(settings?.props?.["data-profile-version"]);
 }
 
 function createSession(runtime, directions) {
@@ -66,7 +67,7 @@ function createSession(runtime, directions) {
     notifications,
     tree: () => tree,
     render: () => (tree = component.render()),
-    save: () => { button(tree, "Сохранить новую версию").props.onClick(); tree = component.render(); },
+    save: () => { button(tree, "Сохранить").props.onClick(); tree = component.render(); },
   };
 }
 
@@ -74,34 +75,34 @@ test("VacancySettings shows persistent accessible ABC validation feedback", asyn
   const runtime = await loadVacancySettingsHarness();
   t.after(() => runtime.cleanup());
 
-  await t.test("shows a collection alert when no direction exists", () => {
+  await t.test("shows a non-blocking empty state when no direction exists", () => {
     const session = createSession(runtime, []);
-    session.save();
     const alerts = findAll(session.tree(), (node) => node.props?.role === "alert");
     assert.equal(version(session.tree()), 7);
-    assert.ok(alerts.some((node) => /хотя бы одно ABC-направление/i.test(textContent(node))));
+    assert.equal(alerts.length, 0);
+    assert.match(textContent(session.tree()), /добавьте хотя бы одно направление/i);
   });
 
-  await t.test("links a field error to the invalid textarea and clears it after correction", () => {
+  await t.test("links a field error to the invalid direction name and clears it after correction", () => {
     const session = createSession(runtime, [VALID_DIRECTION]);
-    let textarea = findAll(session.tree(), (node) => node.type === "textarea")[0];
-    textarea.props.onChange({ target: { value: "  " } });
+    let input = findAll(session.tree(), (node) => node.type === "input")[0];
+    input.props.onChange({ target: { value: "  " } });
     session.render();
     session.save();
 
-    textarea = findAll(session.tree(), (node) => node.type === "textarea")[0];
+    input = findAll(session.tree(), (node) => node.type === "input")[0];
     assert.equal(version(session.tree()), 7);
-    assert.equal(textarea.props["aria-invalid"], true);
-    assert.ok(textarea.props["aria-describedby"]);
-    const describedError = findAll(session.tree(), (node) => node.props?.id === textarea.props["aria-describedby"])[0];
-    assert.match(textContent(describedError), /определение A/i);
+    assert.equal(input.props["aria-invalid"], true);
+    assert.ok(input.props["aria-describedby"]);
+    const describedError = findAll(session.tree(), (node) => node.props?.id === input.props["aria-describedby"])[0];
+    assert.match(textContent(describedError), /название/i);
     assert.ok(!session.notifications.some((message) => /сохранён как версия/i.test(message)));
 
-    textarea.props.onChange({ target: { value: "Исправленное определение A" } });
+    input.props.onChange({ target: { value: "Исправленное направление" } });
     session.render();
-    textarea = findAll(session.tree(), (node) => node.type === "textarea")[0];
-    assert.equal(textarea.props["aria-invalid"], false);
-    assert.equal(textarea.props["aria-describedby"], undefined);
+    input = findAll(session.tree(), (node) => node.type === "input")[0];
+    assert.equal(input.props["aria-invalid"], false);
+    assert.equal(input.props["aria-describedby"], undefined);
     assert.equal(version(session.tree()), 7);
   });
 });

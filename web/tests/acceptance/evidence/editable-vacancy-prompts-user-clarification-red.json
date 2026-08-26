@@ -1,0 +1,98 @@
+{
+  "schemaVersion": "editable-vacancy-prompts-acceptance-evidence/v1",
+  "change": "add-editable-vacancy-prompts",
+  "generatedAtUtc": "2026-08-25T05:11:14.485Z",
+  "phase": "RED",
+  "author": "/root/analysis_prompt_acceptance",
+  "executor": "/root/analysis_prompt_acceptance",
+  "independenceDeclared": true,
+  "productionCodeChangedByAuthor": false,
+  "command": "node tests/editable-vacancy-prompts.evidence.mjs --scenario-prefix \"user clarification\" --author /root/analysis_prompt_acceptance --output tests/acceptance/evidence/editable-vacancy-prompts-user-clarification-red.json",
+  "junit": "tests/acceptance/evidence/editable-vacancy-prompts-user-clarification-red.junit.xml",
+  "safety": {
+    "fixtureSetId": "editable-vacancy-prompts-synthetic-v1",
+    "scenarioFilter": null,
+    "scenarioPrefix": "user clarification",
+    "syntheticOnly": true,
+    "containsSecrets": false,
+    "containsRealPersonalData": false,
+    "providerCallsAllowed": false
+  },
+  "summary": {
+    "total": 3,
+    "green": 0,
+    "red": 3,
+    "infrastructureErrors": 0
+  },
+  "results": [
+    {
+      "scenarioId": "VAC-041-russian-analysis-prompt-ui-copy",
+      "requirements": [
+        "VAC-041",
+        "TST-086"
+      ],
+      "title": "user clarification: settings use the exact Russian label and a readable structured Russian default prompt",
+      "status": "RED",
+      "classification": "product-contract",
+      "mismatches": [
+        "Acceptance scenario is not implemented: VAC-041-russian-analysis-prompt-ui-copy",
+        "status: expected \"SUCCEEDED\"; actual=\"NOT_IMPLEMENTED\"",
+        "navigationLabel: expected \"Промпт для анализа\"; actual=undefined",
+        "sectionHeading: expected \"Промпт для анализа\"; actual=undefined",
+        "legacyLabelVisible: expected false; actual=undefined",
+        "removedIntroVisible: expected false; actual=undefined",
+        "removedVersionNoticeVisible: expected false; actual=undefined",
+        "defaultPrompt.artifactId: expected \"candidate-assessment/v1\"; actual=undefined",
+        "defaultPrompt.language: expected \"ru\"; actual=undefined",
+        "defaultPrompt.structured: expected true; actual=undefined",
+        "defaultPrompt.multiline: expected true; actual=undefined",
+        "defaultPrompt.sectionHeadings: expected exact [\"Цель анализа\",\"Порядок анализа\",\"Требования к доказательствам\",\"Формат результата\"]; actual=undefined",
+        "defaultPrompt.bulletListPresent: expected true; actual=undefined"
+      ]
+    },
+    {
+      "scenarioId": "VAC-041-ASM-062-vacancy-specific-prompt-snapshots",
+      "requirements": [
+        "VAC-041",
+        "ASM-062",
+        "TST-086"
+      ],
+      "title": "user clarification: two vacancies persist different prompts and new runs pin the selected vacancy version",
+      "status": "RED",
+      "classification": "product-contract",
+      "mismatches": [
+        "Acceptance scenario is not implemented: VAC-041-ASM-062-vacancy-specific-prompt-snapshots",
+        "status: expected \"SUCCEEDED\"; actual=\"NOT_IMPLEMENTED\"",
+        "vacancyPromptsStoredSeparately: expected true; actual=undefined",
+        "promptHashesDiffer: expected true; actual=undefined",
+        "exactPromptTextPreservedPerVacancy: expected true; actual=undefined",
+        "runBindings: expected exact [{\"runId\":\"candidate-run-alpha-001\",\"vacancyId\":\"vacancy-prompt-alpha-001\",\"profileVersion\":2,\"usesOwnVacancyPrompt\":true},{\"runId\":\"candidate-run-beta-002\",\"vacancyId\":\"vacancy-prompt-beta-002\",\"profileVersion\":4,\"usesOwnVacancyPrompt\":true}]; actual=undefined",
+        "crossVacancyPromptLeak: expected false; actual=undefined",
+        "runSnapshotsImmutable: expected true; actual=undefined"
+      ]
+    },
+    {
+      "scenarioId": "ASM-062-assessment-request-vacancy-prompt-routing",
+      "requirements": [
+        "ASM-062",
+        "TST-086"
+      ],
+      "title": "user clarification: candidate assessment request contains the pinned vacancy prompt and earlier stages never receive it",
+      "status": "RED",
+      "classification": "product-contract",
+      "mismatches": [
+        "Acceptance scenario is not implemented: ASM-062-assessment-request-vacancy-prompt-routing",
+        "status: expected \"SUCCEEDED\"; actual=\"NOT_IMPLEMENTED\"",
+        "snapshotSource.vacancyId: expected \"vacancy-prompt-routing-001\"; actual=undefined",
+        "snapshotSource.profileVersion: expected 3; actual=undefined",
+        "snapshotSource.runId: expected \"candidate-run-routing-001\"; actual=undefined",
+        "assessmentLlmRequestContainsExactPrompt: expected true; actual=undefined",
+        "assessmentLlmRequestContainsPromptOnce: expected true; actual=undefined",
+        "documentExtractionReceivesPrompt: expected false; actual=undefined",
+        "transcriptionReceivesPrompt: expected false; actual=undefined",
+        "factExtractionReceivesPrompt: expected false; actual=undefined",
+        "assessmentReceivesPrompt: expected true; actual=undefined"
+      ]
+    }
+  ]
+}

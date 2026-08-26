@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="MDA-CONTEXT-RED-001: recursive decision-safe JSON sanitizes string leaves without changing shape or types" time="0.001894" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\decision-safe-json-context-read.acceptance.test.ts" failure="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;+ [&#10;+   'matrix-driven.ts must export decisionSafeJson(value) for recursive leaf-only sanitization'&#10;+ ]&#10;- []&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;+ [&#10;+   'matrix-driven.ts must export decisionSafeJson(value) for recursive leaf-only sanitization'&#10;+ ]&#10;- []">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly deep-equal:
++ actual - expected
+
++ [
++   'matrix-driven.ts must export decisionSafeJson(value) for recursive leaf-only sanitization'
++ ]
+- []
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + [
+  +   'matrix-driven.ts must export decisionSafeJson(value) for recursive leaf-only sanitization'
+  + ]
+  - []
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\decision-safe-json-context-read.acceptance.test.ts:59:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'matrix-driven.ts must export decisionSafeJson(value) for recursive leaf-only sanitization' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="MDA-CONTEXT-RED-002: production context-read never sanitizes a serialized JSON envelope with regex" time="0.001181" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\decision-safe-json-context-read.acceptance.test.ts" failure="stringify→regex→parse may consume JSON delimiters; context-read must sanitize parsed values recursively">
+		<failure type="testCodeFailure" message="stringify→regex→parse may consume JSON delimiters; context-read must sanitize parsed values recursively">
+[Error [ERR_TEST_FAILURE]: stringify→regex→parse may consume JSON delimiters; context-read must sanitize parsed values recursively] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: stringify→regex→parse may consume JSON delimiters; context-read must sanitize parsed values recursively
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\decision-safe-json-context-read.acceptance.test.ts:69:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'toolKey === "candidate.matrix-context-read/v1") {\n            const indexRef = await latestArtifact("candidate.matrix-context-search/v1");\n            const index = await artifactStore.getJson&lt;{ documentRef?: string; transcriptRef?: string }>(indexRef);\n            if (!index.documentRef || !index.transcriptRef) throw new Error("MATRIX_CONTEXT_INDEX_INVALID");\n            const [documents, transcript] = await Promise.all([artifactStore.getJson&lt;unknown>(index.documentRef), artifactStore.getJson&lt;unknown>(index.transcriptRef)]);\n            const materials = { untrustedCandidateData: true, rawLocatorIdentityPreserved: true, documents: JSON.parse(decisionSafeText(JSON.stringify(documents))), transcript: JSON.parse(decisionSafeText(JSON.stringify(transcript))) };\n            const stored = await storeJson("matrix-decision-safe-context", operationIdentity, { schemaVersion: "matrix-decision-safe-context/v1", indexRef, materials });\n            return { artifactRef: stored.artifactRef, checksum: stored.checksum };\n          }\n          if (',
+    expected: /JSON\.parse\s*\(\s*decisionSafeText\s*\(\s*JSON\.stringify\s*\(/,
+    operator: 'doesNotMatch',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="MDA-CONTEXT-RED-003: fixture reproduces delimiter corruption in the forbidden stringify-regex-parse pipeline" time="0.002992" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\decision-safe-json-context-read.acceptance.test.ts"/>
+	<!-- tests 3 -->
+	<!-- suites 0 -->
+	<!-- pass 1 -->
+	<!-- fail 2 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 220.5 -->
+</testsuites>

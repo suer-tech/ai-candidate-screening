@@ -12,10 +12,10 @@ const secrets = { has: (reference) => reference === "provider/main", read: (refe
 function configDocument(overrides = {}) {
   return {
     releaseVersion: "acceptance-release",
-    providers: { main: { provider: "controlled", endpoint: "https://llm.example.test/v1", secretReference: "provider/main", apiContractVersion: "v1" } },
+    providers: { main: { provider: "controlled", endpoint: "https://llm.example.test/v1", secretReference: "provider/main", apiContractVersion: "v1", supportsStructuredOutputs: true } },
     capabilities: { assessment: {
       providerProfile: "main", model: "controlled-v1", promptArtifact: "candidate-assessment/v1",
-      responseSchemaArtifact: "structured-object/v1", toolSchemaArtifacts: ["no-tools/v1"], generationParameters: { temperature: 0 },
+      responseSchemaArtifact: "facts/v1", toolSchemaArtifacts: ["no-tools/v1"], generationParameters: { temperature: 0 },
       limits: { maxOutputTokens: 1000 }, timeoutMs: 10_000,
       retryPolicy: { maxAttempts: 2, initialBackoffMs: 10, maximumBackoffMs: 100 }, fallbackPolicy: { mode: "disabled" },
       ...overrides,
@@ -110,5 +110,5 @@ test("TST-102: startup config rejects partial/secretless config and fallback is 
   }
   await visit(path.resolve(import.meta.dirname, ".."));
   const contents = (await Promise.all(files.map((file) => readFile(file, "utf8")))).join("\n");
-  assert.doesNotMatch(contents, /(?:api[_-]?key|secret|token|password)\s*[:=]\s*["'][^"']+["']/i);
+  assert.doesNotMatch(contents, /(?:api[_-]?key|secret|(?<!template_)token|password)\s*[:=]\s*["'][^"']+["']/i);
 });

@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily encrypted HH PostgreSQL backup
+
+[Timer]
+OnCalendar=*-*-* 02:17:00
+Persistent=true
+RandomizedDelaySec=900
+
+[Install]
+WantedBy=timers.target

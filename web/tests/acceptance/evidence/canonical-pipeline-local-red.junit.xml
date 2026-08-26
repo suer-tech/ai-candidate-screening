@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="E2E-VAC-001: canonical candidate pipeline local controlled conformance" time="0.004818" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\canonical-candidate-pipeline.acceptance.test.mjs" failure="pipeline status: expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;drive-discovery: expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;drive-discovery: reproducible evidence is required&#10;stability-and-input-version: expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;stability-and-input-version: reproducible evidence is required&#10;material-completeness: expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;material-completeness: reproducible evidence is required&#10;metrics-and-eta: expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;metrics-and-eta: reproducible evidence is required&#10;&#10;9 !== 0&#10;">
+		<failure type="testCodeFailure" message="pipeline status: expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;drive-discovery: expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;drive-discovery: reproducible evidence is required&#10;stability-and-input-version: expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;stability-and-input-version: reproducible evidence is required&#10;material-completeness: expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;material-completeness: reproducible evidence is required&#10;metrics-and-eta: expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;metrics-and-eta: reproducible evidence is required&#10;&#10;9 !== 0">
+[Error [ERR_TEST_FAILURE]: pipeline status: expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+drive-discovery: expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+drive-discovery: reproducible evidence is required
+stability-and-input-version: expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+stability-and-input-version: reproducible evidence is required
+material-completeness: expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+material-completeness: reproducible evidence is required
+metrics-and-eta: expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+metrics-and-eta: reproducible evidence is required
+
+9 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: pipeline status: expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  drive-discovery: expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  drive-discovery: reproducible evidence is required
+  stability-and-input-version: expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  stability-and-input-version: reproducible evidence is required
+  material-completeness: expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  material-completeness: reproducible evidence is required
+  metrics-and-eta: expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  metrics-and-eta: reproducible evidence is required
+  
+  9 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/canonical-candidate-pipeline.acceptance.test.mjs:9:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 9,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="E2E-TRN-001: canonical candidate pipeline local controlled conformance" time="0.000721" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\canonical-candidate-pipeline.acceptance.test.mjs" failure="pipeline status: expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;media-probe-and-audio: expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;media-probe-and-audio: reproducible evidence is required&#10;assemblyai-transcription: expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;assemblyai-transcription: reproducible evidence is required&#10;speaker-role-mapping: expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;speaker-role-mapping: reproducible evidence is required&#10;&#10;7 !== 0&#10;">
+		<failure type="testCodeFailure" message="pipeline status: expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;media-probe-and-audio: expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;media-probe-and-audio: reproducible evidence is required&#10;assemblyai-transcription: expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;assemblyai-transcription: reproducible evidence is required&#10;speaker-role-mapping: expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;speaker-role-mapping: reproducible evidence is required&#10;&#10;7 !== 0">
+[Error [ERR_TEST_FAILURE]: pipeline status: expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+media-probe-and-audio: expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+media-probe-and-audio: reproducible evidence is required
+assemblyai-transcription: expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+assemblyai-transcription: reproducible evidence is required
+speaker-role-mapping: expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+speaker-role-mapping: reproducible evidence is required
+
+7 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: pipeline status: expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  media-probe-and-audio: expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  media-probe-and-audio: reproducible evidence is required
+  assemblyai-transcription: expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  assemblyai-transcription: reproducible evidence is required
+  speaker-role-mapping: expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  speaker-role-mapping: reproducible evidence is required
+  
+  7 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/canonical-candidate-pipeline.acceptance.test.mjs:9:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 7,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="E2E-ABC-001: canonical candidate pipeline local controlled conformance" time="0.000256" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\canonical-candidate-pipeline.acceptance.test.mjs" failure="pipeline status: expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;document-extraction: expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;document-extraction: reproducible evidence is required&#10;routerai-ocr: expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;routerai-ocr: reproducible evidence is required&#10;fact-and-evidence-extraction: expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;fact-and-evidence-extraction: reproducible evidence is required&#10;profile-assessment: expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;profile-assessment: reproducible evidence is required&#10;validation-gates: expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;validation-gates: reproducible evidence is required&#10;pdf-pair-render-and-validate: expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;pdf-pair-render-and-validate: reproducible evidence is required&#10;&#10;13 !== 0&#10;">
+		<failure type="testCodeFailure" message="pipeline status: expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;document-extraction: expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;document-extraction: reproducible evidence is required&#10;routerai-ocr: expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;routerai-ocr: reproducible evidence is required&#10;fact-and-evidence-extraction: expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;fact-and-evidence-extraction: reproducible evidence is required&#10;profile-assessment: expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;profile-assessment: reproducible evidence is required&#10;validation-gates: expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;validation-gates: reproducible evidence is required&#10;pdf-pair-render-and-validate: expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;pdf-pair-render-and-validate: reproducible evidence is required&#10;&#10;13 !== 0">
+[Error [ERR_TEST_FAILURE]: pipeline status: expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+document-extraction: expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+document-extraction: reproducible evidence is required
+routerai-ocr: expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+routerai-ocr: reproducible evidence is required
+fact-and-evidence-extraction: expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+fact-and-evidence-extraction: reproducible evidence is required
+profile-assessment: expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+profile-assessment: reproducible evidence is required
+validation-gates: expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+validation-gates: reproducible evidence is required
+pdf-pair-render-and-validate: expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+pdf-pair-render-and-validate: reproducible evidence is required
+
+13 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: pipeline status: expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  document-extraction: expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  document-extraction: reproducible evidence is required
+  routerai-ocr: expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  routerai-ocr: reproducible evidence is required
+  fact-and-evidence-extraction: expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  fact-and-evidence-extraction: reproducible evidence is required
+  profile-assessment: expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  profile-assessment: reproducible evidence is required
+  validation-gates: expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  validation-gates: reproducible evidence is required
+  pdf-pair-render-and-validate: expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  pdf-pair-render-and-validate: reproducible evidence is required
+  
+  13 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/canonical-candidate-pipeline.acceptance.test.mjs:9:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 13,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="E2E-RESULT-001: canonical candidate pipeline local controlled conformance" time="0.000292" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\canonical-candidate-pipeline.acceptance.test.mjs" failure="pipeline status: expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;deterministic-recommendation: expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;deterministic-recommendation: reproducible evidence is required&#10;validation-gates: expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;validation-gates: reproducible evidence is required&#10;pdf-pair-render-and-validate: expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;pdf-pair-render-and-validate: reproducible evidence is required&#10;shared-drive-publication: expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;shared-drive-publication: reproducible evidence is required&#10;telegram-outbox: expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;telegram-outbox: reproducible evidence is required&#10;archive-delete-and-cleanup: expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;archive-delete-and-cleanup: reproducible evidence is required&#10;full synthetic cleanup must complete&#10;&#10;14 !== 0&#10;">
+		<failure type="testCodeFailure" message="pipeline status: expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;deterministic-recommendation: expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;deterministic-recommendation: reproducible evidence is required&#10;validation-gates: expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;validation-gates: reproducible evidence is required&#10;pdf-pair-render-and-validate: expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;pdf-pair-render-and-validate: reproducible evidence is required&#10;shared-drive-publication: expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;shared-drive-publication: reproducible evidence is required&#10;telegram-outbox: expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;telegram-outbox: reproducible evidence is required&#10;archive-delete-and-cleanup: expected SUCCEEDED; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;archive-delete-and-cleanup: reproducible evidence is required&#10;full synthetic cleanup must complete&#10;&#10;14 !== 0">
+[Error [ERR_TEST_FAILURE]: pipeline status: expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+deterministic-recommendation: expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+deterministic-recommendation: reproducible evidence is required
+validation-gates: expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+validation-gates: reproducible evidence is required
+pdf-pair-render-and-validate: expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+pdf-pair-render-and-validate: reproducible evidence is required
+shared-drive-publication: expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+shared-drive-publication: reproducible evidence is required
+telegram-outbox: expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+telegram-outbox: reproducible evidence is required
+archive-delete-and-cleanup: expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+archive-delete-and-cleanup: reproducible evidence is required
+full synthetic cleanup must complete
+
+14 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: pipeline status: expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  deterministic-recommendation: expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  deterministic-recommendation: reproducible evidence is required
+  validation-gates: expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  validation-gates: reproducible evidence is required
+  pdf-pair-render-and-validate: expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  pdf-pair-render-and-validate: reproducible evidence is required
+  shared-drive-publication: expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  shared-drive-publication: reproducible evidence is required
+  telegram-outbox: expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  telegram-outbox: reproducible evidence is required
+  archive-delete-and-cleanup: expected SUCCEEDED; actual="NOT_IMPLEMENTED"
+  archive-delete-and-cleanup: reproducible evidence is required
+  full synthetic cleanup must complete
+  
+  14 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/canonical-candidate-pipeline.acceptance.test.mjs:9:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 14,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 4 -->
+	<!-- suites 0 -->
+	<!-- pass 0 -->
+	<!-- fail 4 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 82.3359 -->
+</testsuites>

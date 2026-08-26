@@ -1,0 +1,154 @@
+# HH AI-screener — базовый docker-compose. Локальный и VPS контуры задаются
+# override-файлами: `docker compose -f docker-compose.yml -f docker-compose.local.yml up -d`
+# или `... -f docker-compose.vps.yml ...`.
+#
+# Конфигурация монтируется из существующего config root (HH_RUNTIME_CONFIG_ROOT):
+#   - локально: ./web/.runtime  (runtime.env + credentials/)
+#   - VPS:      /etc/hh-agent    (runtime.env + credentials/)
+# Сетевые значения (имена сервисов, DATABASE_URL, processor endpoints, HOST)
+# переопределяются через environment и подхватываются environmentProjection
+# (см. server/configuration/runtime.ts). allowlist и preflight не меняются.
+
+name: hh-agent
+
+x-app-common: &app-common
+  build:
+    context: ../../web
+    dockerfile: Dockerfile
+  image: hh-agent:local
+  restart: unless-stopped
+  env_file:
+    - .env
+  environment: &app-env
+    HH_RUNTIME_CONFIG_ROOT: /config
+    DATABASE_URL: postgresql://hh_agent:${HH_POSTGRES_PASSWORD:?set HH_POSTGRES_PASSWORD in .env}@postgres:5432/hh_agent
+    HOST: "0.0.0.0"
+    PORT: "3000"
+    INTERNAL_APP_ORIGIN: http://web:3000
+    MEDIA_PROCESSOR_URL: http://media-processor:4311/v1/extract-audio
+    MEDIA_PROCESSOR_HOST: media-processor
+    MEDIA_PROCESSOR_PORT: "4311"
+    DOCUMENT_PROCESSOR_URL: http://document-processor:4312/v1/extract-document
+    DOCUMENT_PROCESSOR_HOST: document-processor
+    DOCUMENT_PROCESSOR_PORT: "4312"
+    AGENT_RUNTIME_ENVIRONMENT: ${AGENT_RUNTIME_ENVIRONMENT:-local}
+    CANDIDATE_TOOL_EXECUTION_MODE: production
+    CANDIDATE_PIPELINE_ROUTING: ${CANDIDATE_PIPELINE_ROUTING:-shadow}
+    CANDIDATE_PIPELINE_BUILD_ID: ${CANDIDATE_PIPELINE_BUILD_ID:-local-docker}
+    HH_DOCKER_NETWORK: "1"
+  volumes:
+    - config-root:/config:ro
+  depends_on:
+    postgres:
+      condition: service_healthy
+    migrate:
+      condition: service_completed_successfully
+    web:
+      condition: service_started
+  security_opt:
+    - no-new-privileges:true
+
+services:
+  postgres:
+    image: postgres:16.10-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: hh_agent
+      POSTGRES_USER: hh_agent
+      POSTGRES_PASSWORD: ${HH_POSTGRES_PASSWORD:?set HH_POSTGRES_PASSWORD in .env}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hh_agent -d hh_agent"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+      start_period: 5s
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
+      - /run/postgresql
+
+  web:
+    <<: *app-common
+    command: ["npm", "run", "start"]
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health/live').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+  migrate:
+    build:
+      context: ../../web
+      dockerfile: Dockerfile
+    image: hh-agent:local
+    command: ["npm", "run", "db:migrate"]
+    env_file:
+      - .env
+    environment:
+      <<: *app-env
+    volumes:
+      - config-root:/config:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
+    restart: "no"
+
+  worker:
+    <<: *app-common
+    command: ["npm", "run", "service:agent-worker"]
+    environment:
+      <<: *app-env
+      AGENT_RUNTIME_WORKER_ID: docker-worker-1
+
+  media-processor:
+    <<: *app-common
+    command: ["npm", "run", "service:media-processor"]
+    environment:
+      <<: *app-env
+      MEDIA_PROCESSOR_URL: http://0.0.0.0:4311/v1/extract-audio
+      MEDIA_PROCESSOR_HOST: 0.0.0.0
+      MEDIA_PROCESSOR_PORT: "4311"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  document-processor:
+    <<: *app-common
+    command: ["npm", "run", "service:document-processor"]
+    environment:
+      <<: *app-env
+      DOCUMENT_PROCESSOR_URL: http://0.0.0.0:4312/v1/extract-document
+      DOCUMENT_PROCESSOR_HOST: 0.0.0.0
+      DOCUMENT_PROCESSOR_PORT: "4312"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  fixture-controller:
+    <<: *app-common
+    command: ["npm", "run", "service:fixture-controller"]
+    profiles: ["e2e"]
+    environment:
+      <<: *app-env
+      E2E_FIXTURE_CONTROL_TOKEN: ${E2E_FIXTURE_CONTROL_TOKEN:-local-e2e-token}
+      E2E_ALLOW_DESTRUCTIVE_CLEANUP: ${E2E_ALLOW_DESTRUCTIVE_CLEANUP:-true}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      web:
+        condition: service_started
+
+volumes:
+  postgres-data:
+  config-root:

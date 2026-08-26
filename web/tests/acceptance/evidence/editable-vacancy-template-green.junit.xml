@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="VAC-040/TST-086: full server-rendered generation template exposes role assumptions, all sections and structured title isolation" time="0.027528" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\editable-vacancy-prompts.acceptance.test.mjs"/>
+	<!-- tests 1 -->
+	<!-- suites 0 -->
+	<!-- pass 1 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 252.2853 -->
+</testsuites>

@@ -1,0 +1,591 @@
+{
+  "schemaVersion": "matrix-driven-red-evidence/v1",
+  "change": "implement-matrix-driven-candidate-assessment",
+  "generatedAtUtc": "2026-08-26T08:31:56.791Z",
+  "author": "independent acceptance subagent /root/matrix_acceptance_red",
+  "independence": "The acceptance author did not implement or edit production code.",
+  "fixtureSetId": "matrix-driven-assessment-synthetic-v1",
+  "dataClassification": "synthetic-no-real-candidate-data-no-secrets-no-network-no-provider-expense",
+  "exactTestCommand": "cd web && node --test --test-reporter=junit --test-reporter-destination=tests/acceptance/evidence/matrix-driven-assessment-red.junit.xml tests/matrix-driven-assessment.acceptance.test.mjs",
+  "exactEvidenceCommand": "cd web && node tests/matrix-driven-assessment.evidence.mjs --output tests/acceptance/evidence/matrix-driven-assessment-red.json",
+  "expectedBaseline": "RED until the production conformance adapter and matrix-driven workflow are implemented",
+  "summary": {
+    "total": 32,
+    "green": 32,
+    "red": 0,
+    "environmentBlocked": 0,
+    "externalCalls": 0
+  },
+  "groups": {
+    "shared-compilation": {
+      "total": 4,
+      "red": 0
+    },
+    "matrix-compiler": {
+      "total": 5,
+      "red": 0
+    },
+    "evidence": {
+      "total": 5,
+      "red": 0
+    },
+    "matrix-evaluation": {
+      "total": 4,
+      "red": 0
+    },
+    "security": {
+      "total": 3,
+      "red": 0
+    },
+    "rollout-reporting": {
+      "total": 5,
+      "red": 0
+    },
+    "revised-requiredness-risk": {
+      "total": 6,
+      "red": 0
+    }
+  },
+  "cases": [
+    {
+      "scenarioId": "MDA-LAZY-001",
+      "group": "shared-compilation",
+      "requirements": [
+        "MDA-001",
+        "WF-030"
+      ],
+      "status": "GREEN",
+      "failures": [],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": true,
+        "callable": true
+      },
+      "productStatus": "SUCCEEDED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-CONCURRENCY-002",
+      "group": "shared-compilation",
+      "requirements": [
+        "MDA-002"
+      ],
+      "status": "GREEN",
+      "failures": [],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": true,
+        "callable": true
+      },
+      "productStatus": "SUCCEEDED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-LEASE-003",
+      "group": "shared-compilation",
+      "requirements": [
+        "MDA-002"
+      ],
+      "status": "GREEN",
+      "failures": [],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": true,
+        "callable": true
+      },
+      "productStatus": "SUCCEEDED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-IMMUTABLE-004",
+      "group": "shared-compilation",
+      "requirements": [
+        "MDA-001",
+        "MDA-005",
+        "SEC-020"
+      ],
+      "status": "GREEN",
+      "failures": [],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": true,
+        "callable": true
+      },
+      "productStatus": "SUCCEEDED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-CRITIC-005",
+      "group": "matrix-compiler",
+      "requirements": [
+        "MDA-003",
+        "MDA-004",
+        "INT-030"
+      ],
+      "status": "GREEN",
+      "failures": [],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": true,
+        "callable": true
+      },
+      "productStatus": "SUCCEEDED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-SOURCE-006",
+      "group": "matrix-compiler",
+      "requirements": [
+        "MDA-003",
+        "MDA-005"
+      ],
+      "status": "GREEN",
+      "failures": [],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": true,
+        "callable": true
+      },
+      "productStatus": "SUCCEEDED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-QUALITATIVE-007",
+      "group": "matrix-compiler",
+      "requirements": [
+        "MDA-003",
+        "VAC-011"
+      ],
+      "status": "GREEN",
+      "failures": [],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": true,
+        "callable": true
+      },
+      "productStatus": "SUCCEEDED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-INVENTION-008",
+      "group": "matrix-compiler",
+      "requirements": [
+        "MDA-003",
+        "MDA-004",
+        "TST-121"
+      ],
+      "status": "GREEN",
+      "failures": [],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": true,
+        "callable": true
+      },
+      "productStatus": "SUCCEEDED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-FINGERPRINT-009",
+      "group": "matrix-compiler",
+      "requirements": [
+        "MDA-004",
+        "OPS-020"
+      ],
+      "status": "GREEN",
+      "failures": [],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": true,
+        "callable": true
+      },
+      "productStatus": "SUCCEEDED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-CLAIM-010",
+      "group": "evidence",
+      "requirements": [
+        "ASM-070"
+      ],
+      "status": "GREEN",
+      "failures": [],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": true,
+        "callable": true
+      },
+      "productStatus": "SUCCEEDED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-CONTEXT-011",
+      "group": "evidence",
+      "requirements": [
+        "ASM-071"
+      ],
+      "status": "GREEN",
+      "failures": [],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": true,
+        "callable": true
+      },
+      "productStatus": "SUCCEEDED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-SPEAKER-012",
+      "group": "evidence",
+      "requirements": [
+        "ASM-072"
+      ],
+      "status": "GREEN",
+      "failures": [],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": true,
+        "callable": true
+      },
+      "productStatus": "SUCCEEDED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-CONFLICT-013",
+      "group": "evidence",
+      "requirements": [
+        "ASM-071"
+      ],
+      "status": "GREEN",
+      "failures": [],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": true,
+        "callable": true
+      },
+      "productStatus": "SUCCEEDED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-UNMAPPED-014",
+      "group": "evidence",
+      "requirements": [
+        "ASM-073",
+        "ASM-050"
+      ],
+      "status": "GREEN",
+      "failures": [],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": true,
+        "callable": true
+      },
+      "productStatus": "SUCCEEDED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-COVERAGE-015",
+      "group": "matrix-evaluation",
+      "requirements": [
+        "MDA-006"
+      ],
+      "status": "GREEN",
+      "failures": [],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": true,
+        "callable": true
+      },
+      "productStatus": "SUCCEEDED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-ABC-016",
+      "group": "matrix-evaluation",
+      "requirements": [
+        "ASM-014"
+      ],
+      "status": "GREEN",
+      "failures": [],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": true,
+        "callable": true
+      },
+      "productStatus": "SUCCEEDED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-VERIFY-017",
+      "group": "matrix-evaluation",
+      "requirements": [
+        "MDA-006",
+        "ASM-050"
+      ],
+      "status": "GREEN",
+      "failures": [],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": true,
+        "callable": true
+      },
+      "productStatus": "SUCCEEDED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-FORMULA-018",
+      "group": "matrix-evaluation",
+      "requirements": [
+        "ASM-050"
+      ],
+      "status": "GREEN",
+      "failures": [],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": true,
+        "callable": true
+      },
+      "productStatus": "SUCCEEDED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-INJECTION-019",
+      "group": "security",
+      "requirements": [
+        "ASM-074"
+      ],
+      "status": "GREEN",
+      "failures": [],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": true,
+        "callable": true
+      },
+      "productStatus": "SUCCEEDED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-SENSITIVE-020",
+      "group": "security",
+      "requirements": [
+        "ASM-074",
+        "SEC-021"
+      ],
+      "status": "GREEN",
+      "failures": [],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": true,
+        "callable": true
+      },
+      "productStatus": "SUCCEEDED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-ISOLATION-021",
+      "group": "security",
+      "requirements": [
+        "SEC-020"
+      ],
+      "status": "GREEN",
+      "failures": [],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": true,
+        "callable": true
+      },
+      "productStatus": "SUCCEEDED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-SHADOW-022",
+      "group": "rollout-reporting",
+      "requirements": [
+        "OPS-021",
+        "TST-121"
+      ],
+      "status": "GREEN",
+      "failures": [],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": true,
+        "callable": true
+      },
+      "productStatus": "SUCCEEDED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-VERSION-023",
+      "group": "rollout-reporting",
+      "requirements": [
+        "OPS-021",
+        "WF-040"
+      ],
+      "status": "GREEN",
+      "failures": [],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": true,
+        "callable": true
+      },
+      "productStatus": "SUCCEEDED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-LEGACY-024",
+      "group": "rollout-reporting",
+      "requirements": [
+        "WF-040"
+      ],
+      "status": "GREEN",
+      "failures": [],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": true,
+        "callable": true
+      },
+      "productStatus": "SUCCEEDED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-REPORT-025",
+      "group": "rollout-reporting",
+      "requirements": [
+        "REP-020",
+        "REP-021"
+      ],
+      "status": "GREEN",
+      "failures": [],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": true,
+        "callable": true
+      },
+      "productStatus": "SUCCEEDED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-CUTOVER-026",
+      "group": "rollout-reporting",
+      "requirements": [
+        "TST-122"
+      ],
+      "status": "GREEN",
+      "failures": [],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": true,
+        "callable": true
+      },
+      "productStatus": "SUCCEEDED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-REVISED-REQUIREDNESS-027",
+      "group": "revised-requiredness-risk",
+      "requirements": [
+        "VAC-011",
+        "MDA-003",
+        "TST-121"
+      ],
+      "status": "GREEN",
+      "failures": [],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": true,
+        "callable": true
+      },
+      "productStatus": "SUCCEEDED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-REVISED-HARD-STOP-028",
+      "group": "revised-requiredness-risk",
+      "requirements": [
+        "VAC-012",
+        "MDA-003",
+        "TST-121"
+      ],
+      "status": "GREEN",
+      "failures": [],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": true,
+        "callable": true
+      },
+      "productStatus": "SUCCEEDED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-REVISED-REQUIRED-MISMATCH-029",
+      "group": "revised-requiredness-risk",
+      "requirements": [
+        "ASM-050"
+      ],
+      "status": "GREEN",
+      "failures": [],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": true,
+        "callable": true
+      },
+      "productStatus": "SUCCEEDED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-REVISED-CRITICAL-RISK-030",
+      "group": "revised-requiredness-risk",
+      "requirements": [
+        "ASM-050",
+        "ASM-073",
+        "MDA-008",
+        "INT-030"
+      ],
+      "status": "GREEN",
+      "failures": [],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": true,
+        "callable": true
+      },
+      "productStatus": "SUCCEEDED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-REVISED-RISK-UNVERIFIED-031",
+      "group": "revised-requiredness-risk",
+      "requirements": [
+        "ASM-050",
+        "ASM-073",
+        "MDA-008"
+      ],
+      "status": "GREEN",
+      "failures": [],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": true,
+        "callable": true
+      },
+      "productStatus": "SUCCEEDED",
+      "externalCalls": 0
+    },
+    {
+      "scenarioId": "MDA-REVISED-RISK-SENSITIVE-032",
+      "group": "revised-requiredness-risk",
+      "requirements": [
+        "ASM-074",
+        "SEC-021",
+        "MDA-008",
+        "TST-121"
+      ],
+      "status": "GREEN",
+      "failures": [],
+      "adapter": {
+        "path": "server/candidate-pipeline/matrix-driven-conformance.ts",
+        "available": true,
+        "callable": true
+      },
+      "productStatus": "SUCCEEDED",
+      "externalCalls": 0
+    }
+  ]
+}

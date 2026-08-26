@@ -18,7 +18,7 @@ test("TST-094: seven HR-facing cards use exact canonical stages and archive life
   ];
   const snapshot = model.buildDashboardSnapshot(candidates, [vacancy], 7, new Date("2026-08-19T10:00:00Z"));
   assert.deepEqual(snapshot.counts, { MATERIALS_INCOMPLETE: 1, TRANSCRIBING: 1, ANALYZING: 1, VALIDATING: 1, READY: 1, FAILED: 1 });
-  assert.deepEqual(snapshot.queue.map((item) => item.id), [2, 3, 7, 1]);
+  assert.deepEqual(snapshot.queue.map((item) => item.id), [2, 5, 3, 7, 1], "reprocess stability wait is part of the live processing queue");
   assert.ok(snapshot.queue.length <= 5);
   assert.equal(snapshot.archivedCandidates, 1);
   assert.equal("activeVacancies" in snapshot, false);
@@ -55,11 +55,15 @@ test("TST-097: greeting boundaries, Drive polling states and no-demo boundary ar
   const source = await readProductSource();
   for (const state of ["Подключён", "Проверяем подключение", "Нет подключения"]) assert.match(source, new RegExp(state, "i"));
   assert.match(source, /15_?000|15\s*\*\s*1000/, "Drive health polling interval is exactly 15 seconds");
+  assert.match(source, /WORKSPACE_POLL_INTERVAL_MS[\s\S]*fetch\("\/api\/workspace"[\s\S]*setInterval/,
+    "candidate status is refreshed for lists, vacancy views and the open card");
+  assert.match(source, /DASHBOARD_POLL_INTERVAL_MS[\s\S]*fetch\(`\/api\/dashboard\?period=\$\{period\}`[\s\S]*setInterval/,
+    "dashboard counts and queue poll the same current server projection");
   assert.doesNotMatch(source, /отдельн[^\n]{0,40}(?:панель|блок)[^\n]{0,20}ошиб/i);
   assert.doesNotMatch(source, /static demo|demoValue|mockDashboard/i);
   assert.match(source, /metric-card archive/);
   for (const [status, label] of [["MATERIALS_INCOMPLETE", "Недостаточно материалов"], ["TRANSCRIBING", "Транскрибация"], ["ANALYZING", "AI-анализ"], ["VALIDATING", "Проверка результатов"], ["READY", "Готово"], ["FAILED", "Ошибка"]]) {
-    assert.match(source, new RegExp(`\\["${status}", "${label}"`));
+    assert.match(source, new RegExp(`\\[\\s*"${status}"\\s*,\\s*"${label}"`));
   }
   assert.doesNotMatch(source, /\["WAITING_FOR_STABILITY", "Ожидание стабильности"/);
   assert.doesNotMatch(source, /\["PROCESSING", "Обработка"/);
@@ -72,4 +76,10 @@ test("TST-097: greeting boundaries, Drive polling states and no-demo boundary ar
   assert.match(source, /kind: "archive"/);
   assert.match(source, /В архиве кандидатов нет\./);
   assert.doesNotMatch(source, /<p>Активные вакансии<\/p>/);
+});
+
+test("TST-146: published canonical report pairs feed dashboard analysis results", async () => {
+  const source = await readProductSource();
+  assert.match(source, /candidate_report_versions[^]*?r\.state\s*=\s*'PUBLISHED'/i,
+    "Dashboard must aggregate the terminal PUBLISHED report state");
 });

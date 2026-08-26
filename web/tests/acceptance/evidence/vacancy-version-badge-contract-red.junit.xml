@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="vacancy version badge contract: settings heading contains only the vacancy title" time="0.321222" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\editable-vacancy-prompts.acceptance.test.mjs" failure="settings heading contains only the vacancy title without an inline version&#10;+ actual - expected&#10;&#10;+ 'Синтетическая вакансия · версия 7'&#10;- 'Синтетическая вакансия'&#10;                         ^&#10;">
+		<failure type="testCodeFailure" message="settings heading contains only the vacancy title without an inline version&#10;+ actual - expected&#10;&#10;+ 'Синтетическая вакансия · версия 7'&#10;- 'Синтетическая вакансия'&#10;                         ^">
+[Error [ERR_TEST_FAILURE]: settings heading contains only the vacancy title without an inline version
++ actual - expected
+
++ 'Синтетическая вакансия · версия 7'
+- 'Синтетическая вакансия'
+                         ^
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: settings heading contains only the vacancy title without an inline version
+  + actual - expected
+  
+  + 'Синтетическая вакансия · версия 7'
+  - 'Синтетическая вакансия'
+                           ^
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/editable-vacancy-prompts.acceptance.test.mjs:158:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'Синтетическая вакансия · версия 7',
+    expected: 'Синтетическая вакансия',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testsuite name="vacancy version badge contract: header keeps version beside activity and removes old Drive/version copy" time="0.138956" disabled="0" errors="0" tests="3" failures="3" skipped="0" hostname="WIN-4E9RD0TRUH1">
+		<testcase name="shows a separate profile-version badge beside activity" time="0.000585" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\editable-vacancy-prompts.acceptance.test.mjs" failure="header has a separate compact profile-version badge">
+			<failure type="testCodeFailure" message="header has a separate compact profile-version badge">
+Error [ERR_TEST_FAILURE]: header has a separate compact profile-version badge
+    at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/editable-vacancy-prompts.acceptance.test.mjs:179:11) {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: header has a separate compact profile-version badge
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/editable-vacancy-prompts.acceptance.test.mjs:185:12)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at TestContext.test (node:internal/test_runner/test:368:20)
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/editable-vacancy-prompts.acceptance.test.mjs:179:11)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+}
+			</failure>
+		</testcase>
+		<testcase name="removes the old standalone version copy" time="0.000329" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\editable-vacancy-prompts.acceptance.test.mjs" failure="old standalone version copy is absent from the header&#10;&#10;1 !== 0&#10;">
+			<failure type="testCodeFailure" message="old standalone version copy is absent from the header&#10;&#10;1 !== 0">
+Error [ERR_TEST_FAILURE]: old standalone version copy is absent from the header
+
+1 !== 0
+
+    at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/editable-vacancy-prompts.acceptance.test.mjs:193:11) {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: old standalone version copy is absent from the header
+  
+  1 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/editable-vacancy-prompts.acceptance.test.mjs:196:12)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at TestContext.test (node:internal/test_runner/test:368:20)
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/editable-vacancy-prompts.acceptance.test.mjs:193:11)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+			</failure>
+		</testcase>
+		<testcase name="removes Google Drive linkage copy" time="0.000210" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\editable-vacancy-prompts.acceptance.test.mjs" failure="removed Google Drive linkage text is absent from the real vacancy view&#10;&#10;true !== false&#10;">
+			<failure type="testCodeFailure" message="removed Google Drive linkage text is absent from the real vacancy view&#10;&#10;true !== false">
+Error [ERR_TEST_FAILURE]: removed Google Drive linkage text is absent from the real vacancy view
+
+true !== false
+
+    at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/editable-vacancy-prompts.acceptance.test.mjs:199:11) {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: removed Google Drive linkage text is absent from the real vacancy view
+  
+  true !== false
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/editable-vacancy-prompts.acceptance.test.mjs:200:12)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at TestContext.test (node:internal/test_runner/test:368:20)
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/editable-vacancy-prompts.acceptance.test.mjs:199:11)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+			</failure>
+		</testcase>
+	</testsuite>
+	<!-- tests 5 -->
+	<!-- suites 0 -->
+	<!-- pass 0 -->
+	<!-- fail 5 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 1309.7555 -->
+</testsuites>

@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAtUtc": "2026-08-20T08:27:50.544Z",
+  "status": "BLOCKED",
+  "classification": "environment-preflight",
+  "productionAcceptanceClaimed": false,
+  "checks": [
+    {
+      "name": "preflight",
+      "ready": false,
+      "detail": "Missing E2E configuration: E2E_BASE_URL, E2E_AUTH_STORAGE_STATE, E2E_PREFLIGHT_TOKEN, E2E_CONTROL_URL, E2E_CONTROL_TOKEN, E2E_FIXTURE_SET_ID, E2E_BUILD_ID, E2E_ENVIRONMENT, E2E_ALLOW_DESTRUCTIVE_CLEANUP"
+    }
+  ]
+}

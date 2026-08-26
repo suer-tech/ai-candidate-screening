@@ -1,0 +1,27 @@
+[Unit]
+Description=HH durable agent runtime worker
+After=network-online.target postgresql.service hh-web.service
+Wants=network-online.target
+Requires=postgresql.service hh-web.service
+
+[Service]
+Type=simple
+User=hh-agent
+Group=hh-agent
+WorkingDirectory=/opt/hh-agent/current/web
+Environment=HH_RUNTIME_CONFIG_ROOT=/etc/hh-agent
+ExecStart=/usr/bin/npm run service:agent-worker
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=35
+KillSignal=SIGTERM
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/hh-agent /var/log/hh-agent
+LimitNOFILE=65536
+MemoryMax=2G
+
+[Install]
+WantedBy=multi-user.target

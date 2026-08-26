@@ -1,104 +1,83 @@
 # Архитектура проекта
 
-Статус: требования зафиксированы; первый веб-интерфейс находится в `web/` и работает на демонстрационных данных.
+## Назначение и фактический runtime
 
-## Назначение
+Сервис автоматизирует найм: HR вручную задаёт название вакансии, RouterAI генерирует редактируемый профиль, а автономный durable runtime обнаруживает материалы кандидата в личном Google My Drive, транскрибирует интервью, строит доказательную оценку, публикует два PDF и отправляет Telegram-уведомление.
 
-AI-скриннер автоматически получает резюме и запись интервью из Google Drive, формирует транскрипцию и доказательный анализ кандидата относительно конкретной вакансии, сохраняет версию результата и уведомляет HR.
+Production-контур не использует Cloudflare, D1, R2, Shared Drive или service account. Его состав: Node.js/Nitro web, постоянный agent worker, локальные media/document processors и PostgreSQL 16. На Windows PostgreSQL работает в Docker Compose; на Ubuntu — как loopback-only системная служба.
 
-## Планируемый поток
+## Точки запуска
 
-```text
-Google Drive
-  -> опрос новых папок каждые 15 секунд
-  -> три последовательные минуты стабильности количества и размеров файлов
-  -> фиксация версий файлов и старт SLA
-  -> проверка комплектности
-  -> извлечение текста резюме
-  -> фоновое извлечение аудио из видео через FFmpeg
-  -> AssemblyAI EU: русский Universal-2 + диаризация
-  -> raw JSON + внутренний transcript schema v1 + TXT
-  -> извлечение фактов и доказательств
-  -> оценка по версии профиля вакансии
-  -> проверка результата
-  -> отчёт и уведомление
-```
+- `web/scripts/run-runtime-process.ts` — единая точка процессов `web`, `worker`, `media`, `document`, `controller` и приватного `benchmark`.
+- `web/app/api/` — публичные product/OAuth/health routes и закрытые internal runtime/tool routes Nitro.
+- `deploy/local/local.ps1` — Windows-команды `bootstrap`, `check`, `start`, `stop`.
+- `deploy/ubuntu/install.sh` — immutable release, PostgreSQL 16, systemd, nginx Basic Auth/TLS, firewall и backup timers на Ubuntu.
+- `web/scripts/postgres-migrate.ts` — forward-only PostgreSQL migrations под advisory lock.
 
-## Планируемые границы компонентов
-
-- Drive ingestion: обнаружение изменений, получение метаданных и файлов, дедупликация.
-- Workflow: состояния кандидата, фоновые задания, повторы и SLA.
-- Document processing: извлечение текста и локаторов из документов.
-- Transcription: сегменты, говорящие, таймкоды и уверенность.
-- Assessment: факты, противоречия, ABC, компетенции, риски и стоп-факторы.
-- Reporting: версионируемый отчёт и ссылки на доказательства.
-- Vacancy administration: параметры и версии профилей вакансий.
-- Notifications: готовность, недостаток материалов, ошибки и превышение SLA.
-- Audit and access: роли, журнал действий и жизненный цикл персональных данных.
-
-## Планируемое создание вакансии
+## Основной поток данных
 
 ```text
-HR вводит только название вакансии
-  -> серверный LLM-контур формирует структурированный черновик критериев
-  -> веб-интерфейс показывает предзаполненные редактируемые поля
-  -> HR вносит правки и сохраняет версию 1
-  -> единая запись вакансии становится источником для списков, фильтров,
-     привязки кандидатов, анализа, отчётов, дашборда и аудита
+HR: название вакансии
+  -> RouterAI: структурированный профиль (до 4 попыток)
+  -> preview и подтверждение HR
+  -> папка вакансии в личном My Drive
+
+My Drive: папка кандидата
+  -> discovery каждые 15 секунд
+  -> три последовательных минутных снимка без изменений
+  -> immutable input version и durable goal/plan/tasks в PostgreSQL
+  -> PDF/DOCX extraction + FFmpeg + AssemblyAI EU
+  -> protected LLM traces и evidence graph
+  -> при matrix routing: shared claim одной матрицы на profileVersion
+  -> LLM compile (semantic required; hardRequired только для stop-factor sourceRef) -> один clean critic-editor возвращает окончательную матрицу -> immutable checksum publish
+  -> decision-safe нормализованная стенограмма разбивается на перекрывающиеся окна по полному токенному бюджету provider-запроса без суммаризации
+  -> claims извлекаются из каждого окна и объединяются -> global conflicts по всем пакетам -> все matrix rows -> critical row verification
+  -> unmapped INFORMATIONAL signals -> assess-unmapped-risk -> independent verify-critical-risk
+  -> eval gate; retry, repair, replan либо WAITING_FOR_HUMAN
+  -> versioned assessment и два PDF
+  -> outbox/reconcile: My Drive + Telegram
+  -> READY=100%
 ```
 
-Сквозной поток создания вакансии принимается по `E2E-VAC-001` из `openspec/specs/quality-gates/spec.md`. Тестовую документацию и фактическую приёмку выполняет независимый субагент, не участвовавший в основной реализации этого потока.
+## Границы модулей
 
-## Приёмочный production gate
+- `web/server/configuration/` — fail-closed загрузка одного `runtime.env`, точного credential allowlist и server dependency container.
+- `web/server/storage/` и `web/drizzle-postgres/` — PostgreSQL pool, migrations, `bytea` blob store и приватные временные каталоги.
+- `web/server/product/` — вакансии, кандидаты, lifecycle, dashboard и LLM-генерация вакансии.
+- `web/server/google-drive-oauth/` — personal OAuth PKCE, AES-256-GCM token envelope, optimistic refresh, My Drive registry и descendant/tool-grant checks.
+- `web/server/agent-runtime/` — goal graph, durable queue, leases/fencing, checkpoints, grants, budgets, memory, eval/repair/replan, escalation/resume и outbox/compensation.
+- `web/server/candidate-pipeline/` — discovery, material classification, document/media/transcription tools, facts/evidence, assessment, reports, notifications и progress projection.
+- `web/server/candidate-pipeline/matrix-driven.ts`, `matrix-compilation.ts`, `matrix-postgres-repository.ts` — canonical matrix contract, LLM-requiredness с техническим `hardRequired ↔ stop-factor sourceRef` gate, single-pass compiler/critic-editor coordinator, deterministic formula и shared PostgreSQL persistence. Критик один раз возвращает полный окончательный successor; отдельные repair/re-critique не блокируют кандидата. Отдельного requirements UI/write-поля нет; `VacancyRecord.requirements` читается только для совместимости старых записей.
+- `web/server/media-processor/`, `web/server/document-processor/` — loopback-only тяжёлые обработчики с отдельными bearer tokens.
+- `web/server/llm/` — RouterAI/OpenAI-compatible gateway, strict Structured Outputs через отдельный `response_format.json_schema`, рекурсивная fail-closed проверка response artifacts, capability routing, budgets и защищённые трассы без секретов в событиях. JSON Schema не дублируется в prompt messages; выбранная RouterAI-модель обязана явно поддерживать Structured Outputs.
 
-```text
-согласованные спецификации
-  -> независимый субагент создаёт исполняемые приёмочные тесты
-  -> ожидаемый RED для ещё не реализованного поведения
-  -> реализация или изменение модели/компонента
-  -> GREEN: VAC + transcript + ABC file + candidate results file
-  -> production release
-```
+## Персистентность и эффекты
 
-Единый обязательный набор состоит из `E2E-VAC-001`, `E2E-TRN-001`, `E2E-ABC-001` и `E2E-RESULT-001`. Он проверяет содержимое и взаимную согласованность артефактов, повторяется после изменений кода, моделей, инструкций, схем и интеграций и блокирует production-релиз при любом падении. Подробные критерии находятся в `openspec/specs/quality-gates/spec.md`.
+PostgreSQL хранит product state, OAuth state, goal/run/task/event projections, checkpoints, grants/budgets, evidence/assessment/report metadata, outbox и bounded binary artifacts. Queue claim использует `FOR UPDATE SKIP LOCKED`; lease token является fencing token. Matrix migration добавляет immutable vacancy matrix на точную `profileVersion`, fenced compilation lease и candidate/run/input-scoped claims, conflicts и rows. `agent_runs.workflow_version` фиксируется при создании и не меняется после переключения routing. Внешняя запись проходит через intent/outbox, а неизвестный исход сверяется перед повтором. Неустранимые препятствия дают типизированную эскалацию с причиной, evidence и допустимыми действиями человека.
 
-## Текущая реализация
+Новая семантика фиксируется как `matrix-v2`. Формула отклоняет кандидата при подтверждённом срабатывании стоп-фактора, доказанном несоответствии LLM-классифицированному `required` или independently verified `criticalUnmappedRisk`. Open pass сам не принимает решение: критический риск является candidate-scoped artifact с отдельными assessment/verification traces, evidence locators и не изменяет shared vacancy matrix. Непроверенный сигнал остаётся INFORMATIONAL, подтверждённый некритичный риск — оговоркой.
 
-- `web/app/page.tsx` — клиентский прототип кабинета: очередь кандидатов, карточка анализа и редактор вакансии.
-- `web/app/abc-profile-validation.ts` — чистый валидатор ABC-профиля: минимум одно направление, непустые после trim название и A/B/C, уникальность нормализованных названий и структурированные ошибки коллекции, направления и поля.
-- Редактор вакансии получает ABC-направления из выбранного демонстрационного профиля. Для вакансии «Бизнес-ассистент» `BUSINESS_ASSISTANT_ABC_DIRECTIONS` содержит пять направлений с короткими описаниями A/B/C; остальные текущие демонстрационные профили ещё ожидают отдельного согласования. HR может добавлять, переименовывать и удалять направления и адаптировать признаки. Невалидный черновик не повышает локальную версию; ошибки сохраняются рядом с полями и пересчитываются после исправления. В прототипе состояние живёт в браузере; целевая серверная реализация должна повторить правила на серверной границе сохранения.
-- `web/app/globals.css` — адаптивная визуальная система интерфейса.
-- `web/app/layout.tsx` — общая разметка и метаданные приложения.
-- `web/server/transcription/` — отдельный Node-модуль извлечения аудио через FFmpeg, отправки в AssemblyAI и сохранения стенограммы. Он не выполняется внутри Cloudflare Worker.
-- `web/.openai/hosting.json` — конфигурация размещения Sites; постоянное хранилище пока не подключено.
+Google доступ — только к явно выбранному корню личного My Drive и зарегистрированным потомкам. OAuth refresh token зашифрован; браузер получает только безопасную проекцию подключения. Provider secrets читаются из отдельных файлов и не передаются в CLI или логи.
 
-## Команды разработки
+## Конфигурация и эксплуатация
 
-- `cd web && npm test` — сборка и полный доступный unit/rendered/acceptance-набор.
-- `cd web && npm run test:acceptance` — независимый `ACC-VAC-ABC-001` для `VAC-017`/`VAC-019`.
-- `cd web && npm run test:abc` — focused tests чистого ABC-валидатора.
-- `cd web && npm run test:ui` — доступность и постоянное отображение ABC-ошибок.
-- `cd web && npm run lint` — ESLint; в текущем baseline остаётся ранее существующая ошибка `react-hooks/set-state-in-effect` в инициализации темы.
+- Локально: `web/.runtime/runtime.env` и ровно восемь файлов в `web/.runtime/credentials/`; каталог игнорируется Git.
+- VPS: `/etc/hh-agent/runtime.env` и `/etc/hh-agent/credentials/`; web доступен через nginx HTTPS + Basic Auth, который перезаписывает доверенный principal, PostgreSQL и processors слушают только loopback.
+- `cd web && npm run build:id` — детерминированный immutable build ID из delivery-файлов без чтения ignored credentials/candidate.
+- Runtime preflight сверяет точный URL/host/port/route media и document processors, чтобы задача не стартовала при рассинхронизации loopback endpoint.
+- `npm run preflight:runtime` проверяет migrations, OAuth/runtime/provider configuration и запрещённые legacy settings.
+- `npm run security:sentinel` ищет реальные значения credentials в source, logs, evidence и текстовых/JSON полях PostgreSQL, не печатая сами значения.
+- Daily `pg_dump` шифруется `age`; отдельный timer проверяет восстановление в изолированную временную БД. Rollback только forward-compatible, без destructive down migration.
 
-## Реализованный поток транскрибации
+## Проверки
 
-```text
-private video file
-  -> extractAudioTrack: first audio stream -> temporary M4A
-  -> transcribeAudio: AssemblyAI EU, ru, universal-2, speaker labels
-  -> persist: provider response + schemaVersion 1 artifact + timestamped TXT
-  -> delete AssemblyAI transcript
-  -> remove temporary audio
-  -> normalized JSON becomes input for later AI models
-```
+- `cd web && npm run local:bootstrap|local:check|local:start|local:stop` — локальный lifecycle.
+- `cd web && npm test` — build и основной unit/rendered/acceptance regression.
+- `cd web && npm run test:postgres-integration` — реальные PostgreSQL/OAuth/temp invariants.
+- `cd web && npm run test:vps-postgres` — migration/runtime/VPS acceptance.
+- `cd web && node --test tests/matrix-driven-assessment.acceptance.test.mjs` — независимый synthetic matrix-driven acceptance-контур.
+- `cd web && npm run local:status` — безопасная сводка web/worker/processors/PostgreSQL без PID, credentials и provider IDs.
+- `cd web && npm run e2e:required` — обязательные `E2E-VAC-001`, `E2E-TRN-001`, `E2E-ABC-001`, `E2E-RESULT-001` в provisioned среде.
+- `cd web && npm run benchmark:preflight -- --record-consent` и `npm run benchmark:run` — ignored локальный benchmark; reference-файлы служат только offline oracle и запрещены на Drive/provider/blob boundaries.
 
-- Точка запуска: `npm run transcribe:candidate -- --input <file> --output <dir>` из `web/`.
-- `pipeline.ts` оркестрирует жизненный цикл и атомарно сохраняет результаты.
-- `extract-audio.ts` использует bundled `ffmpeg-static`; быстрый путь копирует AAC без потери качества.
-- `assemblyai-client.ts` получает ключ только из `ASSEMBLYAI_API_KEY` и по умолчанию использует EU endpoint.
-- `format-transcript.ts` отделяет внутреннюю схему от структуры ответа провайдера.
-- Постоянное сохранение M4A включается только диагностической опцией `--keep-audio`; точное число говорящих передаётся только при достоверном знании.
-
-Контрольный прогон 2026-08-17 на MP4 длительностью 47 минут завершён успешно: из видео получен M4A около 32,5 MB, AssemblyAI вернул русскую стенограмму с двумя метками говорящих, словами, репликами, таймкодами и уверенностью; удалённая копия после локального сохранения удалена.
-
-Остальные части технологического стека и физическое разбиение ещё не утверждены. Нормативный источник требований: [main OpenSpec specifications](../openspec/specs/).
+Нормативный источник согласованных требований — `openspec/specs/`. Active changes не заменяют main specs до явной синхронизации.

@@ -1,0 +1,471 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="VAC-042: each empty profile field generates once into the unsaved draft and preserves state on error" time="0.016321" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\field-level-vacancy-generation.acceptance.test.mjs" failure="Field-level vacancy generation conformance boundary is absent: export runFieldLevelVacancyGenerationConformanceScenario(fixture) from server/product/application.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;supportedFields: expected exact [&amp;quot;Образ результата&amp;quot;,&amp;quot;Компетенции&amp;quot;,&amp;quot;Стоп-факторы&amp;quot;,&amp;quot;Допуск к КЕ&amp;quot;]; actual=undefined&#10;confirmationRequired: expected true; actual=undefined&#10;callsBeforeConfirmation: expected 0; actual=undefined&#10;callsAfterCancelledConfirmation: expected 0; actual=undefined&#10;confirmedProviderCalls: expected 1; actual=undefined&#10;spinnerVisible: expected true; actual=undefined&#10;repeatedLaunchBlocked: expected true; actual=undefined&#10;selectedFieldOnlyChanged: expected true; actual=undefined&#10;otherFieldsUnchanged: expected true; actual=undefined&#10;abcUnchanged: expected true; actual=undefined&#10;pageReloads: expected 0; actual=undefined&#10;versionsCreated: expected 0; actual=undefined&#10;actionHiddenAfterFill: expected true; actual=undefined&#10;actionHiddenForInitiallyFilledField: expected true; actual=undefined&#10;errorPreservesEntireDraft: expected true; actual=undefined&#10;errorVisible: expected true; actual=undefined&#10;retryAvailable: expected true; actual=undefined&#10;&#10;19 !== 0&#10;">
+		<failure type="testCodeFailure" message="Field-level vacancy generation conformance boundary is absent: export runFieldLevelVacancyGenerationConformanceScenario(fixture) from server/product/application.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;supportedFields: expected exact [&amp;quot;Образ результата&amp;quot;,&amp;quot;Компетенции&amp;quot;,&amp;quot;Стоп-факторы&amp;quot;,&amp;quot;Допуск к КЕ&amp;quot;]; actual=undefined&#10;confirmationRequired: expected true; actual=undefined&#10;callsBeforeConfirmation: expected 0; actual=undefined&#10;callsAfterCancelledConfirmation: expected 0; actual=undefined&#10;confirmedProviderCalls: expected 1; actual=undefined&#10;spinnerVisible: expected true; actual=undefined&#10;repeatedLaunchBlocked: expected true; actual=undefined&#10;selectedFieldOnlyChanged: expected true; actual=undefined&#10;otherFieldsUnchanged: expected true; actual=undefined&#10;abcUnchanged: expected true; actual=undefined&#10;pageReloads: expected 0; actual=undefined&#10;versionsCreated: expected 0; actual=undefined&#10;actionHiddenAfterFill: expected true; actual=undefined&#10;actionHiddenForInitiallyFilledField: expected true; actual=undefined&#10;errorPreservesEntireDraft: expected true; actual=undefined&#10;errorVisible: expected true; actual=undefined&#10;retryAvailable: expected true; actual=undefined&#10;&#10;19 !== 0">
+[Error [ERR_TEST_FAILURE]: Field-level vacancy generation conformance boundary is absent: export runFieldLevelVacancyGenerationConformanceScenario(fixture) from server/product/application.ts
+status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+supportedFields: expected exact ["Образ результата","Компетенции","Стоп-факторы","Допуск к КЕ"]; actual=undefined
+confirmationRequired: expected true; actual=undefined
+callsBeforeConfirmation: expected 0; actual=undefined
+callsAfterCancelledConfirmation: expected 0; actual=undefined
+confirmedProviderCalls: expected 1; actual=undefined
+spinnerVisible: expected true; actual=undefined
+repeatedLaunchBlocked: expected true; actual=undefined
+selectedFieldOnlyChanged: expected true; actual=undefined
+otherFieldsUnchanged: expected true; actual=undefined
+abcUnchanged: expected true; actual=undefined
+pageReloads: expected 0; actual=undefined
+versionsCreated: expected 0; actual=undefined
+actionHiddenAfterFill: expected true; actual=undefined
+actionHiddenForInitiallyFilledField: expected true; actual=undefined
+errorPreservesEntireDraft: expected true; actual=undefined
+errorVisible: expected true; actual=undefined
+retryAvailable: expected true; actual=undefined
+
+19 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Field-level vacancy generation conformance boundary is absent: export runFieldLevelVacancyGenerationConformanceScenario(fixture) from server/product/application.ts
+  status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+  supportedFields: expected exact ["Образ результата","Компетенции","Стоп-факторы","Допуск к КЕ"]; actual=undefined
+  confirmationRequired: expected true; actual=undefined
+  callsBeforeConfirmation: expected 0; actual=undefined
+  callsAfterCancelledConfirmation: expected 0; actual=undefined
+  confirmedProviderCalls: expected 1; actual=undefined
+  spinnerVisible: expected true; actual=undefined
+  repeatedLaunchBlocked: expected true; actual=undefined
+  selectedFieldOnlyChanged: expected true; actual=undefined
+  otherFieldsUnchanged: expected true; actual=undefined
+  abcUnchanged: expected true; actual=undefined
+  pageReloads: expected 0; actual=undefined
+  versionsCreated: expected 0; actual=undefined
+  actionHiddenAfterFill: expected true; actual=undefined
+  actionHiddenForInitiallyFilledField: expected true; actual=undefined
+  errorPreservesEntireDraft: expected true; actual=undefined
+  errorVisible: expected true; actual=undefined
+  retryAvailable: expected true; actual=undefined
+  
+  19 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/field-level-vacancy-generation.acceptance.test.mjs:11:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 19,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="VAC-043: five operation prompts are Russian structured vacancy-scoped snapshots used exactly by the LLM request" time="0.000318" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\field-level-vacancy-generation.acceptance.test.mjs" failure="Field-level vacancy generation conformance boundary is absent: export runFieldLevelVacancyGenerationConformanceScenario(fixture) from server/product/application.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;operationPrompts: expected exact [&amp;quot;Образ результата&amp;quot;,&amp;quot;Компетенции&amp;quot;,&amp;quot;Стоп-факторы&amp;quot;,&amp;quot;Допуск к КЕ&amp;quot;,&amp;quot;ABC-критерии&amp;quot;]; actual=undefined&#10;defaultsRussian: expected true; actual=undefined&#10;defaultsStructured: expected true; actual=undefined&#10;defaultsContainExactVacancyTitle: expected true; actual=undefined&#10;promptsStoredSeparatelyByOperation: expected true; actual=undefined&#10;promptsStoredSeparatelyByVacancy: expected true; actual=undefined&#10;editedPromptPersisted: expected true; actual=undefined&#10;unrelatedPromptsUnchanged: expected true; actual=undefined&#10;nextLlmRequestContainsExactSavedPrompt: expected true; actual=undefined&#10;promptOccurrencesInRequest: expected 1; actual=undefined&#10;requestVacancyIdMatches: expected true; actual=undefined&#10;&#10;13 !== 0&#10;">
+		<failure type="testCodeFailure" message="Field-level vacancy generation conformance boundary is absent: export runFieldLevelVacancyGenerationConformanceScenario(fixture) from server/product/application.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;operationPrompts: expected exact [&amp;quot;Образ результата&amp;quot;,&amp;quot;Компетенции&amp;quot;,&amp;quot;Стоп-факторы&amp;quot;,&amp;quot;Допуск к КЕ&amp;quot;,&amp;quot;ABC-критерии&amp;quot;]; actual=undefined&#10;defaultsRussian: expected true; actual=undefined&#10;defaultsStructured: expected true; actual=undefined&#10;defaultsContainExactVacancyTitle: expected true; actual=undefined&#10;promptsStoredSeparatelyByOperation: expected true; actual=undefined&#10;promptsStoredSeparatelyByVacancy: expected true; actual=undefined&#10;editedPromptPersisted: expected true; actual=undefined&#10;unrelatedPromptsUnchanged: expected true; actual=undefined&#10;nextLlmRequestContainsExactSavedPrompt: expected true; actual=undefined&#10;promptOccurrencesInRequest: expected 1; actual=undefined&#10;requestVacancyIdMatches: expected true; actual=undefined&#10;&#10;13 !== 0">
+[Error [ERR_TEST_FAILURE]: Field-level vacancy generation conformance boundary is absent: export runFieldLevelVacancyGenerationConformanceScenario(fixture) from server/product/application.ts
+status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+operationPrompts: expected exact ["Образ результата","Компетенции","Стоп-факторы","Допуск к КЕ","ABC-критерии"]; actual=undefined
+defaultsRussian: expected true; actual=undefined
+defaultsStructured: expected true; actual=undefined
+defaultsContainExactVacancyTitle: expected true; actual=undefined
+promptsStoredSeparatelyByOperation: expected true; actual=undefined
+promptsStoredSeparatelyByVacancy: expected true; actual=undefined
+editedPromptPersisted: expected true; actual=undefined
+unrelatedPromptsUnchanged: expected true; actual=undefined
+nextLlmRequestContainsExactSavedPrompt: expected true; actual=undefined
+promptOccurrencesInRequest: expected 1; actual=undefined
+requestVacancyIdMatches: expected true; actual=undefined
+
+13 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Field-level vacancy generation conformance boundary is absent: export runFieldLevelVacancyGenerationConformanceScenario(fixture) from server/product/application.ts
+  status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+  operationPrompts: expected exact ["Образ результата","Компетенции","Стоп-факторы","Допуск к КЕ","ABC-критерии"]; actual=undefined
+  defaultsRussian: expected true; actual=undefined
+  defaultsStructured: expected true; actual=undefined
+  defaultsContainExactVacancyTitle: expected true; actual=undefined
+  promptsStoredSeparatelyByOperation: expected true; actual=undefined
+  promptsStoredSeparatelyByVacancy: expected true; actual=undefined
+  editedPromptPersisted: expected true; actual=undefined
+  unrelatedPromptsUnchanged: expected true; actual=undefined
+  nextLlmRequestContainsExactSavedPrompt: expected true; actual=undefined
+  promptOccurrencesInRequest: expected 1; actual=undefined
+  requestVacancyIdMatches: expected true; actual=undefined
+  
+  13 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/field-level-vacancy-generation.acceptance.test.mjs:11:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 13,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="VAC-044: one ABC request preserves exact actual standard/custom/reduced composition and skips zero directions" time="0.001731" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\field-level-vacancy-generation.acceptance.test.mjs" failure="Field-level vacancy generation conformance boundary is absent: export runFieldLevelVacancyGenerationConformanceScenario(fixture) from server/product/application.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;confirmedRequestsPerNonEmptyComposition: expected 1; actual=undefined&#10;spinnerVisible: expected true; actual=undefined&#10;repeatedLaunchBlocked: expected true; actual=undefined&#10;pageReloads: expected 0; actual=undefined&#10;versionsCreated: expected 0; actual=undefined&#10;mixed.idsPreserved: expected true; actual=undefined&#10;mixed.namesPreserved: expected true; actual=undefined&#10;mixed.originsPreserved: expected true; actual=undefined&#10;mixed.orderPreserved: expected true; actual=undefined&#10;mixed.countPreserved: expected true; actual=undefined&#10;mixed.gradesFilledAtomically: expected true; actual=undefined&#10;reduced.idsPreserved: expected true; actual=undefined&#10;reduced.namesPreserved: expected true; actual=undefined&#10;reduced.originsPreserved: expected true; actual=undefined&#10;reduced.orderPreserved: expected true; actual=undefined&#10;reduced.countPreserved: expected true; actual=undefined&#10;reduced.gradesFilledAtomically: expected true; actual=undefined&#10;zero.providerCalls: expected 0; actual=undefined&#10;zero.explainsAddDirectionFirst: expected true; actual=undefined&#10;responseMismatchApplied: expected false; actual=undefined&#10;&#10;22 !== 0&#10;">
+		<failure type="testCodeFailure" message="Field-level vacancy generation conformance boundary is absent: export runFieldLevelVacancyGenerationConformanceScenario(fixture) from server/product/application.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;confirmedRequestsPerNonEmptyComposition: expected 1; actual=undefined&#10;spinnerVisible: expected true; actual=undefined&#10;repeatedLaunchBlocked: expected true; actual=undefined&#10;pageReloads: expected 0; actual=undefined&#10;versionsCreated: expected 0; actual=undefined&#10;mixed.idsPreserved: expected true; actual=undefined&#10;mixed.namesPreserved: expected true; actual=undefined&#10;mixed.originsPreserved: expected true; actual=undefined&#10;mixed.orderPreserved: expected true; actual=undefined&#10;mixed.countPreserved: expected true; actual=undefined&#10;mixed.gradesFilledAtomically: expected true; actual=undefined&#10;reduced.idsPreserved: expected true; actual=undefined&#10;reduced.namesPreserved: expected true; actual=undefined&#10;reduced.originsPreserved: expected true; actual=undefined&#10;reduced.orderPreserved: expected true; actual=undefined&#10;reduced.countPreserved: expected true; actual=undefined&#10;reduced.gradesFilledAtomically: expected true; actual=undefined&#10;zero.providerCalls: expected 0; actual=undefined&#10;zero.explainsAddDirectionFirst: expected true; actual=undefined&#10;responseMismatchApplied: expected false; actual=undefined&#10;&#10;22 !== 0">
+[Error [ERR_TEST_FAILURE]: Field-level vacancy generation conformance boundary is absent: export runFieldLevelVacancyGenerationConformanceScenario(fixture) from server/product/application.ts
+status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+confirmedRequestsPerNonEmptyComposition: expected 1; actual=undefined
+spinnerVisible: expected true; actual=undefined
+repeatedLaunchBlocked: expected true; actual=undefined
+pageReloads: expected 0; actual=undefined
+versionsCreated: expected 0; actual=undefined
+mixed.idsPreserved: expected true; actual=undefined
+mixed.namesPreserved: expected true; actual=undefined
+mixed.originsPreserved: expected true; actual=undefined
+mixed.orderPreserved: expected true; actual=undefined
+mixed.countPreserved: expected true; actual=undefined
+mixed.gradesFilledAtomically: expected true; actual=undefined
+reduced.idsPreserved: expected true; actual=undefined
+reduced.namesPreserved: expected true; actual=undefined
+reduced.originsPreserved: expected true; actual=undefined
+reduced.orderPreserved: expected true; actual=undefined
+reduced.countPreserved: expected true; actual=undefined
+reduced.gradesFilledAtomically: expected true; actual=undefined
+zero.providerCalls: expected 0; actual=undefined
+zero.explainsAddDirectionFirst: expected true; actual=undefined
+responseMismatchApplied: expected false; actual=undefined
+
+22 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Field-level vacancy generation conformance boundary is absent: export runFieldLevelVacancyGenerationConformanceScenario(fixture) from server/product/application.ts
+  status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+  confirmedRequestsPerNonEmptyComposition: expected 1; actual=undefined
+  spinnerVisible: expected true; actual=undefined
+  repeatedLaunchBlocked: expected true; actual=undefined
+  pageReloads: expected 0; actual=undefined
+  versionsCreated: expected 0; actual=undefined
+  mixed.idsPreserved: expected true; actual=undefined
+  mixed.namesPreserved: expected true; actual=undefined
+  mixed.originsPreserved: expected true; actual=undefined
+  mixed.orderPreserved: expected true; actual=undefined
+  mixed.countPreserved: expected true; actual=undefined
+  mixed.gradesFilledAtomically: expected true; actual=undefined
+  reduced.idsPreserved: expected true; actual=undefined
+  reduced.namesPreserved: expected true; actual=undefined
+  reduced.originsPreserved: expected true; actual=undefined
+  reduced.orderPreserved: expected true; actual=undefined
+  reduced.countPreserved: expected true; actual=undefined
+  reduced.gradesFilledAtomically: expected true; actual=undefined
+  zero.providerCalls: expected 0; actual=undefined
+  zero.explainsAddDirectionFirst: expected true; actual=undefined
+  responseMismatchApplied: expected false; actual=undefined
+  
+  22 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/field-level-vacancy-generation.acceptance.test.mjs:11:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 22,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="VAC-045: all-generation warns that every populated section is overwritten and cancellation has no effects" time="0.000151" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\field-level-vacancy-generation.acceptance.test.mjs" failure="Field-level vacancy generation conformance boundary is absent: export runFieldLevelVacancyGenerationConformanceScenario(fixture) from server/product/application.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;actionStillAvailable: expected true; actual=undefined&#10;warningBeforeApi: expected true; actual=undefined&#10;warningMentionsAllSections: expected true; actual=undefined&#10;warningMentionsOverwriteExistingValues: expected true; actual=undefined&#10;cancelled.apiCalls: expected 0; actual=undefined&#10;cancelled.providerCalls: expected 0; actual=undefined&#10;cancelled.draftChanged: expected false; actual=undefined&#10;cancelled.versionsCreated: expected 0; actual=undefined&#10;confirmed.apiCalls: expected 1; actual=undefined&#10;confirmed.spinnerVisible: expected true; actual=undefined&#10;confirmed.structuredDraftApplied: expected true; actual=undefined&#10;confirmed.versionsCreated: expected 0; actual=undefined&#10;&#10;14 !== 0&#10;">
+		<failure type="testCodeFailure" message="Field-level vacancy generation conformance boundary is absent: export runFieldLevelVacancyGenerationConformanceScenario(fixture) from server/product/application.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;actionStillAvailable: expected true; actual=undefined&#10;warningBeforeApi: expected true; actual=undefined&#10;warningMentionsAllSections: expected true; actual=undefined&#10;warningMentionsOverwriteExistingValues: expected true; actual=undefined&#10;cancelled.apiCalls: expected 0; actual=undefined&#10;cancelled.providerCalls: expected 0; actual=undefined&#10;cancelled.draftChanged: expected false; actual=undefined&#10;cancelled.versionsCreated: expected 0; actual=undefined&#10;confirmed.apiCalls: expected 1; actual=undefined&#10;confirmed.spinnerVisible: expected true; actual=undefined&#10;confirmed.structuredDraftApplied: expected true; actual=undefined&#10;confirmed.versionsCreated: expected 0; actual=undefined&#10;&#10;14 !== 0">
+[Error [ERR_TEST_FAILURE]: Field-level vacancy generation conformance boundary is absent: export runFieldLevelVacancyGenerationConformanceScenario(fixture) from server/product/application.ts
+status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+actionStillAvailable: expected true; actual=undefined
+warningBeforeApi: expected true; actual=undefined
+warningMentionsAllSections: expected true; actual=undefined
+warningMentionsOverwriteExistingValues: expected true; actual=undefined
+cancelled.apiCalls: expected 0; actual=undefined
+cancelled.providerCalls: expected 0; actual=undefined
+cancelled.draftChanged: expected false; actual=undefined
+cancelled.versionsCreated: expected 0; actual=undefined
+confirmed.apiCalls: expected 1; actual=undefined
+confirmed.spinnerVisible: expected true; actual=undefined
+confirmed.structuredDraftApplied: expected true; actual=undefined
+confirmed.versionsCreated: expected 0; actual=undefined
+
+14 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Field-level vacancy generation conformance boundary is absent: export runFieldLevelVacancyGenerationConformanceScenario(fixture) from server/product/application.ts
+  status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+  actionStillAvailable: expected true; actual=undefined
+  warningBeforeApi: expected true; actual=undefined
+  warningMentionsAllSections: expected true; actual=undefined
+  warningMentionsOverwriteExistingValues: expected true; actual=undefined
+  cancelled.apiCalls: expected 0; actual=undefined
+  cancelled.providerCalls: expected 0; actual=undefined
+  cancelled.draftChanged: expected false; actual=undefined
+  cancelled.versionsCreated: expected 0; actual=undefined
+  confirmed.apiCalls: expected 1; actual=undefined
+  confirmed.spinnerVisible: expected true; actual=undefined
+  confirmed.structuredDraftApplied: expected true; actual=undefined
+  confirmed.versionsCreated: expected 0; actual=undefined
+  
+  14 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/field-level-vacancy-generation.acceptance.test.mjs:11:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 14,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="VAC-046: one dirty guard covers settings, internal navigation and beforeunload with discard, save and close semantics" time="0.000188" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\field-level-vacancy-generation.acceptance.test.mjs" failure="Field-level vacancy generation conformance boundary is absent: export runFieldLevelVacancyGenerationConformanceScenario(fixture) from server/product/application.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;manualEditMarksDirty: expected true; actual=undefined&#10;generatedEditMarksDirty: expected true; actual=undefined&#10;guardedTransitions: expected exact [&amp;quot;settings-section&amp;quot;,&amp;quot;internal-page&amp;quot;]; actual=undefined&#10;beforeUnloadOnlyWhenDirty: expected true; actual=undefined&#10;dialog.discardLabel: expected &amp;quot;Не сохранять&amp;quot;; actual=undefined&#10;dialog.discardColor: expected &amp;quot;red&amp;quot;; actual=undefined&#10;dialog.saveLabel: expected &amp;quot;Сохранить изменения&amp;quot;; actual=undefined&#10;dialog.saveColor: expected &amp;quot;blue&amp;quot;; actual=undefined&#10;dialog.closeControl: expected true; actual=undefined&#10;close.transitionPerformed: expected false; actual=undefined&#10;close.draftPreserved: expected true; actual=undefined&#10;discard.savedSnapshotRestored: expected true; actual=undefined&#10;discard.transitionPerformed: expected true; actual=undefined&#10;discard.versionsCreated: expected 0; actual=undefined&#10;saveSuccess.versionsCreated: expected 1; actual=undefined&#10;saveSuccess.waitsForSave: expected true; actual=undefined&#10;saveSuccess.transitionPerformedAfterSave: expected true; actual=undefined&#10;saveFailure.transitionPerformed: expected false; actual=undefined&#10;saveFailure.draftPreserved: expected true; actual=undefined&#10;saveFailure.errorVisible: expected true; actual=undefined&#10;&#10;22 !== 0&#10;">
+		<failure type="testCodeFailure" message="Field-level vacancy generation conformance boundary is absent: export runFieldLevelVacancyGenerationConformanceScenario(fixture) from server/product/application.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;manualEditMarksDirty: expected true; actual=undefined&#10;generatedEditMarksDirty: expected true; actual=undefined&#10;guardedTransitions: expected exact [&amp;quot;settings-section&amp;quot;,&amp;quot;internal-page&amp;quot;]; actual=undefined&#10;beforeUnloadOnlyWhenDirty: expected true; actual=undefined&#10;dialog.discardLabel: expected &amp;quot;Не сохранять&amp;quot;; actual=undefined&#10;dialog.discardColor: expected &amp;quot;red&amp;quot;; actual=undefined&#10;dialog.saveLabel: expected &amp;quot;Сохранить изменения&amp;quot;; actual=undefined&#10;dialog.saveColor: expected &amp;quot;blue&amp;quot;; actual=undefined&#10;dialog.closeControl: expected true; actual=undefined&#10;close.transitionPerformed: expected false; actual=undefined&#10;close.draftPreserved: expected true; actual=undefined&#10;discard.savedSnapshotRestored: expected true; actual=undefined&#10;discard.transitionPerformed: expected true; actual=undefined&#10;discard.versionsCreated: expected 0; actual=undefined&#10;saveSuccess.versionsCreated: expected 1; actual=undefined&#10;saveSuccess.waitsForSave: expected true; actual=undefined&#10;saveSuccess.transitionPerformedAfterSave: expected true; actual=undefined&#10;saveFailure.transitionPerformed: expected false; actual=undefined&#10;saveFailure.draftPreserved: expected true; actual=undefined&#10;saveFailure.errorVisible: expected true; actual=undefined&#10;&#10;22 !== 0">
+[Error [ERR_TEST_FAILURE]: Field-level vacancy generation conformance boundary is absent: export runFieldLevelVacancyGenerationConformanceScenario(fixture) from server/product/application.ts
+status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+manualEditMarksDirty: expected true; actual=undefined
+generatedEditMarksDirty: expected true; actual=undefined
+guardedTransitions: expected exact ["settings-section","internal-page"]; actual=undefined
+beforeUnloadOnlyWhenDirty: expected true; actual=undefined
+dialog.discardLabel: expected "Не сохранять"; actual=undefined
+dialog.discardColor: expected "red"; actual=undefined
+dialog.saveLabel: expected "Сохранить изменения"; actual=undefined
+dialog.saveColor: expected "blue"; actual=undefined
+dialog.closeControl: expected true; actual=undefined
+close.transitionPerformed: expected false; actual=undefined
+close.draftPreserved: expected true; actual=undefined
+discard.savedSnapshotRestored: expected true; actual=undefined
+discard.transitionPerformed: expected true; actual=undefined
+discard.versionsCreated: expected 0; actual=undefined
+saveSuccess.versionsCreated: expected 1; actual=undefined
+saveSuccess.waitsForSave: expected true; actual=undefined
+saveSuccess.transitionPerformedAfterSave: expected true; actual=undefined
+saveFailure.transitionPerformed: expected false; actual=undefined
+saveFailure.draftPreserved: expected true; actual=undefined
+saveFailure.errorVisible: expected true; actual=undefined
+
+22 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Field-level vacancy generation conformance boundary is absent: export runFieldLevelVacancyGenerationConformanceScenario(fixture) from server/product/application.ts
+  status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+  manualEditMarksDirty: expected true; actual=undefined
+  generatedEditMarksDirty: expected true; actual=undefined
+  guardedTransitions: expected exact ["settings-section","internal-page"]; actual=undefined
+  beforeUnloadOnlyWhenDirty: expected true; actual=undefined
+  dialog.discardLabel: expected "Не сохранять"; actual=undefined
+  dialog.discardColor: expected "red"; actual=undefined
+  dialog.saveLabel: expected "Сохранить изменения"; actual=undefined
+  dialog.saveColor: expected "blue"; actual=undefined
+  dialog.closeControl: expected true; actual=undefined
+  close.transitionPerformed: expected false; actual=undefined
+  close.draftPreserved: expected true; actual=undefined
+  discard.savedSnapshotRestored: expected true; actual=undefined
+  discard.transitionPerformed: expected true; actual=undefined
+  discard.versionsCreated: expected 0; actual=undefined
+  saveSuccess.versionsCreated: expected 1; actual=undefined
+  saveSuccess.waitsForSave: expected true; actual=undefined
+  saveSuccess.transitionPerformedAfterSave: expected true; actual=undefined
+  saveFailure.transitionPerformed: expected false; actual=undefined
+  saveFailure.draftPreserved: expected true; actual=undefined
+  saveFailure.errorVisible: expected true; actual=undefined
+  
+  22 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/field-level-vacancy-generation.acceptance.test.mjs:11:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 22,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testsuite name="VAC-042/VAC-043 real VacancySettings offers generate and editable prompt controls only for each empty supported field" time="0.266185" disabled="0" errors="0" tests="4" failures="4" skipped="0" hostname="WIN-4E9RD0TRUH1">
+		<testcase name="Образ результата" time="0.000565" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\field-level-vacancy-generation.acceptance.test.mjs" failure="Образ результата exposes a compact generation action while empty">
+			<failure type="testCodeFailure" message="Образ результата exposes a compact generation action while empty">
+Error [ERR_TEST_FAILURE]: Образ результата exposes a compact generation action while empty
+    at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/field-level-vacancy-generation.acceptance.test.mjs:52:13) {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Образ результата exposes a compact generation action while empty
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/field-level-vacancy-generation.acceptance.test.mjs:58:14)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at TestContext.test (node:internal/test_runner/test:368:20)
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/field-level-vacancy-generation.acceptance.test.mjs:52:13)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+}
+			</failure>
+		</testcase>
+		<testcase name="Компетенции" time="0.000225" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\field-level-vacancy-generation.acceptance.test.mjs" failure="Компетенции exposes a compact generation action while empty">
+			<failure type="testCodeFailure" message="Компетенции exposes a compact generation action while empty">
+Error [ERR_TEST_FAILURE]: Компетенции exposes a compact generation action while empty
+    at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/field-level-vacancy-generation.acceptance.test.mjs:52:13) {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Компетенции exposes a compact generation action while empty
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/field-level-vacancy-generation.acceptance.test.mjs:58:14)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at TestContext.test (node:internal/test_runner/test:368:20)
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/field-level-vacancy-generation.acceptance.test.mjs:52:13)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+}
+			</failure>
+		</testcase>
+		<testcase name="Стоп-факторы" time="0.000169" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\field-level-vacancy-generation.acceptance.test.mjs" failure="Стоп-факторы exposes a compact generation action while empty">
+			<failure type="testCodeFailure" message="Стоп-факторы exposes a compact generation action while empty">
+Error [ERR_TEST_FAILURE]: Стоп-факторы exposes a compact generation action while empty
+    at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/field-level-vacancy-generation.acceptance.test.mjs:52:13) {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Стоп-факторы exposes a compact generation action while empty
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/field-level-vacancy-generation.acceptance.test.mjs:58:14)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at TestContext.test (node:internal/test_runner/test:368:20)
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/field-level-vacancy-generation.acceptance.test.mjs:52:13)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+}
+			</failure>
+		</testcase>
+		<testcase name="Допуск к КЕ" time="0.000200" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\field-level-vacancy-generation.acceptance.test.mjs" failure="Допуск к КЕ exposes a compact generation action while empty">
+			<failure type="testCodeFailure" message="Допуск к КЕ exposes a compact generation action while empty">
+Error [ERR_TEST_FAILURE]: Допуск к КЕ exposes a compact generation action while empty
+    at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/field-level-vacancy-generation.acceptance.test.mjs:52:13) {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Допуск к КЕ exposes a compact generation action while empty
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/field-level-vacancy-generation.acceptance.test.mjs:58:14)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at TestContext.test (node:internal/test_runner/test:368:20)
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/field-level-vacancy-generation.acceptance.test.mjs:52:13)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+}
+			</failure>
+		</testcase>
+	</testsuite>
+	<testcase name="VAC-044 real VacancySettings exposes one ABC generation action only for the actual non-empty composition" time="0.126013" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\field-level-vacancy-generation.acceptance.test.mjs" failure="actual standard/custom composition has one ABC generation action&#10;&#10;0 !== 1&#10;">
+		<failure type="testCodeFailure" message="actual standard/custom composition has one ABC generation action&#10;&#10;0 !== 1">
+[Error [ERR_TEST_FAILURE]: actual standard/custom composition has one ABC generation action
+
+0 !== 1
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: actual standard/custom composition has one ABC generation action
+  
+  0 !== 1
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/field-level-vacancy-generation.acceptance.test.mjs:81:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="VAC-045 real all-generation cancellation warns about overwriting all populated sections and sends no generation API request" time="0.134106" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\field-level-vacancy-generation.acceptance.test.mjs" failure="warning explicitly covers all vacancy sections">
+		<failure type="testCodeFailure" message="warning explicitly covers all vacancy sections">
+[Error [ERR_TEST_FAILURE]: warning explicitly covers all vacancy sections] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: warning explicitly covers all vacancy sections
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/field-level-vacancy-generation.acceptance.test.mjs:118:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'Запустить генерацию описания вакансии? Текущие несохранённые значения будут заменены.',
+    expected: /все.*раздел/i,
+    operator: 'match',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="VAC-046 real VacancySettings opens the three-action dirty guard before changing settings section" time="0.122863" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\field-level-vacancy-generation.acceptance.test.mjs" failure="dirty settings transition opens an application dialog">
+		<failure type="testCodeFailure" message="dirty settings transition opens an application dialog">
+[Error [ERR_TEST_FAILURE]: dirty settings transition opens an application dialog] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: dirty settings transition opens an application dialog
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/field-level-vacancy-generation.acceptance.test.mjs:134:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 13 -->
+	<!-- suites 0 -->
+	<!-- pass 0 -->
+	<!-- fail 13 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 1281.7343 -->
+</testsuites>

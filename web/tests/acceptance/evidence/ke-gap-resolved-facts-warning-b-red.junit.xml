@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="VIS-DEMO additional criteria require resolved evidence, not only declared factIds" time="0.257388" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs" failure="The input was expected to not match the regular expression /Критерий только с declared factId/. Input:&#10;&#10;'Дополнительные критерии✓Критерий с раскрываемым фактомФакт разрешён1 доказательствОткрыть факты →Подтверждение компетенцииСвязанный факт компетенцииИнтервью.mp4 · 00:03:00✓Критерий только с declared factIdФакт отсутствует в evidence1 доказательствОбщий анализОснование выводаНесвязанное доказательствоЗаметки.docx'&#10;">
+		<failure type="testCodeFailure" message="The input was expected to not match the regular expression /Критерий только с declared factId/. Input:&#10;&#10;'Дополнительные критерии✓Критерий с раскрываемым фактомФакт разрешён1 доказательствОткрыть факты →Подтверждение компетенцииСвязанный факт компетенцииИнтервью.mp4 · 00:03:00✓Критерий только с declared factIdФакт отсутствует в evidence1 доказательствОбщий анализОснование выводаНесвязанное доказательствоЗаметки.docx'">
+[Error [ERR_TEST_FAILURE]: The input was expected to not match the regular expression /Критерий только с declared factId/. Input:
+
+'Дополнительные критерии✓Критерий с раскрываемым фактомФакт разрешён1 доказательствОткрыть факты →Подтверждение компетенцииСвязанный факт компетенцииИнтервью.mp4 · 00:03:00✓Критерий только с declared factIdФакт отсутствует в evidence1 доказательствОбщий анализОснование выводаНесвязанное доказательствоЗаметки.docx'
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: The input was expected to not match the regular expression /Критерий только с declared factId/. Input:
+  
+  'Дополнительные критерии✓Критерий с раскрываемым фактомФакт разрешён1 доказательствОткрыть факты →Подтверждение компетенцииСвязанный факт компетенцииИнтервью.mp4 · 00:03:00✓Критерий только с declared factIdФакт отсутствует в evidence1 доказательствОбщий анализОснование выводаНесвязанное доказательствоЗаметки.docx'
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/demo-interface-visual-parity.acceptance.test.mjs:455:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'Дополнительные критерии✓Критерий с раскрываемым фактомФакт разрешён1 доказательствОткрыть факты →Подтверждение компетенцииСвязанный факт компетенцииИнтервью.mp4 · 00:03:00✓Критерий только с declared factIdФакт отсутствует в evidence1 доказательствОбщий анализОснование выводаНесвязанное доказательствоЗаметки.docx',
+    expected: /Критерий только с declared factId/,
+    operator: 'doesNotMatch',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="VIS-DEMO KE rows keep at least a 10px horizontal gap after the icon column" time="0.001580" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs" failure="KE row declares an explicit horizontal gap">
+		<failure type="testCodeFailure" message="KE row declares an explicit horizontal gap">
+[Error [ERR_TEST_FAILURE]: KE row declares an explicit horizontal gap] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: KE row declares an explicit horizontal gap
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/demo-interface-visual-parity.acceptance.test.mjs:568:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="VIS-DEMO B badges remain warning-yellow in light and dark without legacy risk overrides" time="0.007495" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs" failure="no legacy dark selector can turn assessment B brown/red/risk">
+		<failure type="testCodeFailure" message="no legacy dark selector can turn assessment B brown/red/risk">
+[Error [ERR_TEST_FAILURE]: no legacy dark selector can turn assessment B brown/red/risk] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: no legacy dark selector can turn assessment B brown/red/risk
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/demo-interface-visual-parity.acceptance.test.mjs:581:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: '\r\nhtml[data-theme="dark"] .abc-item>span.b,\r\nhtml[data-theme="dark"] .grade-b,\r\nhtml[data-theme="dark"] .checklist-panel i.pending {\r\n  background:#3c3018;\r\n  color:#edc56e;\r\n  box-shadow:inset 0 0 0 1px #65512b;\r\n}\nhtml[data-theme="dark"] .grade-bar,html[data-theme="dark"] .score-cell>i{background:var(--score-track)}\nhtml[data-theme="dark"] .grade-b{background:var(--risk-soft);color:var(--risk-ink)}',
+    expected: /var\(--risk-(?:soft|ink)\)|#[0-9a-f]{3,8}\b|rgba?\(/i,
+    operator: 'doesNotMatch',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 3 -->
+	<!-- suites 0 -->
+	<!-- pass 0 -->
+	<!-- fail 3 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 564.7223 -->
+</testsuites>

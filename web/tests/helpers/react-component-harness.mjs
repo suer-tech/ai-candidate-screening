@@ -37,7 +37,9 @@ export function useMemo(factory) {
 export function useEffect() {}
 
 export function useRef(initialValue) {
-  return useMemo(() => ({ current: initialValue }));
+  const slot = hookCursor++;
+  if (!Object.prototype.hasOwnProperty.call(hookSlots, slot)) hookSlots[slot] = { current: initialValue };
+  return hookSlots[slot];
 }
 
 export function useCallback(callback) {
@@ -77,7 +79,7 @@ async function compileModuleGraph({ sourcePath, sourceRoot, outputRoot, entry = 
   const relativeSource = path.relative(sourceRoot, sourcePath);
   const outputPath = path.join(outputRoot, relativeSource).replace(/\.tsx?$/i, ".mjs");
   let source = await readFile(sourcePath, "utf8");
-  if (entry) source += "\nexport { VacancySettings };\n";
+  if (entry) source += "\nexport { Dashboard, Vacancies, VacancySettings };\n";
 
   const dependencies = [...source.matchAll(RELATIVE_IMPORT)].map((match) => match[1]);
   const replacements = new Map();
@@ -138,6 +140,70 @@ export async function loadVacancySettingsHarness() {
         render() {
           reactDouble.__beginRender();
           return entryModule.VacancySettings(props);
+        },
+      };
+    },
+    async cleanup() {
+      await rm(outputRoot, { recursive: true, force: true });
+    },
+  };
+}
+
+export async function loadVacanciesHarness() {
+  const sourceRoot = path.resolve(import.meta.dirname, "../..");
+  const outputRoot = await mkdtemp(path.join(os.tmpdir(), "vacancy-header-acceptance-"));
+  await writeFile(path.join(outputRoot, "react-double.mjs"), REACT_DOUBLE_SOURCE, "utf8");
+
+  const entryPath = await compileModuleGraph({
+    sourcePath: path.join(sourceRoot, "app/page.tsx"),
+    sourceRoot,
+    outputRoot,
+    entry: true,
+  });
+  const [entryModule, reactDouble] = await Promise.all([
+    import(pathToFileURL(entryPath).href),
+    import(pathToFileURL(path.join(outputRoot, "react-double.mjs")).href),
+  ]);
+
+  return {
+    create(props) {
+      reactDouble.__clearHooks();
+      return {
+        render() {
+          reactDouble.__beginRender();
+          return entryModule.Vacancies(props);
+        },
+      };
+    },
+    async cleanup() {
+      await rm(outputRoot, { recursive: true, force: true });
+    },
+  };
+}
+
+export async function loadDriveDashboardHarness() {
+  const sourceRoot = path.resolve(import.meta.dirname, "../..");
+  const outputRoot = await mkdtemp(path.join(os.tmpdir(), "google-drive-dashboard-acceptance-"));
+  await writeFile(path.join(outputRoot, "react-double.mjs"), REACT_DOUBLE_SOURCE, "utf8");
+
+  const entryPath = await compileModuleGraph({
+    sourcePath: path.join(sourceRoot, "app/page.tsx"),
+    sourceRoot,
+    outputRoot,
+    entry: true,
+  });
+  const [entryModule, reactDouble] = await Promise.all([
+    import(pathToFileURL(entryPath).href),
+    import(pathToFileURL(path.join(outputRoot, "react-double.mjs")).href),
+  ]);
+
+  return {
+    create(props) {
+      reactDouble.__clearHooks();
+      return {
+        render() {
+          reactDouble.__beginRender();
+          return entryModule.Dashboard(props);
         },
       };
     },

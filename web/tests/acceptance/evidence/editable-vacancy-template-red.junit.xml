@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="VAC-040/TST-086: full server-rendered generation template exposes role assumptions, all sections and structured title isolation" time="0.038767" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\editable-vacancy-prompts.acceptance.test.mjs" failure="Acceptance scenario is not implemented: VAC-040-server-rendered-visible-generation-template&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;template.fullyVisible: expected true; actual=undefined&#10;template.source: expected &amp;quot;server-rendered&amp;quot;; actual=undefined&#10;template.clientTemplateCopyPresent: expected false; actual=undefined&#10;template.artifactId: expected &amp;quot;vacancy-profile/v1&amp;quot;; actual=undefined&#10;template.renderedTitle: expected &amp;quot;ACCEPT-TEMPLATE-20260824 — Руководитель отдела продаж&amp;quot;; actual=undefined&#10;template.renderedHashMatchesExactText: expected true; actual=undefined&#10;template.soleKnownFactDeclared: expected &amp;quot;Название вакансии&amp;quot;; actual=undefined&#10;template.commonProfessionalInterpretationRequired: expected true; actual=undefined&#10;template.companyAssumptionsAsFactsForbidden: expected true; actual=undefined&#10;template.dependentValuesMarker: expected &amp;quot;Требует решения HR&amp;quot;; actual=undefined&#10;template.immutableResultFormatExplained: expected true; actual=undefined&#10;template.requiredSections: expected exact [&amp;quot;Образ результата&amp;quot;,&amp;quot;ABC-критерии&amp;quot;,&amp;quot;Компетенции&amp;quot;,&amp;quot;Стоп-факторы&amp;quot;,&amp;quot;Допуск к КЕ&amp;quot;]; actual=undefined&#10;template.abcDirections: expected exact [&amp;quot;Продуктивность&amp;quot;,&amp;quot;Инициатива&amp;quot;,&amp;quot;Самообучаемость&amp;quot;,&amp;quot;Корпоративные ценности&amp;quot;,&amp;quot;Автономность&amp;quot;]; actual=undefined&#10;template.keAdmission.meaning: expected &amp;quot;Готовность кандидата к собеседованию с собственником компании&amp;quot;; actual=undefined&#10;template.keAdmission.requiredFields: expected exact [&amp;quot;Формулировка критерия&amp;quot;,&amp;quot;Обязательность&amp;quot;,&amp;quot;Правила и наблюдаемые признаки&amp;quot;,&amp;quot;Источник результата&amp;quot;,&amp;quot;Недостающие проверки&amp;quot;]; actual=undefined&#10;reset.fetchedFromServer: expected true; actual=undefined&#10;reset.textEqualsInitialRenderedTemplate: expected true; actual=undefined&#10;reset.hashEqualsInitialRenderedTemplate: expected true; actual=undefined&#10;reset.exactTitleRestored: expected true; actual=undefined&#10;runtime.titleStructuredField: expected &amp;quot;ACCEPT-TEMPLATE-20260824 — Руководитель отдела продаж&amp;quot;; actual=undefined&#10;runtime.titleIndependentOfEditedTextarea: expected true; actual=undefined&#10;&#10;23 !== 0&#10;">
+		<failure type="testCodeFailure" message="Acceptance scenario is not implemented: VAC-040-server-rendered-visible-generation-template&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;template.fullyVisible: expected true; actual=undefined&#10;template.source: expected &amp;quot;server-rendered&amp;quot;; actual=undefined&#10;template.clientTemplateCopyPresent: expected false; actual=undefined&#10;template.artifactId: expected &amp;quot;vacancy-profile/v1&amp;quot;; actual=undefined&#10;template.renderedTitle: expected &amp;quot;ACCEPT-TEMPLATE-20260824 — Руководитель отдела продаж&amp;quot;; actual=undefined&#10;template.renderedHashMatchesExactText: expected true; actual=undefined&#10;template.soleKnownFactDeclared: expected &amp;quot;Название вакансии&amp;quot;; actual=undefined&#10;template.commonProfessionalInterpretationRequired: expected true; actual=undefined&#10;template.companyAssumptionsAsFactsForbidden: expected true; actual=undefined&#10;template.dependentValuesMarker: expected &amp;quot;Требует решения HR&amp;quot;; actual=undefined&#10;template.immutableResultFormatExplained: expected true; actual=undefined&#10;template.requiredSections: expected exact [&amp;quot;Образ результата&amp;quot;,&amp;quot;ABC-критерии&amp;quot;,&amp;quot;Компетенции&amp;quot;,&amp;quot;Стоп-факторы&amp;quot;,&amp;quot;Допуск к КЕ&amp;quot;]; actual=undefined&#10;template.abcDirections: expected exact [&amp;quot;Продуктивность&amp;quot;,&amp;quot;Инициатива&amp;quot;,&amp;quot;Самообучаемость&amp;quot;,&amp;quot;Корпоративные ценности&amp;quot;,&amp;quot;Автономность&amp;quot;]; actual=undefined&#10;template.keAdmission.meaning: expected &amp;quot;Готовность кандидата к собеседованию с собственником компании&amp;quot;; actual=undefined&#10;template.keAdmission.requiredFields: expected exact [&amp;quot;Формулировка критерия&amp;quot;,&amp;quot;Обязательность&amp;quot;,&amp;quot;Правила и наблюдаемые признаки&amp;quot;,&amp;quot;Источник результата&amp;quot;,&amp;quot;Недостающие проверки&amp;quot;]; actual=undefined&#10;reset.fetchedFromServer: expected true; actual=undefined&#10;reset.textEqualsInitialRenderedTemplate: expected true; actual=undefined&#10;reset.hashEqualsInitialRenderedTemplate: expected true; actual=undefined&#10;reset.exactTitleRestored: expected true; actual=undefined&#10;runtime.titleStructuredField: expected &amp;quot;ACCEPT-TEMPLATE-20260824 — Руководитель отдела продаж&amp;quot;; actual=undefined&#10;runtime.titleIndependentOfEditedTextarea: expected true; actual=undefined&#10;&#10;23 !== 0">
+[Error [ERR_TEST_FAILURE]: Acceptance scenario is not implemented: VAC-040-server-rendered-visible-generation-template
+status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+template.fullyVisible: expected true; actual=undefined
+template.source: expected "server-rendered"; actual=undefined
+template.clientTemplateCopyPresent: expected false; actual=undefined
+template.artifactId: expected "vacancy-profile/v1"; actual=undefined
+template.renderedTitle: expected "ACCEPT-TEMPLATE-20260824 — Руководитель отдела продаж"; actual=undefined
+template.renderedHashMatchesExactText: expected true; actual=undefined
+template.soleKnownFactDeclared: expected "Название вакансии"; actual=undefined
+template.commonProfessionalInterpretationRequired: expected true; actual=undefined
+template.companyAssumptionsAsFactsForbidden: expected true; actual=undefined
+template.dependentValuesMarker: expected "Требует решения HR"; actual=undefined
+template.immutableResultFormatExplained: expected true; actual=undefined
+template.requiredSections: expected exact ["Образ результата","ABC-критерии","Компетенции","Стоп-факторы","Допуск к КЕ"]; actual=undefined
+template.abcDirections: expected exact ["Продуктивность","Инициатива","Самообучаемость","Корпоративные ценности","Автономность"]; actual=undefined
+template.keAdmission.meaning: expected "Готовность кандидата к собеседованию с собственником компании"; actual=undefined
+template.keAdmission.requiredFields: expected exact ["Формулировка критерия","Обязательность","Правила и наблюдаемые признаки","Источник результата","Недостающие проверки"]; actual=undefined
+reset.fetchedFromServer: expected true; actual=undefined
+reset.textEqualsInitialRenderedTemplate: expected true; actual=undefined
+reset.hashEqualsInitialRenderedTemplate: expected true; actual=undefined
+reset.exactTitleRestored: expected true; actual=undefined
+runtime.titleStructuredField: expected "ACCEPT-TEMPLATE-20260824 — Руководитель отдела продаж"; actual=undefined
+runtime.titleIndependentOfEditedTextarea: expected true; actual=undefined
+
+23 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Acceptance scenario is not implemented: VAC-040-server-rendered-visible-generation-template
+  status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+  template.fullyVisible: expected true; actual=undefined
+  template.source: expected "server-rendered"; actual=undefined
+  template.clientTemplateCopyPresent: expected false; actual=undefined
+  template.artifactId: expected "vacancy-profile/v1"; actual=undefined
+  template.renderedTitle: expected "ACCEPT-TEMPLATE-20260824 — Руководитель отдела продаж"; actual=undefined
+  template.renderedHashMatchesExactText: expected true; actual=undefined
+  template.soleKnownFactDeclared: expected "Название вакансии"; actual=undefined
+  template.commonProfessionalInterpretationRequired: expected true; actual=undefined
+  template.companyAssumptionsAsFactsForbidden: expected true; actual=undefined
+  template.dependentValuesMarker: expected "Требует решения HR"; actual=undefined
+  template.immutableResultFormatExplained: expected true; actual=undefined
+  template.requiredSections: expected exact ["Образ результата","ABC-критерии","Компетенции","Стоп-факторы","Допуск к КЕ"]; actual=undefined
+  template.abcDirections: expected exact ["Продуктивность","Инициатива","Самообучаемость","Корпоративные ценности","Автономность"]; actual=undefined
+  template.keAdmission.meaning: expected "Готовность кандидата к собеседованию с собственником компании"; actual=undefined
+  template.keAdmission.requiredFields: expected exact ["Формулировка критерия","Обязательность","Правила и наблюдаемые признаки","Источник результата","Недостающие проверки"]; actual=undefined
+  reset.fetchedFromServer: expected true; actual=undefined
+  reset.textEqualsInitialRenderedTemplate: expected true; actual=undefined
+  reset.hashEqualsInitialRenderedTemplate: expected true; actual=undefined
+  reset.exactTitleRestored: expected true; actual=undefined
+  runtime.titleStructuredField: expected "ACCEPT-TEMPLATE-20260824 — Руководитель отдела продаж"; actual=undefined
+  runtime.titleIndependentOfEditedTextarea: expected true; actual=undefined
+  
+  23 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/editable-vacancy-prompts.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 23,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 1 -->
+	<!-- suites 0 -->
+	<!-- pass 0 -->
+	<!-- fail 1 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 224.0086 -->
+</testsuites>

@@ -1,0 +1,12 @@
+{
+  "schemaVersion": "1.0",
+  "basisId": "main-specs-2026-08-26-personal-oauth-gap",
+  "status": "UNSYNCHRONIZED_DEVIATION",
+  "productionAcceptanceAllowed": false,
+  "normativeSource": "openspec/specs",
+  "normativeRequirements": ["INT-005", "SEC-003", "TST-011"],
+  "normativeIntegration": "corporate-shared-drive-service-account",
+  "harnessIntegration": "personal-google-my-drive-oauth",
+  "resolution": "Synchronize the reviewed integration decision into main specs, then version this basis as SYNCHRONIZED before running production acceptance.",
+  "productEvidence": false
+}

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="vacancy version badge contract: settings heading contains only the vacancy title" time="0.615737" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\editable-vacancy-prompts.acceptance.test.mjs"/>
+	<testsuite name="vacancy version badge contract: header keeps version beside activity and removes old Drive/version copy" time="0.377063" disabled="0" errors="0" tests="3" failures="0" skipped="0" hostname="WIN-4E9RD0TRUH1">
+		<testcase name="shows a separate profile-version badge beside activity" time="0.002723" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\editable-vacancy-prompts.acceptance.test.mjs"/>
+		<testcase name="removes the old standalone version copy" time="0.000825" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\editable-vacancy-prompts.acceptance.test.mjs"/>
+		<testcase name="removes Google Drive linkage copy" time="0.000348" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\editable-vacancy-prompts.acceptance.test.mjs"/>
+	</testsuite>
+	<!-- tests 5 -->
+	<!-- suites 0 -->
+	<!-- pass 5 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 1920.4998 -->
+</testsuites>

@@ -1,0 +1,430 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="VIS-DEMO vacancies keeps scope tabs and header actions, with a separate vacancy search below tabs" time="0.242784" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs" failure="vacancy search is distinct from candidate search&#10;&#10;0 !== 1&#10;">
+		<failure type="testCodeFailure" message="vacancy search is distinct from candidate search&#10;&#10;0 !== 1">
+[Error [ERR_TEST_FAILURE]: vacancy search is distinct from candidate search
+
+0 !== 1
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: vacancy search is distinct from candidate search
+  
+  0 !== 1
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/demo-interface-visual-parity.acceptance.test.mjs:178:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="VIS-DEMO vacancy workspace uses semantic ranking regions and accessible table headers" time="0.117442" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs"/>
+	<testcase name="VIS-DEMO vacancy ranking preserves candidate search and omits unimplemented filters/export" time="0.088600" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs" failure="Фильтры is not shown before the action is implemented&#10;&#10;1 !== 0&#10;">
+		<failure type="testCodeFailure" message="Фильтры is not shown before the action is implemented&#10;&#10;1 !== 0">
+[Error [ERR_TEST_FAILURE]: Фильтры is not shown before the action is implemented
+
+1 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Фильтры is not shown before the action is implemented
+  
+  1 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/demo-interface-visual-parity.acceptance.test.mjs:204:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="VIS-DEMO vacancy match percent is the rounded mean of valid ABC grades" time="0.092974" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs" failure="A=100 and B=70 produce round((100+70)/2)=85%">
+		<failure type="testCodeFailure" message="A=100 and B=70 produce round((100+70)/2)=85%">
+[Error [ERR_TEST_FAILURE]: A=100 and B=70 produce round((100+70)/2)=85%] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: A=100 and B=70 produce round((100+70)/2)=85%
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/demo-interface-visual-parity.acceptance.test.mjs:213:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'A',
+    expected: /85\s*%/,
+    operator: 'match',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="VIS-DEMO match formula rounds once and ignores invalid ABC entries" time="0.106902" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs" failure="round((100+70+40+40)/4)=63%">
+		<failure type="testCodeFailure" message="round((100+70+40+40)/4)=63%">
+[Error [ERR_TEST_FAILURE]: round((100+70+40+40)/4)=63%] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: round((100+70+40+40)/4)=63%
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/demo-interface-visual-parity.acceptance.test.mjs:232:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'A',
+    expected: /63\s*%/,
+    operator: 'match',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="VIS-DEMO empty or invalid ABC has no match number and says score is not ready" time="0.095646" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs" failure="Expected values to be strictly equal:&#10;&#10;0 !== 1&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly equal:&#10;&#10;0 !== 1">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly equal:
+
+0 !== 1
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 1
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/demo-interface-visual-parity.acceptance.test.mjs:245:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="VIS-DEMO ranking preserves projection order instead of sorting by derived match percent" time="0.106556" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs"/>
+	<testcase name="VIS-DEMO READY status has semantic status-ready and tokenized green styling" time="0.084250" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs" failure="The input did not match the regular expression /var\(--success-soft\)/. Input:&#10;&#10;'background:linear-gradient(135deg,#e1f8eb,#a9e4c2);color:#216744'&#10;">
+		<failure type="testCodeFailure" message="The input did not match the regular expression /var\(--success-soft\)/. Input:&#10;&#10;'background:linear-gradient(135deg,#e1f8eb,#a9e4c2);color:#216744'">
+[Error [ERR_TEST_FAILURE]: The input did not match the regular expression /var\(--success-soft\)/. Input:
+
+'background:linear-gradient(135deg,#e1f8eb,#a9e4c2);color:#216744'
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: The input did not match the regular expression /var\(--success-soft\)/. Input:
+  
+  'background:linear-gradient(135deg,#e1f8eb,#a9e4c2);color:#216744'
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/demo-interface-visual-parity.acceptance.test.mjs:265:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'background:linear-gradient(135deg,#e1f8eb,#a9e4c2);color:#216744',
+    expected: /var\(--success-soft\)/,
+    operator: 'match',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="VIS-DEMO READY stage/time does not report a missing forecast" time="0.096451" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs" failure="The input was expected to not match the regular expression /Недостаточно данных для прогноза/i. Input:&#10;&#10;'1МОМария ОрловасейчасГотовоAГотовоНедостаточно данных для прогноза›'&#10;">
+		<failure type="testCodeFailure" message="The input was expected to not match the regular expression /Недостаточно данных для прогноза/i. Input:&#10;&#10;'1МОМария ОрловасейчасГотовоAГотовоНедостаточно данных для прогноза›'">
+[Error [ERR_TEST_FAILURE]: The input was expected to not match the regular expression /Недостаточно данных для прогноза/i. Input:
+
+'1МОМария ОрловасейчасГотовоAГотовоНедостаточно данных для прогноза›'
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: The input was expected to not match the regular expression /Недостаточно данных для прогноза/i. Input:
+  
+  '1МОМария ОрловасейчасГотовоAГотовоНедостаточно данных для прогноза›'
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/demo-interface-visual-parity.acceptance.test.mjs:273:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '1МОМария ОрловасейчасГотовоAГотовоНедостаточно данных для прогноза›',
+    expected: /Недостаточно данных для прогноза/i,
+    operator: 'doesNotMatch',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="VIS-DEMO processing stage/time uses saved milestone, elapsed time and ETA" time="0.107175" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs" failure="The input did not match the regular expression /AI-анализ · сопоставление фактов/. Input:&#10;&#10;'1ИПИван ПетровсейчасАнализ—Анализ≈ 7 мин›'&#10;">
+		<failure type="testCodeFailure" message="The input did not match the regular expression /AI-анализ · сопоставление фактов/. Input:&#10;&#10;'1ИПИван ПетровсейчасАнализ—Анализ≈ 7 мин›'">
+[Error [ERR_TEST_FAILURE]: The input did not match the regular expression /AI-анализ · сопоставление фактов/. Input:
+
+'1ИПИван ПетровсейчасАнализ—Анализ≈ 7 мин›'
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: The input did not match the regular expression /AI-анализ · сопоставление фактов/. Input:
+  
+  '1ИПИван ПетровсейчасАнализ—Анализ≈ 7 мин›'
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/demo-interface-visual-parity.acceptance.test.mjs:280:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '1ИПИван ПетровсейчасАнализ—Анализ≈ 7 мин›',
+    expected: /AI-анализ · сопоставление фактов/,
+    operator: 'match',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="VIS-DEMO processing detail separates hero score from current stage and does not invent progress" time="0.099716" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs" failure="The input did not match the regular expression /AI-анализ · сопоставление фактов/. Input:&#10;&#10;'Текущий этапАнализРезультат появится после успешной обработки'&#10;">
+		<failure type="testCodeFailure" message="The input did not match the regular expression /AI-анализ · сопоставление фактов/. Input:&#10;&#10;'Текущий этапАнализРезультат появится после успешной обработки'">
+[Error [ERR_TEST_FAILURE]: The input did not match the regular expression /AI-анализ · сопоставление фактов/. Input:
+
+'Текущий этапАнализРезультат появится после успешной обработки'
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: The input did not match the regular expression /AI-анализ · сопоставление фактов/. Input:
+  
+  'Текущий этапАнализРезультат появится после успешной обработки'
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/demo-interface-visual-parity.acceptance.test.mjs:291:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'Текущий этапАнализРезультат появится после успешной обработки',
+    expected: /AI-анализ · сопоставление фактов/,
+    operator: 'match',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="VIS-DEMO processing hero does not invent progress when projection omits it" time="0.132186" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs"/>
+	<testcase name="VIS-DEMO processing detail renders workflow timeline, observable metrics and materials" time="0.118374" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs" failure="The input did not match the regular expression /Обнаружен/i. Input:&#10;&#10;'✓МатериалыЗавершено✓ТранскрипцияЗавершено3АнализАнализ4ПроверкаОжидает5РезультатОжидает'&#10;">
+		<failure type="testCodeFailure" message="The input did not match the regular expression /Обнаружен/i. Input:&#10;&#10;'✓МатериалыЗавершено✓ТранскрипцияЗавершено3АнализАнализ4ПроверкаОжидает5РезультатОжидает'">
+[Error [ERR_TEST_FAILURE]: The input did not match the regular expression /Обнаружен/i. Input:
+
+'✓МатериалыЗавершено✓ТранскрипцияЗавершено3АнализАнализ4ПроверкаОжидает5РезультатОжидает'
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: The input did not match the regular expression /Обнаружен/i. Input:
+  
+  '✓МатериалыЗавершено✓ТранскрипцияЗавершено3АнализАнализ4ПроверкаОжидает5РезультатОжидает'
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/demo-interface-visual-parity.acceptance.test.mjs:307:127)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '✓МатериалыЗавершено✓ТранскрипцияЗавершено3АнализАнализ4ПроверкаОжидает5РезультатОжидает',
+    expected: /Обнаружен/i,
+    operator: 'match',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="VIS-DEMO ready detail exposes semantic composition and separate hero score/stage" time="0.106153" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs"/>
+	<testcase name="VIS-DEMO ready hero shows the approved ABC-derived match percent" time="0.114237" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs" failure="The input did not match the regular expression /85\s*%/. Input:&#10;&#10;'МОГотовоМария ОрловаРуководитель продуктаAABCТекущий этапГотовоРекомендовать с оговорками↻ Повторная обработкаВ архив'&#10;">
+		<failure type="testCodeFailure" message="The input did not match the regular expression /85\s*%/. Input:&#10;&#10;'МОГотовоМария ОрловаРуководитель продуктаAABCТекущий этапГотовоРекомендовать с оговорками↻ Повторная обработкаВ архив'">
+[Error [ERR_TEST_FAILURE]: The input did not match the regular expression /85\s*%/. Input:
+
+'МОГотовоМария ОрловаРуководитель продуктаAABCТекущий этапГотовоРекомендовать с оговорками↻ Повторная обработкаВ архив'
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: The input did not match the regular expression /85\s*%/. Input:
+  
+  'МОГотовоМария ОрловаРуководитель продуктаAABCТекущий этапГотовоРекомендовать с оговорками↻ Повторная обработкаВ архив'
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/demo-interface-visual-parity.acceptance.test.mjs:332:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'МОГотовоМария ОрловаРуководитель продуктаAABCТекущий этапГотовоРекомендовать с оговорками↻ Повторная обработкаВ архив',
+    expected: /85\s*%/,
+    operator: 'match',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="VIS-DEMO matching aside shows the same approved ABC-derived percent" time="0.098202" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs" failure="The input did not match the regular expression /85\s*%/. Input:&#10;&#10;'Оценка соответствияABC-профильAПродуктивностьBИнициативаДопуск к КЕ1 из 1 условий✓Допустить к КЕДа, с оговоркойЛичный Google DriveМатериалы▧Резюме Мария Орлова.pdfPDF · обработано▶Интервью Мария Орлова.mp4ВидеоРезультатыАктуальная версия v0007ИтогиABC-тест'&#10;">
+		<failure type="testCodeFailure" message="The input did not match the regular expression /85\s*%/. Input:&#10;&#10;'Оценка соответствияABC-профильAПродуктивностьBИнициативаДопуск к КЕ1 из 1 условий✓Допустить к КЕДа, с оговоркойЛичный Google DriveМатериалы▧Резюме Мария Орлова.pdfPDF · обработано▶Интервью Мария Орлова.mp4ВидеоРезультатыАктуальная версия v0007ИтогиABC-тест'">
+[Error [ERR_TEST_FAILURE]: The input did not match the regular expression /85\s*%/. Input:
+
+'Оценка соответствияABC-профильAПродуктивностьBИнициативаДопуск к КЕ1 из 1 условий✓Допустить к КЕДа, с оговоркойЛичный Google DriveМатериалы▧Резюме Мария Орлова.pdfPDF · обработано▶Интервью Мария Орлова.mp4ВидеоРезультатыАктуальная версия v0007ИтогиABC-тест'
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: The input did not match the regular expression /85\s*%/. Input:
+  
+  'Оценка соответствияABC-профильAПродуктивностьBИнициативаДопуск к КЕ1 из 1 условий✓Допустить к КЕДа, с оговоркойЛичный Google DriveМатериалы▧Резюме Мария Орлова.pdfPDF · обработано▶Интервью Мария Орлова.mp4ВидеоРезультатыАктуальная версия v0007ИтогиABC-тест'
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/demo-interface-visual-parity.acceptance.test.mjs:340:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'Оценка соответствияABC-профильAПродуктивностьBИнициативаДопуск к КЕ1 из 1 условий✓Допустить к КЕДа, с оговоркойЛичный Google DriveМатериалы▧Резюме Мария Орлова.pdfPDF · обработано▶Интервью Мария Орлова.mp4ВидеоРезультатыАктуальная версия v0007ИтогиABC-тест',
+    expected: /85\s*%/,
+    operator: 'match',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="VIS-DEMO ready hero and matching aside omit match percent for invalid ABC" time="0.084128" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs" failure="The input did not match the regular expression /Оценка ещё не готова/i. Input:&#10;&#10;'МОГотовоМария ОрловаРуководитель продуктаXABCТекущий этапГотовоРекомендовать с оговорками↻ Повторная обработкаВ архив'&#10;">
+		<failure type="testCodeFailure" message="The input did not match the regular expression /Оценка ещё не готова/i. Input:&#10;&#10;'МОГотовоМария ОрловаРуководитель продуктаXABCТекущий этапГотовоРекомендовать с оговорками↻ Повторная обработкаВ архив'">
+[Error [ERR_TEST_FAILURE]: The input did not match the regular expression /Оценка ещё не готова/i. Input:
+
+'МОГотовоМария ОрловаРуководитель продуктаXABCТекущий этапГотовоРекомендовать с оговорками↻ Повторная обработкаВ архив'
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: The input did not match the regular expression /Оценка ещё не готова/i. Input:
+  
+  'МОГотовоМария ОрловаРуководитель продуктаXABCТекущий этапГотовоРекомендовать с оговорками↻ Повторная обработкаВ архив'
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/demo-interface-visual-parity.acceptance.test.mjs:351:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'МОГотовоМария ОрловаРуководитель продуктаXABCТекущий этапГотовоРекомендовать с оговорками↻ Повторная обработкаВ архив',
+    expected: /Оценка ещё не готова/i,
+    operator: 'match',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="VIS-DEMO KE access is a separate semantic region, not part of the match score card" time="0.072603" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs" failure="Expected values to be strictly equal:&#10;&#10;0 !== 1&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly equal:&#10;&#10;0 !== 1">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly equal:
+
+0 !== 1
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 1
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/demo-interface-visual-parity.acceptance.test.mjs:358:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="VIS-DEMO materials panel never invents fallback files" time="0.093578" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs" failure="The input was expected to not match the regular expression /Резюме Мария Орлова\.pdf|Интервью\.mp4|Заметки рекрутера\.docx/. Input:&#10;&#10;'Личный Google DriveМатериалы▧Резюме Мария Орлова.pdfPDF · обработано▶Интервью.mp4Видео▤Заметки рекрутера.docxДокументРезультатыАктуальная версия v0007ИтогиABC-тест'&#10;">
+		<failure type="testCodeFailure" message="The input was expected to not match the regular expression /Резюме Мария Орлова\.pdf|Интервью\.mp4|Заметки рекрутера\.docx/. Input:&#10;&#10;'Личный Google DriveМатериалы▧Резюме Мария Орлова.pdfPDF · обработано▶Интервью.mp4Видео▤Заметки рекрутера.docxДокументРезультатыАктуальная версия v0007ИтогиABC-тест'">
+[Error [ERR_TEST_FAILURE]: The input was expected to not match the regular expression /Резюме Мария Орлова\.pdf|Интервью\.mp4|Заметки рекрутера\.docx/. Input:
+
+'Личный Google DriveМатериалы▧Резюме Мария Орлова.pdfPDF · обработано▶Интервью.mp4Видео▤Заметки рекрутера.docxДокументРезультатыАктуальная версия v0007ИтогиABC-тест'
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: The input was expected to not match the regular expression /Резюме Мария Орлова\.pdf|Интервью\.mp4|Заметки рекрутера\.docx/. Input:
+  
+  'Личный Google DriveМатериалы▧Резюме Мария Орлова.pdfPDF · обработано▶Интервью.mp4Видео▤Заметки рекрутера.docxДокументРезультатыАктуальная версия v0007ИтогиABC-тест'
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/demo-interface-visual-parity.acceptance.test.mjs:368:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'Личный Google DriveМатериалы▧Резюме Мария Орлова.pdfPDF · обработано▶Интервью.mp4Видео▤Заметки рекрутера.docxДокументРезультатыАктуальная версия v0007ИтогиABC-тест',
+    expected: /Резюме Мария Орлова\.pdf|Интервью\.mp4|Заметки рекрутера\.docx/,
+    operator: 'doesNotMatch',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="VIS-DEMO decision summary and recommendation basis remain candidate-specific" time="0.173722" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs" failure="The input was expected to not match the regular expression /Отчёты успешно опубликованы|Кандидат соответствует требованиям/. Input:&#10;&#10;'Исследование AIРезюме для принятия решенияВерсия 7Отчёты успешно опубликованы✓Рекомендация AIРекомендовать с оговоркамиКандидат соответствует требованиям'&#10;">
+		<failure type="testCodeFailure" message="The input was expected to not match the regular expression /Отчёты успешно опубликованы|Кандидат соответствует требованиям/. Input:&#10;&#10;'Исследование AIРезюме для принятия решенияВерсия 7Отчёты успешно опубликованы✓Рекомендация AIРекомендовать с оговоркамиКандидат соответствует требованиям'">
+[Error [ERR_TEST_FAILURE]: The input was expected to not match the regular expression /Отчёты успешно опубликованы|Кандидат соответствует требованиям/. Input:
+
+'Исследование AIРезюме для принятия решенияВерсия 7Отчёты успешно опубликованы✓Рекомендация AIРекомендовать с оговоркамиКандидат соответствует требованиям'
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: The input was expected to not match the regular expression /Отчёты успешно опубликованы|Кандидат соответствует требованиям/. Input:
+  
+  'Исследование AIРезюме для принятия решенияВерсия 7Отчёты успешно опубликованы✓Рекомендация AIРекомендовать с оговоркамиКандидат соответствует требованиям'
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/demo-interface-visual-parity.acceptance.test.mjs:383:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'Исследование AIРезюме для принятия решенияВерсия 7Отчёты успешно опубликованы✓Рекомендация AIРекомендовать с оговоркамиКандидат соответствует требованиям',
+    expected: /Отчёты успешно опубликованы|Кандидат соответствует требованиям/,
+    operator: 'doesNotMatch',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="VIS-DEMO every evidence item is criterion-bound and has a contextual label" time="0.081427" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs" failure="unknown technical types use criterion context instead of a global label&#10;&#10;1 !== 0&#10;">
+		<failure type="testCodeFailure" message="unknown technical types use criterion context instead of a global label&#10;&#10;1 !== 0">
+[Error [ERR_TEST_FAILURE]: unknown technical types use criterion context instead of a global label
+
+1 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: unknown technical types use criterion context instead of a global label
+  
+  1 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/demo-interface-visual-parity.acceptance.test.mjs:402:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="VIS-DEMO ready detail hides schema keys and never duplicates evidence locators" time="0.080710" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs"/>
+	<testcase name="VIS-DEMO component surfaces use theme variables instead of light/dark hardcoded palettes" time="0.005715" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs"/>
+	<!-- tests 23 -->
+	<!-- suites 0 -->
+	<!-- pass 6 -->
+	<!-- fail 17 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 2693.5062 -->
+</testsuites>

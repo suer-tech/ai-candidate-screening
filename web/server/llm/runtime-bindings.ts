@@ -1,14 +1,9 @@
-import { env } from "cloudflare:workers";
+import { serverContainer } from "../configuration/container.ts";
+import { PostgresBlobStore } from "../storage/blob-store.ts";
+import { PostgresProtectedTracePersistence } from "./postgres-persistence.ts";
 import { AdminOnlyProtectedTraceStore } from "./protected-store.ts";
-import { R2ProtectedTracePersistence } from "./r2-persistence.ts";
 import { loadRuntimeConfiguration } from "./runtime-loader.ts";
 import type { LogicalLlmCapability } from "./configuration.ts";
 
-export function protectedTraceStore() {
-  if (!env.PROTECTED_LLM_TRACES) throw new Error("Protected trace binding PROTECTED_LLM_TRACES is unavailable");
-  return new AdminOnlyProtectedTraceStore(new R2ProtectedTracePersistence(env.PROTECTED_LLM_TRACES));
-}
-
-export function llmRuntimeConfiguration(requiredCapabilities: readonly LogicalLlmCapability[]) {
-  return loadRuntimeConfiguration(env, requiredCapabilities);
-}
+export async function protectedTraceStore() { const container = await serverContainer(); return new AdminOnlyProtectedTraceStore(new PostgresProtectedTracePersistence(new PostgresBlobStore(container.sql))); }
+export async function llmRuntimeConfiguration(requiredCapabilities: readonly LogicalLlmCapability[]) { const container = await serverContainer(); return loadRuntimeConfiguration(container.environment, requiredCapabilities); }

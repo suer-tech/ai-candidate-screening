@@ -1,0 +1,337 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="TST-110: controlled restart points resume checkpoints without duplicate expensive work" time="0.005458" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\agent-runtime.acceptance.test.mjs" failure="Durable agent runtime conformance adapter is absent at C:\Users\user2\Documents\Cursor\hh\web\server\agent-runtime\conformance.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;restartPointsObserved: expected to include [&amp;quot;before-task-claim&amp;quot;,&amp;quot;during-active-lease&amp;quot;,&amp;quot;after-effect-before-ack&amp;quot;,&amp;quot;after-provider-job-checkpoint&amp;quot;,&amp;quot;between-eval-and-repair&amp;quot;]; actual=undefined&#10;restartCases: each isolated restart case must finish and create at most one remote job/expensive output; actual=undefined&#10;restartCases: provider-job checkpoint recovery must poll the same saved remote job; actual=undefined&#10;timeline: expected a readable event/plan timeline; actual=[]&#10;&#10;6 !== 0&#10;">
+		<failure type="testCodeFailure" message="Durable agent runtime conformance adapter is absent at C:\Users\user2\Documents\Cursor\hh\web\server\agent-runtime\conformance.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;restartPointsObserved: expected to include [&amp;quot;before-task-claim&amp;quot;,&amp;quot;during-active-lease&amp;quot;,&amp;quot;after-effect-before-ack&amp;quot;,&amp;quot;after-provider-job-checkpoint&amp;quot;,&amp;quot;between-eval-and-repair&amp;quot;]; actual=undefined&#10;restartCases: each isolated restart case must finish and create at most one remote job/expensive output; actual=undefined&#10;restartCases: provider-job checkpoint recovery must poll the same saved remote job; actual=undefined&#10;timeline: expected a readable event/plan timeline; actual=[]&#10;&#10;6 !== 0">
+[Error [ERR_TEST_FAILURE]: Durable agent runtime conformance adapter is absent at C:\Users\user2\Documents\Cursor\hh\web\server\agent-runtime\conformance.ts
+status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+restartPointsObserved: expected to include ["before-task-claim","during-active-lease","after-effect-before-ack","after-provider-job-checkpoint","between-eval-and-repair"]; actual=undefined
+restartCases: each isolated restart case must finish and create at most one remote job/expensive output; actual=undefined
+restartCases: provider-job checkpoint recovery must poll the same saved remote job; actual=undefined
+timeline: expected a readable event/plan timeline; actual=[]
+
+6 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Durable agent runtime conformance adapter is absent at C:\Users\user2\Documents\Cursor\hh\web\server\agent-runtime\conformance.ts
+  status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+  restartPointsObserved: expected to include ["before-task-claim","during-active-lease","after-effect-before-ack","after-provider-job-checkpoint","between-eval-and-repair"]; actual=undefined
+  restartCases: each isolated restart case must finish and create at most one remote job/expensive output; actual=undefined
+  restartCases: provider-job checkpoint recovery must poll the same saved remote job; actual=undefined
+  timeline: expected a readable event/plan timeline; actual=[]
+  
+  6 !== 0
+  
+      at accept (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/agent-runtime.acceptance.test.mjs:13:10)
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/agent-runtime.acceptance.test.mjs:18:3)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 6,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TST-111: concurrent delivery, lease reclaim and fencing yield one effective result" time="0.000693" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\agent-runtime.acceptance.test.mjs" failure="Durable agent runtime conformance adapter is absent at C:\Users\user2\Documents\Cursor\hh\web\server\agent-runtime\conformance.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;claims.acceptedAcrossLeaseEpochs: expected 2; actual=undefined&#10;claims.concurrentWinners: expected 1; actual=undefined&#10;transitions.effectiveCompletions: expected 1; actual=undefined&#10;provider.effectfulCalls: expected 1; actual=undefined&#10;artifacts.identities: expected [&amp;quot;transcript-artifact-001&amp;quot;]; actual=undefined&#10;leases.staleAcknowledgement.accepted: expected false; actual=undefined&#10;leases.staleAcknowledgement.code: expected &amp;quot;STALE_LEASE_TOKEN&amp;quot;; actual=undefined&#10;deliveries.duplicatesLinkedToExistingOutcome: expected true; actual=undefined&#10;&#10;10 !== 0&#10;">
+		<failure type="testCodeFailure" message="Durable agent runtime conformance adapter is absent at C:\Users\user2\Documents\Cursor\hh\web\server\agent-runtime\conformance.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;claims.acceptedAcrossLeaseEpochs: expected 2; actual=undefined&#10;claims.concurrentWinners: expected 1; actual=undefined&#10;transitions.effectiveCompletions: expected 1; actual=undefined&#10;provider.effectfulCalls: expected 1; actual=undefined&#10;artifacts.identities: expected [&amp;quot;transcript-artifact-001&amp;quot;]; actual=undefined&#10;leases.staleAcknowledgement.accepted: expected false; actual=undefined&#10;leases.staleAcknowledgement.code: expected &amp;quot;STALE_LEASE_TOKEN&amp;quot;; actual=undefined&#10;deliveries.duplicatesLinkedToExistingOutcome: expected true; actual=undefined&#10;&#10;10 !== 0">
+[Error [ERR_TEST_FAILURE]: Durable agent runtime conformance adapter is absent at C:\Users\user2\Documents\Cursor\hh\web\server\agent-runtime\conformance.ts
+status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+claims.acceptedAcrossLeaseEpochs: expected 2; actual=undefined
+claims.concurrentWinners: expected 1; actual=undefined
+transitions.effectiveCompletions: expected 1; actual=undefined
+provider.effectfulCalls: expected 1; actual=undefined
+artifacts.identities: expected ["transcript-artifact-001"]; actual=undefined
+leases.staleAcknowledgement.accepted: expected false; actual=undefined
+leases.staleAcknowledgement.code: expected "STALE_LEASE_TOKEN"; actual=undefined
+deliveries.duplicatesLinkedToExistingOutcome: expected true; actual=undefined
+
+10 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Durable agent runtime conformance adapter is absent at C:\Users\user2\Documents\Cursor\hh\web\server\agent-runtime\conformance.ts
+  status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+  claims.acceptedAcrossLeaseEpochs: expected 2; actual=undefined
+  claims.concurrentWinners: expected 1; actual=undefined
+  transitions.effectiveCompletions: expected 1; actual=undefined
+  provider.effectfulCalls: expected 1; actual=undefined
+  artifacts.identities: expected ["transcript-artifact-001"]; actual=undefined
+  leases.staleAcknowledgement.accepted: expected false; actual=undefined
+  leases.staleAcknowledgement.code: expected "STALE_LEASE_TOKEN"; actual=undefined
+  deliveries.duplicatesLinkedToExistingOutcome: expected true; actual=undefined
+  
+  10 !== 0
+  
+      at accept (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/agent-runtime.acceptance.test.mjs:13:10)
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/agent-runtime.acceptance.test.mjs:38:3)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 10,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TST-112: every budget and invalid grant is a durable pre-effect hard gate" time="0.000267" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\agent-runtime.acceptance.test.mjs" failure="Durable agent runtime conformance adapter is absent at C:\Users\user2\Documents\Cursor\hh\web\server\agent-runtime\conformance.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;budgets.deniedKinds: expected to include [&amp;quot;taskAttempts&amp;quot;,&amp;quot;repairAttempts&amp;quot;,&amp;quot;replans&amp;quot;,&amp;quot;llmCalls&amp;quot;,&amp;quot;tokens&amp;quot;,&amp;quot;costMicrounits&amp;quot;,&amp;quot;wallTimeMs&amp;quot;,&amp;quot;externalRequests&amp;quot;]; actual=undefined&#10;budgets.deniedExternalSideEffects: expected 0; actual=undefined&#10;budgets.usagePreservedAfterRestart: expected true; actual=undefined&#10;budgets.exhaustedObstacle: expected &amp;quot;BUDGET_EXHAUSTED&amp;quot;; actual=undefined&#10;grants.deniedCases: expected to include [&amp;quot;absent&amp;quot;,&amp;quot;expired&amp;quot;,&amp;quot;wrong-scope&amp;quot;,&amp;quot;wrong-side-effect&amp;quot;]; actual=undefined&#10;grants.deniedProviderCalls: expected 0; actual=undefined&#10;grants.secretResolvedBeforeChecks: expected false; actual=undefined&#10;audit.policyDenialsContainSecret: expected false; actual=undefined&#10;&#10;10 !== 0&#10;">
+		<failure type="testCodeFailure" message="Durable agent runtime conformance adapter is absent at C:\Users\user2\Documents\Cursor\hh\web\server\agent-runtime\conformance.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;budgets.deniedKinds: expected to include [&amp;quot;taskAttempts&amp;quot;,&amp;quot;repairAttempts&amp;quot;,&amp;quot;replans&amp;quot;,&amp;quot;llmCalls&amp;quot;,&amp;quot;tokens&amp;quot;,&amp;quot;costMicrounits&amp;quot;,&amp;quot;wallTimeMs&amp;quot;,&amp;quot;externalRequests&amp;quot;]; actual=undefined&#10;budgets.deniedExternalSideEffects: expected 0; actual=undefined&#10;budgets.usagePreservedAfterRestart: expected true; actual=undefined&#10;budgets.exhaustedObstacle: expected &amp;quot;BUDGET_EXHAUSTED&amp;quot;; actual=undefined&#10;grants.deniedCases: expected to include [&amp;quot;absent&amp;quot;,&amp;quot;expired&amp;quot;,&amp;quot;wrong-scope&amp;quot;,&amp;quot;wrong-side-effect&amp;quot;]; actual=undefined&#10;grants.deniedProviderCalls: expected 0; actual=undefined&#10;grants.secretResolvedBeforeChecks: expected false; actual=undefined&#10;audit.policyDenialsContainSecret: expected false; actual=undefined&#10;&#10;10 !== 0">
+[Error [ERR_TEST_FAILURE]: Durable agent runtime conformance adapter is absent at C:\Users\user2\Documents\Cursor\hh\web\server\agent-runtime\conformance.ts
+status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+budgets.deniedKinds: expected to include ["taskAttempts","repairAttempts","replans","llmCalls","tokens","costMicrounits","wallTimeMs","externalRequests"]; actual=undefined
+budgets.deniedExternalSideEffects: expected 0; actual=undefined
+budgets.usagePreservedAfterRestart: expected true; actual=undefined
+budgets.exhaustedObstacle: expected "BUDGET_EXHAUSTED"; actual=undefined
+grants.deniedCases: expected to include ["absent","expired","wrong-scope","wrong-side-effect"]; actual=undefined
+grants.deniedProviderCalls: expected 0; actual=undefined
+grants.secretResolvedBeforeChecks: expected false; actual=undefined
+audit.policyDenialsContainSecret: expected false; actual=undefined
+
+10 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Durable agent runtime conformance adapter is absent at C:\Users\user2\Documents\Cursor\hh\web\server\agent-runtime\conformance.ts
+  status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+  budgets.deniedKinds: expected to include ["taskAttempts","repairAttempts","replans","llmCalls","tokens","costMicrounits","wallTimeMs","externalRequests"]; actual=undefined
+  budgets.deniedExternalSideEffects: expected 0; actual=undefined
+  budgets.usagePreservedAfterRestart: expected true; actual=undefined
+  budgets.exhaustedObstacle: expected "BUDGET_EXHAUSTED"; actual=undefined
+  grants.deniedCases: expected to include ["absent","expired","wrong-scope","wrong-side-effect"]; actual=undefined
+  grants.deniedProviderCalls: expected 0; actual=undefined
+  grants.secretResolvedBeforeChecks: expected false; actual=undefined
+  audit.policyDenialsContainSecret: expected false; actual=undefined
+  
+  10 !== 0
+  
+      at accept (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/agent-runtime.acceptance.test.mjs:13:10)
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/agent-runtime.acceptance.test.mjs:55:3)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 10,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TST-113: eval PASS, bounded local repair and immutable replan remain distinct" time="0.000236" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\agent-runtime.acceptance.test.mjs" failure="Durable agent runtime conformance adapter is absent at C:\Users\user2\Documents\Cursor\hh\web\server\agent-runtime\conformance.ts&#10;status: expected &amp;quot;WAITING_FOR_HUMAN&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;gates.decisions: expected to include [&amp;quot;PASS&amp;quot;,&amp;quot;REPAIRABLE&amp;quot;,&amp;quot;REPLAN_REQUIRED&amp;quot;,&amp;quot;HUMAN_REQUIRED&amp;quot;]; actual=undefined&#10;repair.tasksCreated: expected 1; actual=undefined&#10;repair.reEvaluations: expected 1; actual=undefined&#10;repair.expensiveArtifactsReused: expected [&amp;quot;transcript-artifact-001&amp;quot;]; actual=undefined&#10;tasks.transcription.effectiveExecutions: expected 1; actual=undefined&#10;replan.planVersions: expected [1,2]; actual=undefined&#10;replan.previousPlanImmutable: expected true; actual=undefined&#10;replan.mappingRecorded: expected true; actual=undefined&#10;loopGuard.repeatedFingerprintBlocked: expected true; actual=undefined&#10;budgets.repairAttempts.used: repair usage must stay within the configured budget; actual=undefined&#10;budgets.replans.used: replan usage must stay within the configured budget; actual=undefined&#10;&#10;13 !== 0&#10;">
+		<failure type="testCodeFailure" message="Durable agent runtime conformance adapter is absent at C:\Users\user2\Documents\Cursor\hh\web\server\agent-runtime\conformance.ts&#10;status: expected &amp;quot;WAITING_FOR_HUMAN&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;gates.decisions: expected to include [&amp;quot;PASS&amp;quot;,&amp;quot;REPAIRABLE&amp;quot;,&amp;quot;REPLAN_REQUIRED&amp;quot;,&amp;quot;HUMAN_REQUIRED&amp;quot;]; actual=undefined&#10;repair.tasksCreated: expected 1; actual=undefined&#10;repair.reEvaluations: expected 1; actual=undefined&#10;repair.expensiveArtifactsReused: expected [&amp;quot;transcript-artifact-001&amp;quot;]; actual=undefined&#10;tasks.transcription.effectiveExecutions: expected 1; actual=undefined&#10;replan.planVersions: expected [1,2]; actual=undefined&#10;replan.previousPlanImmutable: expected true; actual=undefined&#10;replan.mappingRecorded: expected true; actual=undefined&#10;loopGuard.repeatedFingerprintBlocked: expected true; actual=undefined&#10;budgets.repairAttempts.used: repair usage must stay within the configured budget; actual=undefined&#10;budgets.replans.used: replan usage must stay within the configured budget; actual=undefined&#10;&#10;13 !== 0">
+[Error [ERR_TEST_FAILURE]: Durable agent runtime conformance adapter is absent at C:\Users\user2\Documents\Cursor\hh\web\server\agent-runtime\conformance.ts
+status: expected "WAITING_FOR_HUMAN"; actual="NOT_IMPLEMENTED"
+gates.decisions: expected to include ["PASS","REPAIRABLE","REPLAN_REQUIRED","HUMAN_REQUIRED"]; actual=undefined
+repair.tasksCreated: expected 1; actual=undefined
+repair.reEvaluations: expected 1; actual=undefined
+repair.expensiveArtifactsReused: expected ["transcript-artifact-001"]; actual=undefined
+tasks.transcription.effectiveExecutions: expected 1; actual=undefined
+replan.planVersions: expected [1,2]; actual=undefined
+replan.previousPlanImmutable: expected true; actual=undefined
+replan.mappingRecorded: expected true; actual=undefined
+loopGuard.repeatedFingerprintBlocked: expected true; actual=undefined
+budgets.repairAttempts.used: repair usage must stay within the configured budget; actual=undefined
+budgets.replans.used: replan usage must stay within the configured budget; actual=undefined
+
+13 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Durable agent runtime conformance adapter is absent at C:\Users\user2\Documents\Cursor\hh\web\server\agent-runtime\conformance.ts
+  status: expected "WAITING_FOR_HUMAN"; actual="NOT_IMPLEMENTED"
+  gates.decisions: expected to include ["PASS","REPAIRABLE","REPLAN_REQUIRED","HUMAN_REQUIRED"]; actual=undefined
+  repair.tasksCreated: expected 1; actual=undefined
+  repair.reEvaluations: expected 1; actual=undefined
+  repair.expensiveArtifactsReused: expected ["transcript-artifact-001"]; actual=undefined
+  tasks.transcription.effectiveExecutions: expected 1; actual=undefined
+  replan.planVersions: expected [1,2]; actual=undefined
+  replan.previousPlanImmutable: expected true; actual=undefined
+  replan.mappingRecorded: expected true; actual=undefined
+  loopGuard.repeatedFingerprintBlocked: expected true; actual=undefined
+  budgets.repairAttempts.used: repair usage must stay within the configured budget; actual=undefined
+  budgets.replans.used: replan usage must stay within the configured budget; actual=undefined
+  
+  13 !== 0
+  
+      at accept (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/agent-runtime.acceptance.test.mjs:13:10)
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/agent-runtime.acceptance.test.mjs:70:3)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 13,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TST-114: typed WAITING_FOR_HUMAN resumes the same run or supersedes on input change" time="0.000306" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\agent-runtime.acceptance.test.mjs" failure="Durable agent runtime conformance adapter is absent at C:\Users\user2\Documents\Cursor\hh\web\server\agent-runtime\conformance.ts&#10;escalation.initialCandidateState: expected &amp;quot;WAITING_FOR_HUMAN&amp;quot;; actual=undefined&#10;escalation.initialRunState: expected &amp;quot;WAITING_FOR_HUMAN&amp;quot;; actual=undefined&#10;escalation.record: typed escalation must contain obstacle, impact, attempts, budgets, evidence, reusable artifacts and concrete actions; actual=undefined&#10;sameInputResolution.runIdBefore: expected &amp;quot;run-synthetic-001&amp;quot;; actual=undefined&#10;sameInputResolution.runIdAfter: expected &amp;quot;run-synthetic-001&amp;quot;; actual=undefined&#10;sameInputResolution.checkpointsPreserved: expected true; actual=undefined&#10;sameInputResolution.budgetUsagePreserved: expected true; actual=undefined&#10;sameInputResolution.expensiveTaskRepeated: expected false; actual=undefined&#10;staleResolution.accepted: expected false; actual=undefined&#10;staleResolution.code: expected &amp;quot;STALE_ESCALATION_VERSION&amp;quot;; actual=undefined&#10;inputReplacement.previousRunState: expected &amp;quot;SUPERSEDED&amp;quot;; actual=undefined&#10;inputReplacement.newRunLinkedToEscalation: expected true; actual=undefined&#10;inputReplacement.newInputVersion: expected &amp;quot;input-v0002&amp;quot;; actual=undefined&#10;&#10;14 !== 0&#10;">
+		<failure type="testCodeFailure" message="Durable agent runtime conformance adapter is absent at C:\Users\user2\Documents\Cursor\hh\web\server\agent-runtime\conformance.ts&#10;escalation.initialCandidateState: expected &amp;quot;WAITING_FOR_HUMAN&amp;quot;; actual=undefined&#10;escalation.initialRunState: expected &amp;quot;WAITING_FOR_HUMAN&amp;quot;; actual=undefined&#10;escalation.record: typed escalation must contain obstacle, impact, attempts, budgets, evidence, reusable artifacts and concrete actions; actual=undefined&#10;sameInputResolution.runIdBefore: expected &amp;quot;run-synthetic-001&amp;quot;; actual=undefined&#10;sameInputResolution.runIdAfter: expected &amp;quot;run-synthetic-001&amp;quot;; actual=undefined&#10;sameInputResolution.checkpointsPreserved: expected true; actual=undefined&#10;sameInputResolution.budgetUsagePreserved: expected true; actual=undefined&#10;sameInputResolution.expensiveTaskRepeated: expected false; actual=undefined&#10;staleResolution.accepted: expected false; actual=undefined&#10;staleResolution.code: expected &amp;quot;STALE_ESCALATION_VERSION&amp;quot;; actual=undefined&#10;inputReplacement.previousRunState: expected &amp;quot;SUPERSEDED&amp;quot;; actual=undefined&#10;inputReplacement.newRunLinkedToEscalation: expected true; actual=undefined&#10;inputReplacement.newInputVersion: expected &amp;quot;input-v0002&amp;quot;; actual=undefined&#10;&#10;14 !== 0">
+[Error [ERR_TEST_FAILURE]: Durable agent runtime conformance adapter is absent at C:\Users\user2\Documents\Cursor\hh\web\server\agent-runtime\conformance.ts
+escalation.initialCandidateState: expected "WAITING_FOR_HUMAN"; actual=undefined
+escalation.initialRunState: expected "WAITING_FOR_HUMAN"; actual=undefined
+escalation.record: typed escalation must contain obstacle, impact, attempts, budgets, evidence, reusable artifacts and concrete actions; actual=undefined
+sameInputResolution.runIdBefore: expected "run-synthetic-001"; actual=undefined
+sameInputResolution.runIdAfter: expected "run-synthetic-001"; actual=undefined
+sameInputResolution.checkpointsPreserved: expected true; actual=undefined
+sameInputResolution.budgetUsagePreserved: expected true; actual=undefined
+sameInputResolution.expensiveTaskRepeated: expected false; actual=undefined
+staleResolution.accepted: expected false; actual=undefined
+staleResolution.code: expected "STALE_ESCALATION_VERSION"; actual=undefined
+inputReplacement.previousRunState: expected "SUPERSEDED"; actual=undefined
+inputReplacement.newRunLinkedToEscalation: expected true; actual=undefined
+inputReplacement.newInputVersion: expected "input-v0002"; actual=undefined
+
+14 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Durable agent runtime conformance adapter is absent at C:\Users\user2\Documents\Cursor\hh\web\server\agent-runtime\conformance.ts
+  escalation.initialCandidateState: expected "WAITING_FOR_HUMAN"; actual=undefined
+  escalation.initialRunState: expected "WAITING_FOR_HUMAN"; actual=undefined
+  escalation.record: typed escalation must contain obstacle, impact, attempts, budgets, evidence, reusable artifacts and concrete actions; actual=undefined
+  sameInputResolution.runIdBefore: expected "run-synthetic-001"; actual=undefined
+  sameInputResolution.runIdAfter: expected "run-synthetic-001"; actual=undefined
+  sameInputResolution.checkpointsPreserved: expected true; actual=undefined
+  sameInputResolution.budgetUsagePreserved: expected true; actual=undefined
+  sameInputResolution.expensiveTaskRepeated: expected false; actual=undefined
+  staleResolution.accepted: expected false; actual=undefined
+  staleResolution.code: expected "STALE_ESCALATION_VERSION"; actual=undefined
+  inputReplacement.previousRunState: expected "SUPERSEDED"; actual=undefined
+  inputReplacement.newRunLinkedToEscalation: expected true; actual=undefined
+  inputReplacement.newInputVersion: expected "input-v0002"; actual=undefined
+  
+  14 !== 0
+  
+      at accept (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/agent-runtime.acceptance.test.mjs:13:10)
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/agent-runtime.acceptance.test.mjs:88:3)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 14,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TST-115: intent, outbox reconciliation and compensation never expose partial success" time="0.000481" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\agent-runtime.acceptance.test.mjs" failure="Durable agent runtime conformance adapter is absent at C:\Users\user2\Documents\Cursor\hh\web\server\agent-runtime\conformance.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;faults.exercised: expected to include [&amp;quot;timeout-before-call&amp;quot;,&amp;quot;timeout-after-effect&amp;quot;,&amp;quot;partial-pdf-pair&amp;quot;,&amp;quot;lost-notification-response&amp;quot;,&amp;quot;compensation-failure&amp;quot;]; actual=undefined&#10;effects.allHaveDurableIntentBeforeCall: expected true; actual=undefined&#10;effects.allHaveIdempotencyIdentity: expected true; actual=undefined&#10;effects.duplicatePublications: expected 0; actual=undefined&#10;effects.duplicateNotifications: expected 0; actual=undefined&#10;publication.partialSuccessVisible: expected false; actual=undefined&#10;publication.visibleResultVersions: expected 1; actual=undefined&#10;outbox.separateFromCandidateReadiness: expected true; actual=undefined&#10;outbox.lostResponseReconciledBeforeRetry: expected true; actual=undefined&#10;compensation.failureAudited: expected true; actual=undefined&#10;compensation.failureReportedAsSuccess: expected false; actual=undefined&#10;&#10;13 !== 0&#10;">
+		<failure type="testCodeFailure" message="Durable agent runtime conformance adapter is absent at C:\Users\user2\Documents\Cursor\hh\web\server\agent-runtime\conformance.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;faults.exercised: expected to include [&amp;quot;timeout-before-call&amp;quot;,&amp;quot;timeout-after-effect&amp;quot;,&amp;quot;partial-pdf-pair&amp;quot;,&amp;quot;lost-notification-response&amp;quot;,&amp;quot;compensation-failure&amp;quot;]; actual=undefined&#10;effects.allHaveDurableIntentBeforeCall: expected true; actual=undefined&#10;effects.allHaveIdempotencyIdentity: expected true; actual=undefined&#10;effects.duplicatePublications: expected 0; actual=undefined&#10;effects.duplicateNotifications: expected 0; actual=undefined&#10;publication.partialSuccessVisible: expected false; actual=undefined&#10;publication.visibleResultVersions: expected 1; actual=undefined&#10;outbox.separateFromCandidateReadiness: expected true; actual=undefined&#10;outbox.lostResponseReconciledBeforeRetry: expected true; actual=undefined&#10;compensation.failureAudited: expected true; actual=undefined&#10;compensation.failureReportedAsSuccess: expected false; actual=undefined&#10;&#10;13 !== 0">
+[Error [ERR_TEST_FAILURE]: Durable agent runtime conformance adapter is absent at C:\Users\user2\Documents\Cursor\hh\web\server\agent-runtime\conformance.ts
+status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+faults.exercised: expected to include ["timeout-before-call","timeout-after-effect","partial-pdf-pair","lost-notification-response","compensation-failure"]; actual=undefined
+effects.allHaveDurableIntentBeforeCall: expected true; actual=undefined
+effects.allHaveIdempotencyIdentity: expected true; actual=undefined
+effects.duplicatePublications: expected 0; actual=undefined
+effects.duplicateNotifications: expected 0; actual=undefined
+publication.partialSuccessVisible: expected false; actual=undefined
+publication.visibleResultVersions: expected 1; actual=undefined
+outbox.separateFromCandidateReadiness: expected true; actual=undefined
+outbox.lostResponseReconciledBeforeRetry: expected true; actual=undefined
+compensation.failureAudited: expected true; actual=undefined
+compensation.failureReportedAsSuccess: expected false; actual=undefined
+
+13 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Durable agent runtime conformance adapter is absent at C:\Users\user2\Documents\Cursor\hh\web\server\agent-runtime\conformance.ts
+  status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+  faults.exercised: expected to include ["timeout-before-call","timeout-after-effect","partial-pdf-pair","lost-notification-response","compensation-failure"]; actual=undefined
+  effects.allHaveDurableIntentBeforeCall: expected true; actual=undefined
+  effects.allHaveIdempotencyIdentity: expected true; actual=undefined
+  effects.duplicatePublications: expected 0; actual=undefined
+  effects.duplicateNotifications: expected 0; actual=undefined
+  publication.partialSuccessVisible: expected false; actual=undefined
+  publication.visibleResultVersions: expected 1; actual=undefined
+  outbox.separateFromCandidateReadiness: expected true; actual=undefined
+  outbox.lostResponseReconciledBeforeRetry: expected true; actual=undefined
+  compensation.failureAudited: expected true; actual=undefined
+  compensation.failureReportedAsSuccess: expected false; actual=undefined
+  
+  13 !== 0
+  
+      at accept (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/agent-runtime.acceptance.test.mjs:13:10)
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/agent-runtime.acceptance.test.mjs:107:3)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 13,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TST-116: one production-like build supplies focused, regression and safe evidence gates" time="0.000454" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\agent-runtime.acceptance.test.mjs" failure="Durable agent runtime conformance adapter is absent at C:\Users\user2\Documents\Cursor\hh\web\server\agent-runtime\conformance.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;build.productionLike: expected true; actual=undefined&#10;build.id: one immutable build id is required; actual=undefined&#10;focused.passed: expected to include [&amp;quot;TST-110&amp;quot;,&amp;quot;TST-111&amp;quot;,&amp;quot;TST-112&amp;quot;,&amp;quot;TST-113&amp;quot;,&amp;quot;TST-114&amp;quot;,&amp;quot;TST-115&amp;quot;]; actual=undefined&#10;regression.passed: expected to include [&amp;quot;E2E-VAC-001&amp;quot;,&amp;quot;E2E-TRN-001&amp;quot;,&amp;quot;E2E-ABC-001&amp;quot;,&amp;quot;E2E-RESULT-001&amp;quot;]; actual=undefined&#10;focused.buildIdMatches: expected true; actual=undefined&#10;regression.buildIdMatches: expected true; actual=undefined&#10;evidence.machineResultAvailable: expected true; actual=undefined&#10;evidence.readableTimelineAvailable: expected true; actual=undefined&#10;evidence.runtimeArtifactsCleansed: expected true; actual=undefined&#10;evidence.retentionDays: expected 30; actual=undefined&#10;evidence.provisionedBackgroundRuntime: expected true; actual=undefined&#10;&#10;13 !== 0&#10;">
+		<failure type="testCodeFailure" message="Durable agent runtime conformance adapter is absent at C:\Users\user2\Documents\Cursor\hh\web\server\agent-runtime\conformance.ts&#10;status: expected &amp;quot;SUCCEEDED&amp;quot;; actual=&amp;quot;NOT_IMPLEMENTED&amp;quot;&#10;build.productionLike: expected true; actual=undefined&#10;build.id: one immutable build id is required; actual=undefined&#10;focused.passed: expected to include [&amp;quot;TST-110&amp;quot;,&amp;quot;TST-111&amp;quot;,&amp;quot;TST-112&amp;quot;,&amp;quot;TST-113&amp;quot;,&amp;quot;TST-114&amp;quot;,&amp;quot;TST-115&amp;quot;]; actual=undefined&#10;regression.passed: expected to include [&amp;quot;E2E-VAC-001&amp;quot;,&amp;quot;E2E-TRN-001&amp;quot;,&amp;quot;E2E-ABC-001&amp;quot;,&amp;quot;E2E-RESULT-001&amp;quot;]; actual=undefined&#10;focused.buildIdMatches: expected true; actual=undefined&#10;regression.buildIdMatches: expected true; actual=undefined&#10;evidence.machineResultAvailable: expected true; actual=undefined&#10;evidence.readableTimelineAvailable: expected true; actual=undefined&#10;evidence.runtimeArtifactsCleansed: expected true; actual=undefined&#10;evidence.retentionDays: expected 30; actual=undefined&#10;evidence.provisionedBackgroundRuntime: expected true; actual=undefined&#10;&#10;13 !== 0">
+[Error [ERR_TEST_FAILURE]: Durable agent runtime conformance adapter is absent at C:\Users\user2\Documents\Cursor\hh\web\server\agent-runtime\conformance.ts
+status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+build.productionLike: expected true; actual=undefined
+build.id: one immutable build id is required; actual=undefined
+focused.passed: expected to include ["TST-110","TST-111","TST-112","TST-113","TST-114","TST-115"]; actual=undefined
+regression.passed: expected to include ["E2E-VAC-001","E2E-TRN-001","E2E-ABC-001","E2E-RESULT-001"]; actual=undefined
+focused.buildIdMatches: expected true; actual=undefined
+regression.buildIdMatches: expected true; actual=undefined
+evidence.machineResultAvailable: expected true; actual=undefined
+evidence.readableTimelineAvailable: expected true; actual=undefined
+evidence.runtimeArtifactsCleansed: expected true; actual=undefined
+evidence.retentionDays: expected 30; actual=undefined
+evidence.provisionedBackgroundRuntime: expected true; actual=undefined
+
+13 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Durable agent runtime conformance adapter is absent at C:\Users\user2\Documents\Cursor\hh\web\server\agent-runtime\conformance.ts
+  status: expected "SUCCEEDED"; actual="NOT_IMPLEMENTED"
+  build.productionLike: expected true; actual=undefined
+  build.id: one immutable build id is required; actual=undefined
+  focused.passed: expected to include ["TST-110","TST-111","TST-112","TST-113","TST-114","TST-115"]; actual=undefined
+  regression.passed: expected to include ["E2E-VAC-001","E2E-TRN-001","E2E-ABC-001","E2E-RESULT-001"]; actual=undefined
+  focused.buildIdMatches: expected true; actual=undefined
+  regression.buildIdMatches: expected true; actual=undefined
+  evidence.machineResultAvailable: expected true; actual=undefined
+  evidence.readableTimelineAvailable: expected true; actual=undefined
+  evidence.runtimeArtifactsCleansed: expected true; actual=undefined
+  evidence.retentionDays: expected 30; actual=undefined
+  evidence.provisionedBackgroundRuntime: expected true; actual=undefined
+  
+  13 !== 0
+  
+      at accept (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/agent-runtime.acceptance.test.mjs:13:10)
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/agent-runtime.acceptance.test.mjs:125:3)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 13,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 7 -->
+	<!-- suites 0 -->
+	<!-- pass 0 -->
+	<!-- fail 7 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 95.7157 -->
+</testsuites>

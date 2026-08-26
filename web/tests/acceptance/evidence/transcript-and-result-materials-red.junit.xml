@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="VIS-DEMO CandidateDetail transcript tab renders every published utterance without truncation" time="0.247706" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs" failure="published candidate transcript has a semantic region">
+		<failure type="testCodeFailure" message="published candidate transcript has a semantic region">
+[Error [ERR_TEST_FAILURE]: published candidate transcript has a semantic region] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: published candidate transcript has a semantic region
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/demo-interface-visual-parity.acceptance.test.mjs:507:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="VIS-DEMO CandidateDetail passes the published candidate transcript into its transcript tab" time="0.001648" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs" failure="CandidateDetail tab consumes the projected candidate transcript rather than demo rows">
+		<failure type="testCodeFailure" message="CandidateDetail tab consumes the projected candidate transcript rather than demo rows">
+[Error [ERR_TEST_FAILURE]: CandidateDetail tab consumes the projected candidate transcript rather than demo rows] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: CandidateDetail tab consumes the projected candidate transcript rather than demo rows
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/demo-interface-visual-parity.acceptance.test.mjs:515:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: '"use client";\n\nimport { useEffect, useRef, useState, type FormEvent } from "react";\nimport {\n  type AbcDirectionField,\n  type AbcProfileDirection,\n  type AbcProfileValidationError,\n  validateAbcProfile,\n} from "./abc-profile-validation";\nimport {\n  DARK_THEME_QUERY,\n  THEME_STORAGE_KEY,\n  applyTheme,\n  parseTheme,\n  readStoredTheme,\n  resolveTheme,\n  writeStoredTheme,\n  type Theme,\n} from "./theme-preference";\nimport {\n  WORKFLOW_LABELS,\n  abcGradePercent,\n  buildDashboardSnapshot,\n  calculateAbcMatchPercent,\n  canArchive,\n  canReprocess,\n  getGreeting,\n  isProcessingStatus,\n  validateResultPair,\n  validateVacancyTitle,\n  type CandidateRecord,\n  type CandidateEvidenceItem,\n  type CandidateId,\n  type Recommendation,\n  type ResultDocumentType,\n  type VacancyCreateState,\n  type VacancyRecord,\n  type WorkflowStatus,\n} from "./product-model";\n\ntype View = "dashboard" | "vacancies" | "candidates" | "candidate";\ntype UiCandidate = CandidateRecord &amp; {\n  revision?: number;\n  tone: string;\n  updated: string;\n};\ntype StoredUiCandidate = CandidateRecord &amp; { revision: number };\n\nfunction CandidateProgress({ candidate }: { candidate: CandidateRecord }) {\n  const hasProgress = Number.isFinite(candidate.progressPercent);\n  const value = hasProgress\n    ? Math.min(100, Math.max(0, Math.round(candidate.progressPercent!)))\n    : null;\n  const milestone = candidate.progressMilestone?.trim() || WORKFLOW_LABELS[candidate.status];\n  return (\n    &lt;span className="candidate-progress">\n      &lt;span className="progress-copy">\n        {milestone}{value === null ? "" : ` · ${value}%`}\n      &lt;/span>\n      &lt;span\n        className="progress-track"\n        role={value === null ? undefined : "progressbar"}\n        aria-label={`Прогресс обработки: ${milestone}`}\n        aria-valuenow={value ?? undefined}\n        aria-valuemin={value === null ? undefined : 0}\n        aria-valuemax={value === null ? undefined : 100}\n      >\n        &lt;i style={{ width: value === null ? "0" : `${value}%` }} />\n      &lt;/span>\n    &lt;/span>\n  );\n}\ntype UiVacancy = VacancyRecord &amp; {\n  short: string;\n  avatar: string;\n  color: string;\n};\ntype VacancyPromptPayload = {\n  generation: { text: string; artifactId: "vacancy-profile/v1"; hash: string };\n  analysis: { text: string; artifactId: "candidate-assessment/v1"; hash: string };\n  analysisDefault: { text: string; artifactId: "candidate-assessment/v1"; hash: string };\n};\n\nfunction playVacancyReadySound() {\n  try {\n    const context = new window.AudioContext();\n    const oscillator = context.createOscillator();\n    const gain = context.createGain();\n    oscillator.type = "sine";\n    oscillator.frequency.setValueAtTime(660, context.currentTime);\n    gain.gain.setValueAtTime(0.0001, context.currentTime);\n    gain.gain.exponentialRampToValueAtTime(0.08, context.currentTime + 0.02);\n    gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.18);\n    oscillator.connect(gain);\n    gain.connect(context.destination);\n    oscillator.start();\n    oscillator.stop(context.currentTime + 0.2);\n    oscillator.addEventListener("ended", () => void context.close().catch(() => {}), { once: true });\n  } catch { /* Sound is an optional enhancement. */ }\n}\ntype DashboardSnapshot = ReturnType&lt;typeof buildDashboardSnapshot>;\ntype DriveConnection = {\n  state: "CONNECTED" | "REAUTH_REQUIRED" | "DISCONNECTED" | "MISCONFIGURED";\n  connected: boolean;\n  ownerEmail?: string;\n  rootFolderName?: string;\n  rootFolderUrl?: string;\n  nextAction?: string;\n  error?: string;\n};\ntype Preview = {\n  candidateId: CandidateId;\n  type: ResultDocumentType;\n  version: number;\n  title: string;\n} | null;\ntype DashboardStatusFilter =\n  | "MATERIALS_INCOMPLETE"\n  | "TRANSCRIBING"\n  | "ANALYZING"\n  | "VALIDATING"\n  | "WAITING_FOR_HUMAN"\n  | "READY"\n  | "FAILED";\ntype QueueFilter =\n  | { kind: "status"; status: DashboardStatusFilter }\n  | { kind: "archive" }\n  | {\n      kind: "recommendation";\n      recommendation: Recommendation;\n      period: 7 | 30 | 90;\n      candidateIds: CandidateId[];\n    }\n  | null;\nconst DRIVE_POLL_INTERVAL_MS = 15 * 1000;\n\nconst STANDARD_ABC_DIRECTIONS: readonly AbcProfileDirection[] = [\n  [\n    "productivity",\n    "Продуктивность",\n    "Превосходит ожидаемый результат",\n    "Стабильно достигает результата",\n    "Не достигает результата",\n  ],\n  [\n    "initiative",\n    "Инициатива",\n    "Действует проактивно",\n    "Предлагает улучшения после постановки",\n    "Ждёт подробных указаний",\n  ],\n  [\n    "self-learning",\n    "Самообучаемость",\n    "Самостоятельно осваивает новый контекст",\n    "Осваивает с поддержкой",\n    "Повторяет ошибки",\n  ],\n  [\n    "corporate-values",\n    "Корпоративные ценности",\n    "Подтверждает ценности примерами",\n    "В целом соответствует",\n    "Есть подтверждённые противоречия",\n  ],\n  [\n    "autonomy",\n    "Автономность",\n    "Приносит варианты и рекомендацию",\n    "Самостоятелен в типовых задачах",\n    "Требует постоянного контроля",\n  ],\n].map(([id, name, gradeA, gradeB, gradeC]) => ({\n  id,\n  name,\n  gradeA,\n  gradeB,\n  gradeC,\n  origin: "standard",\n}));\n\nconst createStandardAbcDirections = () =>\n  structuredClone(STANDARD_ABC_DIRECTIONS) as AbcProfileDirection[];\n\nconst VACANCY_COLORS = ["#ff98d8", "#ffc56b", "#58dfc4", "#87a9ff", "#a78bfa"];\nconst CANDIDATE_TONES = ["pink", "blue", "orange", "mint", "violet"];\nconst LEGACY_PROFILE_LABELS: Readonly&lt;Record&lt;string, string>> = {\n  цельДолжности: "Цель должности",\n  измеримыеРезультаты: "Измеримые результаты",\n  результат: "Результат",\n  метрики: "Метрики",\n  личныйВклад: "Личный вклад",\n  ожидаемыеИзменения: "Ожидаемые изменения",\n  масштабИРелевантность: "Масштаб и релевантность",\n  ключевыеКомпетенции: "Ключевые компетенции",\n  критичныеПрофессиональныеНавыки: "Критические профессиональные навыки",\n  название: "Название",\n  навык: "Навык",\n  наблюдаемыеПризнаки: "Наблюдаемые признаки",\n  условие: "Условие",\n  какПроверить: "Как проверить",\n  ожидаемыеДоказательства: "Ожидаемые доказательства",\n  чекЛист: "Чек-лист",\n  критерий: "Критерий",\n  статус: "Статус",\n  требование: "Требование",\n  итогДопуска: "Итог допуска",\n  чтоТребуетсяДополнить: "Что требуется дополнить",\n};\nconst LEGACY_TOP_LEVEL_LABELS = new Set([\n  "Цель должности",\n  "Измеримые результаты",\n  "Личный вклад",\n  "Ожидаемые изменения",\n  "Масштаб и релевантность",\n  "Ключевые компетенции",\n  "Критические профессиональные навыки",\n  "Чек-лист",\n  "Итог допуска",\n  "Что требуется дополнить",\n]);\nfunction readableLegacyProfileText(value: string): string {\n  const output: string[] = [];\n  for (const rawLine of value.split(/\\r?\\n/)) {\n    const match = rawLine.trimEnd().match(/^(\\s*)(•\\s*)?([^:]+):(.*)$/);\n    let line = rawLine.trimEnd();\n    let label = "";\n    let topLevel = false;\n    if (match) {\n      const [, indent, bullet = "", rawLabel, rest] = match;\n      label =\n        LEGACY_PROFILE_LABELS[rawLabel.trim()] ??\n        rawLabel.trim().replace(/([а-яёa-z\\d])([А-ЯЁA-Z])/g, "$1 $2");\n      line = `${indent}${bullet}${label}:${rest}`.replace(/[ \\t]+$/g, "");\n      topLevel =\n        indent.length === 0 &amp;&amp; !bullet &amp;&amp; LEGACY_TOP_LEVEL_LABELS.has(label);\n    }\n    if (topLevel &amp;&amp; output.some((item) => item.trim()))\n      while (output.at(-1) === "") output.pop();\n    if (topLevel &amp;&amp; output.some((item) => item.trim())) output.push("");\n    output.push(line);\n  }\n  return output\n    .join("\\n")\n    .replace(/\\n{3,}/g, "\\n\\n")\n    .trim();\n}\nconst hydrateVacancy = (vacancy: VacancyRecord, index: number): UiVacancy => ({\n  ...vacancy,\n  profile: Object.fromEntries(\n    Object.entries(vacancy.profile).map(([key, value]) => [\n      key,\n      readableLegacyProfileText(value),\n    ]),\n  ),\n  active: vacancy.active !== false,\n  archived: vacancy.archived === true,\n  short: vacancy.title,\n  avatar: vacancy.title.slice(0, 2).toUpperCase(),\n  color: VACANCY_COLORS[index % VACANCY_COLORS.length],\n});\nconst hydrateCandidate = (\n  candidate: StoredUiCandidate,\n  index: number,\n): UiCandidate => ({\n  ...candidate,\n  tone: CANDIDATE_TONES[index % CANDIDATE_TONES.length],\n  updated: WORKFLOW_LABELS[candidate.status],\n});\n\nconst nav: { id: View; label: string; icon: string }[] = [\n  { id: "dashboard", label: "Дашборд", icon: "⌘" },\n  { id: "vacancies", label: "Вакансии", icon: "▤" },\n  { id: "candidates", label: "Кандидаты", icon: "♙" },\n];\nconst statusClass = (status: WorkflowStatus) =>\n  `status status-${status.toLowerCase().replaceAll("_", "-")}`;\nfunction StatusPill({\n  status,\n  archived,\n}: {\n  status: WorkflowStatus;\n  archived?: boolean;\n}) {\n  return (\n    &lt;span className={statusClass(status)}>\n      &lt;i />\n      {WORKFLOW_LABELS[status]}\n      {archived ? " · Архив" : ""}\n    &lt;/span>\n  );\n}\n\ntype AuthState = {\n  phase: "checking" | "anonymous" | "password-change" | "authenticated";\n  user?: { displayName: string; email: string };\n  sessionExpired?: boolean;\n};\nconst csrfToken = () =>\n  typeof document === "undefined"\n    ? ""\n    : (document.cookie\n        .split(";")\n        .map((part) => part.trim())\n        .find((part) => part.startsWith("hh_csrf="))\n        ?.slice("hh_csrf=".length) ?? "");\n\nexport default function Home() {\n  const [auth, setAuth] = useState&lt;AuthState>({ phase: "checking" });\n  useEffect(() => {\n    const controller = new AbortController();\n    void fetch("/api/auth/session", {\n      cache: "no-store",\n      signal: controller.signal,\n    })\n      .then(async (response) => {\n        const payload = (await response.json()) as {\n          authenticated?: boolean;\n          scope?: string;\n          user?: { displayName: string; email: string };\n        };\n        if (!response.ok || !payload.authenticated)\n          setAuth({\n            phase: "anonymous",\n            sessionExpired:\n              new URLSearchParams(location.search).get("reason") === "expired",\n          });\n        else\n          setAuth({\n            phase:\n              payload.scope === "PASSWORD_CHANGE_ONLY"\n                ? "password-change"\n                : "authenticated",\n            user: payload.us'... 115859 more characters,
+    expected: /&lt;TranscriptTab\s+transcript=\{candidate\.transcript\}\s*\/>/,
+    operator: 'match',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="VIS-DEMO CandidateDetail transcript search filters the complete published set" time="0.124010" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs" failure="search finds the unique middle utterance from the full projection&#10;&#10;0 !== 1&#10;">
+		<failure type="testCodeFailure" message="search finds the unique middle utterance from the full projection&#10;&#10;0 !== 1">
+[Error [ERR_TEST_FAILURE]: search finds the unique middle utterance from the full projection
+
+0 !== 1
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: search finds the unique middle utterance from the full projection
+  
+  0 !== 1
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/demo-interface-visual-parity.acceptance.test.mjs:527:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="VIS-DEMO CandidateDetail transcript has subject-specific empty states" time="0.127463" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs" failure="published run without utterances has an explicit empty state">
+		<failure type="testCodeFailure" message="published run without utterances has an explicit empty state">
+[Error [ERR_TEST_FAILURE]: published run without utterances has an explicit empty state] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: published run without utterances has an explicit empty state
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/demo-interface-visual-parity.acceptance.test.mjs:535:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="VIS-DEMO READY projection and postgres query bind transcript bundle to the exact published report run" time="0.028216" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs" failure="Expected values to be strictly equal:&#10;+ actual - expected&#10;&#10;+ undefined&#10;- 'published-run-65-plus'&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly equal:&#10;+ actual - expected&#10;&#10;+ undefined&#10;- 'published-run-65-plus'">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly equal:
++ actual - expected
+
++ undefined
+- 'published-run-65-plus'
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + undefined
+  - 'published-run-65-plus'
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/demo-interface-visual-parity.acceptance.test.mjs:563:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: 'published-run-65-plus',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="VIS-DEMO result materials use separate aligned header and action rows" time="0.102416" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs" failure="title and version have their own header row&#10;&#10;0 !== 1&#10;">
+		<failure type="testCodeFailure" message="title and version have their own header row&#10;&#10;0 !== 1">
+[Error [ERR_TEST_FAILURE]: title and version have their own header row
+
+0 !== 1
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: title and version have their own header row
+  
+  0 !== 1
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/demo-interface-visual-parity.acceptance.test.mjs:842:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="VIS-DEMO result materials alignment is isolated from generic compact material grid" time="0.001504" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\demo-interface-visual-parity.acceptance.test.mjs" failure="generic compact item grid explicitly excludes the result block">
+		<failure type="testCodeFailure" message="generic compact item grid explicitly excludes the result block">
+[Error [ERR_TEST_FAILURE]: generic compact item grid explicitly excludes the result block] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: generic compact item grid explicitly excludes the result block
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/demo-interface-visual-parity.acceptance.test.mjs:851:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: `:root { color-scheme:light; --bg:#f4f6f8; --paper:#fff; --ink:#181b20; --muted:#7d838d; --line:#e7e9ed; --blue:#168cff; --blue-soft:#eaf4ff; --success-soft:#eaf9f3; --success-ink:#25765f; --warning-amber:#e3a21a; --warning-soft:color-mix(in srgb,var(--warning-amber) 18%,transparent); --warning-ink:#8a650d; --risk-soft:#fff0eb; --risk-ink:#bd573b; --score-track:#dbe4ec; --shadow:0 8px 28px rgba(33,48,75,.055); }\n.status-ready{background:var(--success-soft);color:var(--success-ink);border:1px solid color-mix(in srgb,var(--success-ink) 35%,transparent)}\n.status-ready i{background:var(--success-ink)}\n* { box-sizing:border-box; text-shadow:none !important; }\nhtml,body { margin:0; min-height:100%; background:var(--bg); color:var(--ink); font-family:"Segoe UI",Arial,sans-serif; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; text-rendering:optimizeLegibility; }\r\nbutton,input,select,textarea { font:inherit; }\r\nbutton { color:inherit; }\r\n.app { min-height:100vh; padding:16px; }\r\n.topbar { width:100%; max-width:1520px; height:72px; margin:0 auto; display:grid; grid-template-columns:max-content minmax(500px,1fr) auto; align-items:center; gap:16px; position:sticky; top:0; z-index:20; }\n.brand,.main-nav,.top-actions { background:rgba(255,255,255,.94); border:1px solid #edf0f3; box-shadow:var(--shadow); border-radius:21px; height:56px; }\r\n.brand { width:max-content; min-width:max-content; border:0; display:flex; align-items:center; gap:10px; padding:8px 14px; text-align:left; cursor:pointer; }\n.brand-mark { width:36px; height:36px; min-width:36px; display:block; background:url('/company-logo.png') center/contain no-repeat; filter:drop-shadow(0 5px 9px rgba(22,140,255,.2)); }\r\n.brand b,.brand small { display:block; white-space:nowrap; }.brand b{font-size:13px}.brand small{font-size:11px;color:var(--muted);margin-top:2px}\r\n.main-nav { display:flex; align-items:center; padding:5px; gap:6px; justify-self:stretch; }\r\n.main-nav button { min-width:126px; height:44px; padding:0 16px; border:0; border-radius:15px; background:transparent; color:#858a92; display:flex; gap:9px; align-items:center; justify-content:center; cursor:pointer; font-size:12px; transition:.18s; }\r\n.main-nav button:hover { background:#f4f7fa; color:#2f3741; }.main-nav button.active { background:linear-gradient(135deg,#72c8ff,#087ff4); color:white; box-shadow:0 8px 18px rgba(22,140,255,.24); }.main-nav button span{font-size:16px}\r\n.top-actions { display:flex; align-items:center; padding:5px 7px; gap:5px; }\r\n.theme-toggle{width:38px;height:38px;border:1px solid var(--line);background:var(--paper);border-radius:12px;display:grid;place-items:center;cursor:pointer;color:#536170;transition:background .2s,color .2s,transform .2s}.theme-toggle:hover{transform:rotate(-8deg);background:var(--blue-soft);color:var(--blue)}.theme-toggle span{font-size:16px;line-height:1;grid-area:1/1}.theme-icon-light{display:none}html[data-theme="dark"] .theme-icon-dark{display:none}html[data-theme="dark"] .theme-icon-light{display:inline}\r\n.global-search { width:158px; height:42px; display:flex; align-items:center; gap:8px; border:1px solid var(--line); border-radius:14px; padding:0 11px; }.global-search input{width:100%;border:0;outline:0;font-size:11px;background:transparent}.global-search span{font-size:20px}.round-button{width:42px;height:42px;border:0;background:transparent;border-radius:14px;position:relative;cursor:pointer;font-size:18px}.round-button:hover{background:#f5f7f9}.round-button i{position:absolute;right:9px;top:7px;width:7px;height:7px;border-radius:50%;background:#ff6475;box-shadow:0 0 0 3px #ffe8eb}.profile{height:42px;border:0;border-left:1px solid var(--line);background:transparent;padding:0 5px 0 11px;display:flex;align-items:center;gap:8px;text-align:left;cursor:pointer}.profile b,.profile small{display:block}.profile b{font-size:11px}.profile small{font-size:11px;color:var(--muted);margin-top:2px}\r\n.avatar{width:38px;height:38px;min-width:38px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:11px;font-style:normal}.avatar-owner{width:34px;height:34px;min-width:34px;background:linear-gradient(145deg,#f3a8f1,#af64ef);color:white}.avatar.pink{background:#ffe0f1;color:#a52c73}.avatar.blue{background:#dcecff;color:#3978b3}.avatar.orange{background:#ffe9c5;color:#a26b16}.avatar.mint{background:#d9f8ee;color:#1e856c}.avatar.violet{background:#e9e1ff;color:#6650a6}.avatar.large{width:48px;height:48px}.avatar.xlarge{width:68px;height:68px;font-size:17px}\r\n.page { max-width:1520px; margin:10px auto 0; }\r\n.welcome-row,.page-title { display:flex; align-items:end; justify-content:space-between; padding:15px 12px 18px; }.welcome-row h1,.page-title h1 { margin:0; font-size:28px; letter-spacing:-.7px; }.welcome-row>div>p:last-child,.page-title>div>p:last-child { margin:6px 0 0; color:var(--muted); font-size:11px; }.breadcrumb{font-size:11px;color:#8b929b;margin:0 0 9px}.date-chip{background:white;border:1px solid var(--line);border-radius:11px;padding:9px 12px;font-size:11px;box-shadow:var(--shadow)}\r\n.metric-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:14px}.metric-card{min-height:128px;border:0;border-radius:17px;padding:19px;text-align:left;position:relative;overflow:hidden;cursor:pointer;box-shadow:var(--shadow);transition:.2s}.metric-card:hover{transform:translateY(-2px);box-shadow:0 13px 30px rgba(33,48,75,.1)}.metric-card:after{content:"";position:absolute;width:170px;height:170px;border:25px solid rgba(255,255,255,.2);border-radius:45%;right:-50px;top:-80px;transform:rotate(35deg)}.metric-card.pink{background:linear-gradient(135deg,#ffd8ef,#f7a5e0)}.metric-card.orange{background:linear-gradient(135deg,#fff0cf,#ffd799)}.metric-card.blue{background:linear-gradient(135deg,#e3efff,#b8d1ff)}.metric-card.mint{background:linear-gradient(135deg,#d5fff3,#77eccd)}.metric-card.status-insufficient{background:linear-gradient(135deg,#fff4cf,#f3d37e);color:#6d4b00}.metric-card.status-transcribing{background:linear-gradient(135deg,#e9e7ff,#c7c2ff);color:#3f358a}.metric-card.status-analyzing{background:linear-gradient(135deg,#ece9ff,#c9c0ff);color:#45378f}.metric-card.status-validating{background:linear-gradient(135deg,#f0e8ff,#d6bfff);color:#573681}.metric-card.status-ready{background:linear-gradient(135deg,#e1f8eb,#a9e4c2);color:#216744}.metric-card.status-failed{background:linear-gradient(135deg,#ffe8e5,#f2b4ae);color:#842f2b}.metric-card.archive{background:linear-gradient(135deg,#eef1f5,#cbd3dd);color:#485361}.metric-icon{width:29px;height:29px;border-radius:9px;background:rgba(255,255,255,.72);display:grid;place-items:center;float:left;margin-right:10px}.metric-card p{font-size:12px;font-weight:600;margin:7px 0 18px}.metric-card strong{font-size:27px;display:block}.metric-card small{font-size:11px;opacity:.65}.metric-card em{position:absolute;right:16px;bottom:17px;background:white;border-radius:10px;padding:4px 8px;font-size:11px;font-style:normal;z-index:2}.metric-card .up{color:#13a76d}.metric-card .urgent{color:#f05d67}\r\n.dashboard-grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(270px,.8fr);gap:14px;margin-top:14px}.panel{background:var(--paper);border:1px solid #e9ebef;border-radius:18px;box-shadow:var(--shadow)}.panel-head{display:flex;justify-content:space-between;align-items:start;gap:15px}.panel-head h2{font-size:15px;margin:2px 0 0}.eyebrow{margin:0 0 5px;color:#9aa0a9;text-transform:uppercase;letter-spacing:1.15px;font-size:11px;font-weight:700}.panel-head button,.table-tools button{border:1px solid var(--line);background:#fff;border-radius:9px;padding:7px 10px;font-size:11px;color:#676e78;cursor:pointer}.flow-panel{padding:18px 20px;min-height:280px}.bar-chart{height:185px;display:flex;gap:20px;align-items:stretch;padding:24px 14px 0;border-bottom:1px solid var(--line);background:repeating-linear-gradient(to bottom,transparent 0,transparent 45px,#f0f1f4 46px)}.bar-slot{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:8px}.bar-wrap{width:100%;height:145px;display:flex;align-items:end;justify-content:center;gap:4px}.bar{width:11px;min-height:10px;border-radius:5px 5px 2px 2px}.bar.new{background:linear-gradient(#73c5ff,#138dff)}.bar.ready{background:linear-gradient(#baf4e3,#51d9b7)}.bar-slot small{font-size:11px;color:#9298a2}.legend{display:flex;gap:18px;justify-content:center;margin-top:12px;font-size:11px;color:#7c838d}.legend span{display:flex;gap:6px;align-items:center}.legend i{width:7px;height:7px;border-radius:50%}.legend-new{background:#168cff}.legend-ready{background:#51d9b7}.result-panel{padding:18px 20px}.donut-wrap{display:grid;place-items:center;margin:15px 0}.donut{width:145px;height:145px;border-radius:50%;background:conic-gradient(#55dec0 0 58%,#89a8ff 58% 84%,#ffc87c 84% 100%);display:grid;place-items:center;transform:rotate(12deg);box-shadow:0 5px 20px rgba(67,167,190,.18)}.donut:before{content:"";position:absolute;width:88px;height:88px;background:#fff;border-radius:50%}.donut div{position:relative;z-index:1;text-align:center;transform:rotate(-12deg)}.donut small,.donut strong{display:block}.donut small{font-size:11px;color:var(--muted)}.donut strong{font-size:25px;margin-top:2px}.result-legend{display:grid;gap:7px}.result-legend span{display:grid;grid-template-columns:8px 22px 1fr;align-items:center;font-size:11px;color:var(--muted)}.result-legend i{width:7px;height:7px;border-radius:3px}.result-legend i.green{background:#55dec0}.result-legend i.yellow{background:#ffc87c}.result-legend i.red{background:#89a8ff}.result-legend b{color:var(--ink);font-size:11px}.attention-panel{padding:18px 20px}.attention-list{margin-top:10px}.attention-list>button{width:100%;border:0;border-top:1px solid #eff0f2;background:white;display:grid;grid-template-columns:38px minmax(180px,1fr) 120px 90px 16px;gap:12px;align-items:center;text-align:left;padding:12px 5px;cursor:pointer;border-radius:8px}.attention-list>button:hover{background:#f8fbfd}.per`... 88245 more characters,
+    expected: /\.materials-compact\s*>\s*div:not\(\.panel-head\):not\(\.result-materials\)\s*\{/,
+    operator: 'match',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 7 -->
+	<!-- suites 0 -->
+	<!-- pass 0 -->
+	<!-- fail 7 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 927.8674 -->
+</testsuites>

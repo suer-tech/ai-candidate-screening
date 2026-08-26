@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="MDA-REVISED-REQUIREDNESS-027 [VAC-011, MDA-003, TST-121]: llm-semantic-requiredness" time="0.044526" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs" failure="scenario status expected SUCCEEDED; actual=&amp;quot;ADAPTER_ERROR&amp;quot;&#10;vacancy write contract must not expose a separate requirements field&#10;vacancy UI/API must not require required or hardRequired toggles&#10;LLM matrix compiler must assign semantic requiredness&#10;compiler result must include both required and optional semantic examples&#10;semantically mandatory criterion must compile as required&#10;optional preference must not compile as required&#10;every requiredness decision needs an explanation&#10;independent critic must verify requiredness in a clean context&#10;&#10;9 !== 0&#10;">
+		<failure type="testCodeFailure" message="scenario status expected SUCCEEDED; actual=&amp;quot;ADAPTER_ERROR&amp;quot;&#10;vacancy write contract must not expose a separate requirements field&#10;vacancy UI/API must not require required or hardRequired toggles&#10;LLM matrix compiler must assign semantic requiredness&#10;compiler result must include both required and optional semantic examples&#10;semantically mandatory criterion must compile as required&#10;optional preference must not compile as required&#10;every requiredness decision needs an explanation&#10;independent critic must verify requiredness in a clean context&#10;&#10;9 !== 0">
+[Error [ERR_TEST_FAILURE]: scenario status expected SUCCEEDED; actual="ADAPTER_ERROR"
+vacancy write contract must not expose a separate requirements field
+vacancy UI/API must not require required or hardRequired toggles
+LLM matrix compiler must assign semantic requiredness
+compiler result must include both required and optional semantic examples
+semantically mandatory criterion must compile as required
+optional preference must not compile as required
+every requiredness decision needs an explanation
+independent critic must verify requiredness in a clean context
+
+9 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: scenario status expected SUCCEEDED; actual="ADAPTER_ERROR"
+  vacancy write contract must not expose a separate requirements field
+  vacancy UI/API must not require required or hardRequired toggles
+  LLM matrix compiler must assign semantic requiredness
+  compiler result must include both required and optional semantic examples
+  semantically mandatory criterion must compile as required
+  optional preference must not compile as required
+  every requiredness decision needs an explanation
+  independent critic must verify requiredness in a clean context
+  
+  9 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/matrix-driven-assessment.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 9,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="MDA-REVISED-HARD-STOP-028 [VAC-012, MDA-003, TST-121]: hard-required-iff-stop-factor" time="0.003492" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs" failure="scenario status expected SUCCEEDED; actual=&amp;quot;ADAPTER_ERROR&amp;quot;&#10;every stop-factor source criterion must have hardRequired=true&#10;non-stop-factor criterion must have hardRequired=false&#10;both directions of hardRequired/source-section mismatch must be rejected&#10;hardRequired correspondence rejection must be typed&#10;shadow gate must block inaccurate hardRequired mapping&#10;&#10;6 !== 0&#10;">
+		<failure type="testCodeFailure" message="scenario status expected SUCCEEDED; actual=&amp;quot;ADAPTER_ERROR&amp;quot;&#10;every stop-factor source criterion must have hardRequired=true&#10;non-stop-factor criterion must have hardRequired=false&#10;both directions of hardRequired/source-section mismatch must be rejected&#10;hardRequired correspondence rejection must be typed&#10;shadow gate must block inaccurate hardRequired mapping&#10;&#10;6 !== 0">
+[Error [ERR_TEST_FAILURE]: scenario status expected SUCCEEDED; actual="ADAPTER_ERROR"
+every stop-factor source criterion must have hardRequired=true
+non-stop-factor criterion must have hardRequired=false
+both directions of hardRequired/source-section mismatch must be rejected
+hardRequired correspondence rejection must be typed
+shadow gate must block inaccurate hardRequired mapping
+
+6 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: scenario status expected SUCCEEDED; actual="ADAPTER_ERROR"
+  every stop-factor source criterion must have hardRequired=true
+  non-stop-factor criterion must have hardRequired=false
+  both directions of hardRequired/source-section mismatch must be rejected
+  hardRequired correspondence rejection must be typed
+  shadow gate must block inaccurate hardRequired mapping
+  
+  6 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/matrix-driven-assessment.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 6,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="MDA-REVISED-REQUIRED-MISMATCH-029 [ASM-050]: required-mismatch-rejection" time="0.002639" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs" failure="scenario status expected SUCCEEDED; actual=&amp;quot;ADAPTER_ERROR&amp;quot;&#10;fixture must reach a proven required mismatch&#10;required mismatch needs admissible evidence&#10;proven required mismatch must produce rejection&#10;formula must persist the required-mismatch branch&#10;&#10;5 !== 0&#10;">
+		<failure type="testCodeFailure" message="scenario status expected SUCCEEDED; actual=&amp;quot;ADAPTER_ERROR&amp;quot;&#10;fixture must reach a proven required mismatch&#10;required mismatch needs admissible evidence&#10;proven required mismatch must produce rejection&#10;formula must persist the required-mismatch branch&#10;&#10;5 !== 0">
+[Error [ERR_TEST_FAILURE]: scenario status expected SUCCEEDED; actual="ADAPTER_ERROR"
+fixture must reach a proven required mismatch
+required mismatch needs admissible evidence
+proven required mismatch must produce rejection
+formula must persist the required-mismatch branch
+
+5 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: scenario status expected SUCCEEDED; actual="ADAPTER_ERROR"
+  fixture must reach a proven required mismatch
+  required mismatch needs admissible evidence
+  proven required mismatch must produce rejection
+  formula must persist the required-mismatch branch
+  
+  5 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/matrix-driven-assessment.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 5,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="MDA-REVISED-CRITICAL-RISK-030 [ASM-050, ASM-073, MDA-008, INT-030]: verified-critical-unmapped-risk" time="0.004342" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs" failure="scenario status expected SUCCEEDED; actual=&amp;quot;ADAPTER_ERROR&amp;quot;&#10;open pass alone must remain informational&#10;separate risk skill must propose criticality&#10;independent verification must confirm criticality&#10;assessment and verification require distinct protected traces&#10;critical-risk verifier must receive a clean context&#10;verified risk requires candidate-scoped admissible locators&#10;candidate risk must not mutate the shared matrix or create a stop factor&#10;independently verified critical risk must produce rejection&#10;snapshot must retain risk provenance and formula branch&#10;&#10;10 !== 0&#10;">
+		<failure type="testCodeFailure" message="scenario status expected SUCCEEDED; actual=&amp;quot;ADAPTER_ERROR&amp;quot;&#10;open pass alone must remain informational&#10;separate risk skill must propose criticality&#10;independent verification must confirm criticality&#10;assessment and verification require distinct protected traces&#10;critical-risk verifier must receive a clean context&#10;verified risk requires candidate-scoped admissible locators&#10;candidate risk must not mutate the shared matrix or create a stop factor&#10;independently verified critical risk must produce rejection&#10;snapshot must retain risk provenance and formula branch&#10;&#10;10 !== 0">
+[Error [ERR_TEST_FAILURE]: scenario status expected SUCCEEDED; actual="ADAPTER_ERROR"
+open pass alone must remain informational
+separate risk skill must propose criticality
+independent verification must confirm criticality
+assessment and verification require distinct protected traces
+critical-risk verifier must receive a clean context
+verified risk requires candidate-scoped admissible locators
+candidate risk must not mutate the shared matrix or create a stop factor
+independently verified critical risk must produce rejection
+snapshot must retain risk provenance and formula branch
+
+10 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: scenario status expected SUCCEEDED; actual="ADAPTER_ERROR"
+  open pass alone must remain informational
+  separate risk skill must propose criticality
+  independent verification must confirm criticality
+  assessment and verification require distinct protected traces
+  critical-risk verifier must receive a clean context
+  verified risk requires candidate-scoped admissible locators
+  candidate risk must not mutate the shared matrix or create a stop factor
+  independently verified critical risk must produce rejection
+  snapshot must retain risk provenance and formula branch
+  
+  10 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/matrix-driven-assessment.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 10,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="MDA-REVISED-RISK-UNVERIFIED-031 [ASM-050, ASM-073, MDA-008]: unverified-risk-non-rejection" time="0.004325" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs" failure="scenario status expected SUCCEEDED; actual=&amp;quot;ADAPTER_ERROR&amp;quot;&#10;failed verification must leave signal informational&#10;failed verification cannot reject the candidate&#10;verified noncritical risk may only become a caveat&#10;noncritical risk must use caveat recommendation branch&#10;shadow gate must block a rejection based on unverified risk&#10;&#10;6 !== 0&#10;">
+		<failure type="testCodeFailure" message="scenario status expected SUCCEEDED; actual=&amp;quot;ADAPTER_ERROR&amp;quot;&#10;failed verification must leave signal informational&#10;failed verification cannot reject the candidate&#10;verified noncritical risk may only become a caveat&#10;noncritical risk must use caveat recommendation branch&#10;shadow gate must block a rejection based on unverified risk&#10;&#10;6 !== 0">
+[Error [ERR_TEST_FAILURE]: scenario status expected SUCCEEDED; actual="ADAPTER_ERROR"
+failed verification must leave signal informational
+failed verification cannot reject the candidate
+verified noncritical risk may only become a caveat
+noncritical risk must use caveat recommendation branch
+shadow gate must block a rejection based on unverified risk
+
+6 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: scenario status expected SUCCEEDED; actual="ADAPTER_ERROR"
+  failed verification must leave signal informational
+  failed verification cannot reject the candidate
+  verified noncritical risk may only become a caveat
+  noncritical risk must use caveat recommendation branch
+  shadow gate must block a rejection based on unverified risk
+  
+  6 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/matrix-driven-assessment.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 6,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="MDA-REVISED-RISK-SENSITIVE-032 [ASM-074, SEC-021, MDA-008, TST-121]: sensitive-irrelevant-risk-exclusion" time="0.003487" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs" failure="scenario status expected SUCCEEDED; actual=&amp;quot;ADAPTER_ERROR&amp;quot;&#10;sensitive content must be filtered while the irrelevant synthetic signal remains auditable&#10;risk skills must not receive prohibited sensitive values&#10;sensitive signal cannot enter critical assessment&#10;role-irrelevant signal cannot become critical&#10;sensitive or irrelevant signals cannot cause rejection&#10;filtered signals must not mutate the matrix&#10;&#10;7 !== 0&#10;">
+		<failure type="testCodeFailure" message="scenario status expected SUCCEEDED; actual=&amp;quot;ADAPTER_ERROR&amp;quot;&#10;sensitive content must be filtered while the irrelevant synthetic signal remains auditable&#10;risk skills must not receive prohibited sensitive values&#10;sensitive signal cannot enter critical assessment&#10;role-irrelevant signal cannot become critical&#10;sensitive or irrelevant signals cannot cause rejection&#10;filtered signals must not mutate the matrix&#10;&#10;7 !== 0">
+[Error [ERR_TEST_FAILURE]: scenario status expected SUCCEEDED; actual="ADAPTER_ERROR"
+sensitive content must be filtered while the irrelevant synthetic signal remains auditable
+risk skills must not receive prohibited sensitive values
+sensitive signal cannot enter critical assessment
+role-irrelevant signal cannot become critical
+sensitive or irrelevant signals cannot cause rejection
+filtered signals must not mutate the matrix
+
+7 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: scenario status expected SUCCEEDED; actual="ADAPTER_ERROR"
+  sensitive content must be filtered while the irrelevant synthetic signal remains auditable
+  risk skills must not receive prohibited sensitive values
+  sensitive signal cannot enter critical assessment
+  role-irrelevant signal cannot become critical
+  sensitive or irrelevant signals cannot cause rejection
+  filtered signals must not mutate the matrix
+  
+  7 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///C:/Users/user2/Documents/Cursor/hh/web/tests/matrix-driven-assessment.acceptance.test.mjs:10:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 7,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 6 -->
+	<!-- suites 0 -->
+	<!-- pass 0 -->
+	<!-- fail 6 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 169.7196 -->
+</testsuites>

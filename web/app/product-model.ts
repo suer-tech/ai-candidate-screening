@@ -1,4 +1,5 @@
 import type { AbcProfileDirection } from "./abc-profile-validation";
+import type { VacancyGenerationPromptMap } from "../server/product/prompt-contracts";
 
 export const WORKFLOW_STATUS = {
   NEW: "Новый",
@@ -12,31 +13,106 @@ export const WORKFLOW_STATUS = {
   FAILED: "Ошибка",
 } as const;
 
-export type WorkflowStatus = keyof typeof WORKFLOW_STATUS;
+export const WORKFLOW_LABELS = { ...WORKFLOW_STATUS, WAITING_FOR_HUMAN: "Требуется действие" } as const;
+export type WorkflowStatus = keyof typeof WORKFLOW_LABELS;
 export type Recommendation = "Не рекомендовать" | "Недостаточно данных" | "Рекомендовать с оговорками" | "Рекомендовать";
 export type ResultDocumentType = "candidate-results" | "abc-test";
+export type CandidateId = string | number;
 
 export type ResultDocument = {
   id: string;
   type: ResultDocumentType;
   fileName: string;
   version: number;
-  candidateId: number;
+  candidateId: CandidateId;
   vacancyId: string;
   published: boolean;
   valid: boolean;
 };
+
+export type AssessmentOverviewItem = {
+  name: string;
+  state?: string;
+  reason?: string;
+  factIds: string[];
+};
+
+export type CandidateMaterial = {
+  id: string;
+  fileName: string;
+  kind: "resume" | "interview" | "notes" | "document" | "other";
+  state?: string;
+};
+
+export type CandidateEvidenceItem = {
+  id: string;
+  label: string;
+  technicalType?: string;
+  claim?: string;
+  source: string;
+  quote?: string;
+  page?: number | null;
+  timecode?: string;
+  criterion?: string;
+};
+
+export type CandidateAiOverview = {
+  state?: "present" | "error";
+  message?: string;
+  summary?: string;
+  recommendationBasis: string;
+  stopFactors: AssessmentOverviewItem[];
+  abc: Array<{ direction: string; grade: string; reason?: string; factIds: string[] }>;
+  strengths?: AssessmentOverviewItem[];
+  competencies: AssessmentOverviewItem[];
+  risks: AssessmentOverviewItem[];
+  accessToKe: AssessmentOverviewItem[];
+  evidence: CandidateEvidenceItem[];
+};
+
+const ABC_MATCH_POINTS = Object.freeze({ A: 100, B: 70, C: 40 } as const);
+
+export function abcGradePercent(grade: unknown): number | null {
+  const normalized = typeof grade === "string" ? grade.trim().toUpperCase() : "";
+  return normalized === "A" || normalized === "B" || normalized === "C"
+    ? ABC_MATCH_POINTS[normalized]
+    : null;
+}
+
+export function calculateAbcMatchPercent(
+  directions: readonly { grade?: unknown }[] | null | undefined,
+): number | null {
+  const values = (directions ?? [])
+    .map((direction) => abcGradePercent(direction.grade))
+    .filter((value): value is number => value !== null);
+  return values.length
+    ? Math.round(values.reduce((total, value) => total + value, 0) / values.length)
+    : null;
+}
 
 export type ResultPair = {
   version: number;
   completedAt: string;
   summary: string;
   recommendation: Recommendation;
+  aiOverview?: CandidateAiOverview;
   documents: readonly [ResultDocument, ResultDocument];
 };
 
+export type CandidateTranscriptUtterance = {
+  startMs: number;
+  endMs: number;
+  speaker: string;
+  text: string;
+};
+
+export type CandidateTranscript = {
+  runId: string;
+  utterances: CandidateTranscriptUtterance[];
+};
+
 export type CandidateRecord = {
-  id: number;
+  id: CandidateId;
   name: string;
   initials: string;
   vacancyId: string;
@@ -46,23 +122,61 @@ export type CandidateRecord = {
   stageStartedAt: string;
   elapsedMinutes: number;
   etaMinutes: number | null;
+  progressPercent?: number;
+  progressMilestone?: string;
+  workflowVersion?: string;
+  matrixCompilation?: { state: "CLAIMED" | "PUBLISHED" | "FAILED"; repairCount: number; terminalErrorCode?: string };
+  matrixShadow?: { state: string };
+  materials?: CandidateMaterial[];
+  transcript?: CandidateTranscript;
   result: ResultPair | null;
   failedStage?: string;
   failureReason?: string;
   attempts?: number;
   automaticRetriesExhausted?: boolean;
+  escalation?: {
+    id: string;
+    version: number;
+    stage: string;
+    obstacle: string;
+    impact: string;
+    attempts: number;
+    evidence: string[];
+    reusableArtifacts: string[];
+    actions: { key: string; label: string }[];
+  };
 };
 
 export type VacancyRecord = {
   id: string;
   title: string;
   normalizedTitle: string;
-  active: true;
-  version: 1;
+  active: boolean;
+  archived: boolean;
+  version: number;
   templateVersion: string;
   driveFolderId: string;
   profile: Record<string, string>;
+  requirements?: VacancyProfileRequirement[];
   abcDirections: AbcProfileDirection[];
+  analysisPrompt?: {
+    text: string;
+    artifactId: "candidate-assessment/v1";
+    hash: string;
+  };
+  generationPrompts?: VacancyGenerationPromptMap;
+  generationPromptsRevision?: number;
+};
+
+export type VacancyLifecycleAction = "archive" | "restore" | "delete";
+
+export type VacancyLifecycleAuditEvent = {
+  vacancyId: string;
+  action: VacancyLifecycleAction;
+  actor: string;
+  timestamp: string;
+  outcome: "success" | "rejected";
+  details?: string;
 };
 
 export type VacancyCreateState = {
@@ -72,16 +186,28 @@ export type VacancyCreateState = {
 
 export type VacancyCreateInput = {
   operationId: string;
+  generationOperationId?: string;
+  confirmedSnapshotHash?: string;
   title: string;
   profile: Record<string, string>;
   abcDirections: AbcProfileDirection[];
   templateVersion: string;
 };
 
+export type VacancyProfileRequirement = {
+  id: string;
+  text: string;
+  required: boolean;
+  hardRequired: boolean;
+  expectedLevelOrDuration?: string;
+  allowedEquivalents?: string[];
+  evidenceRule?: string;
+};
+
 export type AuditEvent = {
   action: "archive" | "restore" | "delete" | "reprocess" | "export";
   actor: string;
-  candidateId: number;
+  candidateId: CandidateId;
   timestamp: string;
   outcome: "success" | "rejected";
   details?: string;
@@ -90,14 +216,14 @@ export type AuditEvent = {
 export type CandidateRun = {
   runId: string;
   resultVersion: number;
-  candidateId: number;
+  candidateId: CandidateId;
   inputVersion: string;
   profileVersion: string;
   startedAt: string;
   reusedStages: string[];
 };
 
-const PROCESSING = new Set<WorkflowStatus>(["MATERIALS_READY", "TRANSCRIBING", "ANALYZING", "VALIDATING"]);
+const PROCESSING = new Set<WorkflowStatus>(["WAITING_FOR_STABILITY", "MATERIALS_READY", "TRANSCRIBING", "ANALYZING", "VALIDATING"]);
 
 export function normalizeVacancyTitle(value: string) {
   return value.trim().replace(/\s+/g, " ").toLocaleLowerCase("ru-RU");
@@ -112,9 +238,8 @@ export function validateVacancyTitle(title: string, existing: readonly VacancyRe
 
 export function validateFullVacancyProfile(input: VacancyCreateInput) {
   const missing = ["Образ результата", "Компетенции", "Стоп-факторы", "Допуск к КЕ"].filter((key) => !input.profile[key]?.trim());
-  if (!input.abcDirections.length) missing.push("ABC-профиль");
   for (const direction of input.abcDirections) {
-    if (![direction.name, direction.gradeA, direction.gradeB, direction.gradeC].every((value) => value.trim())) {
+    if (!direction.name.trim()) {
       missing.push(`ABC: ${direction.name || "без названия"}`);
     }
   }
@@ -142,6 +267,7 @@ export function createVacancyAtomically(state: VacancyCreateState, input: Vacanc
     title: input.title.trim().replace(/\s+/g, " "),
     normalizedTitle: normalizeVacancyTitle(input.title),
     active: true,
+    archived: false,
     version: 1,
     templateVersion: input.templateVersion,
     driveFolderId: folderId,
@@ -169,6 +295,11 @@ export function canReprocess(candidate: CandidateRecord) {
   return !candidate.archived && (candidate.status === "READY" || (candidate.status === "FAILED" && candidate.automaticRetriesExhausted === true));
 }
 
+export function filterDiscoverableCandidateFolders<T extends { vacancyFolderId: string }>(folders: readonly T[], vacancies: readonly VacancyRecord[]) {
+  const activeFolderIds = new Set(vacancies.filter((vacancy) => vacancy.active && !vacancy.archived).map((vacancy) => vacancy.driveFolderId));
+  return folders.filter((folder) => activeFolderIds.has(folder.vacancyFolderId));
+}
+
 export function archiveCandidate(candidate: CandidateRecord) {
   if (!canArchive(candidate)) throw new Error("Архивирование доступно после завершения обработки");
   return { ...candidate, archived: true };
@@ -177,6 +308,50 @@ export function archiveCandidate(candidate: CandidateRecord) {
 export function restoreCandidate(candidate: CandidateRecord) {
   if (!candidate.archived) throw new Error("Кандидат не находится в архиве");
   return { ...candidate, archived: false };
+}
+
+export function mergeCandidateLifecycleProjection(
+  current: CandidateRecord,
+  updated: CandidateRecord,
+  action: "archive" | "restore" | "reprocess",
+) {
+  const acknowledged = {
+    ...updated,
+    archived: action === "archive" ? true : action === "restore" ? false : updated.archived,
+  };
+  if (action === "reprocess") {
+    const responseHasCurrentProgress = acknowledged.status !== "READY" && acknowledged.status !== "FAILED";
+    return structuredClone({
+      ...acknowledged,
+      status: responseHasCurrentProgress ? acknowledged.status : "WAITING_FOR_STABILITY",
+      elapsedMinutes: responseHasCurrentProgress ? acknowledged.elapsedMinutes : 0,
+      etaMinutes: responseHasCurrentProgress ? acknowledged.etaMinutes : null,
+      progressPercent: responseHasCurrentProgress && Number.isFinite(acknowledged.progressPercent) ? acknowledged.progressPercent : 0,
+      progressMilestone: responseHasCurrentProgress && acknowledged.progressMilestone?.trim()
+        ? acknowledged.progressMilestone
+        : "Ожидание стабильности материалов",
+      transcript: undefined,
+      failedStage: undefined,
+      failureReason: undefined,
+      automaticRetriesExhausted: undefined,
+      result: null,
+    });
+  }
+  if (!validateResultPair(current) || validateResultPair(acknowledged)) {
+    return structuredClone(acknowledged);
+  }
+  return {
+    ...acknowledged,
+    status: "READY" as const,
+    stageStartedAt: current.stageStartedAt,
+    elapsedMinutes: current.elapsedMinutes,
+    etaMinutes: current.etaMinutes,
+    progressPercent: current.progressPercent ?? 100,
+    progressMilestone: current.progressMilestone ?? "Результат опубликован",
+    transcript: current.transcript ? structuredClone(current.transcript) : undefined,
+    materials: current.materials ? structuredClone(current.materials) : updated.materials,
+    result: structuredClone(current.result),
+  };
 }
 
 export function deleteArchivedCandidate(candidate: CandidateRecord) {
@@ -195,7 +370,20 @@ export function executeCandidateLifecycleCommand(candidate: CandidateRecord, act
 
 export function beginManualReprocess(candidate: CandidateRecord, now = new Date().toISOString()) {
   if (!canReprocess(candidate)) throw new Error("Повторная обработка сейчас недоступна");
-  return { ...candidate, status: "WAITING_FOR_STABILITY" as const, stageStartedAt: now, elapsedMinutes: 0, etaMinutes: null, result: null };
+  return {
+    ...candidate,
+    status: "WAITING_FOR_STABILITY" as const,
+    stageStartedAt: now,
+    elapsedMinutes: 0,
+    etaMinutes: null,
+    progressPercent: 0,
+    progressMilestone: "Ожидание стабильности материалов",
+    transcript: undefined,
+    failedStage: undefined,
+    failureReason: undefined,
+    automaticRetriesExhausted: undefined,
+    result: null,
+  };
 }
 
 export function createVersionedCandidateRun(candidate: CandidateRecord, binding: { inputVersion: string; profileVersion: string }, now = new Date().toISOString()): CandidateRun {
@@ -254,7 +442,9 @@ export function buildDashboardSnapshot(candidates: readonly CandidateRecord[], v
     READY: current.filter((item) => item.status === "READY").length,
     FAILED: current.filter((item) => item.status === "FAILED").length,
   };
-  const queue = current.filter((item) => item.status === "FAILED" || isProcessingStatus(item.status)).sort((a, b) => {
+  const queue = current.filter((item) => item.status === "FAILED" || item.status === "WAITING_FOR_HUMAN" || isProcessingStatus(item.status)).sort((a, b) => {
+    if (a.status === "WAITING_FOR_HUMAN" && b.status !== "WAITING_FOR_HUMAN") return -1;
+    if (b.status === "WAITING_FOR_HUMAN" && a.status !== "WAITING_FOR_HUMAN") return 1;
     if (a.status === "FAILED" && b.status !== "FAILED") return -1;
     if (b.status === "FAILED" && a.status !== "FAILED") return 1;
     return Date.parse(a.stageStartedAt) - Date.parse(b.stageStartedAt);
@@ -269,5 +459,5 @@ export function buildDashboardSnapshot(candidates: readonly CandidateRecord[], v
   });
   const recommendations = Object.fromEntries(["Не рекомендовать", "Недостаточно данных", "Рекомендовать с оговорками", "Рекомендовать"].map((name) => [name, ready.filter((item) => item.result?.recommendation === name).length])) as Record<Recommendation, number>;
   const flow = vacancies.filter((item) => item.active).map((vacancy) => ({ vacancyId: vacancy.id, title: vacancy.title, count: ready.filter((item) => item.vacancyId === vacancy.id).length }));
-  return { asOf: asOf.toISOString(), period, counts, archivedCandidates, queue, ready, recommendations, flow };
+  return { asOf: asOf.toISOString(), period, counts, waitingForHuman: current.filter((item) => item.status === "WAITING_FOR_HUMAN").length, archivedCandidates, queue, ready, recommendations, flow };
 }

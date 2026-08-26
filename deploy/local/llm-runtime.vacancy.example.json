@@ -1,0 +1,26 @@
+{
+  "releaseVersion": "local-routerai-v1",
+  "providers": {
+    "routerai": {
+      "provider": "routerai-openai-compatible",
+      "endpoint": "https://routerai.ru/api/v1/chat/completions",
+      "secretReference": "ROUTERAI_API_KEY",
+      "apiContractVersion": "openai-chat-completions/v1",
+      "supportsStructuredOutputs": true
+    }
+  },
+  "capabilities": {
+    "vacancy_generation": {
+      "providerProfile": "routerai",
+      "model": "REPLACE-WITH-MODEL-ID",
+      "promptArtifact": "vacancy-profile/v1",
+      "responseSchemaArtifact": "vacancy-profile-response/v1",
+      "toolSchemaArtifacts": ["no-tools/v1"],
+      "generationParameters": { "temperature": 0 },
+      "limits": { "maxInputBytes": 1000000, "maxOutputTokens": 8192 },
+      "timeoutMs": 120000,
+      "retryPolicy": { "maxAttempts": 1, "initialBackoffMs": 0, "maximumBackoffMs": 0 },
+      "fallbackPolicy": { "mode": "disabled" }
+    }
+  }
+}

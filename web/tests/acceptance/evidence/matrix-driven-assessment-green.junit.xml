@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="MDA-LAZY-001 [MDA-001, WF-030]: lazy-shared" time="0.092971" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs"/>
+	<testcase name="MDA-CONCURRENCY-002 [MDA-002]: concurrent-claim" time="0.008439" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs"/>
+	<testcase name="MDA-LEASE-003 [MDA-002]: lease-fencing" time="0.007804" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs"/>
+	<testcase name="MDA-IMMUTABLE-004 [MDA-001, MDA-005, SEC-020]: immutable-reuse" time="0.006425" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs"/>
+	<testcase name="MDA-CRITIC-005 [MDA-003, MDA-004, INT-030]: critic-isolation" time="0.004789" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs"/>
+	<testcase name="MDA-SOURCE-006 [MDA-003, MDA-005]: invalid-source-ref" time="0.003932" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs"/>
+	<testcase name="MDA-QUALITATIVE-007 [MDA-003, VAC-011]: best-effort-no-threshold" time="0.003095" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs"/>
+	<testcase name="MDA-INVENTION-008 [MDA-003, MDA-004, TST-121]: invented-policy-repair" time="0.003409" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs"/>
+	<testcase name="MDA-FINGERPRINT-009 [MDA-004, OPS-020]: bounded-fingerprint" time="0.004331" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs"/>
+	<testcase name="MDA-CLAIM-010 [ASM-070]: claims-not-facts" time="0.003735" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs"/>
+	<testcase name="MDA-CONTEXT-011 [ASM-071]: full-context" time="0.003098" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs"/>
+	<testcase name="MDA-SPEAKER-012 [ASM-072]: speaker-gate" time="0.003362" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs"/>
+	<testcase name="MDA-CONFLICT-013 [ASM-071]: global-conflict" time="0.003669" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs"/>
+	<testcase name="MDA-UNMAPPED-014 [ASM-073, ASM-050]: unmapped-informational" time="0.004204" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs"/>
+	<testcase name="MDA-COVERAGE-015 [MDA-006]: row-coverage" time="0.003505" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs"/>
+	<testcase name="MDA-ABC-016 [ASM-014]: abc-sufficiency" time="0.004306" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs"/>
+	<testcase name="MDA-VERIFY-017 [MDA-006, ASM-050]: critical-verification" time="0.003395" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs"/>
+	<testcase name="MDA-FORMULA-018 [ASM-050]: recommendation-formula" time="0.002525" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs"/>
+	<testcase name="MDA-INJECTION-019 [ASM-074]: prompt-injection" time="0.003092" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs"/>
+	<testcase name="MDA-SENSITIVE-020 [ASM-074, SEC-021]: sensitive-exclusion" time="0.007809" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs"/>
+	<testcase name="MDA-ISOLATION-021 [SEC-020]: cross-candidate-isolation" time="0.003251" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs"/>
+	<testcase name="MDA-SHADOW-022 [OPS-021, TST-121]: shadow-side-effects" time="0.002533" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs"/>
+	<testcase name="MDA-VERSION-023 [OPS-021, WF-040]: fixed-workflow-version" time="0.002188" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs"/>
+	<testcase name="MDA-LEGACY-024 [WF-040]: legacy-immutability" time="0.002823" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs"/>
+	<testcase name="MDA-REPORT-025 [REP-020, REP-021]: two-pdf-report" time="0.002437" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs"/>
+	<testcase name="MDA-CUTOVER-026 [TST-122]: release-regression-gate" time="0.002334" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs"/>
+	<testcase name="MDA-REVISED-REQUIREDNESS-027 [VAC-011, MDA-003, TST-121]: llm-semantic-requiredness" time="0.002951" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs"/>
+	<testcase name="MDA-REVISED-HARD-STOP-028 [VAC-012, MDA-003, TST-121]: hard-required-iff-stop-factor" time="0.002424" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs"/>
+	<testcase name="MDA-REVISED-REQUIRED-MISMATCH-029 [ASM-050]: required-mismatch-rejection" time="0.002678" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs"/>
+	<testcase name="MDA-REVISED-CRITICAL-RISK-030 [ASM-050, ASM-073, MDA-008, INT-030]: verified-critical-unmapped-risk" time="0.002696" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs"/>
+	<testcase name="MDA-REVISED-RISK-UNVERIFIED-031 [ASM-050, ASM-073, MDA-008]: unverified-risk-non-rejection" time="0.002884" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs"/>
+	<testcase name="MDA-REVISED-RISK-SENSITIVE-032 [ASM-074, SEC-021, MDA-008, TST-121]: sensitive-irrelevant-risk-exclusion" time="0.003038" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-driven-assessment.acceptance.test.mjs"/>
+	<!-- tests 32 -->
+	<!-- suites 0 -->
+	<!-- pass 32 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 315.1391 -->
+</testsuites>

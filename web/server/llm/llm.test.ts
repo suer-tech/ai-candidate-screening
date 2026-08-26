@@ -5,20 +5,41 @@ import {
   AdminOnlyProtectedTraceStore,
   InMemoryProtectedTracePersistence,
   PROMPT_ARTIFACTS,
+  RESPONSE_SCHEMA_ARTIFACTS,
   PROTECTED_TRACE_RETENTION_MS,
   RuntimeConfigurationError,
   createProtectedLlmTrace,
   executeLlmAttempt,
   LlmProviderAttemptError,
   loadRuntimeConfiguration,
-  R2ProtectedTracePersistence,
   validateRuntimeConfiguration,
+  strictSchemaErrors,
   writeProtectedTraceFailOpen,
   type AttemptTraceInput,
   type CapabilityConfigDocument,
   type RuntimeConfigDocument,
   type RuntimeSecretSource,
 } from "./index.ts";
+
+test("strict Structured Outputs validator accepts closed complete schemas and rejects unsafe constructs", () => {
+  assert.deepEqual(strictSchemaErrors({ type: "object", additionalProperties: false, required: ["value"], properties: { value: { type: "string" } } }), []);
+  for (const [schema, pattern] of [
+    [{ type: "object", additionalProperties: true }, /open object|additionalProperties/],
+    [{ type: "object", additionalProperties: false, required: [], properties: { value: { type: "string" } } }, /required/],
+    [{ type: "array" }, /items/],
+    [{ type: "object", additionalProperties: false, required: [], properties: {}, patternProperties: {} }, /not supported/],
+  ] as const) {
+    assert.match(strictSchemaErrors(schema).join("\n"), pattern);
+  }
+});
+test("every production response artifact is strict-compatible", () => {
+  for (const [id, artifact] of Object.entries(RESPONSE_SCHEMA_ARTIFACTS)) {
+    if (id === "structured-object/v1") continue;
+    assert.deepEqual(strictSchemaErrors(artifact.schema), [], id);
+  }
+  assert.notEqual(RESPONSE_SCHEMA_ARTIFACTS["vacancy-profile-response/v1"].hash, RESPONSE_SCHEMA_ARTIFACTS["vacancy-field-response/v1"].hash);
+  assert.notEqual(RESPONSE_SCHEMA_ARTIFACTS["vacancy-field-response/v1"].hash, RESPONSE_SCHEMA_ARTIFACTS["vacancy-abc-response/v1"].hash);
+});
 
 const secretValue = "provider-secret-that-must-not-leak";
 const secrets: RuntimeSecretSource = {
@@ -33,7 +54,7 @@ function capabilityConfig(
     providerProfile: "main",
     model: "configured-model",
     promptArtifact: "candidate-assessment/v1",
-    responseSchemaArtifact: "structured-object/v1",
+    responseSchemaArtifact: "facts/v1",
     toolSchemaArtifacts: ["no-tools/v1"],
     generationParameters: { temperature: 0 },
     limits: { maxOutputTokens: 1000 },
@@ -53,6 +74,7 @@ function configDocument(): RuntimeConfigDocument {
         endpoint: "https://llm.example.test/v1",
         secretReference: "provider/main",
         apiContractVersion: "v1",
+        supportsStructuredOutputs: true,
       },
     },
     capabilities: { assessment: capabilityConfig() },
@@ -434,21 +456,4 @@ test("runtime loader separates versioned non-secret config from environment cred
   assert.equal(config.readProviderCredential("main"), secretValue);
   assert.doesNotMatch(JSON.stringify(config.nonSecretSnapshot), new RegExp(secretValue));
   assert.throws(() => loadRuntimeConfiguration({ LLM_RUNTIME_CONFIG_JSON: "{}" }, ["assessment"]), /releaseVersion|providers/);
-});
-
-test("R2 persistence stores full trace separately and purges by exact expiry metadata", async () => {
-  const records = new Map<string, { body: string; customMetadata?: Record<string, string> }>();
-  const bucket = {
-    async put(key: string, body: string, options: { customMetadata?: Record<string, string> }) { records.set(key, { body, customMetadata: options.customMetadata }); },
-    async get(key: string) { const value = records.get(key); return value ? { json: async () => JSON.parse(value.body) } : null; },
-    async list() { return { objects: [...records].map(([key, value]) => ({ key, customMetadata: value.customMetadata })), truncated: false }; },
-    async delete(keys: string | string[]) { for (const key of Array.isArray(keys) ? keys : [keys]) records.delete(key); },
-  } as unknown as R2Bucket;
-  const persistence = new R2ProtectedTracePersistence(bucket);
-  const trace = createProtectedLlmTrace(traceInput());
-  await persistence.put(trace);
-  assert.equal((await persistence.findById("trace-1"))?.correlation.traceId, "trace-1");
-  assert.equal(await persistence.deleteExpired(new Date(Date.parse(trace.expiresAt) - 1).toISOString()), 0);
-  assert.equal(await persistence.deleteExpired(trace.expiresAt), 1);
-  assert.equal(await persistence.findById("trace-1"), null);
 });

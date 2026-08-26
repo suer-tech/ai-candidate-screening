@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="UI-DASH-FLOW-001: candidate-flow bars share a stable baseline, labels and readable mobile layout" time="0.001739" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\vacancy-flow-chart-layout.acceptance.test.mjs"/>
+	<!-- tests 1 -->
+	<!-- suites 0 -->
+	<!-- pass 1 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 78.0587 -->
+</testsuites>

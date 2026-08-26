@@ -2,8 +2,17 @@
 
 This directory contains the executable release harness for `E2E-VAC-001`,
 `E2E-TRN-001`, `E2E-ABC-001`, and `E2E-RESULT-001`. It is intentionally not a
-local demo test: missing identity, D1, R2, Google Drive, LLM, STT, Telegram, or
+local demo test: missing identity, PostgreSQL 16, personal My Drive OAuth, LLM, STT, Telegram, or
 test-control infrastructure blocks the run before Chromium starts.
+
+The checked-in `requirements-basis.v1.json` currently records a normative
+conflict: main specs `INT-005`, `SEC-003`, and `TST-011` require corporate Shared
+Drive/service-account access, while this harness targets personal My Drive
+OAuth. Its status is `UNSYNCHRONIZED_DEVIATION`, so production acceptance is
+intentionally BLOCKED before any product/provider call. This is a normative
+compatibility guard, not product evidence and not a static source-code check.
+Only a reviewed synchronization of main specs followed by a versioned basis
+update to `SYNCHRONIZED` may enable the production-like run.
 
 The main E2E uses the deterministic RouterAI-compatible test gateway required by
 the canonical quality specification. Preflight also performs separate smoke
@@ -16,19 +25,28 @@ not accepted for either boundary.
 npm run e2e:install
 npm run e2e:preflight
 npm run e2e:required
+npm run e2e:canonical:local-red
 ```
 
-`e2e:preflight` exits with code `2` and a component-level `BLOCKED` diagnostic
-when the environment is incomplete. A blocked or skipped run is never reported
+The underlying `node tests/e2e/preflight.mjs` process exits with code `2` and a
+component-level `BLOCKED` diagnostic when the environment is incomplete. The
+`npm run e2e:preflight` wrapper reports that child failure as a non-zero npm
+exit (npm may normalize it to `1`). A blocked or skipped run is never reported
 as a passed release gate. `npm run test:e2e-harness` tests only the local
 configuration and readiness logic; it is not production acceptance.
+
+`e2e:canonical:local-red` is an intentionally smaller, controlled conformance
+adapter used to prove that product stages are absent before implementation. It
+always records `productionLikeAcceptanceClaimed: false` and must never replace
+preflight plus Playwright against staging/preproduction. Its machine result is
+written to `tests/acceptance/evidence/canonical-pipeline-local-red.json`.
 
 ## Required runner configuration
 
 All values are supplied by the CI secret/configuration boundary and must not be
 committed:
 
-- `E2E_BASE_URL`: HTTPS URL of the provisioned staging or preproduction app.
+- `E2E_BASE_URL`: HTTPS URL of the provisioned staging or preproduction app. The separate local PostgreSQL gate uses the controlled local command and never claims VPS production-like acceptance.
 - `E2E_AUTH_STORAGE_STATE`: Playwright storage state for an authorized synthetic
   HR identity. Keep the file outside version control.
 - `E2E_PREFLIGHT_TOKEN`: token for the protected app readiness endpoint.
@@ -40,8 +58,8 @@ committed:
 - `E2E_ALLOW_DESTRUCTIVE_CLEANUP=true`: explicit permission to delete isolated
   test data from application storage, Drive, and external providers.
 
-The deployed app separately requires `DB`, `PROTECTED_LLM_TRACES`, Drive
-integration values, `LLM_RUNTIME_CONFIG_JSON` plus its referenced secrets,
+The deployed app separately requires current PostgreSQL migrations, protected trace blob storage, personal My Drive OAuth,
+`LLM_RUNTIME_CONFIG_JSON` plus its referenced secrets,
 `ASSEMBLYAI_API_KEY`, `E2E_PREFLIGHT_TOKEN`, and the four real-provider smoke
 URL/token pairs. Runtime secrets must never be placed in Playwright output.
 
@@ -54,24 +72,26 @@ configuration alone.
 
 ## Test-control contract
 
-The external control plane provisions synthetic inputs in the real Shared Drive,
+The external control plane provisions synthetic inputs in the connected personal My Drive root,
 observes the deployed workflow, exposes non-sensitive acceptance evidence, and
 performs test-only cleanup. It is not linked into product runtime code.
 It also owns the independent second synthetic HR identity used for the cross-HR
 access matrix; the application storage state belongs only to the browser actor.
 
 - `POST /preflight` attests the fixture digest, production-like mode, real LLM
-  and STT smoke, deterministic test gateway, and all declared capabilities.
+  and STT smoke, deterministic test gateway, exact synchronized requirements
+  basis, and all declared capabilities.
 - `POST /runs` creates an isolated run for the supplied fixture/build/prefix.
 - `POST /runs/{runId}/vacancy` binds the UI-created vacancy to the run.
 - `POST /runs/{runId}/candidates` places the immutable synthetic inputs in the
   vacancy's real Drive folder.
 - `GET /runs/{runId}` returns observable workflow status and current result
   version; it must return terminal `FAILED` immediately rather than hiding it.
-- `GET /runs/{runId}/evidence/{vacancy|transcript|abc|result}` returns only the
-  IDs, counts, hashes, boolean attestations, timings, and synthetic oracle
-  matches asserted in `required.spec.mjs`. It must derive them from deployed
-  app/provider state, not return hard-coded success.
+- `GET /runs/{runId}/evidence/{vacancy|transcript|abc|result}` returns IDs,
+  counts, hashes, timings and observed checks asserted in `required.spec.mjs`.
+  Every check includes its observation time, method and deployed-state artifact
+  references. Boolean self-attestations, static source scans and hard-coded
+  success are rejected by contract `1.1`.
 - `GET /runs/{runId}/evidence/{versioning|failure-matrix|run}` verifies the
   controlled mutation/failure cases and complete reproducibility metadata.
 - `POST /runs/{runId}/evidence/report-publication` safely verifies idempotent
@@ -80,6 +100,15 @@ access matrix; the application storage state belongs only to the browser actor.
 - `POST /runs/{runId}/cleanup` removes all data created by the harness, including
   the synthetic source folder in Drive. This test-only cleanup is distinct from
   the product's candidate-delete behavior, which never deletes Drive files.
+
+The normative executable control description is
+`control-contract.v1.json`. The versioned synthetic fixture descriptor is
+`fixtures/canonical-candidate-v1/manifest.json`. It uses opaque references for
+secured binary assets and provider identities; the control plane must resolve
+those references, attest their immutable digest, and must not expose actual
+credentials or Telegram `chat_id` values in evidence. The base MVP fixture has
+one Telegram recipient. A separately isolated delivery matrix may temporarily
+configure two synthetic recipients to prove per-recipient retry independence.
 
 The run is serial against one build and configuration. Cleanup executes even
 after a failed scenario and must attest removal from application storage, Drive,

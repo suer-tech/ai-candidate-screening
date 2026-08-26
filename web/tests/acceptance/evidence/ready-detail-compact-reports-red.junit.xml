@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="E2E-RESULT-001 regression: READY detail projects the structured assessment into AI overview" time="0.001317" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\ready-candidate-and-compact-reports.acceptance.test.ts" failure="READY result exposes a structured AI overview, not only generic publication text">
+		<failure type="testCodeFailure" message="READY result exposes a structured AI overview, not only generic publication text">
+[Error [ERR_TEST_FAILURE]: READY result exposes a structured AI overview, not only generic publication text] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: READY result exposes a structured AI overview, not only generic publication text
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\ready-candidate-and-compact-reports.acceptance.test.ts:45:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="E2E-ABC-001/E2E-RESULT-001 regression: oversized evidence still produces exactly two compact readable PDFs" time="1.219750" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\ready-candidate-and-compact-reports.acceptance.test.ts" failure="content oracle must accept compact evidence references without raw exactText; actual=PDF_CONTENT_ORACLE_FAILED">
+		<failure type="testCodeFailure" message="content oracle must accept compact evidence references without raw exactText; actual=PDF_CONTENT_ORACLE_FAILED">
+[Error [ERR_TEST_FAILURE]: content oracle must accept compact evidence references without raw exactText; actual=PDF_CONTENT_ORACLE_FAILED] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: content oracle must accept compact evidence references without raw exactText; actual=PDF_CONTENT_ORACLE_FAILED
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\ready-candidate-and-compact-reports.acceptance.test.ts:92:14)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: undefined,
+    operator: 'fail',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 2 -->
+	<!-- suites 0 -->
+	<!-- pass 0 -->
+	<!-- fail 2 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 1563.9267 -->
+</testsuites>

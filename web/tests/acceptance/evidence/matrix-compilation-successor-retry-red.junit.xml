@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="MATRIX-SUCCESSOR-RED-001: manual-reprocess retries terminal FAILED compilation as the next attempt" time="0.001962" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-compilation-successor-retry.acceptance.test.ts" failure="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;+ [&#10;+   'manual successor claim allowRetry expected true; actual=undefined',&#10;+   'manual successor attempt expected 2; actual=1',&#10;+   'manual successor result expected PUBLISHED; actual=FAILED',&#10;+   'manual successor must compile, critique and publish; published=false, skillCalls=0'&#10;+ ]&#10;- []&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;+ [&#10;+   'manual successor claim allowRetry expected true; actual=undefined',&#10;+   'manual successor attempt expected 2; actual=1',&#10;+   'manual successor result expected PUBLISHED; actual=FAILED',&#10;+   'manual successor must compile, critique and publish; published=false, skillCalls=0'&#10;+ ]&#10;- []">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly deep-equal:
++ actual - expected
+
++ [
++   'manual successor claim allowRetry expected true; actual=undefined',
++   'manual successor attempt expected 2; actual=1',
++   'manual successor result expected PUBLISHED; actual=FAILED',
++   'manual successor must compile, critique and publish; published=false, skillCalls=0'
++ ]
+- []
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + [
+  +   'manual successor claim allowRetry expected true; actual=undefined',
+  +   'manual successor attempt expected 2; actual=1',
+  +   'manual successor result expected PUBLISHED; actual=FAILED',
+  +   'manual successor must compile, critique and publish; published=false, skillCalls=0'
+  + ]
+  - []
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-compilation-successor-retry.acceptance.test.ts:84:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'manual successor claim allowRetry expected true; actual=undefined', 'manual successor attempt expected 2; actual=1', 'manual successor result expected PUBLISHED; actual=FAILED', 'manual successor must compile, critique and publish; published=false, skillCalls=0' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="MATRIX-SUCCESSOR-002: ordinary automatic run cannot retry terminal FAILED compilation" time="0.000287" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-compilation-successor-retry.acceptance.test.ts"/>
+	<testcase name="MATRIX-SUCCESSOR-003: published matrix remains immutable and manual retry reuses it without a new claim" time="0.007417" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-compilation-successor-retry.acceptance.test.ts"/>
+	<!-- tests 3 -->
+	<!-- suites 0 -->
+	<!-- pass 2 -->
+	<!-- fail 1 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 213.5235 -->
+</testsuites>

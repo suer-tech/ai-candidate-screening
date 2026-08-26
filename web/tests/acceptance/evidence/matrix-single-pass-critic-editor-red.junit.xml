@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="MDA-004-RED-013.1: one critic-editor correction is the published successor without repair or re-critique" time="0.025922" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-single-pass-critic-editor.acceptance.test.ts" failure="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;+ [&#10;+   'critic-editor calls expected 1; actual=3',&#10;+   'separate matrix repair calls expected 0; actual=2',&#10;+   'corrected successor expected PUBLISHED; actual={&amp;quot;state&amp;quot;:&amp;quot;FAILED&amp;quot;,&amp;quot;errorCode&amp;quot;:&amp;quot;MATRIX_REPAIR_BUDGET_EXHAUSTED&amp;quot;}',&#10;+   'semantic correction must not terminate via legacy repair-loop budget; actual=MATRIX_REPAIR_BUDGET_EXHAUSTED',&#10;+   'compilation must not record terminal failure; actual=MATRIX_REPAIR_BUDGET_EXHAUSTED',&#10;+   'critic-editor successor was not canonicalized and published',&#10;+   'published interpretation must come from corrected successor; actual=undefined',&#10;+   'repair progress must stay empty/zero; actual=[{&amp;quot;profileVersion&amp;quot;:&amp;quot;profile-single-editor-v1&amp;quot;,&amp;quot;ownerId&amp;quot;:&amp;quot;candidate-run-1&amp;quot;,&amp;quot;fencingToken&amp;quot;:17,&amp;quot;repairCycles&amp;quot;:1,&amp;quot;llmCalls&amp;quot;:2,&amp;quot;obstacleFingerprint&amp;quot;:&amp;quot;c29cc78c77146facf424332442f67e45a366ccebc08a369a96c88db09b250330&amp;quot;,&amp;quot;sameFingerprintRetries&amp;quot;:0},{&amp;quot;profileVersion&amp;quot;:&amp;quot;profile-single-editor-v1&amp;quot;,&amp;quot;ownerId&amp;quot;:&amp;quot;candidate-run-1&amp;quot;,&amp;quot;fencingToken&amp;quot;:17,&amp;quot;repairCycles&amp;quot;:2,&amp;quot;llmCalls&amp;quot;:4,&amp;quot;obstacleFingerprint&amp;quot;:&amp;quot;6f14d76fc264833d069511f37895e49c536eb020e470d8e0a556c2c26195c01b&amp;quot;,&amp;quot;sameFingerprintRetries&amp;quot;:0}]'&#10;+ ]&#10;- []&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;+ [&#10;+   'critic-editor calls expected 1; actual=3',&#10;+   'separate matrix repair calls expected 0; actual=2',&#10;+   'corrected successor expected PUBLISHED; actual={&amp;quot;state&amp;quot;:&amp;quot;FAILED&amp;quot;,&amp;quot;errorCode&amp;quot;:&amp;quot;MATRIX_REPAIR_BUDGET_EXHAUSTED&amp;quot;}',&#10;+   'semantic correction must not terminate via legacy repair-loop budget; actual=MATRIX_REPAIR_BUDGET_EXHAUSTED',&#10;+   'compilation must not record terminal failure; actual=MATRIX_REPAIR_BUDGET_EXHAUSTED',&#10;+   'critic-editor successor was not canonicalized and published',&#10;+   'published interpretation must come from corrected successor; actual=undefined',&#10;+   'repair progress must stay empty/zero; actual=[{&amp;quot;profileVersion&amp;quot;:&amp;quot;profile-single-editor-v1&amp;quot;,&amp;quot;ownerId&amp;quot;:&amp;quot;candidate-run-1&amp;quot;,&amp;quot;fencingToken&amp;quot;:17,&amp;quot;repairCycles&amp;quot;:1,&amp;quot;llmCalls&amp;quot;:2,&amp;quot;obstacleFingerprint&amp;quot;:&amp;quot;c29cc78c77146facf424332442f67e45a366ccebc08a369a96c88db09b250330&amp;quot;,&amp;quot;sameFingerprintRetries&amp;quot;:0},{&amp;quot;profileVersion&amp;quot;:&amp;quot;profile-single-editor-v1&amp;quot;,&amp;quot;ownerId&amp;quot;:&amp;quot;candidate-run-1&amp;quot;,&amp;quot;fencingToken&amp;quot;:17,&amp;quot;repairCycles&amp;quot;:2,&amp;quot;llmCalls&amp;quot;:4,&amp;quot;obstacleFingerprint&amp;quot;:&amp;quot;6f14d76fc264833d069511f37895e49c536eb020e470d8e0a556c2c26195c01b&amp;quot;,&amp;quot;sameFingerprintRetries&amp;quot;:0}]'&#10;+ ]&#10;- []">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly deep-equal:
++ actual - expected
+
++ [
++   'critic-editor calls expected 1; actual=3',
++   'separate matrix repair calls expected 0; actual=2',
++   'corrected successor expected PUBLISHED; actual={"state":"FAILED","errorCode":"MATRIX_REPAIR_BUDGET_EXHAUSTED"}',
++   'semantic correction must not terminate via legacy repair-loop budget; actual=MATRIX_REPAIR_BUDGET_EXHAUSTED',
++   'compilation must not record terminal failure; actual=MATRIX_REPAIR_BUDGET_EXHAUSTED',
++   'critic-editor successor was not canonicalized and published',
++   'published interpretation must come from corrected successor; actual=undefined',
++   'repair progress must stay empty/zero; actual=[{"profileVersion":"profile-single-editor-v1","ownerId":"candidate-run-1","fencingToken":17,"repairCycles":1,"llmCalls":2,"obstacleFingerprint":"c29cc78c77146facf424332442f67e45a366ccebc08a369a96c88db09b250330","sameFingerprintRetries":0},{"profileVersion":"profile-single-editor-v1","ownerId":"candidate-run-1","fencingToken":17,"repairCycles":2,"llmCalls":4,"obstacleFingerprint":"6f14d76fc264833d069511f37895e49c536eb020e470d8e0a556c2c26195c01b","sameFingerprintRetries":0}]'
++ ]
+- []
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + [
+  +   'critic-editor calls expected 1; actual=3',
+  +   'separate matrix repair calls expected 0; actual=2',
+  +   'corrected successor expected PUBLISHED; actual={"state":"FAILED","errorCode":"MATRIX_REPAIR_BUDGET_EXHAUSTED"}',
+  +   'semantic correction must not terminate via legacy repair-loop budget; actual=MATRIX_REPAIR_BUDGET_EXHAUSTED',
+  +   'compilation must not record terminal failure; actual=MATRIX_REPAIR_BUDGET_EXHAUSTED',
+  +   'critic-editor successor was not canonicalized and published',
+  +   'published interpretation must come from corrected successor; actual=undefined',
+  +   'repair progress must stay empty/zero; actual=[{"profileVersion":"profile-single-editor-v1","ownerId":"candidate-run-1","fencingToken":17,"repairCycles":1,"llmCalls":2,"obstacleFingerprint":"c29cc78c77146facf424332442f67e45a366ccebc08a369a96c88db09b250330","sameFingerprintRetries":0},{"profileVersion":"profile-single-editor-v1","ownerId":"candidate-run-1","fencingToken":17,"repairCycles":2,"llmCalls":4,"obstacleFingerprint":"6f14d76fc264833d069511f37895e49c536eb020e470d8e0a556c2c26195c01b","sameFingerprintRetries":0}]'
+  + ]
+  - []
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-single-pass-critic-editor.acceptance.test.ts:135:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'critic-editor calls expected 1; actual=3', 'separate matrix repair calls expected 0; actual=2', 'corrected successor expected PUBLISHED; actual={"state":"FAILED","errorCode":"MATRIX_REPAIR_BUDGET_EXHAUSTED"}', 'semantic correction must not terminate via legacy repair-loop budget; actual=MATRIX_REPAIR_BUDGET_EXHAUSTED', 'compilation must not record terminal failure; actual=MATRIX_REPAIR_BUDGET_EXHAUSTED', 'critic-editor successor was not canonicalized and published', 'published interpretation must come from corrected successor; actual=undefined', 'repair progress must stay empty/zero; actual=[{"profileVersion":"profile-single-editor-v1","ownerId":"candidate-run-1","fencingToken":17,"repairCycles":1,"llmCalls":2,"obstacleFingerprint":"c29cc78c77146facf424332442f67e45a366ccebc08a369a96c88db09b250330","sameFingerprintRetries":0},{"profileVersion":"profile-single-editor-v1","ownerId":"candidate-run-1","fencingToken":17,"repairCycles":2,"llmCalls":4,"obstacleFingerprint":"6f14d76fc264833d069511f37895e49c536eb020e470d8e0a556c2c26195c01b","sameFingerprintRetries":0}]' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 1 -->
+	<!-- suites 0 -->
+	<!-- pass 0 -->
+	<!-- fail 1 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 299.6358 -->
+</testsuites>
