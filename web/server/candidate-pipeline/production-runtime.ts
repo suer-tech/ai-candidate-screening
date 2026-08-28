@@ -674,7 +674,7 @@ export async function createProductionCandidateToolExecution(input: { database: 
             const manifest = await materialManifest();
             const documents = (manifest.entries ?? []).filter((entry) => entry.supported !== false
               && entry.role !== "interview"
-              && ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"].includes(entry.mimeType));
+              && ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/msword"].includes(entry.mimeType));
             if (!documents.length) throw new Error("DOCUMENT_MATERIAL_NOT_FOUND");
             const budgetedOcrDependencies: ExecuteLlmAttemptDependencies = {
               ...llmDependencies,
@@ -713,7 +713,7 @@ export async function createProductionCandidateToolExecution(input: { database: 
               const processed = await processDocument({ mimeType: document.mimeType, fileId: document.fileId, fileVersion: document.version,
                 bytes: downloaded.bytes,
                 pdf: { extract: async () => extracted.kind === "pdf" && Array.isArray(extracted.pages) ? extracted.pages : Promise.reject(new Error("DOCUMENT_PROCESSOR_PDF_OUTPUT_INVALID")) },
-                docx: { extract: async () => extracted.kind === "docx" && Array.isArray(extracted.sections) ? extracted.sections : Promise.reject(new Error("DOCUMENT_PROCESSOR_DOCX_OUTPUT_INVALID")) },
+                docx: { extract: async () => ["docx", "doc"].includes(String(extracted.kind)) && Array.isArray(extracted.sections) ? extracted.sections : Promise.reject(new Error("DOCUMENT_PROCESSOR_WORD_OUTPUT_INVALID")) },
                 ocr });
               processedDocuments.push({ artifactId: `document-${sha256([document.fileId, document.version, processed.raw.checksum]).slice(0, 24)}`,
                 file: document, processed });

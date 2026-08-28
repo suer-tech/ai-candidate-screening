@@ -1,5 +1,7 @@
 import { sha256 } from "./core.ts";
 import type { DocumentLocator } from "./types.ts";
+import { createRequire } from "node:module";
+import { stripRtf } from "rtf-to-text";
 
 export type ExtractedPage = { page: number; text: string; section?: string; method: "text"; textSpans?: Array<{ start: number; end: number }> };
 export type OcrPage = { page: number; text: string; confidence: number; regions: Array<{ text: string; bbox: { x: number; y: number; width: number; height: number }; confidence: number }>; schemaVersion?: "ocr-page/v1"; instructionVersion?: string; rawTraceIdentity?: string };
@@ -59,6 +61,36 @@ export class MammothDocxExtractionAdapter implements DocxExtractionAdapter {
   }
 }
 
+export class LegacyDocExtractionAdapter implements DocxExtractionAdapter {
+  async extract(bytes: Uint8Array): Promise<readonly ExtractedSection[]> {
+    type ExtractedWordDocument = { getBody(): string };
+    type WordExtractorInstance = { extract(value: Buffer): Promise<ExtractedWordDocument> };
+    type WordExtractorConstructor = new () => WordExtractorInstance;
+    let body: string;
+    const source = Buffer.from(bytes).toString("latin1");
+    if (source.trimStart().startsWith("{\\rtf")) {
+      const codePage = source.match(/\\ansicpg(\d+)/i)?.[1] ?? "1252";
+      const encoding = codePage === "1251" ? "windows-1251" : codePage === "65001" ? "utf-8" : "windows-1252";
+      const decoder = new TextDecoder(encoding);
+      const decodedHex = source.replace(/\\'([0-9a-f]{2})/gi, (_match, value: string) => decoder.decode(Uint8Array.of(Number.parseInt(value, 16))));
+      body = stripRtf(decodedHex);
+    } else {
+      let WordExtractor: WordExtractorConstructor;
+      try { WordExtractor = createRequire(import.meta.url)("word-extractor") as WordExtractorConstructor; }
+      catch { throw new Error("DOC_EXTRACTION_RUNTIME_UNAVAILABLE"); }
+      try { body = (await new WordExtractor().extract(Buffer.from(bytes))).getBody(); }
+      catch { throw new Error("CORRUPT_DOC"); }
+    }
+    const paragraphs = body.replace(/\u0000/g, "").split(/\r?\n+/).map((value) => value.trim()).filter(Boolean);
+    if (!paragraphs.length) throw new Error("CORRUPT_DOC");
+    let section = "Раздел не определён";
+    return paragraphs.map((text, index) => {
+      if (text.endsWith(":" ) && text.length <= 120) section = text.slice(0, -1).trim() || section;
+      return { paragraph: index + 1, section, text };
+    });
+  }
+}
+
 export type ProcessedDocument = {
   raw: { checksum: string; byteSize: number };
   normalized: { text: string; boundaries: Array<{ page?: number; paragraph?: number; section: string; start: number; end: number; method: "text" | "ocr" }> };
@@ -86,9 +118,9 @@ export async function processDocument(input: { mimeType: string; fileId: string;
     const boundaries = merged.map((page) => { const start = text.length; text += `${page.text}\n`; return { page: page.page, section: page.section, start, end: start + page.text.length, method: page.method }; });
     return { raw, normalized: { text: text.trimEnd(), boundaries }, extractedPages: structuredClone(extractedPages), ocrPages };
   }
-  if (input.mimeType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+  if (["application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/msword"].includes(input.mimeType)) {
     const sections = await input.docx.extract(input.bytes);
-    if (!sections.length) throw new Error("CORRUPT_DOCX");
+    if (!sections.length) throw new Error(input.mimeType === "application/msword" ? "CORRUPT_DOC" : "CORRUPT_DOCX");
     let text = "";
     const boundaries = sections.map((section) => { const start = text.length; text += `${section.text}\n`; return { paragraph: section.paragraph, section: section.section ?? "Раздел не определён", start, end: start + section.text.length, method: "text" as const }; });
     return { raw, normalized: { text: text.trimEnd(), boundaries } };

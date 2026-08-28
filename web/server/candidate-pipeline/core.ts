@@ -67,7 +67,8 @@ export class StabilityTracker {
 }
 
 const DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-const RESUME_MIME = new Set(["application/pdf", DOCX_MIME]);
+const DOC_MIME = "application/msword";
+const RESUME_MIME = new Set(["application/pdf", DOCX_MIME, DOC_MIME]);
 const INTERVIEW_PREFIXES = ["audio/", "video/"];
 const READY_TRANSCRIPT_MIME = new Set(["text/plain", "text/markdown", "text/vtt", "application/x-subrip", DOCX_MIME]);
 const READY_TRANSCRIPT_NAME = /(?:стенограмм|транскрип|транскриб|расшифров|интервью|interview|transcript)/iu;

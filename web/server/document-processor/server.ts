@@ -2,7 +2,7 @@ import { timingSafeEqual } from "node:crypto";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { MammothDocxExtractionAdapter, PdfJsExtractionAdapter } from "../candidate-pipeline/documents.ts";
+import { LegacyDocExtractionAdapter, MammothDocxExtractionAdapter, PdfJsExtractionAdapter } from "../candidate-pipeline/documents.ts";
 import { renderCandidatePdf, validateRenderedReportPdf, type ReportModel } from "../candidate-pipeline/reports.ts";
 
 export type DocumentProcessorConfig = { token: string; host: string; port: number; maxInputBytes: number };
@@ -45,7 +45,7 @@ function json(response: ServerResponse, status: number, body: Record<string, unk
 export function createDocumentProcessorServer(config: DocumentProcessorConfig) {
   return createServer(async (request, response) => {
     if (!authorized(request.headers.authorization, config.token)) return json(response, 401, { code: "DOCUMENT_PROCESSOR_UNAUTHORIZED" });
-    if (request.method === "GET" && request.url === "/health") return json(response, 200, { ready: true, pdfjs: true, mammoth: true, storesInput: false });
+    if (request.method === "GET" && request.url === "/health") return json(response, 200, { ready: true, pdfjs: true, mammoth: true, wordExtractor: true, storesInput: false });
     if (request.method === "POST" && request.url === "/v1/render-candidate-report") {
       try {
         const input = await bytes(request, config.maxInputBytes);
@@ -75,9 +75,13 @@ export function createDocumentProcessorServer(config: DocumentProcessorConfig) {
         const sections = await new MammothDocxExtractionAdapter().extract(input);
         return json(response, 200, { schemaVersion: "document-extraction/v1", kind: "docx", sections });
       }
+      if (mimeType === "application/msword") {
+        const sections = await new LegacyDocExtractionAdapter().extract(input);
+        return json(response, 200, { schemaVersion: "document-extraction/v1", kind: "doc", sections });
+      }
       return json(response, 415, { code: "UNSUPPORTED_DOCUMENT_TYPE" });
     } catch (error) {
-      const code = error instanceof Error && ["DOCUMENT_INPUT_TOO_LARGE", "DOCUMENT_INPUT_EMPTY", "CORRUPT_PDF", "CORRUPT_DOCX", "PDF_EXTRACTION_RUNTIME_UNAVAILABLE", "DOCX_EXTRACTION_RUNTIME_UNAVAILABLE"].includes(error.message)
+      const code = error instanceof Error && ["DOCUMENT_INPUT_TOO_LARGE", "DOCUMENT_INPUT_EMPTY", "CORRUPT_PDF", "CORRUPT_DOCX", "CORRUPT_DOC", "PDF_EXTRACTION_RUNTIME_UNAVAILABLE", "DOCX_EXTRACTION_RUNTIME_UNAVAILABLE", "DOC_EXTRACTION_RUNTIME_UNAVAILABLE"].includes(error.message)
         ? error.message : "DOCUMENT_PROCESSOR_FAILED";
       return json(response, code === "DOCUMENT_INPUT_TOO_LARGE" ? 413 : 422, { code });
     }
