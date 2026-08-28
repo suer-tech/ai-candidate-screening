@@ -5,7 +5,7 @@ export async function authService() {
   const container = await serverContainer();
   const fingerprintKey = container.environment.AUTH_FINGERPRINT_KEY || container.environment.AGENT_RUNTIME_INTERNAL_TOKEN;
   if (!fingerprintKey) throw new Error("AUTH_FINGERPRINT_KEY_MISSING");
-  return new AuthService(container.sql, fingerprintKey);
+  return new AuthService(container.sql, fingerprintKey, undefined, container.environment.APP_ORIGIN);
 }
 
 export async function requestAuthPrincipal(request: Request): Promise<AuthPrincipal | null> {

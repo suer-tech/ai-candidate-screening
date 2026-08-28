@@ -27,11 +27,13 @@ export class AuthService {
   private readonly sql: PostgresClient;
   private readonly fingerprintKey: string;
   private readonly now: () => number;
+  private readonly publicOrigin?: string;
 
-  constructor(sql: PostgresClient, fingerprintKey: string, now = () => Date.now()) {
+  constructor(sql: PostgresClient, fingerprintKey: string, now = () => Date.now(), publicOrigin?: string) {
     this.sql = sql;
     this.fingerprintKey = fingerprintKey;
     this.now = now;
+    this.publicOrigin = publicOrigin ? new URL(publicOrigin).origin : undefined;
   }
 
   private fingerprint(kind: string, value: string) { return createHmac("sha256", this.fingerprintKey).update(`${kind}:${value}`).digest("hex"); }
@@ -95,7 +97,7 @@ export class AuthService {
   async setUserState(userId: string, state: "ACTIVE" | "DISABLED") { await withTransaction(this.sql, async (tx) => { await tx`UPDATE auth_users SET state=${state},updated_at=${iso(this.now())} WHERE id=${userId}`; if (state === "DISABLED") await tx`UPDATE auth_sessions SET revoked_at=${iso(this.now())},revoke_reason=${"USER_DISABLED"} WHERE user_id=${userId} AND revoked_at IS NULL`; await this.audit(tx, state === "DISABLED" ? "USER_DISABLED" : "USER_ENABLED", `AUTH_USER_${state}`, null, userId); }); }
   async revokeSessions(userId: string) { await withTransaction(this.sql, async (tx) => { await tx`UPDATE auth_sessions SET revoked_at=${iso(this.now())},revoke_reason=${"OPERATOR_REVOKE"} WHERE user_id=${userId} AND revoked_at IS NULL`; await this.audit(tx, "SESSIONS_REVOKED", "AUTH_SESSIONS_REVOKED", null, userId); }); }
   async resetPassword(userId: string, password: string) { validatePassword(password); const passwordHash = await hashPassword(password); await withTransaction(this.sql, async (tx) => { await tx`UPDATE auth_users SET password_hash=${passwordHash},must_change_password=true,updated_at=${iso(this.now())} WHERE id=${userId}`; await tx`UPDATE auth_sessions SET revoked_at=${iso(this.now())},revoke_reason=${"PASSWORD_RESET"} WHERE user_id=${userId} AND revoked_at IS NULL`; await this.audit(tx, "PASSWORD_RESET", "AUTH_PASSWORD_RESET", null, userId); }); }
-  async verifyCsrf(request: Request, principal: AuthPrincipal) { const cookies = parseCookies(request); const proof = request.headers.get("x-csrf-token") ?? ""; const origin = request.headers.get("origin"); const expectedOrigin = new URL(request.url).origin; return origin === expectedOrigin && proof.length > 20 && cookies[CSRF_COOKIE] === proof && safeEqual(sha(proof), principal.csrfHash); }
+  async verifyCsrf(request: Request, principal: AuthPrincipal) { const cookies = parseCookies(request); const proof = request.headers.get("x-csrf-token") ?? ""; const origin = request.headers.get("origin"); const expectedOrigin = this.publicOrigin ?? new URL(request.url).origin; return origin === expectedOrigin && proof.length > 20 && cookies[CSRF_COOKIE] === proof && safeEqual(sha(proof), principal.csrfHash); }
   async cleanup() { const now = iso(this.now()); const attemptsBefore = iso(this.now() - 2 * 24 * 60 * 60 * 1000); const eventsBefore = iso(this.now() - 180 * 24 * 60 * 60 * 1000); await this.sql`DELETE FROM auth_login_attempts WHERE attempted_at < ${attemptsBefore}`; await this.sql`DELETE FROM auth_sessions WHERE expires_at < ${now} OR (revoked_at IS NOT NULL AND revoked_at < ${attemptsBefore})`; await this.sql`DELETE FROM auth_security_events WHERE occurred_at < ${eventsBefore}`; }
 }
 
