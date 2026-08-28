@@ -15,10 +15,10 @@
   "heartbeatMs": 10000,
   "flags": {
     "synthetic": false,
-    "shadow": true,
+    "shadow": false,
     "acceptNewGoals": true,
     "toolRouting": {
-      "candidate-analysis/v1": "agent",
+      "candidate-analysis-matrix/v1": "agent",
       "candidate-cleanup/v1": "agent"
     }
   }

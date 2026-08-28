@@ -95,7 +95,7 @@ async function seedSixIdentities(client: PostgresClient) {
     VALUES ('oauth-conformance','primary','CONNECTED','subject','person@example.invalid','[]','root','Найм','production-personal',${now},1)`;
   await client`INSERT INTO agent_goals
     (id,candidate_id,goal_type,input_version,profile_version,policy_version,completion_criteria_version,completion_criteria_json,state,revision,created_at)
-    VALUES ('goal-conformance',9101,'candidate-analysis/v1','input-v1','profile-v1','policy-v1','criteria-v1','{}','ACTIVE',1,${now})`;
+    VALUES ('goal-conformance',9101,'candidate-analysis-matrix/v1','input-v1','profile-v1','policy-v1','criteria-v1','{}','ACTIVE',1,${now})`;
   await client`INSERT INTO agent_runs (id,goal_id,trigger_identity,state,revision,current_plan_version,last_progress_at)
     VALUES ('run-conformance','goal-conformance','trigger-conformance','ACTIVE',1,1,${now})`;
   await client`INSERT INTO agent_plan_versions (id,run_id,version,reason,plan_json,created_at)

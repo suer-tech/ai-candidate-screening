@@ -68,8 +68,3 @@ test("release evidence is fixed-path, bounded, complete, and contains no secret-
   assert.throws(() => parseReleaseEvidence(JSON.stringify({ ...validEvidence, providerToken: "forbidden" })), /RELEASE_EVIDENCE_UNSAFE_FIELD/);
   assert.throws(() => parseReleaseEvidence(JSON.stringify({ ...validEvidence, hardBudgetsVerified: false })), /RELEASE_EVIDENCE_INCOMPLETE/);
 });
-
-test("matrix assessment routing accepts only disabled, shadow, or production", () => {
-  for (const mode of ["disabled", "shadow", "production"]) assert.equal(parseRuntimeEnv(`MATRIX_ASSESSMENT_ROUTING=${mode}`).MATRIX_ASSESSMENT_ROUTING, mode);
-  assert.throws(() => parseRuntimeEnv("MATRIX_ASSESSMENT_ROUTING=effectful"), /MATRIX_ASSESSMENT_ROUTING_INVALID/);
-});

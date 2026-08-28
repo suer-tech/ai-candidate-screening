@@ -1,18 +1,6 @@
 import type { PlanTaskTemplate, ToolDefinition } from "../agent-runtime/types.ts";
 import { GoalRegistry, ToolRegistry } from "../agent-runtime/registry.ts";
 
-const tasks: readonly PlanTaskTemplate[] = [
-  { key: "drive-snapshot", tool: "candidate.drive-snapshot/v1", dependencies: [], expectedOutputs: ["input-version"] },
-  { key: "documents", tool: "candidate.document-extraction/v1", dependencies: ["drive-snapshot"], expectedOutputs: ["document-artifacts"] },
-  { key: "transcription", tool: "candidate.transcription/v1", dependencies: ["drive-snapshot"], expectedOutputs: ["transcript-artifacts"] },
-  { key: "evidence", tool: "candidate.evidence-extraction/v1", dependencies: ["documents", "transcription"], expectedOutputs: ["evidence-graph"] },
-  { key: "assessment", tool: "candidate.assessment/v1", dependencies: ["evidence"], expectedOutputs: ["assessment-snapshot"] },
-  { key: "validation", tool: "candidate.validation/v1", dependencies: ["assessment"], expectedOutputs: ["validated-assessment"] },
-  { key: "reports", tool: "candidate.report-pair/v1", dependencies: ["validation"], expectedOutputs: ["abc-pdf", "result-pdf"], completionGate: "validated-report-pair" },
-  { key: "publication", tool: "candidate.drive-publication/v1", dependencies: ["reports"], expectedOutputs: ["published-report-pair"], completionGate: "ready-after-pair-publication" },
-  { key: "notification", tool: "candidate.telegram/v1", dependencies: ["publication"], expectedOutputs: ["delivery-outcome"], completionGate: "logical-notification-created" },
-];
-
 const matrixTasks: readonly PlanTaskTemplate[] = [
   { key: "drive-snapshot", tool: "candidate.drive-snapshot/v1", dependencies: [], expectedOutputs: ["input-version"] },
   { key: "matrix", tool: "candidate.matrix-compile/v1", dependencies: [], expectedOutputs: ["vacancy-matrix"] },
@@ -30,9 +18,6 @@ const matrixTasks: readonly PlanTaskTemplate[] = [
   { key: "publication", tool: "candidate.drive-publication/v1", dependencies: ["reports"], expectedOutputs: ["published-candidate-report"], completionGate: "ready-after-report-publication" },
   { key: "notification", tool: "candidate.telegram/v1", dependencies: ["publication"], expectedOutputs: ["delivery-outcome"], completionGate: "logical-notification-created" },
 ];
-const matrixShadowTasks = matrixTasks
-  .filter((task) => !["reports", "publication", "notification"].includes(task.key))
-  .map((task) => task.key === "validation" ? { ...task, completionGate: "validated-assessment" } : task);
 
 function tool(key: string, sideEffectClass: ToolDefinition["sideEffectClass"], checkpoint: ToolDefinition["checkpoint"], requiredSecrets: string[] = []): ToolDefinition {
   return { key, version: "1", inputSchemaVersion: "1.0", outputSchemaVersion: "1.0", timeoutClass: "short-external", retryClass: "transient", sideEffectClass, idempotency: sideEffectClass === "read-only" ? "none" : "identity", checkpoint, requiredSecrets, recoveryActions: ["reconcile"] };
@@ -43,8 +28,6 @@ export function registerCanonicalCandidatePipeline(tools: ToolRegistry, goals: G
     tool("candidate.drive-snapshot/v1", "read-only", "artifact", ["GOOGLE_DRIVE_OAUTH_CONNECTION"]),
     tool("candidate.document-extraction/v1", "idempotent-write", "artifact"),
     tool("candidate.transcription/v1", "idempotent-write", "remote-job", ["ASSEMBLYAI_API_KEY"]),
-    tool("candidate.evidence-extraction/v1", "idempotent-write", "artifact", ["ROUTERAI_API_KEY"]),
-    tool("candidate.assessment/v1", "idempotent-write", "artifact", ["ROUTERAI_API_KEY"]),
     tool("candidate.matrix-compile/v1", "idempotent-write", "artifact", ["ROUTERAI_API_KEY"]),
     tool("candidate.matrix-claims/v1", "idempotent-write", "artifact", ["ROUTERAI_API_KEY"]),
     tool("candidate.matrix-evidence/v1", "idempotent-write", "artifact", ["ROUTERAI_API_KEY"]),
@@ -64,7 +47,6 @@ export function registerCanonicalCandidatePipeline(tools: ToolRegistry, goals: G
     tool("candidate.matrix-claim-submit/v1", "idempotent-write", "artifact"),
     tool("candidate.matrix-conflict-submit/v1", "idempotent-write", "artifact"),
     tool("candidate.validation/v1", "read-only", "artifact"),
-    { ...tool("candidate.report-pair/v1", "idempotent-write", "artifact"), compensation: "candidate.report-delete/v1" },
     { ...tool("candidate.report/v1", "idempotent-write", "artifact"), compensation: "candidate.report-delete/v1" },
     { ...tool("candidate.drive-publication/v1", "reversible-write", "artifact", ["GOOGLE_DRIVE_OAUTH_CONNECTION"]), compensation: "candidate.drive-publication-delete/v1" },
     tool("candidate.telegram/v1", "irreversible-write", "artifact", ["TELEGRAM_BOT_TOKEN", "TELEGRAM_RECIPIENT_REFS"]),
@@ -78,28 +60,10 @@ export function registerCanonicalCandidatePipeline(tools: ToolRegistry, goals: G
   ]) tools.register(definition);
 
   goals.register({
-    key: "candidate-analysis/v1",
-    policyVersions: ["candidate-policy-v1"],
-    completionCriteriaVersions: ["candidate-completion-v1"],
-    plan: () => tasks.map((task) => structuredClone(task)),
-    recoveryTemplates: {
-      "candidate-bounded-repair/v1": (current) => current.map((task) => task.key === "assessment" ? { ...task, key: "assessment-repair", dependencies: ["evidence"] } : { ...task, dependencies: task.dependencies.map((item) => item === "assessment" ? "assessment-repair" : item) }),
-    },
-  });
-  goals.register({
     key: "candidate-analysis-matrix/v1",
     policyVersions: ["candidate-policy-v1"],
     completionCriteriaVersions: ["candidate-completion-v1"],
     plan: () => matrixTasks.map((task) => structuredClone(task)),
-    recoveryTemplates: {
-      "candidate-bounded-repair/v1": (current) => current.map((task) => task.key === "rows" ? { ...task, key: "rows-repair", dependencies: ["matrix", "global-evidence"] } : { ...task, dependencies: task.dependencies.map((item) => item === "rows" ? "rows-repair" : item) }),
-    },
-  });
-  goals.register({
-    key: "candidate-analysis-matrix-shadow/v1",
-    policyVersions: ["candidate-policy-v1"],
-    completionCriteriaVersions: ["candidate-completion-v1"],
-    plan: () => matrixShadowTasks.map((task) => structuredClone(task)),
     recoveryTemplates: {
       "candidate-bounded-repair/v1": (current) => current.map((task) => task.key === "rows" ? { ...task, key: "rows-repair", dependencies: ["matrix", "global-evidence"] } : { ...task, dependencies: task.dependencies.map((item) => item === "rows" ? "rows-repair" : item) }),
     },

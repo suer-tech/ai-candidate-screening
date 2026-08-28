@@ -21,9 +21,9 @@ telegram-recipients.json
 
 После release gates рядом с `runtime.env` появляется отдельный safe `release-evidence.json`. Это не credential и не ручной флаг: effectful routing читает его только из фиксированного пути и требует совпадающий build/config fingerprint плюс GREEN recovery/budget gates.
 
-Matrix-driven оценка управляется отдельным `MATRIX_ASSESSMENT_ROUTING=disabled|shadow|production`. `shadow` создаёт отдельный run без задач PDF, Drive и Telegram. `production` разрешён только при `matrixShadowGreen`, `matrixAcceptanceGreen` и `requiredE2eGreen` в release evidence. Переключение действует только на новые runs; rollback выполняется возвратом значения в `shadow` или `disabled`, без изменения уже зафиксированных `workflow_version` и старых результатов.
+Обработка кандидата имеет единственный production workflow `matrix-v3`. Отдельных legacy/shadow веток и переключателя версии матрицы нет. `CANDIDATE_PIPELINE_ROUTING=effectful` включает обработку после проверки release evidence; `disabled` останавливает создание новых запусков. Старые записи и PDF остаются доступны только для чтения.
 
-Отдельного UI/write-поля обязательных требований нет: `compile-vacancy-matrix/v1` определяет `required` из семантики существующего профиля, а `hardRequired` допустим только для sourceRef раздела стоп-факторов. Эта семантика создаёт новые runs с `workflowVersion=matrix-v2`; существующие версии не переписываются. Отказ формируется детерминированно при подтверждённом стоп-факторе, доказанном required mismatch или independently verified `criticalUnmappedRisk`. Непредусмотренный сигнал сам по себе остаётся INFORMATIONAL; для влияния на отказ обязательны отдельные `assess-unmapped-risk/v1` и `verify-critical-risk/v1`, разные protected traces и допустимые evidence locators.
+`matrix-v3` структурирует заполненные параметры вакансии без добавления новых требований, последовательно проверяет каждый критерий по материалам кандидата и формирует один компактный `candidate-report`.
 
 ## Windows
 
@@ -37,8 +37,6 @@ npm run local:status
 ```
 
 `bootstrap` мигрирует старую локальную раскладку, запускает PostgreSQL 16 в Docker, применяет migrations и выполняет preflight. `start` собирает и запускает Node web, worker, media и document processors скрытыми процессами. Состояние и логи находятся в ignored `web/.runtime/`.
-
-Если после миграции остались старые `local-services.env`, `secrets/`, корневые логи или SQLite fixture-controller, `npm run config:archive-legacy` переносит только этот точный allowlist в timestamped read-only `web/.runtime/legacy-backups/`. Активные `runtime.env`, `credentials/`, PostgreSQL data, новые logs/evidence и PID state не затрагиваются.
 
 Перед финальным локальным release-прогоном выполните `npm run build:pin-local`: команда сама вычислит fingerprint delivery-файлов и атомарно запишет только `CANDIDATE_PIPELINE_BUILD_ID` в ignored `runtime.env`; ключи она не читает и не печатает.
 
@@ -106,6 +104,6 @@ Effectful routing нельзя включать до GREEN на одном immut
 - RouterAI, AssemblyAI EU, personal My Drive, Telegram smokes;
 - backup/restore и automatic cleanup.
 
-До этих проверок используйте `shadow` routing.
+До этих проверок оставляйте routing в состоянии `disabled`.
 
-Для matrix production дополнительно обязательны GREEN matrix acceptance, shadow-quality gate и весь набор required E2E. Не редактируйте опубликованную матрицу: исправление требований выполняется новой версией профиля вакансии.
+Для matrix production дополнительно обязательны GREEN matrix acceptance и весь набор required E2E. Не редактируйте опубликованную матрицу: исправление требований выполняется новой версией профиля вакансии.

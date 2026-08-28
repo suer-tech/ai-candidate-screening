@@ -41,7 +41,7 @@ export class PostgresAgentRuntimeRepository {
           : [];
         const vacancy = (versionRows[0] ?? currentRows[0]) ? JSON.parse((versionRows[0] ?? currentRows[0]).record_json) as { analysisPrompt?: EditablePromptSnapshot } : {};
         const analysisPrompt = vacancy.analysisPrompt ?? standardEditablePrompt(CANDIDATE_ASSESSMENT_PROMPT_ARTIFACT);
-        const workflowVersion = input.workflowVersion ?? (input.goalType === "candidate-analysis-matrix/v1" ? COVERAGE_FIRST_WORKFLOW_VERSION : "legacy-v1");
+        const workflowVersion = input.workflowVersion ?? (input.goalType === "candidate-analysis-matrix/v1" ? COVERAGE_FIRST_WORKFLOW_VERSION : "cleanup-v1");
         const sourceRuns = !goalCreated
           ? await transaction<{ id: string; state: string; input_version: string; profile_version: string; workflow_version: string; policy_version: string }[]>`SELECT source_run.id,source_run.state,source_goal.input_version,source_goal.profile_version,source_run.workflow_version,source_goal.policy_version
               FROM agent_runs source_run JOIN agent_goals source_goal ON source_goal.id=source_run.goal_id
@@ -300,7 +300,7 @@ export class PostgresAgentRuntimeRepository {
       const newGoalId = randomUUID(); const newRunId = randomUUID(); const nextInput = input.newInputVersion ?? String(row.input_version); const nextProfile = input.newProfileVersion ?? String(row.profile_version);
       await transaction`UPDATE agent_runs SET state='SUPERSEDED',revision=revision+1,last_progress_at=${eventTime} WHERE id=${String(row.run_id)} AND state='WAITING_FOR_HUMAN' AND revision=${Number(row.run_revision)}`;
       await transaction`INSERT INTO agent_goals (id,candidate_id,goal_type,input_version,profile_version,policy_version,completion_criteria_version,completion_criteria_json,state,revision,created_at) VALUES (${newGoalId},${Number(row.candidate_id)},${String(row.goal_type)},${nextInput},${nextProfile},${String(row.policy_version)},${String(row.completion_criteria_version)},${String(row.completion_criteria_json)},'ACTIVE',1,${eventTime})`;
-      await transaction`INSERT INTO agent_runs (id,goal_id,trigger_identity,origin_escalation_id,state,revision,current_plan_version,last_progress_at,workflow_version) VALUES (${newRunId},${newGoalId},${`human-resolution:${input.escalationId}:${input.expectedVersion}`},${input.escalationId},'ACTIVE',1,1,${eventTime},${String(row.workflow_version ?? "legacy-v1")})`;
+      await transaction`INSERT INTO agent_runs (id,goal_id,trigger_identity,origin_escalation_id,state,revision,current_plan_version,last_progress_at,workflow_version) VALUES (${newRunId},${newGoalId},${`human-resolution:${input.escalationId}:${input.expectedVersion}`},${input.escalationId},'ACTIVE',1,1,${eventTime},${String(row.workflow_version ?? COVERAGE_FIRST_WORKFLOW_VERSION)})`;
       await transaction`UPDATE candidates SET revision=revision+1,record_json=((record_json::jsonb || jsonb_build_object('status','MATERIALS_READY','escalation',NULL))::text) WHERE id=${Number(row.candidate_id)}`;
       return { sameRun: false, previousRunState: "SUPERSEDED", runId: newRunId, linkedEscalationId: input.escalationId, inputVersion: nextInput, profileVersion: nextProfile };
     });

@@ -191,12 +191,12 @@ export class FixtureController {
       goalId,
       runId,
       candidateId: candidatePk,
-      goalType: "candidate-analysis/v1",
+      goalType: "candidate-analysis-matrix/v1",
       inputVersion,
       profileVersion: `${vacancyId}:profile:fixture-v1`,
       policyVersion: "candidate-policy-v1",
       completionCriteriaVersion: "candidate-completion-v1",
-      completionCriteria: ["validated-assessment", "shadow-effects-suppressed"],
+      completionCriteria: ["validated-candidate-report", "ready-after-report-publication"],
       budgets: GOAL_BUDGETS,
       triggerIdentity: `e2e-fixture:${this.config.fixtureSetId}:${run.prefix}`,
     });
@@ -239,8 +239,6 @@ export class FixtureController {
       }
       const runtime = createCanonicalProductionRuntime(this.database, runtimeRepository, { ...task, authorizationGrantId: authorization.grantId, candidateFolderId: run.candidate!.driveFolderId });
       const result = await executeCandidateTool({
-        mode: "production",
-        environment: "local",
         environmentBindings: environment,
         runtime,
         toolKey: claimed.tool_key,
@@ -407,10 +405,7 @@ function createCanonicalToolAdapters() {
       "candidate.drive-snapshot/v1": "read-only",
       "candidate.document-extraction/v1": "idempotent-write",
       "candidate.transcription/v1": "idempotent-write",
-      "candidate.evidence-extraction/v1": "idempotent-write",
-      "candidate.assessment/v1": "idempotent-write",
       "candidate.validation/v1": "read-only",
-      "candidate.report-pair/v1": "idempotent-write",
       "candidate.report/v1": "idempotent-write",
       "candidate.drive-publication/v1": "reversible-write",
       "candidate.telegram/v1": "irreversible-write",
@@ -453,7 +448,7 @@ function createCanonicalProductionRuntime(database: PostgresClient, repository: 
       },
       routerAI: { invoke: async (value) => ({ artifactRef: `artifact:routerai:${String(value.capability)}:${task.id}`, schemaVersion: "synthetic/v1" }) },
       assemblyAI: { create: async () => ({ remoteJobId: `assembly-${task.id}` }), poll: async () => ({ status: "completed", artifactRef: `artifact:transcript:${task.id}` }) },
-      pdf: { renderPair: async () => [{ type: "abc-test", checksum: "abc-checksum-synthetic", artifactRef: `artifact:pdf:abc:${task.id}` }, { type: "candidate-results", checksum: "result-checksum-synthetic", artifactRef: `artifact:pdf:result:${task.id}` }] },
+      pdf: { render: async () => ({ type: "candidate-report", checksum: "candidate-report-checksum-synthetic", artifactRef: `artifact:pdf:candidate-report:${task.id}` }) },
       telegram: { send: async () => ({ messageId: "message-synthetic" }) },
     },
     record: (kind: string) => { if (kind === "release-evidence:validated" || kind.startsWith("drive:")) void kind; },

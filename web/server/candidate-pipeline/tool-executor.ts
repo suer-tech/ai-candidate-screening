@@ -1,8 +1,6 @@
-import { runControlledCanonicalPipeline } from "./pipeline.ts";
-import type { CanonicalStageId } from "./types.ts";
 import { candidatePipelineReadiness, type CandidatePipelineEnvironment } from "./readiness.ts";
 
-type CandidateToolStageId = CanonicalStageId | "matrix-compilation" | "criterion-claim-extraction" | "global-evidence-graph" | "matrix-row-evaluation" | "critical-row-verification";
+type CandidateToolStageId = "drive-discovery" | "stability-and-input-version" | "material-completeness" | "document-extraction" | "routerai-ocr" | "media-probe-and-audio" | "assemblyai-transcription" | "speaker-role-mapping" | "matrix-compilation" | "criterion-claim-extraction" | "global-evidence-graph" | "matrix-row-evaluation" | "critical-row-verification" | "deterministic-recommendation" | "validation-gates" | "candidate-report-render-and-validate" | "personal-drive-publication" | "telegram-outbox" | "archive-delete-and-cleanup";
 const TOOL_STAGES: Record<string, CandidateToolStageId[]> = {
   "candidate.drive-snapshot/v1": ["drive-discovery", "stability-and-input-version", "material-completeness"],
   "candidate.document-extraction/v1": ["document-extraction", "routerai-ocr"],
@@ -17,11 +15,8 @@ const TOOL_STAGES: Record<string, CandidateToolStageId[]> = {
   "candidate.matrix-rows/v1": ["matrix-row-evaluation"],
   "candidate.matrix-verify/v1": ["critical-row-verification"],
   "candidate.matrix-recommendation/v1": ["deterministic-recommendation"],
-  "candidate.evidence-extraction/v1": ["fact-and-evidence-extraction"],
-  "candidate.assessment/v1": ["profile-assessment", "deterministic-recommendation"],
   "candidate.validation/v1": ["validation-gates"],
-  "candidate.report-pair/v1": ["pdf-pair-render-and-validate"],
-  "candidate.report/v1": ["pdf-pair-render-and-validate"],
+  "candidate.report/v1": ["candidate-report-render-and-validate"],
   "candidate.drive-publication/v1": ["personal-drive-publication"],
   "candidate.telegram/v1": ["telegram-outbox"],
   "candidate.cleanup-block-triggers/v1": ["archive-delete-and-cleanup"],
@@ -50,7 +45,7 @@ export type ProductionRuntime = {
     routerAI: { invoke(value: Record<string, unknown>): Promise<{ artifactRef: string; schemaVersion?: string }> };
     assemblyAI: { create(value: Record<string, unknown>): Promise<{ remoteJobId: string }>; poll(remoteJobId: string): Promise<{ status?: string; artifactRef?: string }> };
     validation?: { validate(): Promise<{ artifactRef: string; checksum?: string }> };
-    pdf: { renderPair(): Promise<Array<{ type: string; checksum: string; artifactRef: string }>> };
+    pdf: { render(): Promise<{ type: "candidate-report"; checksum: string; artifactRef: string }> };
     telegram: { send(value: Record<string, unknown>): Promise<unknown> };
     matrix?: { execute(toolKey: string, task: Record<string, unknown>): Promise<{ artifactRef: string; checksum?: string; state?: string; [key: string]: unknown }> };
   };
@@ -125,13 +120,6 @@ async function executeProductionTool(input: { toolKey: string; task: Record<stri
   const checkpoint = (kind: string, artifactRef: string, extra: Record<string, unknown> = {}) => repository.checkpoint({ taskId, kind, identity, artifactRef, ...extra });
 
   try {
-    if (input.environment.CANDIDATE_PIPELINE_ROUTING === "shadow"
-      && (input.toolKey === "candidate.drive-publication/v1" || input.toolKey === "candidate.telegram/v1")) {
-      const ref = await artifact(repository, `artifact:shadow-effect-suppressed:${identity}`);
-      await checkpoint("shadow-effect-suppressed", ref, { toolKey: input.toolKey });
-      return { outcome: "SUCCEEDED" as const, evidence: { artifactRef: ref, effectSuppressed: true, routing: "shadow" } };
-    }
-
     if (input.toolKey === "candidate.drive-snapshot/v1") {
       const folderId = requiredTaskText(task, "candidateFolderId");
       const allowed = await repository.assertGrant(grantId, {
@@ -169,14 +157,6 @@ async function executeProductionTool(input: { toolKey: string; task: Record<stri
       return { outcome: "SUCCEEDED" as const, evidence: { artifactRef: ref, remoteJobId: created.remoteJobId } };
     }
 
-    if (input.toolKey === "candidate.evidence-extraction/v1" || input.toolKey === "candidate.assessment/v1") {
-      const capability = input.toolKey === "candidate.evidence-extraction/v1" ? "fact_extraction" : "assessment";
-      const result = await runtime.adapters.routerAI.invoke({ capability, taskId, inputVersion: task.inputVersion, profileVersion: task.profileVersion });
-      await stageOperation(() => artifact(repository, result.artifactRef), `${capability.toUpperCase()}_ARTIFACT_REFERENCE_FAILED`);
-      await stageOperation(() => checkpoint(capability, result.artifactRef), `${capability.toUpperCase()}_CHECKPOINT_FAILED`);
-      return { outcome: "SUCCEEDED" as const, evidence: { artifactRef: result.artifactRef } };
-    }
-
     if (input.toolKey.startsWith("candidate.matrix-")) {
       if (!runtime.adapters.matrix) throw new Error("MATRIX_RUNTIME_NOT_PROVISIONED");
       const result = await runtime.adapters.matrix.execute(input.toolKey, task);
@@ -194,21 +174,19 @@ async function executeProductionTool(input: { toolKey: string; task: Record<stri
       return { outcome: "SUCCEEDED" as const, evidence: { artifactRef: ref } };
     }
 
-    if (input.toolKey === "candidate.report-pair/v1" || input.toolKey === "candidate.report/v1") {
-      const reports = await runtime.adapters.pdf.renderPair();
-      const expectedCount = input.toolKey === "candidate.report/v1" ? 1 : 2;
-      if (reports.length !== expectedCount || new Set(reports.map((item) => item.type)).size !== expectedCount
-        || (expectedCount === 1 && reports[0]?.type !== "candidate-report")) throw new Error(expectedCount === 1 ? "CANDIDATE_REPORT_INVALID" : "REPORT_PAIR_INVALID");
-      session(runtime).reports = reports.map((item) => ({ ...item }));
-      for (const report of reports) await artifact(repository, report.artifactRef, report.checksum);
-      await checkpoint(expectedCount === 1 ? "candidate-report" : "report-pair", `artifact:${expectedCount === 1 ? "candidate-report" : "report-pair"}:${identity}`);
-      return { outcome: "SUCCEEDED" as const, evidence: { documents: reports.map(({ type, checksum, artifactRef }) => ({ type, checksum, artifactRef })) } };
+    if (input.toolKey === "candidate.report/v1") {
+      const report = await runtime.adapters.pdf.render();
+      if (report.type !== "candidate-report") throw new Error("CANDIDATE_REPORT_INVALID");
+      session(runtime).reports = [report];
+      await artifact(repository, report.artifactRef, report.checksum);
+      await checkpoint("candidate-report", `artifact:candidate-report:${identity}`);
+      return { outcome: "SUCCEEDED" as const, evidence: { documents: [report] } };
     }
 
     if (input.toolKey === "candidate.drive-publication/v1") {
       releaseEvidence(input.environment, runtime);
       let reports = session(runtime).reports;
-      if (reports.length === 0) reports = await runtime.adapters.pdf.renderPair();
+      if (reports.length === 0) reports = [await runtime.adapters.pdf.render()];
       for (const report of reports) {
         const operationIdentity = `${identity}:${report.type}`;
         await repository.outboxIntent({ operationIdentity, kind: "drive-publication", artifactRef: report.artifactRef, checksum: report.checksum });
@@ -219,8 +197,7 @@ async function executeProductionTool(input: { toolKey: string; task: Record<stri
         }
       }
       if (runtime.state) runtime.state.candidateState = "READY";
-      const singular = reports.length === 1 && reports[0]?.type === "candidate-report";
-      await checkpoint(singular ? "published-candidate-report" : "published-report-pair", `artifact:${singular ? "published-candidate-report" : "published-report-pair"}:${identity}`);
+      await checkpoint("published-candidate-report", `artifact:published-candidate-report:${identity}`);
       return { outcome: "SUCCEEDED" as const, evidence: { state: "READY", documentCount: reports.length } };
     }
 
@@ -249,24 +226,13 @@ async function executeProductionTool(input: { toolKey: string; task: Record<stri
   }
 }
 
-export async function executeCandidateTool(input: { mode: "controlled-local" | "production"; environment?: string; environmentBindings?: CandidatePipelineEnvironment; runtime?: ProductionRuntime; toolKey: string; task: Record<string, unknown> }): Promise<CandidateToolResult> {
+export async function executeCandidateTool(input: { environmentBindings?: CandidatePipelineEnvironment; runtime?: ProductionRuntime; toolKey: string; task: Record<string, unknown> }): Promise<CandidateToolResult> {
   const stages = TOOL_STAGES[input.toolKey];
   if (!stages) return { outcome: "FAILED" as const, errorCode: "TOOL_NOT_REGISTERED" };
-  if (input.mode === "production") {
-    if (!input.environmentBindings || !input.runtime) return { outcome: "FAILED" as const, errorCode: "PRODUCTION_TOOL_RUNTIME_NOT_PROVISIONED" };
-    const readiness = candidatePipelineReadiness(input.environmentBindings);
-    if (!readiness.ready) return { outcome: "FAILED" as const, errorCode: readiness.reason };
-    return executeProductionTool({ toolKey: input.toolKey, task: input.task, environment: input.environmentBindings, runtime: input.runtime });
-  }
-  if (input.environment !== "local") {
-    return { outcome: "FAILED" as const, errorCode: "CONTROLLED_TOOL_EXECUTOR_LOCAL_ONLY" };
-  }
-  const result = await runControlledCanonicalPipeline({ fixtureSetId: "canonical-candidate-v1", dataClassification: "synthetic-no-pii-no-secrets" });
-  const canonicalStages = stages.filter((stage): stage is CanonicalStageId => stage in result.stages);
-  const failed = canonicalStages.find((stage) => result.stages[stage].status !== "SUCCEEDED");
-  return failed
-    ? { outcome: "FAILED" as const, errorCode: result.stages[failed].safeCode ?? `CONTROLLED_STAGE_${failed}_FAILED` }
-    : { outcome: "SUCCEEDED" as const, evidence: { scope: result.evidenceScope, stages, productionLikeAcceptanceClaimed: false, taskId: input.task.id } };
+  if (!input.environmentBindings || !input.runtime) return { outcome: "FAILED" as const, errorCode: "PRODUCTION_TOOL_RUNTIME_NOT_PROVISIONED" };
+  const readiness = candidatePipelineReadiness(input.environmentBindings);
+  if (!readiness.ready) return { outcome: "FAILED" as const, errorCode: readiness.reason };
+  return executeProductionTool({ toolKey: input.toolKey, task: input.task, environment: input.environmentBindings, runtime: input.runtime });
 }
 
 export function authorizeCandidateToolRequest(header: string | null, expected: string | undefined) {

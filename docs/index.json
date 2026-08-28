@@ -85,11 +85,6 @@
       "kind": "function",
       "summary": "Проецирует durable milestones в единый candidate progress/status."
     },
-    "runCanonicalCandidatePipelineConformance": {
-      "file": "web/server/candidate-pipeline/conformance.ts",
-      "kind": "function",
-      "summary": "Исполняемый canonical pipeline conformance boundary."
-    },
     "compileVacancyMatrix": {
       "file": "web/server/candidate-pipeline/matrix-compilation.ts",
       "kind": "function",
@@ -138,7 +133,7 @@
     "createDocumentProcessorServer": {
       "file": "web/server/document-processor/server.ts",
       "kind": "function",
-      "summary": "Loopback document/PDF processor; новые runs используют singular /v1/render-candidate-report для компактного HR-документа без видимого matrix appendix, legacy pair endpoint сохранён для старых artifacts."
+      "summary": "Loopback document/PDF processor; /v1/render-candidate-report формирует единственный компактный HR-документ без видимого matrix appendix."
     },
     "buildCriterionClaimExtractionBatches": {
       "file": "web/server/candidate-pipeline/transcript-claim-batching.ts",
@@ -168,7 +163,7 @@
     "PostgresVacancyMatrixRepository": {
       "file": "web/server/candidate-pipeline/matrix-postgres-repository.ts",
       "kind": "class",
-      "summary": "Fenced compilation claim и immutable matrix publish по (profileVersion, workflowIdentity), включая совместимое чтение matrix-v2, независимую matrix-v3 и cleanup-aware защиту candidate-scoped matrix history."
+      "summary": "Fenced compilation claim и immutable matrix-v3 publish по (profileVersion, workflowIdentity); исторические matrix-v2 записи не участвуют в новых запусках."
     },
     "deriveMatrixRecommendation": {
       "file": "web/server/candidate-pipeline/matrix-driven.ts",

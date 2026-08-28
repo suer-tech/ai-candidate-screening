@@ -6,7 +6,7 @@ export const MATRIX_SCHEMA_VERSION = "vacancy-matrix/v1" as const;
 export const MATRIX_WORKFLOW_VERSION = COVERAGE_FIRST_WORKFLOW_VERSION;
 
 export function isMatrixWorkflowVersion(value: string): boolean {
-  return /^matrix-v[1-9]\d*(?:-shadow)?$/.test(value);
+  return value === MATRIX_WORKFLOW_VERSION;
 }
 
 export type MatrixOperator = "ALL_OF" | "ANY_OF" | "AT_LEAST_N" | "INFORMATIONAL";

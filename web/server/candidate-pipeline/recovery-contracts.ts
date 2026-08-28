@@ -1,5 +1,4 @@
 export const COVERAGE_FIRST_WORKFLOW_VERSION = "matrix-v3" as const;
-export const COVERAGE_FIRST_SHADOW_WORKFLOW_VERSION = "matrix-v3-shadow" as const;
 
 const MATRIX_V3_ARTIFACT_SCHEMAS: Readonly<Record<string, string>> = Object.freeze({
   "candidate.drive-snapshot/v1": "drive-snapshot/v1",
@@ -14,9 +13,8 @@ const MATRIX_V3_ARTIFACT_SCHEMAS: Readonly<Record<string, string>> = Object.free
   "candidate.matrix-verify/v1": "matrix-verification/v2",
   "candidate.matrix-recommendation/v1": "matrix-assessment-snapshot/v2",
   "candidate.validation/v1": "validated-matrix-assessment/v2",
-  "candidate.report-pair/v1": "candidate-report-pair/v1",
   "candidate.report/v1": "candidate-report/v1",
-  "candidate.drive-publication/v1": "published-report-pair/v1",
+  "candidate.drive-publication/v1": "published-candidate-report/v1",
   "candidate.telegram/v1": "notification-outcome/v1",
 });
 

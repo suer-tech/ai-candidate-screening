@@ -3,7 +3,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { MammothDocxExtractionAdapter, PdfJsExtractionAdapter } from "../candidate-pipeline/documents.ts";
-import { renderCandidatePdf, validateRenderedReportPdf, validateReportPairModels, type ReportModel } from "../candidate-pipeline/reports.ts";
+import { renderCandidatePdf, validateRenderedReportPdf, type ReportModel } from "../candidate-pipeline/reports.ts";
 
 export type DocumentProcessorConfig = { token: string; host: string; port: number; maxInputBytes: number };
 
@@ -58,30 +58,6 @@ export function createDocumentProcessorServer(config: DocumentProcessorConfig) {
         return json(response, 200, { schemaVersion: "rendered-candidate-report/v1", report: { type: payload.model.type,
           checksum: validation.checksum, bytesBase64: Buffer.from(rendered).toString("base64"), contentOraclePassed: validation.contentOraclePassed,
           warningCount: validation.contentOracleWarningCount, contentOracleWarningFingerprints: validation.contentOracleWarningFingerprints } });
-      } catch (error) {
-        const code = error instanceof Error && /^[A-Z0-9_:.-]+$/.test(error.message) ? error.message : "REPORT_RENDER_PROCESSOR_FAILED";
-        return json(response, 422, { code });
-      }
-    }
-    if (request.method === "POST" && request.url === "/v1/render-report-pair") {
-      try {
-        const input = await bytes(request, config.maxInputBytes);
-        const payload = JSON.parse(new TextDecoder().decode(input)) as { models?: ReportModel[] };
-        if (!Array.isArray(payload.models) || payload.models.length !== 2) throw new Error("REPORT_PAIR_MODEL_INVALID");
-        validateReportPairModels(payload.models[0], payload.models[1]);
-        const reports = [];
-        for (const model of payload.models) {
-          const rendered = await renderCandidatePdf(model);
-          const validation = await validateRenderedReportPdf(rendered, model);
-          if (!validation.contentOraclePassed) console.info(JSON.stringify({ event: "report-content-oracle-warning", reportType: model.type,
-            warningCount: validation.contentOracleWarningCount, warningFingerprints: validation.contentOracleWarningFingerprints }));
-          reports.push({ type: model.type, checksum: validation.checksum, bytesBase64: Buffer.from(rendered).toString("base64"),
-            contentOraclePassed: validation.contentOraclePassed, warningCount: validation.contentOracleWarningCount,
-            contentOracleWarningFingerprints: validation.contentOracleWarningFingerprints });
-        }
-        return json(response, 200, { schemaVersion: "rendered-report-pair/v1", reports,
-          contentOraclePassed: reports.every((report) => report.contentOraclePassed),
-          warningCount: reports.reduce((sum, report) => sum + report.warningCount, 0) });
       } catch (error) {
         const code = error instanceof Error && /^[A-Z0-9_:.-]+$/.test(error.message) ? error.message : "REPORT_RENDER_PROCESSOR_FAILED";
         return json(response, 422, { code });

@@ -11,8 +11,6 @@ const entries: Record<string, string[]> = {
   media: ["--import", "tsx", path.join(webRoot, "server", "media-processor", "server.ts")],
   document: ["--import", "tsx", path.join(webRoot, "server", "document-processor", "server.ts")],
   controller: ["--import", "tsx", path.join(webRoot, "server", "e2e-controller", "cli.ts")],
-  benchmark: ["--import", "tsx", path.join(webRoot, "scripts", "run-private-candidate-benchmark.ts")],
-  "benchmark-cleanup": ["--import", "tsx", path.join(webRoot, "scripts", "cleanup-private-candidate-benchmark.ts")],
 };
 const argumentsForService = service ? entries[service] : undefined;
 if (!argumentsForService) throw new Error("RUNTIME_SERVICE_UNKNOWN");

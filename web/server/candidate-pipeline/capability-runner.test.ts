@@ -6,15 +6,15 @@ import { AdminOnlyProtectedTraceStore, InMemoryProtectedTracePersistence } from 
 import { runLlmCapabilityWithPolicy } from "./capability-runner.ts";
 
 function configuration(maxAttempts = 3) {
-  return validateRuntimeConfiguration({ releaseVersion: "test", providers: { router: { provider: "routerai", endpoint: "https://router.invalid/v1", secretReference: "KEY", apiContractVersion: "v1", supportsStructuredOutputs: true } }, capabilities: { fact_extraction: { providerProfile: "router", model: "controlled", promptArtifact: "fact-extraction/v1", responseSchemaArtifact: "facts/v1", toolSchemaArtifacts: ["no-tools/v1"], generationParameters: {}, limits: {}, timeoutMs: 100, retryPolicy: { maxAttempts, initialBackoffMs: 0, maximumBackoffMs: 0 }, fallbackPolicy: { mode: "disabled" } } } }, { has: () => true, read: () => "secret" }, { requiredCapabilities: ["fact_extraction"] });
+  return validateRuntimeConfiguration({ releaseVersion: "test", providers: { router: { provider: "routerai", endpoint: "https://router.invalid/v1", secretReference: "KEY", apiContractVersion: "v1", supportsStructuredOutputs: true } }, capabilities: { matrix_compiler: { providerProfile: "router", model: "controlled", promptArtifact: "compile-vacancy-matrix/v1", responseSchemaArtifact: "vacancy-matrix-draft/v1", toolSchemaArtifacts: ["no-tools/v1"], generationParameters: {}, limits: { maxInputBytes: 10_000, maxOutputTokens: 1_000 }, timeoutMs: 100, retryPolicy: { maxAttempts, initialBackoffMs: 0, maximumBackoffMs: 0 }, fallbackPolicy: { mode: "disabled" } } } }, { has: () => true, read: () => "secret" }, { requiredCapabilities: ["matrix_compiler"] });
 }
 
-const request = { capability: "fact_extraction" as const, correlation: { traceId: "trace", callId: "call", attemptId: "attempt", attemptNumber: 1, workflowRunId: "run", workflowStage: "facts" }, request: { messages: [], toolDefinitions: [] }, inputSnapshot: { materials: [], context: {} } };
+const request = { capability: "matrix_compiler" as const, correlation: { traceId: "trace", callId: "call", attemptId: "attempt", attemptNumber: 1, workflowRunId: "run", workflowStage: "matrix" }, request: { messages: [], toolDefinitions: [] }, inputSnapshot: { profile: {}, context: {} } };
 
 test("transient capability failure retries within config and accounts every external call", async () => {
   let calls = 0; let reserved = 0; let committed = 0;
   const traces = new InMemoryProtectedTracePersistence();
-  const provider: LlmProviderAdapter = { execute: async () => { calls += 1; if (calls < 3) throw new LlmProviderAttemptError("temporary", { class: "provider_unavailable" }, 503, true); return { rawEnvelope: {}, assistantMessages: [], normalizedOutput: { schemaVersion: "facts/v1", facts: [], conflicts: [] }, toolEvents: [] }; } };
+  const provider: LlmProviderAdapter = { execute: async () => { calls += 1; if (calls < 3) throw new LlmProviderAttemptError("temporary", { class: "provider_unavailable" }, 503, true); return { rawEnvelope: {}, assistantMessages: [], normalizedOutput: { schemaVersion: "vacancy-matrix-draft/v1", criteria: [] }, toolEvents: [] }; } };
   const result = await runLlmCapabilityWithPolicy({ configuration: configuration(), adapter: provider, protectedStore: new AdminOnlyProtectedTraceStore(traces), incidents: { record: () => undefined } }, { reserve: (amount) => { reserved += amount.llmCalls ?? 0; }, commit: (amount) => { committed += amount.llmCalls ?? 0; }, release: () => undefined }, request);
   assert.equal(result.attempts, 3); assert.equal(reserved, 3); assert.equal(committed, 3);
   assert.deepEqual([...traces.records.keys()], ["trace:attempt:1", "trace:attempt:2", "trace:attempt:3"]);

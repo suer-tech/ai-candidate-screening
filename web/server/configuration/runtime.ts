@@ -24,7 +24,7 @@ const RUNTIME_KEYS = new Set([
   "GOOGLE_OAUTH_CLIENT_ID", "GOOGLE_OAUTH_REDIRECT_URI", "GOOGLE_OAUTH_DEPLOYMENT_MODE",
   "ROUTERAI_ENDPOINT", "ROUTERAI_MODEL", "ROUTERAI_STRUCTURED_OUTPUTS", "ROUTERAI_CONTEXT_WINDOW_TOKENS", "MATRIX_BATCH_SAFETY_TOKENS", "LLM_RELEASE_VERSION",
   "AGENT_RUNTIME_ENVIRONMENT", "AGENT_RUNTIME_WORKER_ID", "AGENT_RUNTIME_POLLING_MS", "AGENT_RUNTIME_HEARTBEAT_MS", "AGENT_RUNTIME_LEASE_MS",
-  "CANDIDATE_TOOL_EXECUTION_MODE", "CANDIDATE_PIPELINE_ROUTING", "MATRIX_ASSESSMENT_ROUTING", "CANDIDATE_PIPELINE_BUILD_ID",
+  "CANDIDATE_TOOL_EXECUTION_MODE", "CANDIDATE_PIPELINE_ROUTING", "CANDIDATE_PIPELINE_BUILD_ID",
   "MEDIA_PROCESSOR_URL", "MEDIA_PROCESSOR_HOST", "MEDIA_PROCESSOR_PORT", "MEDIA_PROCESSOR_MAX_INPUT_BYTES",
   "DOCUMENT_PROCESSOR_URL", "DOCUMENT_PROCESSOR_HOST", "DOCUMENT_PROCESSOR_PORT", "DOCUMENT_PROCESSOR_MAX_INPUT_BYTES",
   "E2E_ENVIRONMENT", "E2E_FIXTURE_SET_ID", "E2E_ALLOW_DESTRUCTIVE_CLEANUP", "FIXTURE_CONTROLLER_PORT", "FIXTURE_CONTROLLER_STATE_PATH",
@@ -83,9 +83,6 @@ export function parseRuntimeEnv(source: string): Record<string, string> {
     if (INLINE_SECRET_KEY.test(key)) throw new RuntimeConfigurationError("INLINE_SECRET_REJECTED");
     if (!RUNTIME_KEYS.has(key)) throw new RuntimeConfigurationError("RUNTIME_ENV_UNKNOWN_KEY");
     values[key] = value;
-  }
-  if (values.MATRIX_ASSESSMENT_ROUTING && !["disabled", "shadow", "production"].includes(values.MATRIX_ASSESSMENT_ROUTING)) {
-    throw new RuntimeConfigurationError("MATRIX_ASSESSMENT_ROUTING_INVALID");
   }
   return values;
 }
@@ -179,7 +176,7 @@ export async function loadRuntimeConfiguration(webRoot = process.cwd()): Promise
 export function environmentProjection(configuration: RuntimeConfiguration): Record<string, string> {
   const overrides = processEnvOverrides();
   const values = { ...configuration.values, ...overrides };
-  if (values.MATRIX_ASSESSMENT_ROUTING === "production") {
+  if (values.CANDIDATE_PIPELINE_ROUTING === "effectful") {
     const release = configuration.releaseEvidence ? JSON.parse(configuration.releaseEvidence) as Record<string, unknown> : {};
     if (release.matrixShadowGreen !== true || release.matrixAcceptanceGreen !== true || release.requiredE2eGreen !== true) {
       throw new RuntimeConfigurationError("MATRIX_PRODUCTION_SHADOW_GATE_MISSING");
@@ -214,24 +211,15 @@ export function environmentProjection(configuration: RuntimeConfiguration): Reco
       vacancy_generation: capability("vacancy-profile/v1", "vacancy-profile-response/v1", 1),
       ocr: capability("document-ocr/v1", "ocr-page/v1"),
       speaker_mapping: capability("speaker-mapping/v1", "speaker-map/v1"),
-      fact_extraction: capability("fact-extraction/v1", "facts/v1"),
-      // Candidate assessment is the largest structured request. RouterAI can take
-      // longer than the generic two-minute boundary while streaming its JSON body.
-      assessment: { ...capability("candidate-assessment/v1", "assessment/v1"), timeoutMs: 300_000 },
-      validation_repair: capability("result-validation/v1", "bounded-repair/v1"),
-      agent_tool_subcall: capability("agent-subcall/v1", "agent-subcall-response/v1"),
       matrix_compiler: { ...capability("compile-vacancy-matrix/v1", "vacancy-matrix-draft/v1", 1), timeoutMs: 600_000 },
       matrix_critic: { ...capability("critique-vacancy-matrix/v2", "vacancy-matrix-critic/v2", 1), timeoutMs: 600_000 },
       criterion_claim_extraction: { ...capability("extract-claims-for-criteria/v1", "candidate-claims/v1", 1), timeoutMs: 600_000 },
       unmapped_signal_discovery: { ...capability("discover-unmapped-signals/v1", "candidate-unmapped-signals/v1", 1), timeoutMs: 600_000 },
-      unmapped_risk_assessment: capability("assess-unmapped-risk/v1", "candidate-unmapped-risk-assessment/v1", 1),
-      critical_risk_verification: capability("verify-critical-risk/v1", "candidate-critical-risk-verification/v1", 1),
       evidence_consolidation: { ...capability("consolidate-evidence/v1", "candidate-evidence-consolidation/v1", 1), timeoutMs: 600_000 },
       global_conflict_detection: { ...capability("detect-global-conflicts/v1", "candidate-global-conflicts/v1", 1), timeoutMs: 600_000 },
       matrix_row_evaluation: { ...capability("fill-matrix-rows/v2", "candidate-matrix-rows/v2", 1), timeoutMs: 600_000 },
       abc_matrix_assessment: { ...capability("assess-abc-direction/v2", "candidate-abc-matrix/v1", 1), timeoutMs: 600_000 },
       critical_row_verification: { ...capability("verify-critical-row/v1", "candidate-row-verification/v1", 1), timeoutMs: 600_000 },
-      invalid_row_repair: { ...capability("repair-invalid-rows/v1", "candidate-matrix-rows/v1", 1), timeoutMs: 600_000 },
       candidate_report_composer: { ...capability("compose-candidate-report/v2", "candidate-report-composition/v2", 1), timeoutMs: 300_000 },
     },
   };
@@ -241,8 +229,8 @@ export function environmentProjection(configuration: RuntimeConfiguration): Reco
     leaseMs: Number(values.AGENT_RUNTIME_LEASE_MS || 30_000),
     pollingMs: Number(values.AGENT_RUNTIME_POLLING_MS || 1_000),
     heartbeatMs: Number(values.AGENT_RUNTIME_HEARTBEAT_MS || 10_000),
-    flags: { synthetic: false, shadow: values.CANDIDATE_PIPELINE_ROUTING !== "effectful", acceptNewGoals: true,
-      toolRouting: { "candidate-analysis/v1": "agent", "candidate-analysis-matrix/v1": "agent", "candidate-analysis-matrix-shadow/v1": "agent", "candidate-cleanup/v1": "agent" } },
+    flags: { synthetic: false, shadow: false, acceptNewGoals: true,
+      toolRouting: { "candidate-analysis-matrix/v1": "agent", "candidate-cleanup/v1": "agent" } },
   };
   return {
     ...values,

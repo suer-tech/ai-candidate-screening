@@ -465,12 +465,11 @@ export class PostgresProductRepository implements ProductRepository {
       this.sql<{ id: number; revision: number; record_json: string }[]>`SELECT id,revision,record_json FROM candidates`,
       this.sql<{ record_json: string }[]>`SELECT record_json FROM vacancies`,
       this.sql<Row[]>`SELECT g.candidate_id,r.id AS run_id,r.state AS run_state,r.workflow_version,g.created_at AS run_started_at,r.last_progress_at,t.task_key,t.state AS task_state,t.attempt_count,a.error_code,
-          compilation.state AS matrix_state,compilation.repair_cycles AS matrix_repair_count,compilation.terminal_error_code AS matrix_terminal_error_code,shadow_run.state AS matrix_shadow_state
+          compilation.state AS matrix_state,compilation.repair_cycles AS matrix_repair_count,compilation.terminal_error_code AS matrix_terminal_error_code
         FROM agent_goals g JOIN agent_runs r ON r.goal_id=g.id LEFT JOIN agent_tasks t ON t.run_id=r.id LEFT JOIN agent_attempts a ON a.task_id=t.id AND a.attempt_number=t.attempt_count
         LEFT JOIN vacancy_matrix_compilations compilation
           ON compilation.profile_version=g.profile_version
          AND compilation.workflow_identity=r.workflow_version
-        LEFT JOIN LATERAL (SELECT sr.state FROM agent_goals sg JOIN agent_runs sr ON sr.goal_id=sg.id WHERE sg.goal_type='candidate-analysis-matrix-shadow/v1' AND sg.candidate_id=g.candidate_id AND sg.input_version=g.input_version AND sg.profile_version=g.profile_version ORDER BY sr.last_progress_at DESC LIMIT 1) shadow_run ON TRUE
         WHERE g.goal_type IN ('candidate-analysis/v1','candidate-analysis-matrix/v1') ORDER BY g.candidate_id,g.created_at DESC,r.last_progress_at DESC,t.id`,
       this.sql<Row[]>`WITH RECURSIVE report_lineage(report_run_id,id,depth) AS (
           SELECT DISTINCT published.run_id,published.run_id,0 FROM candidate_report_versions published WHERE published.state='PUBLISHED'
@@ -535,7 +534,7 @@ export class PostgresProductRepository implements ProductRepository {
     for (const row of runtimeRows) {
       const candidateId = Number(row.candidate_id); const current = runtimeByCandidate.get(candidateId); if (current?.length && current[0].runId !== String(row.run_id)) continue;
       const value: RuntimeProjectionRow = { runId: String(row.run_id), runState: String(row.run_state), workflowVersion: row.workflow_version ? String(row.workflow_version) : undefined, startedAt: String(row.run_started_at), lastProgressAt: String(row.last_progress_at), taskKey: row.task_key ? String(row.task_key) : undefined, taskState: row.task_state ? String(row.task_state) : undefined, attemptCount: row.attempt_count == null ? undefined : Number(row.attempt_count), errorCode: row.error_code ? String(row.error_code) : undefined,
-        matrixState: row.matrix_state ? String(row.matrix_state) as RuntimeProjectionRow["matrixState"] : undefined, matrixRepairCount: row.matrix_repair_count == null ? undefined : Number(row.matrix_repair_count), matrixTerminalErrorCode: row.matrix_terminal_error_code ? String(row.matrix_terminal_error_code) : undefined, matrixShadowState: row.matrix_shadow_state ? String(row.matrix_shadow_state) : undefined };
+        matrixState: row.matrix_state ? String(row.matrix_state) as RuntimeProjectionRow["matrixState"] : undefined, matrixRepairCount: row.matrix_repair_count == null ? undefined : Number(row.matrix_repair_count), matrixTerminalErrorCode: row.matrix_terminal_error_code ? String(row.matrix_terminal_error_code) : undefined };
       runtimeByCandidate.set(candidateId, [...(current ?? []), value]);
     }
     const reportsByCandidate = new Map<number, ReadyReportProjection>();

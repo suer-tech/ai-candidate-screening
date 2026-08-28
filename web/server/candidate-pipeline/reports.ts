@@ -4,7 +4,7 @@ import type { PDFFont, PDFImage, PDFPage, RGB } from "pdf-lib";
 import type { CandidateMatrixRow } from "./matrix-driven.ts";
 
 export type ReportModel = {
-  type: "abc-test" | "candidate-results" | "candidate-report";
+  type: "candidate-report";
   candidateId: string;
   candidateDisplayName: string;
   vacancyId: string;
@@ -18,7 +18,6 @@ export type ReportModel = {
   matrixRows?: readonly CandidateMatrixRow[];
   sections: readonly { id: string; title: string; body: string }[];
   evidence: readonly EvidenceFact[];
-  interviewSummary?: InterviewSummary;
   decisionSnapshot?: unknown;
   evidenceCatalog?: readonly { evidenceId: string; quote: string; source?: string; sourceLabel?: string }[];
   sourceMaterials?: readonly ReportSourceMaterial[];
@@ -107,19 +106,10 @@ export type InterviewSummary = {
 };
 
 const REQUIRED: Record<ReportModel["type"], readonly string[]> = {
-  "abc-test": ["identity", "scale", "directions", "evidence", "conflicts", "strengths", "limitations", "questions"],
-  "candidate-results": ["identity", "recommendation", "stop-factors", "critical-mismatches", "strengths", "limitations", "risks", "abc", "competencies", "confirmed-results", "conflicts", "unverified-questions", "interview-quality", "access-to-ke", "ke-questions", "transcription-quality", "evidence"],
   "candidate-report": ["identity", "sources", "organizational-conditions", "review", "key-evidence", "abc-directions", "technical-check", "motivation-fit", "risks", "decision", "final-summary"],
 };
 
 const SECTION_TITLES: Record<ReportModel["type"], Readonly<Record<string, string>>> = {
-  "abc-test": { identity: "Кандидат", scale: "Шкала оценки", directions: "ABC-профиль", evidence: "Основания", conflicts: "Противоречия",
-    strengths: "Сильные стороны", limitations: "Ограничения", questions: "Вопросы HR" },
-  "candidate-results": { identity: "Кандидат", recommendation: "Рекомендация", "stop-factors": "Стоп-факторы",
-    "critical-mismatches": "Критические несоответствия", strengths: "Сильные стороны", limitations: "Ограничения", risks: "Риски",
-    abc: "ABC-профиль", competencies: "Компетенции", "confirmed-results": "Подтверждённые результаты", conflicts: "Противоречия",
-    "unverified-questions": "Что проверить", "interview-quality": "Качество интервью", "access-to-ke": "Допуск к КЕ",
-    "ke-questions": "Вопросы КЕ", "transcription-quality": "Качество транскрипции", evidence: "Основания" },
   "candidate-report": { identity: "Кандидат и вакансия", sources: "Исходные материалы", "organizational-conditions": "Организационные моменты",
     review: "Ревью", "key-evidence": "Ключевые доказательства", "abc-directions": "ABC по направлениям",
     "technical-check": "Технический чек", "motivation-fit": "Мотивация и соответствие роли", risks: "Риски",
@@ -244,30 +234,18 @@ export async function renderCandidatePdf(model: ReportModel, options: { fontByte
   const blue = rgb(0.05, 0.42, 0.72);
   const paleBlue = rgb(0.94, 0.97, 0.99);
   const line = rgb(0.83, 0.87, 0.90);
-  if (model.type === "candidate-results" && model.interviewSummary) {
-    renderInterviewSummary(page, model, model.interviewSummary, { font, bold, ink, muted, blue, line, logo });
-    document.setTitle(reportFileName(model));
-    document.setSubject(`Итоги интервью: ${sanitizeReportText(model.interviewSummary.fullName)}`);
-    document.setProducer("AI screener report-tool/v1");
-    return new Uint8Array(await document.save({ useObjectStreams: false }));
-  }
   page.drawImage(logo, { x: 40, y: 774, width: 34, height: 34 });
   page.drawText("Правильный выбор", { x: 83, y: 793, size: 12, font: bold, color: ink });
   page.drawText("AI-анализ кандидатов", { x: 83, y: 778, size: 7.5, font, color: muted });
-  const reportTitle = model.type === "abc-test" ? "ABC-профиль кандидата" : model.type === "candidate-report" ? "Отчёт по кандидату" : "Итоги анализа кандидата";
+  const reportTitle = "Отчёт по кандидату";
   page.drawText(reportTitle, { x: 40, y: 742, size: 19, font: bold, color: ink });
   page.drawText(`Кандидат: ${sanitizeReportText(model.candidateDisplayName)}`, { x: 40, y: 716, size: 9, font: bold, color: ink });
   page.drawText(`Вакансия: ${sanitizeReportText(model.vacancyTitle)}`, { x: 40, y: 700, size: 9, font, color: ink });
   page.drawText(new Date(model.generatedAtUtc).toLocaleDateString("ru-RU", { timeZone: "UTC" }), { x: 485, y: 716, size: 8, font, color: muted });
-  const compactHrReport = model.type === "candidate-report";
-  if (!compactHrReport) {
-    page.drawRectangle({ x: 40, y: 644, width: 515, height: 40, color: paleBlue, borderColor: rgb(0.72, 0.84, 0.94), borderWidth: 0.7 });
-    page.drawText("Рекомендация", { x: 52, y: 668, size: 7.3, font: bold, color: blue });
-    page.drawText(sanitizeReportText(model.recommendation), { x: 52, y: 650, size: 12, font: bold, color: ink });
-  }
+  const compactHrReport = true;
 
   const visibleSections = reportVisibleSections(model);
-  const singleColumn = model.type === "abc-test" || model.type === "candidate-report";
+  const singleColumn = true;
   const columnGap = 12;
   const columnWidth = singleColumn ? 515 : (515 - columnGap) / 2;
   const left = 40;
@@ -453,18 +431,15 @@ function renderInterviewSummary(
 }
 
 const VISIBLE_SECTIONS: Record<ReportModel["type"], readonly string[]> = {
-  "abc-test": ["identity", "scale", "directions", "evidence", "conflicts", "strengths", "limitations", "questions"],
-  "candidate-results": ["strengths", "limitations", "risks", "competencies", "confirmed-results", "unverified-questions", "access-to-ke"],
   "candidate-report": ["identity", "sources", "organizational-conditions", "review", "key-evidence", "abc-directions", "technical-check", "motivation-fit", "risks", "decision", "final-summary"],
 };
 
 function reportVisibleSections(model: ReportModel) {
   const allowed = new Set(VISIBLE_SECTIONS[model.type]);
-  if (model.workflowVersion?.startsWith("matrix-v") && model.type !== "candidate-report") allowed.add("matrix");
   return model.sections
-    .filter((section) => allowed.has(section.id) || (model.workflowVersion?.startsWith("matrix-v") && model.type !== "candidate-report" && section.id.startsWith("matrix:")))
+    .filter((section) => allowed.has(section.id))
     .map((section) => ({ ...section, title: hrSafeReportText(section.title), body: hrSafeReportText(
-      model.type === "candidate-report" && section.id === "sources" && model.sourceMaterials?.length
+      section.id === "sources" && model.sourceMaterials?.length
         ? projectCandidateReportSourceLines(model.sourceMaterials).join("\n")
         : section.body,
     ) }));
@@ -532,14 +507,9 @@ export async function validateRenderedReportPdf(bytes: Uint8Array, model: Report
   const pages = await new PdfJsExtractionAdapter().extract(bytes);
   const text = pages.map((page) => page.text).join(" ").replace(/\s+/g, " ");
   if (!pages.length || pages.length > 50 || bytes.byteLength > 5_000_000) throw new Error("PDF_READABILITY_BUDGET_EXCEEDED");
-  const requiredContent = model.type === "candidate-results" && model.interviewSummary
-    ? ["Итоги интервью", model.interviewSummary.fullName, model.vacancyTitle, "Hard skills", "Soft skills", "Плюсы кандидата", "Минусы кандидата", "ДОПОЛНИТЕЛЬНО"]
-    : model.type === "abc-test"
-      ? [model.candidateDisplayName, model.vacancyTitle, model.recommendation,
-        ...reportVisibleSections(model).flatMap((section) => [section.title, ...section.body.split(/\r?\n/).filter(Boolean)])]
-      : [model.candidateDisplayName, model.vacancyTitle, model.recommendation,
-        ...reportVisibleSections(model).flatMap((section) => [section.title])];
-  const normalizedRequiredContent = requiredContent.map(model.type === "abc-test" ? normalizeReportBodyText : sanitizeReportText);
+  const requiredContent = [model.candidateDisplayName, model.vacancyTitle, model.recommendation,
+    ...reportVisibleSections(model).flatMap((section) => [section.title])];
+  const normalizedRequiredContent = requiredContent.map(sanitizeReportText);
   const missing = normalizedRequiredContent.filter((value) => value && !renderedTextContains(text, value));
   return {
     ...structural,
@@ -582,13 +552,6 @@ function renderedTextContains(renderedText: string, requiredValue: string) {
   return false;
 }
 
-export function validateReportPairModels(left: ReportModel, right: ReportModel) {
-  if (left.type === right.type || left.candidateId !== right.candidateId || left.vacancyId !== right.vacancyId || left.profileVersion !== right.profileVersion || left.analysisVersion !== right.analysisVersion || left.recommendation !== right.recommendation) throw new Error("REPORT_PAIR_MODEL_MISMATCH");
-  if (sha256(left.evidence) !== sha256(right.evidence)) throw new Error("REPORT_PAIR_EVIDENCE_MISMATCH");
-  if (left.workflowVersion !== right.workflowVersion || sha256(left.matrixProvenance ?? null) !== sha256(right.matrixProvenance ?? null) || sha256(left.matrixRows ?? []) !== sha256(right.matrixRows ?? [])) throw new Error("REPORT_PAIR_MATRIX_MISMATCH");
-  return true;
-}
-
 export function validatePdf(bytes: Uint8Array, model: ReportModel) {
   validateReportModel(model);
   const text = Buffer.from(bytes).toString("latin1");
@@ -597,31 +560,5 @@ export function validatePdf(bytes: Uint8Array, model: ReportModel) {
 }
 
 export function reportFileName(model: ReportModel) {
-  const prefix = model.type === "abc-test" ? "ABC-тест" : model.type === "candidate-report" ? "Отчёт по кандидату" : "Итоги по кандидату";
-  return `${prefix} — ${model.candidateDisplayName} — v${String(model.analysisVersion).padStart(4, "0")}.pdf`;
-}
-
-export type PublishableReport = { type: ReportModel["type"]; checksum: string; fileName: string; bytes: Uint8Array };
-
-export class ReportPublicationRegistry {
-  private readonly files = new Map<string, { driveFileId: string; checksum: string; fileName: string }>();
-
-  publishPair(candidateId: string, analysisVersion: number, reports: readonly PublishableReport[]) {
-    if (reports.length !== 2 || new Set(reports.map((report) => report.type)).size !== 2) throw new Error("REPORT_PAIR_INCOMPLETE");
-    const version = `v${String(analysisVersion).padStart(4, "0")}`;
-    const pending: Array<{ identity: string; value: { driveFileId: string; checksum: string; fileName: string } }> = [];
-    for (const report of reports) {
-      if (!report.bytes.byteLength || report.checksum !== sha256(report.bytes)) throw new Error("REPORT_CHECKSUM_INVALID");
-      const identity = `${candidateId}:${version}:${report.type}`;
-      const existing = this.files.get(identity);
-      if (existing && existing.checksum !== report.checksum) throw new Error("REPORT_VERSION_CONFLICT");
-      pending.push({ identity, value: existing ?? { driveFileId: `drive-${sha256(identity).slice(0, 16)}`, checksum: report.checksum, fileName: report.fileName } });
-    }
-    for (const item of pending) this.files.set(item.identity, item.value);
-    return { state: "READY" as const, directory: `Результаты/${version}`, documents: pending.map((item) => structuredClone(item.value)) };
-  }
-
-  deleteCandidate(candidateId: string) {
-    for (const identity of this.files.keys()) if (identity.startsWith(`${candidateId}:`)) this.files.delete(identity);
-  }
+  return `Отчёт по кандидату — ${model.candidateDisplayName} — v${String(model.analysisVersion).padStart(4, "0")}.pdf`;
 }

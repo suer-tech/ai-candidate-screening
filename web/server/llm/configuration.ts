@@ -13,23 +13,15 @@ export const LLM_CAPABILITIES = [
   "vacancy_generation",
   "ocr",
   "speaker_mapping",
-  "fact_extraction",
-  "assessment",
-  "validation_repair",
-  "agent_tool_subcall",
   "matrix_compiler",
   "matrix_critic",
-  "matrix_repair",
   "criterion_claim_extraction",
   "unmapped_signal_discovery",
-  "unmapped_risk_assessment",
-  "critical_risk_verification",
   "evidence_consolidation",
   "global_conflict_detection",
   "matrix_row_evaluation",
   "abc_matrix_assessment",
   "critical_row_verification",
-  "invalid_row_repair",
   "candidate_report_composer",
 ] as const;
 
@@ -397,7 +389,7 @@ export function validateRuntimeConfiguration(
     if (["matrix_compiler", "matrix_critic", "matrix_repair"].includes(capability) && validated.timeoutMs > 600_000) {
       throw new RuntimeConfigurationError(`capabilities.${capability}.timeoutMs exceeds the ten-minute ceiling`);
     }
-    if (capability.startsWith("matrix_") || ["criterion_claim_extraction", "unmapped_signal_discovery", "unmapped_risk_assessment", "critical_risk_verification", "evidence_consolidation", "global_conflict_detection", "abc_matrix_assessment", "critical_row_verification", "invalid_row_repair"].includes(capability)) {
+    if (capability.startsWith("matrix_") || ["criterion_claim_extraction", "unmapped_signal_discovery", "evidence_consolidation", "global_conflict_detection", "abc_matrix_assessment", "critical_row_verification"].includes(capability)) {
       const limits = validated.limits as Record<string, JsonValue>;
       if (!limits || typeof limits !== "object" || Array.isArray(limits) || !Number.isInteger(limits.maxOutputTokens) || Number(limits.maxOutputTokens) <= 0) {
         throw new RuntimeConfigurationError(`capabilities.${capability}.limits.maxOutputTokens must be a positive integer`);

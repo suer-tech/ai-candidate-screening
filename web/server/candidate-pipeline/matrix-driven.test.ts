@@ -21,9 +21,10 @@ const draft = (temporaryId: string, sourceRef: string): MatrixCriterionDraft => 
 });
 
 test("validation recognizes pinned matrix workflow versions without accepting legacy or malformed values", () => {
-  assert.equal(isMatrixWorkflowVersion("matrix-v1"), true);
-  assert.equal(isMatrixWorkflowVersion("matrix-v2"), true);
-  assert.equal(isMatrixWorkflowVersion("matrix-v2-shadow"), true);
+  assert.equal(isMatrixWorkflowVersion("matrix-v1"), false);
+  assert.equal(isMatrixWorkflowVersion("matrix-v2"), false);
+  assert.equal(isMatrixWorkflowVersion("matrix-v2-shadow"), false);
+  assert.equal(isMatrixWorkflowVersion("matrix-v3"), true);
   assert.equal(isMatrixWorkflowVersion("legacy-v1"), false);
   assert.equal(isMatrixWorkflowVersion("matrix-v2-unknown"), false);
   assert.equal(isMatrixWorkflowVersion("matrix-v"), false);

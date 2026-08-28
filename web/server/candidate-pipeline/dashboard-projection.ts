@@ -1,7 +1,7 @@
 import type { CandidateAiOverview, CandidateRecord, CandidateTranscript, Recommendation, ResultDocument, ResultDocumentType } from "../../app/product-model.ts";
 import { candidateFailureMessage } from "../agent-runtime/failure-policy.ts";
 
-export type RuntimeProjectionRow = { runId: string; runState: string; workflowVersion?: string; startedAt?: string; lastProgressAt: string; taskKey?: string; taskState?: string; attemptCount?: number; errorCode?: string; matrixState?: "CLAIMED" | "PUBLISHED" | "FAILED"; matrixRepairCount?: number; matrixTerminalErrorCode?: string; matrixShadowState?: string };
+export type RuntimeProjectionRow = { runId: string; runState: string; workflowVersion?: string; startedAt?: string; lastProgressAt: string; taskKey?: string; taskState?: string; attemptCount?: number; errorCode?: string; matrixState?: "CLAIMED" | "PUBLISHED" | "FAILED"; matrixRepairCount?: number; matrixTerminalErrorCode?: string };
 export type ReadyReportProjection = { runId: string; analysisVersion: number; completedAt: string; elapsedMinutes: number; recommendation: Recommendation; assessment?: CandidateAiOverview; transcript?: CandidateTranscript; documents: Array<{ id: string; type: ResultDocumentType; fileName: string; driveFileId: string }> };
 
 const PROGRESS_BY_TASK: Readonly<Record<string, { percent: number; milestone: string }>> = Object.freeze({
@@ -68,7 +68,7 @@ export function projectCandidate(candidate: CandidateRecord, runtime: readonly R
       ? { ...withoutStaleResult, elapsedMinutes: 0, progressPercent: 0, progressMilestone: "Ожидание стабильности материалов" }
       : withoutStaleResult);
   }
-  const projected = { ...withoutStaleResult, workflowVersion: run.workflowVersion, matrixCompilation: run.matrixState ? { state: run.matrixState, repairCount: run.matrixRepairCount ?? 0, terminalErrorCode: run.matrixTerminalErrorCode } : undefined, matrixShadow: run.matrixShadowState ? { state: run.matrixShadowState } : undefined, stageStartedAt: run.startedAt ?? candidate.stageStartedAt, elapsedMinutes: runtimeElapsedMinutes(candidate, run, now) };
+  const projected = { ...withoutStaleResult, workflowVersion: run.workflowVersion, matrixCompilation: run.matrixState ? { state: run.matrixState, repairCount: run.matrixRepairCount ?? 0, terminalErrorCode: run.matrixTerminalErrorCode } : undefined, stageStartedAt: run.startedAt ?? candidate.stageStartedAt, elapsedMinutes: runtimeElapsedMinutes(candidate, run, now) };
   const progress = provenProgress(runtime);
   if (run.runState === "WAITING_FOR_HUMAN") return { ...projected, status: "WAITING_FOR_HUMAN", progressPercent: progress.percent, progressMilestone: progress.milestone };
   if (run.runState === "FAILED") {

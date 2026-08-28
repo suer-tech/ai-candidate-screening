@@ -4,7 +4,7 @@ import { withTransaction, type PostgresClient } from "../storage/postgres.ts";
 import { PostgresBlobStore } from "../storage/blob-store.ts";
 import { createGoogleDriveOAuthRuntime } from "../google-drive-oauth/runtime.ts";
 import type { GoogleDriveOAuthEnvironment } from "../google-drive-oauth/types.ts";
-import { classifyMaterials, recommendationAsm050, sha256 } from "./core.ts";
+import { classifyMaterials, sha256 } from "./core.ts";
 import type { CandidatePipelineEnvironment } from "./readiness.ts";
 import type { ProductionRuntime } from "./tool-executor.ts";
 import type { DriveObject } from "./types.ts";
@@ -13,9 +13,7 @@ import { DurableAssemblyAiAdapter } from "./providers.ts";
 import { parseReadyTranscript, transcriptRepresentations, type TranscriptUtterance, type TranscriptWord } from "./transcription.ts";
 import { processDocument, type ExtractedPage, type ExtractedSection, type ProcessedDocument } from "./documents.ts";
 import { RouterAiPageOcrAdapter } from "./router-tools.ts";
-import { RouterAiFactExtractionAdapter } from "./fact-extraction.ts";
 import { runLlmCapabilityWithPolicy, type CapabilityBudget } from "./capability-runner.ts";
-import { normalizeCandidateCapabilityOutput } from "./schemas.ts";
 import { loadRuntimeConfiguration } from "../llm/runtime-loader.ts";
 import { OpenAiCompatibleProviderAdapter } from "../llm/openai-compatible-adapter.ts";
 import { AdminOnlyProtectedTraceStore } from "../llm/protected-store.ts";
@@ -27,11 +25,9 @@ import type { AssessmentInputs, EvidenceFact, EvidenceLocator } from "./types.ts
 import { composeCandidateReportFailSoft, projectCandidateReportSourceLines, projectReportSourceMaterials, reportFileName, reportSectionTitle, requiredReportSections, type ReportModel } from "./reports.ts";
 import { PostgresNotificationStore, NotificationDispatcher, ServerRecipientRegistry, TelegramBotTransport } from "./notifications.ts";
 import { successTelegramTemplate } from "./operations.ts";
-import { composeProtectedAssessmentInstruction, verifiedEditablePrompt, type EditablePromptSnapshot } from "../product/prompt-contracts.ts";
-import { projectVacancyProfileForAssessment } from "./assessment-profile.ts";
 import { PostgresVacancyMatrixRepository } from "./matrix-postgres-repository.ts";
 import { compileVacancyMatrix, type MatrixCompilationSkills } from "./matrix-compilation.ts";
-import { MATRIX_WORKFLOW_VERSION, applyCriticalVerificationDecisions, candidateClaimIsDecisionAdmissible, decisionSafeJson, isMatrixWorkflowVersion, matrixChecksum, validateCandidateMatrixRows, type CandidateMatrixRow, type CandidateSourceClaim, type CriticalUnmappedRisk, type CriticalVerificationDecision, type MatrixCriterion } from "./matrix-driven.ts";
+import { MATRIX_WORKFLOW_VERSION, applyCriticalVerificationDecisions, candidateClaimIsDecisionAdmissible, decisionSafeJson, matrixChecksum, validateCandidateMatrixRows, type CandidateMatrixRow, type CandidateSourceClaim, type CriticalUnmappedRisk, type CriticalVerificationDecision, type MatrixCriterion } from "./matrix-driven.ts";
 import { normalizeMatrixCapabilityOutput, type MatrixCapability } from "./matrix-schemas.ts";
 import { buildCriterionClaimExtractionBatches } from "./transcript-claim-batching.ts";
 import { recoveryArtifactPurpose, recoveryArtifactSchema } from "./recovery-contracts.ts";
@@ -39,34 +35,6 @@ import { deduplicateCoverageEvidence, matrixCriterionIds, technicalFallbackRow, 
 import { countOpenAiCompatibleContextTokens } from "../llm/token-counting.ts";
 
 type ExecutionEnvironment = CandidatePipelineEnvironment & GoogleDriveOAuthEnvironment;
-
-type AssessmentEvidenceSource = {
-  facts?: Array<Record<string, unknown> & { locator?: Record<string, unknown> }>;
-  conflicts?: Array<Record<string, unknown>>;
-};
-
-export function projectAssessmentEvidenceForPrompt(evidence: AssessmentEvidenceSource) {
-  const facts = (evidence.facts ?? []).map((fact) => {
-    const locator = fact.locator ?? {};
-    const quote = String(locator.exactText ?? locator.quote ?? "").replace(/\s+/g, " ").trim().slice(0, 240);
-    const source = Object.fromEntries([
-      "kind", "fileId", "fileVersion", "artifactId", "fileName", "page", "section",
-      "recordingId", "recordingVersion", "speakerLabel", "speakerRole", "startMs", "endMs", "sourceLine", "timingOrigin", "confidence",
-    ].flatMap((key) => locator[key] === undefined ? [] : [[key, locator[key]]]));
-    return {
-      id: fact.id,
-      predicate: fact.predicate,
-      value: fact.value,
-      confidence: fact.confidence,
-      significant: fact.significant,
-      locator: { ...source, quote },
-    };
-  });
-  const conflicts = (evidence.conflicts ?? []).map((conflict) => Object.fromEntries(
-    ["id", "predicate", "factIds", "resolved"].flatMap((key) => conflict[key] === undefined ? [] : [[key, conflict[key]]]),
-  ));
-  return { facts, conflicts };
-}
 
 type OrganizationalFact = Pick<EvidenceFact, "predicate" | "value"> & { locator?: unknown };
 type OrganizationalClaim = Pick<CandidateSourceClaim, "sourceClass" | "text" | "locator">;
@@ -378,6 +346,7 @@ export async function createProductionCandidateToolExecution(input: { database: 
   const agentRuntime = new PostgresAgentRuntimeRepository(input.database);
   const goal = await queryOne<{ goal_id: string; workflow_version: string; trigger_identity: string }>(input.database, "SELECT goal_id,workflow_version,trigger_identity FROM agent_runs WHERE id=$1", [task.runId]);
   if (!goal) throw new Error("PRODUCTION_RUN_NOT_FOUND");
+  if (goal.workflow_version !== MATRIX_WORKFLOW_VERSION) throw new Error("UNSUPPORTED_CANDIDATE_WORKFLOW_VERSION");
   const taskId = text(task.id, "PRODUCTION_TASK_ID_MISSING");
   const attemptId = text(task.attemptId, "PRODUCTION_TASK_ATTEMPT_ID_MISSING");
   const worker = text(task.worker, "PRODUCTION_TASK_WORKER_MISSING");
@@ -435,20 +404,15 @@ export async function createProductionCandidateToolExecution(input: { database: 
   const llmDependencies: ExecuteLlmAttemptDependencies = {
     configuration: loadRuntimeConfiguration(input.environment, [
       "ocr",
-      "fact_extraction",
-      "assessment",
       "matrix_compiler",
       "matrix_critic",
       "criterion_claim_extraction",
       "unmapped_signal_discovery",
-      "unmapped_risk_assessment",
-      "critical_risk_verification",
       "evidence_consolidation",
       "global_conflict_detection",
       "matrix_row_evaluation",
       "abc_matrix_assessment",
       "critical_row_verification",
-      "invalid_row_repair",
       "candidate_report_composer",
     ]),
     adapter: {
@@ -602,9 +566,9 @@ export async function createProductionCandidateToolExecution(input: { database: 
         const storageIdentity = value.artifactRef;
         const storageClass = storageIdentity.startsWith("pgblob://") ? "postgres-blob" : "drive";
         const checksum = value.checksum ?? sha256(storageIdentity);
-        const memoryId = `memory-${sha256([task.runId, storageIdentity]).slice(0, 24)}`;
+        const memoryId = `memory-${sha256([String(task.runId), storageIdentity]).slice(0, 24)}`;
         const refId = `artifact-ref-${sha256([storageIdentity, checksum]).slice(0, 24)}`;
-        const recoverySchema = recoveryArtifactSchema(goal.workflow_version, task.toolKey);
+        const recoverySchema = recoveryArtifactSchema(goal.workflow_version, String(task.toolKey));
         const artifactPurpose = recoverySchema ? recoveryArtifactPurpose(goal.workflow_version) : "candidate-pipeline-stage";
         await withTransaction(input.database, async (transaction) => {
           await execute(transaction, `INSERT INTO agent_memory_entries
@@ -666,9 +630,7 @@ export async function createProductionCandidateToolExecution(input: { database: 
           return { fileId: published.id, checksum: published.checksum };
         },
         reconcile: async (identity) => {
-          const type = identity.endsWith(":candidate-report") ? "candidate-report"
-            : identity.endsWith(":candidate-results") ? "candidate-results"
-            : identity.endsWith(":abc-test") ? "abc-test" : undefined;
+          const type = identity.endsWith(":candidate-report") ? "candidate-report" : undefined;
           if (type) {
             const descriptor = await queryOne<{ id: string; checksum: string; report_version_id: string; drive_file_id: string | null }>(input.database, `WITH RECURSIVE run_lineage(id,depth) AS (
                 SELECT $1::text,0 UNION ALL SELECT source.recovery_source_run_id,lineage.depth+1
@@ -758,140 +720,6 @@ export async function createProductionCandidateToolExecution(input: { database: 
             return { artifactRef: stored.artifactRef, schemaVersion: "document-bundle/v1" };
           }
 
-          if (capability === "fact_extraction") {
-            let documentRef: string;
-            let transcriptRef: string;
-            let documentBundle: { documents?: Array<{ artifactId: string; file: DriveObject; processed: ProcessedDocument }> };
-            let transcriptBundle: { normalized?: { utterances?: TranscriptUtterance[] } };
-            try {
-              documentRef = await latestArtifact("candidate.document-extraction/v1");
-              transcriptRef = await latestArtifact("candidate.transcription/v1");
-              documentBundle = await artifactStore.getJson(documentRef);
-              transcriptBundle = await artifactStore.getJson(transcriptRef);
-            } catch (error) { throw safeCandidateStageError(error, "FACT_UPSTREAM_ARTIFACT_READ_FAILED"); }
-            const locators: Record<string, EvidenceLocator> = {};
-            try {
-              for (const document of documentBundle.documents ?? []) {
-                for (const boundary of document.processed.normalized.boundaries) {
-                  const exactText = document.processed.normalized.text.slice(boundary.start, boundary.end).trim();
-                  if (!exactText) continue;
-                  const locatorId = `locator-${sha256([document.artifactId, boundary.page, boundary.paragraph, exactText]).slice(0, 24)}`;
-                  locators[locatorId] = { kind: "document", fileId: document.file.fileId, fileVersion: document.file.version,
-                    artifactId: document.artifactId, fileName: document.file.name, exactText,
-                    page: boundary.page, paragraph: boundary.paragraph, section: boundary.section,
-                    textSpan: { start: boundary.start, end: boundary.end } };
-                }
-              }
-              for (const utterance of transcriptBundle.normalized?.utterances ?? []) {
-                const locatorId = `locator-${sha256([transcriptRef, utterance.speaker, utterance.start, utterance.end, utterance.text]).slice(0, 24)}`;
-                locators[locatorId] = { kind: "transcript", recordingId: transcriptRef, recordingVersion: inputVersion,
-                  artifactId: transcriptRef, speakerLabel: utterance.speaker, exactText: utterance.text,
-                  startMs: utterance.start, endMs: utterance.end, sourceLine: utterance.sourceLine,
-                  timingOrigin: utterance.timingOrigin ?? "provider", confidence: utterance.confidence };
-              }
-            } catch (error) { throw safeCandidateStageError(error, "FACT_LOCATOR_BUILD_FAILED"); }
-            if (!Object.keys(locators).length) throw new Error("EVIDENCE_LOCATORS_MISSING");
-            let vacancy: Awaited<ReturnType<typeof vacancyContext>>;
-            try { vacancy = await vacancyContext(); }
-            catch (error) { throw safeCandidateStageError(error, "FACT_CONTEXT_BUILD_FAILED"); }
-            const batches = partitionEvidenceLocators(locators);
-            let extraction: Awaited<ReturnType<RouterAiFactExtractionAdapter["extract"]>>;
-            try {
-              const results = [];
-              for (let index = 0; index < batches.length; index += 1) {
-                const batchLocators = batches[index];
-                const structuredContext = JSON.parse(JSON.stringify({ vacancy, locators: batchLocators })) as JsonValue;
-                results.push(await new RouterAiFactExtractionAdapter(llmDependencies, llmBudget).extract({
-                  correlation: traceCorrelation("fact-extraction", `batch-${index + 1}`), candidateId: candidate.public_id ?? String(candidatePk), inputVersion,
-                  documentArtifactIds: [documentRef], transcriptArtifactIds: [transcriptRef], locators: batchLocators, structuredContext,
-                }));
-              }
-              const facts = results.flatMap((result) => result.facts).map((fact) => ({ ...fact,
-                id: `fact-${sha256([fact.locator.artifactId, fact.predicate, fact.value]).slice(0, 24)}` }));
-              extraction = { facts: [...new Map(facts.map((fact) => [fact.id, fact])).values()], conflicts: results.flatMap((result) => result.conflicts),
-                traceId: results.map((result) => result.traceId).join(","), attempts: results.reduce((sum, result) => sum + result.attempts, 0) };
-            } catch (error) { throw safeCandidateStageError(error, "FACT_EXTRACTION_EXECUTION_FAILED"); }
-            let stored: Awaited<ReturnType<typeof storeJson>>;
-            try {
-              stored = await storeJson("evidence-bundle", operationIdentity, { schemaVersion: "evidence-bundle/v1", ...extraction });
-            } catch (error) { throw safeCandidateStageError(error, "FACT_ARTIFACT_PERSIST_FAILED"); }
-            return { artifactRef: stored.artifactRef, schemaVersion: "evidence-bundle/v1" };
-          }
-
-          if (capability === "assessment") {
-            let evidenceRef: string;
-            try { evidenceRef = await latestArtifact("candidate.evidence-extraction/v1"); }
-            catch (error) { throw safeCandidateStageError(error, "ASSESSMENT_UPSTREAM_ARTIFACT_READ_FAILED"); }
-            let evidence: { facts?: Array<{ id?: string }>; conflicts?: Array<{ id?: string; resolved?: boolean }> };
-            try { evidence = await artifactStore.getJson(evidenceRef); }
-            catch (error) { throw safeCandidateStageError(error, "ASSESSMENT_EVIDENCE_READ_FAILED"); }
-            let profile: Awaited<ReturnType<typeof vacancyContext>>;
-            try {
-              const context = await vacancyContext();
-              profile = { ...context, vacancy: projectVacancyProfileForAssessment(context.vacancy) };
-            }
-            catch (error) { throw safeCandidateStageError(error, "ASSESSMENT_CONTEXT_BUILD_FAILED"); }
-            const config = llmDependencies.configuration.resolve("assessment");
-            const promptRow = await queryOne<{ analysis_prompt_text: string | null; analysis_prompt_artifact_id: string | null; analysis_prompt_hash: string | null }>(input.database,
-              "SELECT analysis_prompt_text,analysis_prompt_artifact_id,analysis_prompt_hash FROM agent_runs WHERE id=$1", [runId]);
-            const promptSnapshot = promptRow ? {
-              text: promptRow.analysis_prompt_text ?? "",
-              artifactId: promptRow.analysis_prompt_artifact_id ?? "",
-              hash: promptRow.analysis_prompt_hash ?? "",
-            } as EditablePromptSnapshot : undefined;
-            if (!promptSnapshot) throw new Error("ASSESSMENT_PROMPT_SNAPSHOT_MISSING");
-            try { verifiedEditablePrompt(promptSnapshot); }
-            catch (error) { throw safeCandidateStageError(error, "ASSESSMENT_PROMPT_INTEGRITY_MISMATCH"); }
-            const assessmentEvidence = projectAssessmentEvidenceForPrompt(evidence as AssessmentEvidenceSource);
-            const baseMessages = [{ role: "system", content: composeProtectedAssessmentInstruction(promptSnapshot) },
-              { role: "user", content: { evidence: assessmentEvidence, profile, responseSchema: config.responseSchema.id } }] as JsonValue[];
-            const profileVacancy = profile.vacancy && typeof profile.vacancy === "object" && !Array.isArray(profile.vacancy) ? profile.vacancy as Record<string, unknown> : {};
-            const abcDirections = Array.isArray(profileVacancy.abcDirections)
-              ? profileVacancy.abcDirections.filter((item): item is { id: string; gradeA?: string; gradeB?: string; gradeC?: string } => Boolean(item && typeof item === "object" && !Array.isArray(item) && typeof (item as Record<string, unknown>).id === "string"))
-              : [];
-            let normalized: Record<string, unknown> | undefined;
-            let validationFeedback: string | undefined;
-            let previousOutput: JsonValue | undefined;
-            let protectedTraceId = traceCorrelation("assessment", "validation-1").traceId;
-            for (let validationAttempt = 1; validationAttempt <= 3; validationAttempt += 1) {
-              const correlation = traceCorrelation("assessment", `validation-${validationAttempt}`);
-              protectedTraceId = correlation.traceId;
-              let attempt: Awaited<ReturnType<typeof runLlmCapabilityWithPolicy>>;
-              try {
-                const messages = validationFeedback
-                  ? [...baseMessages, { role: "user", content: { task: "Исправь структурированную оценку и верни её полностью заново", validationErrors: [validationFeedback], previousOutput } } as JsonValue]
-                  : baseMessages;
-                attempt = await runLlmCapabilityWithPolicy(llmDependencies, llmBudget, {
-                  capability: "assessment", correlation,
-                  request: { messages, toolDefinitions: [] },
-                  inputSnapshot: { materials: [{ materialId: evidenceRef, mediaType: "application/x-evidence-graph", content: { artifactRef: evidenceRef } }],
-                    context: JSON.parse(JSON.stringify(profile)) as JsonValue },
-                });
-              } catch (error) { throw safeCandidateStageError(error, "ASSESSMENT_EXECUTION_FAILED"); }
-              try {
-                const normalizedResponse = normalizeCandidateCapabilityOutput("assessment", attempt.response.normalizedOutput);
-                const grounded = groundStructuredAssessment(normalizedResponse, evidence.facts ?? [], evidence.conflicts ?? []);
-                normalized = validateAbcAssessmentSemantics(grounded, abcDirections, new Set((evidence.facts ?? []).flatMap((fact) => typeof fact.id === "string" ? [fact.id] : [])));
-                break;
-              } catch (error) {
-                validationFeedback = error instanceof Error ? error.message : "ASSESSMENT_RESPONSE_INVALID";
-                previousOutput = attempt.response.normalizedOutput;
-                if (validationAttempt === 3) throw safeCandidateStageError(error, "ASSESSMENT_RESPONSE_INVALID");
-              }
-            }
-            if (!normalized) throw new Error("ASSESSMENT_RESPONSE_INVALID");
-            const unresolvedConflicts = (evidence.conflicts ?? []).filter((conflict) => conflict.resolved !== true && typeof conflict.id === "string").map((conflict) => conflict.id!);
-            const inputs = assessmentInputsFromStructured(normalized, unresolvedConflicts);
-            let stored: Awaited<ReturnType<typeof storeJson>>;
-            try {
-              stored = await storeJson("assessment-snapshot", operationIdentity, {
-                schemaVersion: "assessment-snapshot/v1", inputVersion, profileVersion,
-                evidenceRef, protectedTraceId,
-                structuredAssessment: normalized, inputs, recommendation: recommendationAsm050(inputs),
-              });
-            } catch (error) { throw safeCandidateStageError(error, "ASSESSMENT_ARTIFACT_PERSIST_FAILED"); }
-            return { artifactRef: stored.artifactRef, schemaVersion: "assessment-snapshot/v1" };
-          }
           throw new Error(`PRODUCTION_ROUTERAI_CAPABILITY_UNSUPPORTED:${capability}`);
         },
       },
@@ -1319,8 +1147,7 @@ export async function createProductionCandidateToolExecution(input: { database: 
       validation: {
         validate: async () => {
           if (!artifactStore) throw new Error("PRODUCTION_ARTIFACT_STORE_NOT_PROVISIONED");
-          if (isMatrixWorkflowVersion(goal.workflow_version)) {
-            const assessmentRef = await latestArtifact("candidate.matrix-recommendation/v1");
+          const assessmentRef = await latestArtifact("candidate.matrix-recommendation/v1");
             const assessment = await artifactStore.getJson<{ schemaVersion?: string; inputVersion?: string; profileVersion?: string; matrixId?: string; matrixChecksum?: string; rowsRef?: string; evidenceRef?: string; verificationRef?: string; recommendation?: ReportModel["recommendation"]; selectedBranch?: string; criticalUnmappedRisks?: CriticalUnmappedRisk[]; coverageSummary?: unknown; warnings?: string[] }>(assessmentRef);
             if (!new Set(["matrix-assessment-snapshot/v1", "matrix-assessment-snapshot/v2"]).has(String(assessment.schemaVersion)) || assessment.inputVersion !== inputVersion || assessment.profileVersion !== profileVersion
               || !assessment.matrixId || !assessment.matrixChecksum || !assessment.rowsRef || !assessment.evidenceRef || !assessment.verificationRef || !assessment.recommendation) throw new Error("MATRIX_ASSESSMENT_SNAPSHOT_SCOPE_INVALID");
@@ -1340,54 +1167,15 @@ export async function createProductionCandidateToolExecution(input: { database: 
             const assessmentId = `assessment-${sha256([runId, assessmentRef]).slice(0, 24)}`;
             await execute(input.database, `INSERT INTO candidate_assessments (id,artifact_id,attempt,recommendation,formula_version,gate_state,decision_evidence_json)
               VALUES ($1,$2,1,$3,'ASM-050/coverage-first-v1','PASSED',$4) ON CONFLICT DO NOTHING`, [assessmentId, stored.domainArtifactId, assessment.recommendation, JSON.stringify({ assessmentRef, matrixId: assessment.matrixId, matrixChecksum: assessment.matrixChecksum, verificationRef: assessment.verificationRef, coverageSummary: assessment.coverageSummary, warnings: assessment.warnings ?? [] })]);
-            return { artifactRef: stored.artifactRef, checksum: stored.checksum };
-          }
-          const assessmentRef = await latestArtifact("candidate.assessment/v1");
-          const assessment = await artifactStore.getJson<{
-            schemaVersion?: string;
-            inputVersion?: string;
-            profileVersion?: string;
-            evidenceRef?: string;
-            structuredAssessment?: Record<string, unknown>;
-            inputs?: AssessmentInputs;
-            recommendation?: string;
-          }>(assessmentRef);
-          if (assessment.schemaVersion !== "assessment-snapshot/v1" || assessment.inputVersion !== inputVersion
-            || assessment.profileVersion !== profileVersion || !assessment.evidenceRef || !assessment.structuredAssessment || !assessment.inputs) {
-            throw new Error("ASSESSMENT_SNAPSHOT_SCOPE_INVALID");
-          }
-          normalizeCandidateCapabilityOutput("assessment", assessment.structuredAssessment);
-          const deterministicRecommendation = recommendationAsm050(assessment.inputs);
-          if (assessment.recommendation !== deterministicRecommendation) throw new Error("ASSESSMENT_FORMULA_MISMATCH");
-          const evidence = await artifactStore.getJson<{ facts?: Array<{ id?: string; locator?: EvidenceLocator }>; conflicts?: Array<{ factIds?: string[]; resolved?: boolean }> }>(assessment.evidenceRef);
-          if (!Array.isArray(evidence.facts) || evidence.facts.some((fact) => !fact.locator || !fact.locator.exactText)) {
-            throw new Error("ASSESSMENT_EVIDENCE_GATE_FAILED");
-          }
-          groundStructuredAssessment(assessment.structuredAssessment, evidence.facts, evidence.conflicts ?? []);
-          const stored = await storeJson("validated-assessment", operationIdentity, {
-            schemaVersion: "validated-assessment/v1",
-            assessmentRef,
-            recommendation: deterministicRecommendation,
-            gates: { schema: true, evidence: true, formula: true, consistency: true },
-          });
-          const assessmentId = `assessment-${sha256([runId, assessmentRef]).slice(0, 24)}`;
-          await execute(input.database, `INSERT INTO candidate_assessments
-            (id,artifact_id,attempt,recommendation,formula_version,gate_state,decision_evidence_json)
-            VALUES ($1,$2,1,$3,'ASM-050/v1','PASSED',$4) ON CONFLICT DO NOTHING`, [assessmentId, stored.domainArtifactId, deterministicRecommendation,
-              JSON.stringify({ assessmentRef, gates: ["schema", "evidence", "formula", "consistency"] })]);
           return { artifactRef: stored.artifactRef, checksum: stored.checksum };
         },
       },
       pdf: {
-        renderPair: async () => {
+        render: async () => {
           if (!artifactStore) throw new Error("PRODUCTION_REPORT_STAGE_CONTEXT_NOT_PROVISIONED");
-          const existing = (await artifactsFor(goal.workflow_version === "matrix-v3" ? "candidate.report/v1" : "candidate.report-pair/v1")).flatMap((artifact) => {
-            const type = artifact.artifactRef.includes("report-candidate-report") ? "candidate-report"
-              : artifact.artifactRef.includes("report-abc-test") ? "abc-test"
-                : artifact.artifactRef.includes("report-candidate-results") ? "candidate-results" : undefined;
-            return type ? [{ ...artifact, type }] : [];
-          });
-          if (existing.length === 1 && existing[0]?.type === "candidate-report") return existing;
+          const existing = (await artifactsFor("candidate.report/v1")).flatMap((artifact) =>
+            artifact.artifactRef.includes("report-candidate-report") ? [{ ...artifact, type: "candidate-report" as const }] : []);
+          if (existing.length === 1 && existing[0]?.type === "candidate-report") return existing[0];
           const validatedRef = await latestArtifact("candidate.validation/v1");
           const validated = await artifactStore.getJson<{ assessmentRef?: string; recommendation?: ReportModel["recommendation"]; workflowVersion?: string; matrixId?: string; matrixChecksum?: string }>(validatedRef);
           if (!validated.assessmentRef || !validated.recommendation) throw new Error("VALIDATED_ASSESSMENT_REFERENCE_MISSING");
@@ -1559,24 +1347,6 @@ export async function createProductionCandidateToolExecution(input: { database: 
             /^references\.availability/i,
           ]), ...reportClaimValues("report.motivation")].filter((value, index, values) => value && values.indexOf(value) === index).slice(0, 4);
           const organizationalConditions = projectOrganizationalConditions(facts, matrixClaims);
-          const interviewSummary: NonNullable<ReportModel["interviewSummary"]> = {
-            interviewDate,
-            fullName,
-            age,
-            compensation: firstFactValue(/^conditions\.compensation$/i, /^stopFactor\.compensationExpectation/i) || "Не указано",
-            recentEmployment: [{
-              employer: clean(employer, 160),
-              role: clean(role, 160),
-              period: clean(employmentPeriod, 120),
-              summary: firstFactValue(/^employmentStability\.lastRoleContext/i) || "Краткое описание последнего места работы не извлечено.",
-              achievements: "Не указаны.",
-            }],
-            hardSkills,
-            softSkills,
-            positives,
-            negatives,
-            additional,
-          };
           const reportEvidenceIds = new Set(matrixRows.flatMap((row) => [...row.supportingClaimIds, ...row.contradictingClaimIds]));
           const collectReportEvidenceIds = (value: unknown, key = "") => {
             if (Array.isArray(value)) {
@@ -1711,8 +1481,8 @@ export async function createProductionCandidateToolExecution(input: { database: 
             if (section === "matrix") return matrixText || "Строки матрицы отсутствуют.";
             return "Не применимо к текущему набору материалов.";
           };
-          const createModel = (type: ReportModel["type"]): ReportModel => ({
-            type,
+          const createModel = (): ReportModel => ({
+            type: "candidate-report",
             candidateId: candidate.public_id ?? String(candidatePk),
             candidateDisplayName: fullName,
             vacancyId,
@@ -1724,14 +1494,13 @@ export async function createProductionCandidateToolExecution(input: { database: 
             workflowVersion: validated.workflowVersion,
             matrixProvenance: validated.workflowVersion?.startsWith("matrix-v") && validated.matrixId && validated.matrixChecksum ? { matrixId: validated.matrixId, checksum: validated.matrixChecksum, skillVersions: assessment.skillVersions, policyVersion: assessment.policyVersions?.compiler ?? "matrix-compiler-policy/v1" } : undefined,
             matrixRows: validated.workflowVersion?.startsWith("matrix-v") ? matrixRows : undefined,
-            sections: [...requiredReportSections(type).map((id) => ({ id, title: reportSectionTitle(type, id), body: bodyFor(id) })), ...(validated.workflowVersion?.startsWith("matrix-v") && type !== "candidate-report" ? matrixRows.map((row) => ({ id: `matrix:${row.criterionId}`, title: matrixCriteria[row.criterionId]?.sourceText ?? "Пункт вакансии", body: matrixTextForRow(row) })) : [])],
+            sections: requiredReportSections("candidate-report").map((id) => ({ id, title: reportSectionTitle("candidate-report", id), body: bodyFor(id) })),
             evidence: facts,
-            interviewSummary: type === "candidate-results" && !validated.workflowVersion?.startsWith("matrix-v") ? interviewSummary : undefined,
             decisionSnapshot,
             evidenceCatalog: reportEvidenceCatalog,
-            sourceMaterials: type === "candidate-report" ? reportSourceMaterials : undefined,
+            sourceMaterials: reportSourceMaterials,
           });
-          const model = createModel("candidate-report");
+          const model = createModel();
           if (!input.environment.DOCUMENT_PROCESSOR_URL || !input.environment.DOCUMENT_PROCESSOR_TOKEN) throw new Error("PRODUCTION_REPORT_PROCESSOR_NOT_PROVISIONED");
           const processorBase = new URL(input.environment.DOCUMENT_PROCESSOR_URL);
           if (input.environment.E2E_ENVIRONMENT === "local") {
@@ -1777,7 +1546,9 @@ export async function createProductionCandidateToolExecution(input: { database: 
                 contentOraclePassed: report.contentOraclePassed, warningCount: report.warningCount,
                 contentOracleWarningFingerprints: report.contentOracleWarningFingerprints, artifactRef: report.artifactRef })]);
           });
-          return reports;
+          const report = reports[0];
+          if (!report || report.type !== "candidate-report") throw new Error("CANDIDATE_REPORT_INVALID");
+          return { ...report, type: "candidate-report" as const };
         },
       },
       telegram: {

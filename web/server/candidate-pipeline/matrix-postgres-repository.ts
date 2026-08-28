@@ -2,9 +2,10 @@ import { randomUUID } from "node:crypto";
 import type { PostgresClient } from "../storage/postgres.ts";
 import { withTransaction } from "../storage/postgres.ts";
 import type { CandidateMatrixRow, CandidateSourceClaim, VacancyMatrix } from "./matrix-driven.ts";
+import { COVERAGE_FIRST_WORKFLOW_VERSION } from "./recovery-contracts.ts";
 
 export class PostgresVacancyMatrixRepository {
-  constructor(private readonly sql: PostgresClient, private readonly defaultWorkflowIdentity = "matrix-v2") {}
+  constructor(private readonly sql: PostgresClient, private readonly defaultWorkflowIdentity: string = COVERAGE_FIRST_WORKFLOW_VERSION) {}
 
   async claimCompilation(input: { profileVersion: string; workflowIdentity?: string; ownerId: string; now: Date; leaseMs: number; allowRetry?: boolean }) {
     const workflowIdentity = input.workflowIdentity ?? this.defaultWorkflowIdentity;
