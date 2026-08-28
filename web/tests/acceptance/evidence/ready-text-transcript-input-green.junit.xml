@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="WF-010: resume plus one transcript-like text is complete and identifies ready-transcript without changing recording classification" time="0.001467" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\ready-text-transcript-input.acceptance.test.ts"/>
+	<testcase name="INT-032: deterministic parser preserves source text, speakers and explicit time while untimed evidence remains line-addressed" time="0.002370" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\ready-text-transcript-input.acceptance.test.ts"/>
+	<testcase name="INT-032: ready-text application projection creates the normal transcript representation with zero media/STT calls" time="0.000339" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\ready-text-transcript-input.acceptance.test.ts"/>
+	<testcase name="INT-032: empty or unparseable ready text fails with stable typed errors" time="0.000652" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\ready-text-transcript-input.acceptance.test.ts"/>
+	<testcase name="INT-032/WF-030: production ready-text branch persists transcript-bundle and keeps downstream/recovery family unchanged" time="0.001368" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\ready-text-transcript-input.acceptance.test.ts"/>
+	<!-- tests 5 -->
+	<!-- suites 0 -->
+	<!-- pass 5 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 188.7798 -->
+</testsuites>

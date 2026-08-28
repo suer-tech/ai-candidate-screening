@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="WF-043: every manual reprocess waits for a fresh four-observation live stability cycle" time="0.009847" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\manual-reprocess-fresh-manifest.acceptance.test.ts"/>
+	<testcase name="WF-043: provider-version change at identical size creates a new immutable inputVersion" time="0.001943" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\manual-reprocess-fresh-manifest.acceptance.test.ts" failure="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;+ [&#10;+   'same-size provider-version change must not reuse predecessor; duplicate=true',&#10;+   'provider-version change reused old inputVersion input-drive-candidate-fresh-manifest-0001-710ff1eb4b33',&#10;+   'full-manifest matcher treated changed provider version as the same input'&#10;+ ]&#10;- []&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;+ [&#10;+   'same-size provider-version change must not reuse predecessor; duplicate=true',&#10;+   'provider-version change reused old inputVersion input-drive-candidate-fresh-manifest-0001-710ff1eb4b33',&#10;+   'full-manifest matcher treated changed provider version as the same input'&#10;+ ]&#10;- []">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly deep-equal:
++ actual - expected
+
++ [
++   'same-size provider-version change must not reuse predecessor; duplicate=true',
++   'provider-version change reused old inputVersion input-drive-candidate-fresh-manifest-0001-710ff1eb4b33',
++   'full-manifest matcher treated changed provider version as the same input'
++ ]
+- []
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + [
+  +   'same-size provider-version change must not reuse predecessor; duplicate=true',
+  +   'provider-version change reused old inputVersion input-drive-candidate-fresh-manifest-0001-710ff1eb4b33',
+  +   'full-manifest matcher treated changed provider version as the same input'
+  + ]
+  - []
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\manual-reprocess-fresh-manifest.acceptance.test.ts:98:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'same-size provider-version change must not reuse predecessor; duplicate=true', 'provider-version change reused old inputVersion input-drive-candidate-fresh-manifest-0001-710ff1eb4b33', 'full-manifest matcher treated changed provider version as the same input' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="WF-043/WF-042: unchanged fresh manifest may reuse failed input, while a started run stays pinned" time="0.000795" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\manual-reprocess-fresh-manifest.acceptance.test.ts"/>
+	<testcase name="WF-043 application boundary: changed manual input creates exactly one goal/run only after fresh stability" time="0.000579" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\manual-reprocess-fresh-manifest.acceptance.test.ts" failure="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;+ [&#10;+   'added-file: manual command did not confirm a new live stable snapshot',&#10;+   'added-file: goal was not gated by the fresh stability cycle',&#10;+   'added-file: changed manifest incorrectly reused predecessor inputVersion',&#10;+   'added-file: expected exactly one new goal; actual=0',&#10;+   'added-file: candidate-scoped failed checkpoints must not cross changed inputVersion',&#10;+   'same-size-provider-version: manual command did not confirm a new live stable snapshot',&#10;+   'same-size-provider-version: goal was not gated by the fresh stability cycle',&#10;+   'same-size-provider-version: changed manifest incorrectly reused predecessor inputVersion',&#10;+   'same-size-provider-version: expected exactly one new goal; actual=0',&#10;+   'same-size-provider-version: candidate-scoped failed checkpoints must not cross changed inputVersion'&#10;+ ]&#10;- []&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;+ [&#10;+   'added-file: manual command did not confirm a new live stable snapshot',&#10;+   'added-file: goal was not gated by the fresh stability cycle',&#10;+   'added-file: changed manifest incorrectly reused predecessor inputVersion',&#10;+   'added-file: expected exactly one new goal; actual=0',&#10;+   'added-file: candidate-scoped failed checkpoints must not cross changed inputVersion',&#10;+   'same-size-provider-version: manual command did not confirm a new live stable snapshot',&#10;+   'same-size-provider-version: goal was not gated by the fresh stability cycle',&#10;+   'same-size-provider-version: changed manifest incorrectly reused predecessor inputVersion',&#10;+   'same-size-provider-version: expected exactly one new goal; actual=0',&#10;+   'same-size-provider-version: candidate-scoped failed checkpoints must not cross changed inputVersion'&#10;+ ]&#10;- []">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly deep-equal:
++ actual - expected
+
++ [
++   'added-file: manual command did not confirm a new live stable snapshot',
++   'added-file: goal was not gated by the fresh stability cycle',
++   'added-file: changed manifest incorrectly reused predecessor inputVersion',
++   'added-file: expected exactly one new goal; actual=0',
++   'added-file: candidate-scoped failed checkpoints must not cross changed inputVersion',
++   'same-size-provider-version: manual command did not confirm a new live stable snapshot',
++   'same-size-provider-version: goal was not gated by the fresh stability cycle',
++   'same-size-provider-version: changed manifest incorrectly reused predecessor inputVersion',
++   'same-size-provider-version: expected exactly one new goal; actual=0',
++   'same-size-provider-version: candidate-scoped failed checkpoints must not cross changed inputVersion'
++ ]
+- []
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + [
+  +   'added-file: manual command did not confirm a new live stable snapshot',
+  +   'added-file: goal was not gated by the fresh stability cycle',
+  +   'added-file: changed manifest incorrectly reused predecessor inputVersion',
+  +   'added-file: expected exactly one new goal; actual=0',
+  +   'added-file: candidate-scoped failed checkpoints must not cross changed inputVersion',
+  +   'same-size-provider-version: manual command did not confirm a new live stable snapshot',
+  +   'same-size-provider-version: goal was not gated by the fresh stability cycle',
+  +   'same-size-provider-version: changed manifest incorrectly reused predecessor inputVersion',
+  +   'same-size-provider-version: expected exactly one new goal; actual=0',
+  +   'same-size-provider-version: candidate-scoped failed checkpoints must not cross changed inputVersion'
+  + ]
+  - []
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\manual-reprocess-fresh-manifest.acceptance.test.ts:147:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'added-file: manual command did not confirm a new live stable snapshot', 'added-file: goal was not gated by the fresh stability cycle', 'added-file: changed manifest incorrectly reused predecessor inputVersion', 'added-file: expected exactly one new goal; actual=0', 'added-file: candidate-scoped failed checkpoints must not cross changed inputVersion', 'same-size-provider-version: manual command did not confirm a new live stable snapshot', 'same-size-provider-version: goal was not gated by the fresh stability cycle', 'same-size-provider-version: changed manifest incorrectly reused predecessor inputVersion', 'same-size-provider-version: expected exactly one new goal; actual=0', 'same-size-provider-version: candidate-scoped failed checkpoints must not cross changed inputVersion' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="WF-043 application boundary: exact fresh manifest match keeps failed-predecessor selective recovery" time="0.000414" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\manual-reprocess-fresh-manifest.acceptance.test.ts" failure="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;  {&#10;+   candidateScopedRecoveryReused: undefined,&#10;+   freshLiveSnapshotConfirmed: undefined,&#10;-   candidateScopedRecoveryReused: true,&#10;-   freshLiveSnapshotConfirmed: true,&#10;    inputVersionReused: 'input-predecessor-failed',&#10;+   recoverySourceRunId: undefined,&#10;-   recoverySourceRunId: 'run-predecessor-failed',&#10;    runsCreatedForRevision: 1&#10;  }&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;  {&#10;+   candidateScopedRecoveryReused: undefined,&#10;+   freshLiveSnapshotConfirmed: undefined,&#10;-   candidateScopedRecoveryReused: true,&#10;-   freshLiveSnapshotConfirmed: true,&#10;    inputVersionReused: 'input-predecessor-failed',&#10;+   recoverySourceRunId: undefined,&#10;-   recoverySourceRunId: 'run-predecessor-failed',&#10;    runsCreatedForRevision: 1&#10;  }">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly deep-equal:
++ actual - expected
+
+  {
++   candidateScopedRecoveryReused: undefined,
++   freshLiveSnapshotConfirmed: undefined,
+-   candidateScopedRecoveryReused: true,
+-   freshLiveSnapshotConfirmed: true,
+    inputVersionReused: 'input-predecessor-failed',
++   recoverySourceRunId: undefined,
+-   recoverySourceRunId: 'run-predecessor-failed',
+    runsCreatedForRevision: 1
+  }
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    {
+  +   candidateScopedRecoveryReused: undefined,
+  +   freshLiveSnapshotConfirmed: undefined,
+  -   candidateScopedRecoveryReused: true,
+  -   freshLiveSnapshotConfirmed: true,
+      inputVersionReused: 'input-predecessor-failed',
+  +   recoverySourceRunId: undefined,
+  -   recoverySourceRunId: 'run-predecessor-failed',
+      runsCreatedForRevision: 1
+    }
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\manual-reprocess-fresh-manifest.acceptance.test.ts:168:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { freshLiveSnapshotConfirmed: undefined, inputVersionReused: 'input-predecessor-failed', recoverySourceRunId: undefined, candidateScopedRecoveryReused: undefined, runsCreatedForRevision: 1 },
+    expected: { freshLiveSnapshotConfirmed: true, inputVersionReused: 'input-predecessor-failed', recoverySourceRunId: 'run-predecessor-failed', candidateScopedRecoveryReused: true, runsCreatedForRevision: 1 },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 5 -->
+	<!-- suites 0 -->
+	<!-- pass 2 -->
+	<!-- fail 3 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 694.0541 -->
+</testsuites>

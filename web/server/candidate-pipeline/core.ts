@@ -34,7 +34,15 @@ export function snapshotDrive(folderId: string, objects: readonly DriveObject[],
     capturedAtUtc,
     complete,
     objects: structuredClone(inputObjects),
-    fingerprint: sha256(inputObjects.map(({ fileId, size }) => ({ fileId, size }))),
+    fingerprint: sha256(inputObjects.map(({ fileId, parentFolderId, version, name, mimeType, size, modifiedTime }) => ({
+      fileId,
+      parentFolderId,
+      version,
+      name,
+      mimeType,
+      size,
+      modifiedTime,
+    }))),
   });
 }
 
@@ -58,18 +66,33 @@ export class StabilityTracker {
   }
 }
 
-const RESUME_MIME = new Set(["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]);
+const DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+const RESUME_MIME = new Set(["application/pdf", DOCX_MIME]);
 const INTERVIEW_PREFIXES = ["audio/", "video/"];
+const READY_TRANSCRIPT_MIME = new Set(["text/plain", "text/markdown", "text/vtt", "application/x-subrip", DOCX_MIME]);
+const READY_TRANSCRIPT_NAME = /(?:стенограмм|транскрип|транскриб|расшифров|интервью|interview|transcript)/iu;
+const ADDITIONAL_DOCUMENT_NAME = /(?:рекомендац|характеристик|портфолио|сопроводител|reference|recommendation)/iu;
+
+export function isReadyTranscriptMaterial(item: Pick<DriveObject, "name" | "mimeType">) {
+  const extensionIsTranscript = /\.(?:srt|vtt)$/iu.test(item.name);
+  return READY_TRANSCRIPT_MIME.has(item.mimeType.toLowerCase()) && (extensionIsTranscript || READY_TRANSCRIPT_NAME.test(item.name));
+}
 
 export function classifyMaterials(objects: readonly DriveObject[]): MaterialManifest {
   const entries: MaterialManifestEntry[] = objects.filter((item) => !item.inResultsSubtree).map((item) => {
-    const role = RESUME_MIME.has(item.mimeType) ? "resume" : INTERVIEW_PREFIXES.some((prefix) => item.mimeType.startsWith(prefix)) ? "interview" : "additional";
-    return { ...item, role, supported: role !== "additional" };
+    const recording = INTERVIEW_PREFIXES.some((prefix) => item.mimeType.startsWith(prefix));
+    const readyTranscript = isReadyTranscriptMaterial(item);
+    const document = RESUME_MIME.has(item.mimeType);
+    const role = recording || readyTranscript ? "interview"
+      : document && !ADDITIONAL_DOCUMENT_NAME.test(item.name) ? "resume"
+      : "additional";
+    return { ...item, role, supported: recording || readyTranscript || document,
+      ...(role === "interview" ? { interviewSource: readyTranscript ? "ready-transcript" as const : "recording" as const } : {}) };
   });
   const resumeIds = entries.filter((item) => item.role === "resume").map((item) => item.fileId);
   const interviewIds = entries.filter((item) => item.role === "interview").map((item) => item.fileId);
   // A candidate folder may contain a resume plus supporting PDF/DOCX documents. All are
-  // processed as document evidence; only multiple interview recordings are ambiguous.
+  // processed as document evidence; multiple interview sources are intentionally ambiguous.
   const ambiguities = [interviewIds.length > 1 ? "MULTIPLE_INTERVIEWS" : ""].filter(Boolean);
   return Object.freeze({ entries, complete: resumeIds.length >= 1 && interviewIds.length === 1 && ambiguities.length === 0, resumeIds, interviewIds, ambiguities });
 }

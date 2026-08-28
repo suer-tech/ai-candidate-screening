@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="WF-042: drive-snapshot application boundary uses only pinned manifest identities and performs zero live listing" time="0.003465" classname="test" file="C:\Users\user2\Documents\Cursor\hh-23-red-baseline\web\tests\immutable-run-input-drive-race.acceptance.test.ts" failure="public pinned run-input snapshot boundary is missing&#10;+ actual - expected&#10;&#10;+ 'undefined'&#10;- 'function'&#10;">
+		<failure type="testCodeFailure" message="public pinned run-input snapshot boundary is missing&#10;+ actual - expected&#10;&#10;+ 'undefined'&#10;- 'function'">
+[Error [ERR_TEST_FAILURE]: public pinned run-input snapshot boundary is missing
++ actual - expected
+
++ 'undefined'
+- 'function'
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: public pinned run-input snapshot boundary is missing
+  + actual - expected
+  
+  + 'undefined'
+  - 'function'
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh-23-red-baseline\web\tests\immutable-run-input-drive-race.acceptance.test.ts:26:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'undefined',
+    expected: 'function',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="WF-042: production adapter reproduces candidate_input_versions manifest instead of live listChildren" time="0.006542" classname="test" file="C:\Users\user2\Documents\Cursor\hh-23-red-baseline\web\tests\immutable-run-input-drive-race.acceptance.test.ts" failure="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;+ [&#10;+   'production drive.snapshot does not project the pinned input manifest',&#10;+   'production drive.snapshot does not read its existing inputVersion',&#10;+   'production drive.snapshot still lists the live candidate folder'&#10;+ ]&#10;- []&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;+ [&#10;+   'production drive.snapshot does not project the pinned input manifest',&#10;+   'production drive.snapshot does not read its existing inputVersion',&#10;+   'production drive.snapshot still lists the live candidate folder'&#10;+ ]&#10;- []">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly deep-equal:
++ actual - expected
+
++ [
++   'production drive.snapshot does not project the pinned input manifest',
++   'production drive.snapshot does not read its existing inputVersion',
++   'production drive.snapshot still lists the live candidate folder'
++ ]
+- []
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + [
+  +   'production drive.snapshot does not project the pinned input manifest',
+  +   'production drive.snapshot does not read its existing inputVersion',
+  +   'production drive.snapshot still lists the live candidate folder'
+  + ]
+  - []
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh-23-red-baseline\web\tests\immutable-run-input-drive-race.acceptance.test.ts:87:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'production drive.snapshot does not project the pinned input manifest', 'production drive.snapshot does not read its existing inputVersion', 'production drive.snapshot still lists the live candidate folder' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="WF-042: discovery sees a post-start file only as the next immutable input version" time="0.022395" classname="test" file="C:\Users\user2\Documents\Cursor\hh-23-red-baseline\web\tests\immutable-run-input-drive-race.acceptance.test.ts"/>
+	<!-- tests 3 -->
+	<!-- suites 0 -->
+	<!-- pass 1 -->
+	<!-- fail 2 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 1177.3039 -->
+</testsuites>

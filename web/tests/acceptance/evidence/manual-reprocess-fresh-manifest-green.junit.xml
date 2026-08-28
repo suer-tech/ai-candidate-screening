@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="WF-043: every manual reprocess waits for a fresh four-observation live stability cycle" time="0.010126" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\manual-reprocess-fresh-manifest.acceptance.test.ts"/>
+	<testcase name="WF-043: provider-version change at identical size creates a new immutable inputVersion" time="0.000875" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\manual-reprocess-fresh-manifest.acceptance.test.ts"/>
+	<testcase name="WF-043/WF-042: unchanged fresh manifest may reuse failed input, while a started run stays pinned" time="0.000822" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\manual-reprocess-fresh-manifest.acceptance.test.ts"/>
+	<testcase name="WF-043 application boundary: changed manual input creates exactly one goal/run only after fresh stability" time="0.000361" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\manual-reprocess-fresh-manifest.acceptance.test.ts"/>
+	<testcase name="WF-043 application boundary: exact fresh manifest match keeps failed-predecessor selective recovery" time="0.000198" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\manual-reprocess-fresh-manifest.acceptance.test.ts"/>
+	<!-- tests 5 -->
+	<!-- suites 0 -->
+	<!-- pass 5 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 698.8785 -->
+</testsuites>

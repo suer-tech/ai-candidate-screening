@@ -4,13 +4,13 @@ import { withTransaction, type PostgresClient } from "../storage/postgres.ts";
 import { PostgresBlobStore } from "../storage/blob-store.ts";
 import { createGoogleDriveOAuthRuntime } from "../google-drive-oauth/runtime.ts";
 import type { GoogleDriveOAuthEnvironment } from "../google-drive-oauth/types.ts";
-import { classifyMaterials, recommendationAsm050, sha256, snapshotDrive } from "./core.ts";
+import { classifyMaterials, recommendationAsm050, sha256 } from "./core.ts";
 import type { CandidatePipelineEnvironment } from "./readiness.ts";
 import type { ProductionRuntime } from "./tool-executor.ts";
 import type { DriveObject } from "./types.ts";
 import { PostgresCandidateArtifactStore } from "./artifact-store.ts";
 import { DurableAssemblyAiAdapter } from "./providers.ts";
-import { transcriptRepresentations, type TranscriptUtterance, type TranscriptWord } from "./transcription.ts";
+import { parseReadyTranscript, transcriptRepresentations, type TranscriptUtterance, type TranscriptWord } from "./transcription.ts";
 import { processDocument, type ExtractedPage, type ExtractedSection, type ProcessedDocument } from "./documents.ts";
 import { RouterAiPageOcrAdapter } from "./router-tools.ts";
 import { RouterAiFactExtractionAdapter } from "./fact-extraction.ts";
@@ -51,7 +51,7 @@ export function projectAssessmentEvidenceForPrompt(evidence: AssessmentEvidenceS
     const quote = String(locator.exactText ?? locator.quote ?? "").replace(/\s+/g, " ").trim().slice(0, 240);
     const source = Object.fromEntries([
       "kind", "fileId", "fileVersion", "artifactId", "fileName", "page", "section",
-      "recordingId", "recordingVersion", "speakerLabel", "speakerRole", "startMs", "endMs", "confidence",
+      "recordingId", "recordingVersion", "speakerLabel", "speakerRole", "startMs", "endMs", "sourceLine", "timingOrigin", "confidence",
     ].flatMap((key) => locator[key] === undefined ? [] : [[key, locator[key]]]));
     return {
       id: fact.id,
@@ -69,19 +69,25 @@ export function projectAssessmentEvidenceForPrompt(evidence: AssessmentEvidenceS
 }
 
 type OrganizationalFact = Pick<EvidenceFact, "predicate" | "value"> & { locator?: unknown };
+type OrganizationalClaim = Pick<CandidateSourceClaim, "sourceClass" | "text" | "locator">;
 
-export function projectOrganizationalConditions(facts: readonly OrganizationalFact[]): readonly string[] {
+export function projectOrganizationalConditions(facts: readonly OrganizationalFact[], claims: readonly OrganizationalClaim[] = []): readonly string[] {
   const groundedValue = (patterns: readonly RegExp[]) => {
     const fact = facts.find((candidate) => patterns.some((pattern) => pattern.test(candidate.predicate))
       && Boolean(candidate.locator && typeof candidate.locator === "object" && !Array.isArray(candidate.locator))
       && typeof candidate.value === "string" && candidate.value.trim());
     return fact?.value.replace(/\s+/g, " ").trim().replace(/;+$/u, "") || "не указано";
   };
+  const claimValue = (sourceClass: string, fallback?: RegExp) => claims.find((claim) => claim.sourceClass === sourceClass
+    || Boolean(fallback?.test(claim.text)))?.text.replace(/\s+/g, " ").trim().replace(/;+$/u, "") || "";
+  const workFormat = claimValue("report.organization.work-format", /(?:удал[её]н|гибрид|офисн).*(?:формат|вариант)|(?:формат|вариант).*(?:удал[её]н|гибрид|офисн)/iu);
+  const city = claimValue("report.organization.city", /(?:нахожусь|живу|адрес|город|Ростов-на-Дону|Москва|Санкт-Петербург)/iu);
+  const formatAndCity = [workFormat, city].filter((value, index, values) => value && values.findIndex((item) => item.toLocaleLowerCase("ru-RU").includes(value.toLocaleLowerCase("ru-RU")) || value.toLocaleLowerCase("ru-RU").includes(item.toLocaleLowerCase("ru-RU"))) === index).join("; ");
   return [
-    `Формат: ${groundedValue([/^conditions\.(?:work_format_city|workFormatCity|work_format_and_city|workFormat|location_and_mobility|location)$/i])};`,
-    `Доход: ${groundedValue([/^conditions\.(?:expected_net_income|expectedNetIncome|compensation)$/i, /^stopFactor\.compensationExpectation$/i])};`,
-    `Готов к тестовому дню: ${groundedValue([/^conditions\.(?:trial_day_readiness|trialDayReadiness)$/i])};`,
-    `Готов к выходу: ${groundedValue([/^conditions\.(?:start_readiness|startReadiness|start_availability)$/i, /^references\.availability$/i])};`,
+    `Формат: ${formatAndCity || groundedValue([/^conditions\.(?:work_format_city|workFormatCity|work_format_and_city|workFormat|location_and_mobility|location)$/i])};`,
+    `Доход: ${claimValue("report.organization.income") || groundedValue([/^conditions\.(?:expected_net_income|expectedNetIncome|compensation)$/i, /^stopFactor\.compensationExpectation$/i])};`,
+    `Готов к тестовому дню: ${claimValue("report.organization.trial-day", /тестов(?:ому|ый)\s+д(?:ню|ень)/iu) || groundedValue([/^conditions\.(?:trial_day_readiness|trialDayReadiness)$/i])};`,
+    `Готов к выходу: ${claimValue("report.organization.start") || groundedValue([/^conditions\.(?:start_readiness|startReadiness|start_availability)$/i, /^references\.availability$/i])};`,
   ];
 }
 
@@ -335,40 +341,21 @@ export function assessmentInputsFromStructured(value: Record<string, unknown>, c
   };
 }
 
-async function persistSnapshot(db: PostgresClient, task: Record<string, unknown>, folderId: string, objects: DriveObject[]) {
-  const candidatePk = integer(task.candidatePk, "PRODUCTION_TASK_CANDIDATE_PK_MISSING");
-  const inputVersion = text(task.inputVersion, "PRODUCTION_TASK_INPUT_VERSION_MISSING");
-  const capturedAtUtc = new Date().toISOString();
-  const snapshot = snapshotDrive(folderId, objects, capturedAtUtc);
-  const manifest = classifyMaterials(snapshot.objects);
-  const snapshotId = `snapshot-${candidatePk}-${snapshot.fingerprint.slice(0, 24)}`;
-  const currentInput = await queryOne<{ snapshot_id: string; manifest_json: string }>(db,
-    "SELECT snapshot_id,manifest_json FROM candidate_input_versions WHERE id=$1 AND candidate_id=$2", [inputVersion, candidatePk]);
-  if (currentInput && currentInput.snapshot_id !== snapshotId) throw new Error("INPUT_VERSION_SNAPSHOT_CONFLICT");
-  const sequence = currentInput ? undefined : ((await queryOne<{ next_sequence: number }>(db,
-    "SELECT COALESCE(MAX(sequence),0)+1 AS next_sequence FROM candidate_input_versions WHERE candidate_id=$1", [candidatePk]))?.next_sequence ?? 1);
-  const objectRows = snapshot.objects.map((object) => ({ ...object, id: `drive-object-${candidatePk}-${sha256([object.fileId, object.version]).slice(0, 24)}` }));
-  await withTransaction(db, async (transaction) => {
-    for (const object of objectRows) {
-      await execute(transaction, `INSERT INTO candidate_drive_objects
-        (id,candidate_id,drive_folder_id,drive_file_id,provider_version,name,mime_type,size,modified_at_utc,in_results_subtree)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) ON CONFLICT DO NOTHING`,
-      [object.id, candidatePk, folderId, object.fileId, object.version, object.name, object.mimeType, object.size, object.modifiedTime, Boolean(object.inResultsSubtree)]);
-    }
-    await execute(transaction, `INSERT INTO candidate_material_snapshots
-      (id,candidate_id,fingerprint,complete,stable_comparisons,captured_at_utc) VALUES ($1,$2,$3,$4,3,$5) ON CONFLICT DO NOTHING`,
-    [snapshotId, candidatePk, snapshot.fingerprint, snapshot.complete, capturedAtUtc]);
-    if (!currentInput) await execute(transaction, `INSERT INTO candidate_input_versions
-      (id,candidate_id,snapshot_id,sequence,manifest_json,state,created_at_utc) VALUES ($1,$2,$3,$4,$5,$6,$7)`,
-    [inputVersion, candidatePk, snapshotId, sequence, JSON.stringify(manifest), manifest.complete ? "MATERIALS_READY" : "MATERIALS_INCOMPLETE", capturedAtUtc]);
-    for (const entry of manifest.entries) {
-      const row = objectRows.find((object) => object.fileId === entry.fileId && object.version === entry.version);
-      if (row) await execute(transaction,
-        "INSERT INTO candidate_material_entries (input_version_id,drive_object_id,role,supported) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING",
-        [inputVersion, row.id, entry.role, entry.supported]);
-    }
-  });
-  return { folderId, objects: [...snapshot.objects], snapshotId, manifest };
+type PinnedInputSnapshotRow = { snapshot_id: string; manifest_json: string; state: string };
+
+export async function resolvePinnedRunInputSnapshot(input: {
+  folderId: string;
+  inputVersion: string;
+  load: () => Promise<PinnedInputSnapshotRow | undefined>;
+}) {
+  const row = await input.load();
+  if (!row) throw new Error("CANDIDATE_INPUT_VERSION_NOT_FOUND");
+  if (row.state !== "MATERIALS_READY") throw new Error("CANDIDATE_INPUT_VERSION_NOT_READY");
+  let manifest: ReturnType<typeof classifyMaterials>;
+  try { manifest = JSON.parse(row.manifest_json) as ReturnType<typeof classifyMaterials>; }
+  catch { throw new Error("CANDIDATE_INPUT_MANIFEST_INVALID"); }
+  if (!manifest.complete || !Array.isArray(manifest.entries)) throw new Error("CANDIDATE_INPUT_MANIFEST_INVALID");
+  return Object.freeze({ folderId: input.folderId, objects: structuredClone(manifest.entries), snapshotId: row.snapshot_id, manifest: structuredClone(manifest), inputVersion: input.inputVersion });
 }
 
 function loopbackOrDockerHostname(hostname: string): boolean {
@@ -507,7 +494,7 @@ export async function createProductionCandidateToolExecution(input: { database: 
       "SELECT manifest_json FROM candidate_input_versions WHERE id=$1 AND candidate_id=$2", [task.inputVersion, candidatePk]);
     if (!row) throw new Error("CANDIDATE_INPUT_VERSION_NOT_FOUND");
     return JSON.parse(row.manifest_json) as {
-      entries?: Array<DriveObject & { role?: string; supported?: boolean }>;
+      entries?: Array<DriveObject & { role?: string; supported?: boolean; interviewSource?: "recording" | "ready-transcript" }>;
     };
   };
   const immutableFileChecksum = async (fileId: string) => {
@@ -647,7 +634,8 @@ export async function createProductionCandidateToolExecution(input: { database: 
     oauth: { connectionId: status.id, rootFolderId: status.rootFolderId, accessToken: () => oauth.tokenProvider.accessToken() },
     adapters: {
       drive: {
-        snapshot: async (folderId) => persistSnapshot(input.database, task, folderId, await drive.listChildren(folderId)),
+        snapshot: async (folderId) => resolvePinnedRunInputSnapshot({ folderId, inputVersion, load: () => queryOne<PinnedInputSnapshotRow>(input.database,
+          "SELECT snapshot_id,manifest_json,state FROM candidate_input_versions WHERE id=$1 AND candidate_id=$2", [inputVersion, candidatePk]) }),
         publishPdf: async (value) => {
           if (!artifactStore) throw new Error("PRODUCTION_REPORT_ARTIFACT_STORE_NOT_PROVISIONED");
           const artifactRef = text(value.artifactRef, "REPORT_ARTIFACT_REF_MISSING");
@@ -798,7 +786,8 @@ export async function createProductionCandidateToolExecution(input: { database: 
                 const locatorId = `locator-${sha256([transcriptRef, utterance.speaker, utterance.start, utterance.end, utterance.text]).slice(0, 24)}`;
                 locators[locatorId] = { kind: "transcript", recordingId: transcriptRef, recordingVersion: inputVersion,
                   artifactId: transcriptRef, speakerLabel: utterance.speaker, exactText: utterance.text,
-                  startMs: utterance.start, endMs: utterance.end, confidence: utterance.confidence };
+                  startMs: utterance.start, endMs: utterance.end, sourceLine: utterance.sourceLine,
+                  timingOrigin: utterance.timingOrigin ?? "provider", confidence: utterance.confidence };
               }
             } catch (error) { throw safeCandidateStageError(error, "FACT_LOCATOR_BUILD_FAILED"); }
             if (!Object.keys(locators).length) throw new Error("EVIDENCE_LOCATORS_MISSING");
@@ -997,9 +986,19 @@ export async function createProductionCandidateToolExecution(input: { database: 
             const coverageEntries: BatchCoverageEntry[] = [];
             const coverageLedger: Array<{ batchId: string; requestedCriterionIds: string[]; coverage: BatchCoverageEntry[] }> = [];
             const allCriterionIds = matrixCriterionIds(matrix.criteria);
+            const reportFieldRequests = [
+              { field: "workFormat", sourceClass: "report.organization.work-format", instruction: "Предпочтительный формат работы: удалённо, офис или гибрид." },
+              { field: "city", sourceClass: "report.organization.city", instruction: "Город проживания кандидата." },
+              { field: "income", sourceClass: "report.organization.income", instruction: "Ожидаемый доход кандидата с валютой и net/gross, если указано." },
+              { field: "trialDay", sourceClass: "report.organization.trial-day", instruction: "Готовность и срок выхода на тестовый день." },
+              { field: "start", sourceClass: "report.organization.start", instruction: "Готовность и срок постоянного выхода на работу; не подменять тестовым днём." },
+              { field: "technical", sourceClass: "report.technical", instruction: "Конкретные программы, сервисы, ИИ-инструменты и технические способы работы." },
+              { field: "motivation", sourceClass: "report.motivation", instruction: "Почему кандидату интересна роль, что мотивирует и какие условия он ценит." },
+            ];
             for (const claimBatch of claimBatches) {
               let directed: Awaited<ReturnType<typeof call>> | undefined;
-              try { directed = await call("criterion_claim_extraction", claimBatch.request, `directed-${claimBatch.batchId}`); }
+              const reportAwareRequest = { ...claimBatch.request, reportFieldRequests };
+              try { directed = await call("criterion_claim_extraction", reportAwareRequest, `directed-${claimBatch.batchId}`); }
               catch { coverageWarnings.push(`PRIMARY_EXTRACTION_FAILED:${claimBatch.batchId}`); }
               const primaryCoverage = Array.isArray(directed?.output.coverage) ? directed.output.coverage as unknown as BatchCoverageEntry[] : [];
               const primaryValidation = validateExactCriterionCoverage(allCriterionIds, primaryCoverage);
@@ -1007,7 +1006,7 @@ export async function createProductionCandidateToolExecution(input: { database: 
               const retryIds = directed ? primaryValidation.missingIds : allCriterionIds;
               if (retryIds.length || primaryValidation.duplicateIds.length || primaryValidation.unknownIds.length) {
                 try {
-                  targeted = await call("criterion_claim_extraction", { ...claimBatch.request, requestedCriterionIds: retryIds.length ? retryIds : allCriterionIds,
+                  targeted = await call("criterion_claim_extraction", { ...reportAwareRequest, requestedCriterionIds: retryIds.length ? retryIds : allCriterionIds,
                     coverageRetry: { targeted: true, reason: "MISSING_OR_INVALID_CRITERION_IDS" } }, `coverage-retry-${claimBatch.batchId}`);
                 } catch { coverageWarnings.push(`TARGETED_EXTRACTION_FAILED:${claimBatch.batchId}`); }
               }
@@ -1226,11 +1225,10 @@ export async function createProductionCandidateToolExecution(input: { database: 
       },
       assemblyAI: {
         create: async () => {
-          if (!input.environment.ASSEMBLYAI_API_KEY || !input.environment.MEDIA_PROCESSOR_URL || !input.environment.MEDIA_PROCESSOR_TOKEN || !artifactStore) {
-            throw new Error("PRODUCTION_ASSEMBLYAI_STAGE_CONTEXT_NOT_PROVISIONED");
-          }
+          if (!artifactStore) throw new Error("PRODUCTION_TRANSCRIPTION_ARTIFACT_STORE_NOT_PROVISIONED");
           const restored = await queryOne<{ remote_job_id: string }>(input.database, `SELECT cp.remote_job_id FROM agent_checkpoints cp JOIN agent_attempts a ON a.id=cp.attempt_id
-            WHERE a.task_id=$1 AND cp.kind='provider-job-created' AND cp.remote_job_id IS NOT NULL ORDER BY cp.created_at DESC LIMIT 1`, [taskId]);
+            WHERE a.task_id=$1 AND (cp.kind='provider-job-created' OR (cp.kind='transcript-persisted' AND cp.remote_job_id LIKE 'ready-transcript:%')) AND cp.remote_job_id IS NOT NULL
+            ORDER BY CASE WHEN cp.kind='transcript-persisted' THEN 0 ELSE 1 END, cp.created_at DESC LIMIT 1`, [taskId]);
           if (restored?.remote_job_id) return { remoteJobId: restored.remote_job_id };
           const manifest = await materialManifest();
           const interviews = (manifest.entries ?? []).filter((entry) => entry.role === "interview" && entry.supported !== false);
@@ -1241,6 +1239,38 @@ export async function createProductionCandidateToolExecution(input: { database: 
           const source = await drive.downloadVersion({ fileId: interview.fileId, expectedVersion: interview.version,
             expectedSize: interview.size, expectedModifiedTime: interview.modifiedTime, expectedChecksum,
             checkpoint: (value) => checkpoint({ kind: "drive-download", identity: `${operationIdentity}:source`, artifactIdentity: `${value.fileId}:${value.version}`, checksum: value.checksum }) });
+          if (interview.interviewSource === "ready-transcript") {
+            let extractedText: string | undefined;
+            if (interview.mimeType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+              if (!input.environment.DOCUMENT_PROCESSOR_URL || !input.environment.DOCUMENT_PROCESSOR_TOKEN) throw new Error("PRODUCTION_DOCUMENT_PROCESSOR_NOT_PROVISIONED");
+              const processorUrl = new URL(input.environment.DOCUMENT_PROCESSOR_URL);
+              if (input.environment.E2E_ENVIRONMENT === "local") {
+                if (!loopbackOrDockerHostname(processorUrl.hostname) || !["http:", "https:"].includes(processorUrl.protocol)) throw new Error("LOCAL_DOCUMENT_PROCESSOR_MUST_BE_LOOPBACK");
+              } else if (processorUrl.protocol !== "https:") throw new Error("REMOTE_DOCUMENT_PROCESSOR_MUST_USE_HTTPS");
+              await auditBoundary("provider", source.bytes);
+              const extractionResponse = await fetch(processorUrl, { method: "POST",
+                headers: { authorization: `Bearer ${input.environment.DOCUMENT_PROCESSOR_TOKEN}`, "content-type": interview.mimeType },
+                body: source.bytes.slice().buffer as ArrayBuffer, signal: AbortSignal.timeout(5 * 60_000) });
+              const extracted = await extractionResponse.json() as { code?: string; kind?: string; sections?: ExtractedSection[] };
+              if (!extractionResponse.ok) throw new Error(extracted.code ?? `DOCUMENT_PROCESSOR_HTTP_${extractionResponse.status}`);
+              if (extracted.kind !== "docx" || !Array.isArray(extracted.sections)) throw new Error("DOCUMENT_PROCESSOR_DOCX_OUTPUT_INVALID");
+              extractedText = extracted.sections.map((section) => section.text.trim()).filter(Boolean).join("\n");
+            }
+            const parsed = parseReadyTranscript({ fileId: interview.fileId, fileVersion: interview.version, fileName: interview.name,
+              mimeType: interview.mimeType, ...(extractedText === undefined ? { bytes: source.bytes } : { extractedText }) });
+            const remoteJobId = `ready-transcript:${sha256([operationIdentity, source.checksum]).slice(0, 24)}`;
+            const representations = transcriptRepresentations({ providerJobId: remoteJobId,
+              raw: { schemaVersion: parsed.schemaVersion, source: parsed.source, text: parsed.text, timingSource: "provided-text" },
+              words: parsed.words, utterances: parsed.utterances });
+            await auditBoundary("blob", new TextEncoder().encode(JSON.stringify(representations)));
+            const stored = await artifactStore.putJson({ candidatePk, runId: text(task.runId, "PRODUCTION_TASK_RUN_ID_MISSING"), kind: "transcript-bundle",
+              identity: operationIdentity, value: representations });
+            await checkpoint({ kind: "transcript-persisted", identity: operationIdentity, remoteJobId, artifactIdentity: stored.artifactRef, checksum: stored.checksum });
+            return { remoteJobId };
+          }
+          if (!input.environment.ASSEMBLYAI_API_KEY || !input.environment.MEDIA_PROCESSOR_URL || !input.environment.MEDIA_PROCESSOR_TOKEN) {
+            throw new Error("PRODUCTION_ASSEMBLYAI_STAGE_CONTEXT_NOT_PROVISIONED");
+          }
           const mediaUrl = new URL(input.environment.MEDIA_PROCESSOR_URL);
           if (input.environment.E2E_ENVIRONMENT === "local") {
             if (!loopbackOrDockerHostname(mediaUrl.hostname) || !["http:", "https:"].includes(mediaUrl.protocol)) throw new Error("LOCAL_MEDIA_PROCESSOR_MUST_BE_LOOPBACK");
@@ -1259,7 +1289,14 @@ export async function createProductionCandidateToolExecution(input: { database: 
           } });
         },
         poll: async (remoteJobId) => {
-          if (!input.environment.ASSEMBLYAI_API_KEY || !artifactStore) throw new Error("PRODUCTION_ASSEMBLYAI_STAGE_CONTEXT_NOT_PROVISIONED");
+          if (!artifactStore) throw new Error("PRODUCTION_TRANSCRIPTION_ARTIFACT_STORE_NOT_PROVISIONED");
+          if (remoteJobId.startsWith("ready-transcript:")) {
+            const persisted = await queryOne<{ artifact_identity: string }>(input.database, `SELECT cp.artifact_identity FROM agent_checkpoints cp JOIN agent_attempts a ON a.id=cp.attempt_id
+              WHERE a.task_id=$1 AND cp.kind='transcript-persisted' AND cp.remote_job_id=$2 AND cp.artifact_identity IS NOT NULL ORDER BY cp.created_at DESC LIMIT 1`, [taskId, remoteJobId]);
+            if (!persisted?.artifact_identity) throw new Error("READY_TRANSCRIPT_ARTIFACT_CHECKPOINT_MISSING");
+            return { status: "completed", artifactRef: persisted.artifact_identity };
+          }
+          if (!input.environment.ASSEMBLYAI_API_KEY) throw new Error("PRODUCTION_ASSEMBLYAI_STAGE_CONTEXT_NOT_PROVISIONED");
           const provider = new DurableAssemblyAiAdapter({ apiKey: input.environment.ASSEMBLYAI_API_KEY });
           let raw: Record<string, unknown> | undefined;
           for (let attempt = 0; attempt < 300; attempt += 1) {
@@ -1377,10 +1414,11 @@ export async function createProductionCandidateToolExecution(input: { database: 
             const utterance = locator.match(/(?:utterance(?:Id)?|реплик[аи])\s*[=:]\s*(?:utterance-)?(\d+)/iu)?.[1];
             const startMs = Number(locator.match(/(?:startMs|start)\s*[=:]\s*(\d+)/iu)?.[1]);
             const endMs = Number(locator.match(/(?:endMs|end)\s*[=:]\s*(\d+)/iu)?.[1]);
+            const sourceLine = locator.match(/(?:sourceLine|строк[аи])\s*[=:]\s*(\d+)/iu)?.[1];
             const formatTime = (value: number) => `${String(Math.floor(value / 60_000)).padStart(2, "0")}:${String(Math.floor((value % 60_000) / 1_000)).padStart(2, "0")}`;
             const interval = Number.isFinite(startMs) ? `${formatTime(startMs)}${Number.isFinite(endMs) && endMs > startMs ? `–${formatTime(endMs)}` : ""}` : undefined;
             const lowered = `${claim.sourceClass} ${locator}`.toLocaleLowerCase("ru");
-            if (/interview|transcript|интервью|стенограмм/u.test(lowered)) return ["Интервью", interval, !interval && utterance ? `реплика ${utterance}` : undefined].filter(Boolean).join(" · ");
+            if (/interview|transcript|интервью|стенограмм/u.test(lowered)) return ["Интервью", sourceLine ? `строка ${sourceLine}` : interval, !sourceLine && !interval && utterance ? `реплика ${utterance}` : undefined].filter(Boolean).join(" · ");
             if (/resume|резюме/u.test(lowered)) return ["Резюме", page ? `стр. ${page}` : undefined].filter(Boolean).join(" · ");
             if (/recommend|рекомендац/u.test(lowered)) return ["Рекомендация", page ? `стр. ${page}` : undefined].filter(Boolean).join(" · ");
             return ["Документ кандидата", page ? `стр. ${page}` : undefined].filter(Boolean).join(" · ");
@@ -1431,6 +1469,9 @@ export async function createProductionCandidateToolExecution(input: { database: 
           const source = (fact: EvidenceFact) => {
             const locator = fact.locator;
             if (locator.kind === "transcript") {
+              if (locator.timingOrigin === "derived-line-order" && locator.sourceLine) {
+                return `Стенограмма; ${locator.speakerLabel ?? "Спикер"}; строка ${locator.sourceLine} — «${reportText(locator.exactText)}»`;
+              }
               const start = Number(locator.startMs ?? 0);
               const end = Number(locator.endMs ?? start);
               const minutes = Math.floor(start / 60_000);
@@ -1492,10 +1533,12 @@ export async function createProductionCandidateToolExecution(input: { database: 
           const questions = [...assessmentItems(structured.competencies), ...assessmentItems(structured.accessToKe)]
             .filter((item) => /Недостаточно|Не подтверждено|Частично/i.test(item)).map((item) => item.replace(/^• /, "• Уточнить: ")).join("\n") || "• Уточнить мотивацию, ожидаемый результат и условия следующего этапа.";
           const stripAssessmentMarker = (value: string) => value.replace(/^•\s*/, "").replace(/\s*\[[^\]]+]\s*/g, " ").replace(/\s+/g, " ").trim();
-          const hardSkills = factValues([
+          const reportClaimValues = (sourceClass: string) => matrixClaims.filter((claim) => claim.sourceClass === sourceClass)
+            .map((claim) => reportText(claim.text)).filter((value, index, values) => value && values.indexOf(value) === index);
+          const hardSkills = [...factValues([
             /^required[_A-Z]?experience/i, /^requiredExperience/i, /^experience\./i,
             /^competency\.(?:digitalAndAI|taskSystems|english|analytics|confidentiality|process_standardization|coordination)/i,
-          ]).slice(0, 9);
+          ]), ...reportClaimValues("report.technical")].filter((value, index, values) => value && values.indexOf(value) === index).slice(0, 9);
           const softSkills = factValues([
             /^competency\.(?:autonomy|adaptability|accountability|initiative|businessCommunication)/i,
             /^abc\.(?:initiative|self_learning)/i, /^ABC\.(?:selfLearning|initiative|autonomy)/i,
@@ -1510,12 +1553,12 @@ export async function createProductionCandidateToolExecution(input: { database: 
             ...assessmentItems(structured.stopFactors).map(stripAssessmentMarker),
             ...assessmentItems(structured.risks).map(stripAssessmentMarker),
           ].filter((value, index, values) => value && values.indexOf(value) === index).slice(0, 4);
-          const additional = factValues([
+          const additional = [...factValues([
             /^motivation\.(?:long_term|manager_match|role_focus|service_role)/i,
             /^conditions\.(?:location_and_mobility|mobility)/i,
             /^references\.availability/i,
-          ]).slice(0, 4);
-          const organizationalConditions = projectOrganizationalConditions(facts);
+          ]), ...reportClaimValues("report.motivation")].filter((value, index, values) => value && values.indexOf(value) === index).slice(0, 4);
+          const organizationalConditions = projectOrganizationalConditions(facts, matrixClaims);
           const interviewSummary: NonNullable<ReportModel["interviewSummary"]> = {
             interviewDate,
             fullName,
@@ -1543,10 +1586,13 @@ export async function createProductionCandidateToolExecution(input: { database: 
             } else if (value && typeof value === "object") Object.entries(value as Record<string, unknown>).forEach(([childKey, item]) => collectReportEvidenceIds(item, childKey));
           };
           collectReportEvidenceIds(structured);
+          matrixClaims.filter((claim) => claim.sourceClass.startsWith("report.")).forEach((claim) => reportEvidenceIds.add(claim.claimId));
           const reportEvidenceCatalog = [
             ...matrixClaims.filter((claim) => reportEvidenceIds.has(claim.claimId)).map((claim) => ({ evidenceId: claim.claimId, quote: reportText(claim.text), source: matrixClaimSource(claim) })),
             ...facts.filter((fact) => reportEvidenceIds.has(fact.id)).map((fact) => ({ evidenceId: fact.id, quote: reportText(fact.locator.exactText || fact.value), source: fact.locator.kind === "transcript"
-              ? `Интервью · ${Math.floor(Number(fact.locator.startMs ?? 0) / 60_000)}:${String(Math.floor((Number(fact.locator.startMs ?? 0) % 60_000) / 1_000)).padStart(2, "0")}`
+              ? fact.locator.timingOrigin === "derived-line-order" && fact.locator.sourceLine
+                ? `Интервью · строка ${fact.locator.sourceLine}`
+                : `Интервью · ${Math.floor(Number(fact.locator.startMs ?? 0) / 60_000)}:${String(Math.floor((Number(fact.locator.startMs ?? 0) % 60_000) / 1_000)).padStart(2, "0")}`
               : `${fact.locator.fileName ?? "Документ"}${fact.locator.page ? ` · стр. ${fact.locator.page}` : ""}` })),
           ].filter((item, index, items) => item.evidenceId && item.quote && items.findIndex((candidateItem) => candidateItem.evidenceId === item.evidenceId) === index).slice(0, 160);
           const abcGrades = Object.fromEntries(Object.entries(abcStates).map(([directionId, grade]) => [directionId, String(grade)]));
@@ -1637,8 +1683,8 @@ export async function createProductionCandidateToolExecution(input: { database: 
             if (section === "organizational-conditions") return organizationalConditions.join("\n");
             if (section === "review") return composedBody.get(section) ?? (positiveRows.slice(0, 3).map(compactRow).join("\n") || recommendationReason);
             if (section === "key-evidence") return composedBody.get(section) ?? fallbackKeyEvidence;
-            if (section === "technical-check") return composedBody.get(section) ?? (hardSkills.length ? `Профессиональные инструменты\n${hardSkills.map((item) => `• ${item}`).join("\n")}` : "Отдельный технический опыт в материалах не раскрыт.");
-            if (section === "motivation-fit") return composedBody.get(section) ?? (additional.map((item) => `• ${item}`).join("\n") || "Отдельные сведения о мотивации и соответствии роли не выявлены.");
+            if (section === "technical-check") return composedBody.get(section) || (hardSkills.length ? `Профессиональные инструменты\n${hardSkills.map((item) => `• ${item}`).join("\n")}` : "Отдельный технический опыт в материалах не раскрыт.");
+            if (section === "motivation-fit") return composedBody.get(section) || (additional.map((item) => `• ${item}`).join("\n") || "Отдельные сведения о мотивации и соответствии роли не выявлены.");
             if (section === "decision") return `${validated.recommendation}.\n${composedBody.get(section) ?? `${recommendationReason}\n${nextAction}`}`;
             if (section === "final-summary") return composedBody.get(section) ?? fallbackFinalSummary;
             if (section === "scale") return scaleText;

@@ -135,6 +135,24 @@ Runtime проверяет ссылки composer против переданно
 
 Document processor получает singular endpoint и возвращает один PDF/checksum. Repository, Drive и notification outbox публикуют одну immutable report version/file. Legacy pair endpoint и чтение старых report types сохраняются только для уже существующих результатов и совместимости, но новые runs их не вызывают.
 
+### 15. Готовая стенограмма является альтернативным входом той же transcription stage
+
+Material manifest различает `recording` и `ready-transcript`, сохраняя общую роль `interview`. Поддерживаемый текстовый файл или DOCX с явным transcript-like именем закрывает обязательный источник интервью. DOCX стенограммы извлекается через document processor до детерминированного transcript parsing; DOCX рекомендаций/характеристик остаётся поддерживаемым дополнительным документом. Резюме и дополнительные документы не должны становиться стенограммой только из-за MIME-типа.
+
+В `candidate.transcription/v1` recording path остаётся прежним: Drive download → media processor/FFmpeg → AssemblyAI → `transcript-bundle`. Ready-transcript path выполняет Drive download → UTF-8 decode → deterministic parsing → тот же `transcript-bundle`; media processor и AssemblyAI не создаются и не вызываются. Поэтому fact extraction, batching, matrix rows, report и selective recovery используют прежнюю artifact family и не получают отдельной ветки.
+
+Явные таймкоды и speaker labels сохраняются как входные сведения. Для строк без таймкода сохраняется line locator; техническая монотонная координата может использоваться только внутри совместимого normalized transport и должна быть явно помечена как derived, чтобы HR presentation не показывала её как время интервью.
+
+### 16. Drive snapshot задачи воспроизводят pinned input, а не перечитывают live-папку
+
+Discovery фиксирует stable snapshot и manifest до создания goal. Поэтому `candidate.drive-snapshot/v1` читает их из `candidate_input_versions`; повторный `listChildren` после начала run создавал бы race и нарушал immutable input boundary. Live Drive продолжает сканироваться discovery worker отдельно: изменения становятся новой input version и не влияют на уже начатые extraction/transcription/matrix/report стадии.
+
+### 17. Ручной повтор начинается с нового live discovery cycle
+
+Команда reprocess не должна немедленно создавать run на последней сохранённой версии входов. Она переводит кандидата в `WAITING_FOR_STABILITY`; discovery заново читает папку и получает полный стабильный snapshot с `capturedAtUtc`, не предшествующим самой команде. Непрерывно наблюдаемая неизменная папка может подтвердить стабильность ближайшим post-command observation; при изменении fingerprint действует обычное окно из четырёх наблюдений. Материальная идентичность включает `fileId` и provider version вместе с метаданными manifest, поэтому замена содержимого без изменения размера не считается прежним входом.
+
+Если свежий manifest совпал с failed predecessor, его immutable `inputVersion` переиспользуется: это сохраняет selective recovery и не означает использование устаревшего списка, поскольку совпадение установлено новым live scan. Любое добавление, удаление либо изменение provider version создаёт новую `inputVersion` и отключает reuse upstream checkpoints. После создания goal snapshot снова становится pinned по правилу раздела 16.
+
 ## Risks / Trade-offs
 
 - [Самоописание может быть неточным] → показывать provenance «со слов кандидата», точные цитаты и вопросы HR, не выдавая это за background check.

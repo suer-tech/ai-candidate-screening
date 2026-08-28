@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="22.1 pre-change RED: ready text is one interview source and recording plus text is ambiguous" time="0.002898" classname="test" file="C:\Users\user2\Documents\Cursor\hh-22-red-baseline\web\tests\ready-text-transcript-prechange.acceptance.test.ts" failure="resume + ready transcript must be complete&#10;&#10;false !== true&#10;">
+		<failure type="testCodeFailure" message="resume + ready transcript must be complete&#10;&#10;false !== true">
+[Error [ERR_TEST_FAILURE]: resume + ready transcript must be complete
+
+false !== true
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: resume + ready transcript must be complete
+  
+  false !== true
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh-22-red-baseline\web\tests\ready-text-transcript-prechange.acceptance.test.ts:15:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="22.1 pre-change RED: deterministic parser and production bypass persist the existing transcript family" time="0.000771" classname="test" file="C:\Users\user2\Documents\Cursor\hh-22-red-baseline\web\tests\ready-text-transcript-prechange.acceptance.test.ts" failure="ready transcript parser is missing&#10;+ actual - expected&#10;&#10;+ 'undefined'&#10;- 'function'&#10;">
+		<failure type="testCodeFailure" message="ready transcript parser is missing&#10;+ actual - expected&#10;&#10;+ 'undefined'&#10;- 'function'">
+[Error [ERR_TEST_FAILURE]: ready transcript parser is missing
++ actual - expected
+
++ 'undefined'
+- 'function'
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: ready transcript parser is missing
+  + actual - expected
+  
+  + 'undefined'
+  - 'function'
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh-22-red-baseline\web\tests\ready-text-transcript-prechange.acceptance.test.ts:23:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'undefined',
+    expected: 'function',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 2 -->
+	<!-- suites 0 -->
+	<!-- pass 0 -->
+	<!-- fail 2 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 280.8794 -->
+</testsuites>

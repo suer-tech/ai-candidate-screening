@@ -80,7 +80,13 @@ export class CandidateDiscoveryCoordinator {
     if (!manifest.complete) return { state: "MATERIALS_INCOMPLETE" as const, manifest };
     const existing = this.repository.inputVersions(candidate.candidateId);
     const duplicate = existing.find((version) => version.snapshot.fingerprint === snapshot.fingerprint);
-    if (duplicate) return { state: "MATERIALS_READY" as const, inputVersion: duplicate, duplicate: true };
+    if (duplicate) return {
+      state: "MATERIALS_READY" as const,
+      inputVersion: duplicate,
+      duplicate: true,
+      observedSnapshot: snapshot,
+      observedManifest: manifest,
+    };
     const value = immutableInputVersion(folderId, snapshot, existing.length + 1);
     const inputVersion: RegisteredInputVersion = {
       ...value,
@@ -90,6 +96,12 @@ export class CandidateDiscoveryCoordinator {
       trigger: existing.length === 0 ? "AUTOMATIC_FIRST_RUN" : "MANUAL_RUN_AVAILABLE",
     };
     this.repository.saveInputVersion(inputVersion);
-    return { state: "MATERIALS_READY" as const, inputVersion, duplicate: false };
+    return {
+      state: "MATERIALS_READY" as const,
+      inputVersion,
+      duplicate: false,
+      observedSnapshot: snapshot,
+      observedManifest: manifest,
+    };
   }
 }

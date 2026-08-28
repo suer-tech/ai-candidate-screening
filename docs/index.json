@@ -78,7 +78,7 @@
     "CandidateDiscoveryCoordinator": {
       "file": "web/server/candidate-pipeline/discovery.ts",
       "kind": "class",
-      "summary": "Регистрирует Drive folders, стабильные snapshots и immutable input versions."
+      "summary": "Регистрирует Drive folders, стабильные snapshots и immutable input versions; перед каждым ручным повтором подтверждает свежий post-command manifest по fileId и provider version."
     },
     "projectCandidate": {
       "file": "web/server/candidate-pipeline/dashboard-projection.ts",
@@ -119,6 +119,21 @@
       "file": "web/server/candidate-pipeline/reports.ts",
       "kind": "function",
       "summary": "Проектирует supported non-results entries immutable candidate manifest в HR-safe имена и точные allowlisted Google Drive/Docs HTTPS ссылки для единого PDF."
+    },
+    "isReadyTranscriptMaterial": {
+      "file": "web/server/candidate-pipeline/core.ts",
+      "kind": "function",
+      "summary": "Распознаёт готовую TXT/Markdown/SRT/VTT или DOCX стенограмму по безопасному MIME и transcript-like имени; рекомендации/характеристики DOCX оставляет supported additional documents."
+    },
+    "parseReadyTranscript": {
+      "file": "web/server/candidate-pipeline/transcription.ts",
+      "kind": "function",
+      "summary": "Детерминированно преобразует UTF-8 текст или извлечённый из DOCX текст в transcript-bundle-compatible utterances, сохраняя явные speaker labels, таймкоды либо номера исходных строк."
+    },
+    "resolvePinnedRunInputSnapshot": {
+      "file": "web/server/candidate-pipeline/production-runtime.ts",
+      "kind": "function",
+      "summary": "Воспроизводит immutable manifest конкретной inputVersion для начатого run без повторного чтения live-состава Drive-папки."
     },
     "createDocumentProcessorServer": {
       "file": "web/server/document-processor/server.ts",

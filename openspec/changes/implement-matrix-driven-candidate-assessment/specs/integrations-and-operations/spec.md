@@ -1,5 +1,19 @@
 ## ADDED Requirements
 
+### Requirement: INT-032 Готовая текстовая стенограмма без STT
+Поддерживаемая готовая текстовая стенограмма MUST преобразовываться в versioned `transcript-bundle` того же downstream-контракта, что и результат распознавания записи. Для неё runtime MUST NOT вызывать FFmpeg/media processor или AssemblyAI. Исходный текст, имя и immutable версия файла, порядок реплик, явно указанные speaker labels и явно указанные таймкоды MUST сохраняться. Если таймкодов нет, runtime MUST сохранять устойчивую адресацию по строкам и MUST NOT выдавать синтетическое время за исходный таймкод. Пустой или неразбираемый текст MUST завершаться типизированной ошибкой.
+
+#### Scenario: Готовая стенограмма содержит speaker labels и таймкоды
+- **WHEN** candidate workflow обрабатывает поддерживаемый текстовый файл стенограммы
+- **THEN** runtime создаёт `transcript-bundle` с исходным текстом и нормализованными репликами
+- **AND** downstream этапы получают обычный transcript artifact
+- **AND** media processor и AssemblyAI не вызываются
+
+#### Scenario: В готовой стенограмме нет таймкодов
+- **WHEN** непустой текст содержит реплики без временных отметок
+- **THEN** реплики сохраняют порядок и номера исходных строк
+- **AND** пользовательские evidence locators ссылаются на строки, а не на выдуманное время
+
 ### Requirement: INT-030 Versioned assessment skills
 Компиляция, однократный fail-soft critic-editor, batch coverage extraction, gap-search, консолидация, поиск реальных конфликтов, сбалансированные дополнительные наблюдения, попунктное заполнение строк, мягкая проверка стоп-факторов/существенно отказных выводов и итоговый синтез MUST использовать отдельно версионируемые instruction и response schema artifacts через защищённый server-side LLM gateway. Каждая стадия MUST сохранять фактическую конфигурацию и protected trace. Batch extraction и gap-search MUST NOT принимать итоговые кадровые решения.
 

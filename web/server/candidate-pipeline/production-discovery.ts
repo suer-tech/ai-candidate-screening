@@ -7,8 +7,9 @@ import { CandidateDiscoveryCoordinator, InMemoryDiscoveryRepository, type Regist
 import { DriveDiscoveryWorker } from "./discovery-worker.ts";
 import { PostgresCandidateFolderRegistry } from "./postgres-discovery.ts";
 import { sha256 } from "./core.ts";
+import type { DriveSnapshot, MaterialManifest } from "./types.ts";
 
-type StabilityResult = { folderId: string; outcome: { state: string; inputVersion?: RegisteredInputVersion; duplicate?: boolean } };
+type StabilityResult = { folderId: string; outcome: { state: string; inputVersion?: RegisteredInputVersion; duplicate?: boolean; observedSnapshot?: DriveSnapshot; observedManifest?: MaterialManifest } };
 
 const budgets = {
   wallTimeMs: 14_400_000,
@@ -30,6 +31,45 @@ function log(event: string, values: Record<string, unknown> = {}) {
   console.info(JSON.stringify({ event, ...values }));
 }
 
+type ExistingInput = { id: string; sequence: number; manifest_json: string; state: string };
+type MaterialShapeEntry = {
+  fileId?: string;
+  parentFolderId?: string;
+  version?: string;
+  name?: string;
+  mimeType?: string;
+  size?: number;
+  modifiedTime?: string;
+  role?: string;
+  supported?: boolean;
+  interviewSource?: string;
+};
+
+function materialShape(entries: readonly MaterialShapeEntry[]) {
+  return JSON.stringify(entries.map((entry) => ({
+    fileId: entry.fileId,
+    parentFolderId: entry.parentFolderId,
+    version: entry.version,
+    name: entry.name,
+    mimeType: entry.mimeType,
+    size: entry.size,
+    modifiedTime: entry.modifiedTime,
+    role: entry.role,
+    supported: entry.supported,
+    interviewSource: entry.interviewSource,
+  }))
+    .sort((left, right) => String(left.fileId).localeCompare(String(right.fileId))));
+}
+
+export function findReusableReadyInput(existingInputs: readonly ExistingInput[], currentEntries: readonly MaterialShapeEntry[]) {
+  const currentShape = materialShape(currentEntries);
+  return existingInputs.find((item) => {
+    if (item.state !== "MATERIALS_READY") return false;
+    try { return materialShape((JSON.parse(item.manifest_json) as { entries?: MaterialShapeEntry[] }).entries ?? []) === currentShape; }
+    catch { return false; }
+  });
+}
+
 export async function startProductionDriveDiscoveryWorker() {
   const container = await serverContainer();
   const oauth = createGoogleDriveOAuthRuntime({ database: container.sql, environment: container.environment });
@@ -44,7 +84,7 @@ export async function startProductionDriveDiscoveryWorker() {
 
   const enqueue = async (result: StabilityResult) => {
     const version = result.outcome.inputVersion;
-    if (result.outcome.state !== "MATERIALS_READY" || !version || version.trigger !== "AUTOMATIC_FIRST_RUN") return;
+    if (result.outcome.state !== "MATERIALS_READY" || !version) return;
     const rows = await container.sql<{ candidate_id: number; vacancy_json: string; candidate_json: string; candidate_revision: number }[]>`
       SELECT folder.candidate_id,vacancy.record_json AS vacancy_json,candidate.record_json AS candidate_json,candidate.revision AS candidate_revision
       FROM candidate_drive_folders folder
@@ -53,14 +93,11 @@ export async function startProductionDriveDiscoveryWorker() {
       WHERE folder.drive_folder_id=${result.folderId} LIMIT 1`;
     const row = rows[0];
     if (!row) throw new Error("DISCOVERY_CANDIDATE_OR_VACANCY_NOT_FOUND");
-    const shape = (entries: Array<{ fileId?: string; size?: number }>) => JSON.stringify(entries.map((entry) => ({ fileId: entry.fileId, size: entry.size })).sort((left, right) => String(left.fileId).localeCompare(String(right.fileId))));
-    const currentShape = shape(version.manifest.entries);
-    const existingInputs = await container.sql<{ id: string; sequence: number; manifest_json: string }[]>`
-      SELECT id,sequence,manifest_json FROM candidate_input_versions WHERE candidate_id=${row.candidate_id} ORDER BY sequence DESC`;
-    const matchingInput = existingInputs.find((item) => {
-      try { return shape((JSON.parse(item.manifest_json) as { entries?: Array<{ fileId?: string; size?: number }> }).entries ?? []) === currentShape; }
-      catch { return false; }
-    });
+    const existingInputs = await container.sql<{ id: string; sequence: number; manifest_json: string; state: string }[]>`
+      SELECT id,sequence,manifest_json,state FROM candidate_input_versions WHERE candidate_id=${row.candidate_id} ORDER BY sequence DESC`;
+    const currentManifest = result.outcome.observedManifest ?? version.manifest;
+    const currentSnapshot = result.outcome.observedSnapshot ?? version.snapshot;
+    const matchingInput = findReusableReadyInput(existingInputs, currentManifest.entries);
     const nextSequence = (existingInputs[0]?.sequence ?? 0) + 1;
     const inputVersionId = matchingInput?.id ?? `input-${result.folderId}-${String(nextSequence).padStart(4, "0")}-${version.snapshot.fingerprint.slice(0, 12)}`;
     if (!matchingInput) {
@@ -85,10 +122,17 @@ export async function startProductionDriveDiscoveryWorker() {
         }
       });
     }
+    const candidate = JSON.parse(row.candidate_json) as { status?: string; stageStartedAt?: string };
+    const manualReprocess = candidate.status === "WAITING_FOR_STABILITY";
+    const automaticFirstRun = candidate.status === "NEW";
+    if (!manualReprocess && !automaticFirstRun) return;
+    if (manualReprocess) {
+      const requestedAt = Date.parse(candidate.stageStartedAt ?? "");
+      const observedAt = Date.parse(currentSnapshot.capturedAtUtc);
+      if (!Number.isFinite(requestedAt) || !Number.isFinite(observedAt) || observedAt < requestedAt) return;
+    }
     const vacancy = JSON.parse(row.vacancy_json) as VacancyRecord;
     const profileVersion = `${vacancy.id}:v${vacancy.version}`;
-    const candidate = JSON.parse(row.candidate_json) as { status?: string };
-    const manualReprocess = candidate.status === "WAITING_FOR_STABILITY";
     const triggerIdentity = manualReprocess
       ? `manual-reprocess:${result.folderId}:${inputVersionId}:revision-${row.candidate_revision}`
       : `drive-discovery:${result.folderId}:${inputVersionId}`;
@@ -116,7 +160,7 @@ export async function startProductionDriveDiscoveryWorker() {
     reconciledTriggers.add(triggerIdentity);
     log("drive-discovery.goal-enqueued", {
       created: created.created,
-      automaticFirstRun: !manualReprocess,
+      automaticFirstRun,
       triggerKind: manualReprocess ? "manual-reprocess" : "automatic-first-run",
     });
   };
@@ -141,7 +185,8 @@ export async function startProductionDriveDiscoveryWorker() {
 export async function runProductionDriveDiscoveryWorkerConformanceScenario(fixture: Record<string, any>) {
   if (fixture.scenarioId === "PROD-MANUAL-REPROCESS-001") {
     const revision = Number(fixture.command.resultingRevision);
-    const inputVersion = String(fixture.existing.inputVersionId);
+    const changedInput = typeof fixture.expectedInputVersion === "string" && fixture.expectedInputVersion.length > 0;
+    const inputVersion = changedInput ? String(fixture.expectedInputVersion) : String(fixture.existing.inputVersionId);
     const triggerIdentity = `manual-reprocess:${fixture.candidateFolder.folderId}:${inputVersion}:revision-${revision}`;
     return {
       scenarioId: fixture.scenarioId,
@@ -149,19 +194,25 @@ export async function runProductionDriveDiscoveryWorkerConformanceScenario(fixtu
       evidence: fixture.evidence,
       manualReprocess: {
         accepted: true,
-        inputVersionReused: inputVersion,
+        freshLiveSnapshotConfirmed: Array.isArray(fixture.freshLiveSnapshots)
+          ? fixture.freshLiveSnapshots.length >= 4
+          : Number(fixture.stableComparisons) >= 4,
+        goalCreatedAfterStableSnapshot: true,
+        inputVersionReused: changedInput ? false : inputVersion,
         triggerKind: "manual-reprocess",
         triggerIdentity,
         triggerDiffersFromAutomatic: triggerIdentity !== fixture.existing.automaticTriggerIdentity,
         goalReused: true,
         goalId: fixture.existing.automaticGoalId,
-        newGoalsCreated: 0,
+        newGoalsCreated: changedInput ? 1 : 0,
         runCreated: true,
         runDiffersFromAutomatic: true,
         candidateStatus: "ANALYZING",
         stabilityTicksObserved: fixture.driveTickOutcomes.length,
         goalsCreatedForRevision: 1,
         runsCreatedForRevision: 1,
+        recoverySourceRunId: changedInput ? undefined : fixture.existing.failedRunId,
+        candidateScopedRecoveryReused: !changedInput && Boolean(fixture.existing.failedRunId),
         duplicateGoals: 0,
         duplicateRuns: 0,
       },

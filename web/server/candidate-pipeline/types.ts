@@ -45,6 +45,7 @@ export type DriveSnapshot = {
 export type MaterialManifestEntry = DriveObject & {
   role: MaterialRole;
   supported: boolean;
+  interviewSource?: "recording" | "ready-transcript";
 };
 
 export type MaterialManifest = {
@@ -80,6 +81,8 @@ export type TranscriptLocator = {
   exactText: string;
   startMs: number;
   endMs: number;
+  sourceLine?: number;
+  timingOrigin?: "provider" | "explicit-text" | "derived-line-order";
   confidence?: number;
 };
 

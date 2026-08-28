@@ -174,3 +174,23 @@
 - [x] 21.2 Добавить forward-only migration, переводящую immutable triggers `candidate_source_claims`, `candidate_evidence_conflicts`, `candidate_matrix_rows` на cleanup-aware guard без ослабления `vacancy_matrices`.
 - [x] 21.3 Выполнить migration/PostgreSQL integration и независимый GREEN, проверить lifecycle API/repository boundary на synthetic candidate без внешних эффектов.
 - [x] 21.4 Обновить architecture/index, выполнить OpenSpec strict, build/diff-check, пересобрать контейнеры и проверить health/logs.
+
+## 22. Ready text transcript input
+
+- [x] 22.1 Поручить независимому acceptance-субагенту зафиксировать RED: резюме + одна готовая текстовая стенограмма образуют полный комплект, создают обычный transcript-bundle и не вызывают media processor/AssemblyAI.
+- [x] 22.2 Добавить явный тип источника интервью в immutable material manifest и поддержку текстовых форматов стенограммы без ошибочной классификации как резюме/дополнительного файла.
+- [x] 22.3 Реализовать детерминированный разбор готового текста с сохранением исходных speaker labels, явных таймкодов либо line locators и production bypass FFmpeg/AssemblyAI.
+- [x] 22.4 Подтвердить downstream/recovery совместимость, типизированные ошибки пустого текста, focused acceptance/regression/build, обновить architecture/index и OpenSpec strict/diff-check.
+
+## 23. Immutable run input boundary
+
+- [x] 23.1 Поручить независимому acceptance-субагенту зафиксировать RED для race: новый Drive-файл после создания run не попадает в текущий snapshot и не роняет текущий run.
+- [x] 23.2 Перевести production drive-snapshot task на чтение pinned `candidate_input_versions.manifest_json` без повторного live-list при существующей inputVersion.
+- [x] 23.3 Подтвердить, что downstream использует только pinned IDs/versions, а discovery создаёт следующую input version для новых файлов; выполнить focused regression/build/strict/diff-check и пересобрать сервис.
+
+## 24. Fresh manifest for every manual reprocess
+
+- [x] 24.1 Поручить независимому acceptance-субагенту зафиксировать RED: reprocess ждёт свежий стабильный live snapshot, видит добавленный или version-changed файл и сохраняет reuse failed predecessor только при полном совпадении manifest.
+- [x] 24.2 Усилить fingerprint и matching immutable входов provider version и полным material identity; исключить совпадение только по `fileId + size`.
+- [x] 24.3 Исправить manual discovery orchestration: каждый revision reprocess подтверждается свежим post-command live observation, новая готовая версия создаёт ровно один goal/run, неизменная версия остаётся совместимой с selective recovery.
+- [x] 24.4 Выполнить focused acceptance/regression/build/OpenSpec strict/diff-check, обновить architecture/index и пересобрать сервис.

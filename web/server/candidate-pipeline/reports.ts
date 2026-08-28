@@ -304,7 +304,7 @@ export async function renderCandidatePdf(model: ReportModel, options: { fontByte
       if (!href) continue;
       const sourceLine = projectCandidateReportSourceLines([material])[0];
       if (!sourceLine) continue;
-      for (const text of wrap(sourceLine, bodySize, font, columnWidth - 20)) {
+      for (const text of sectionParagraphLines(sourceLine, columnWidth - 20, font, bodySize).flat()) {
         sourceLineLinks.set(text, [...(sourceLineLinks.get(text) ?? []), href]);
       }
     }
