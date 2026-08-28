@@ -40,17 +40,23 @@ type OrganizationalFact = Pick<EvidenceFact, "predicate" | "value"> & { locator?
 type OrganizationalClaim = Pick<CandidateSourceClaim, "sourceClass" | "text" | "locator">;
 
 export function projectOrganizationalConditions(facts: readonly OrganizationalFact[], claims: readonly OrganizationalClaim[] = []): readonly string[] {
+  const missingValue = /(?:не\s+(?:указан|указана|указано|назван|названа|названо|раскрыт|раскрыта|раскрыто|сообщил|сообщила)|нет\s+(?:данных|сведений|информации)|отсутств(?:ует|уют)|неизвестн)/iu;
   const groundedValue = (patterns: readonly RegExp[]) => {
     const fact = facts.find((candidate) => patterns.some((pattern) => pattern.test(candidate.predicate))
       && Boolean(candidate.locator && typeof candidate.locator === "object" && !Array.isArray(candidate.locator))
-      && typeof candidate.value === "string" && candidate.value.trim());
+      && typeof candidate.value === "string" && candidate.value.trim() && !missingValue.test(candidate.value));
     return fact?.value.replace(/\s+/g, " ").trim().replace(/;+$/u, "") || "не указано";
   };
-  const claimValue = (sourceClass: string, fallback?: RegExp) => claims.find((claim) => claim.sourceClass === sourceClass
-    || Boolean(fallback?.test(claim.text)))?.text.replace(/\s+/g, " ").trim().replace(/;+$/u, "") || "";
-  const workFormat = claimValue("report.organization.work-format", /(?:удал[её]н|гибрид|офисн).*(?:формат|вариант)|(?:формат|вариант).*(?:удал[её]н|гибрид|офисн)/iu);
+  const claimValue = (sourceClass: string, fallback?: RegExp) => {
+    const exact = claims.filter((claim) => claim.sourceClass === sourceClass);
+    const candidates = exact.length ? exact : claims.filter((claim) => Boolean(fallback?.test(claim.text)));
+    return candidates.map((claim) => claim.text.replace(/\s+/g, " ").trim().replace(/;+$/u, ""))
+      .find((value) => value && !missingValue.test(value)) || "";
+  };
+  const rawWorkFormat = claimValue("report.organization.work-format", /(?:удал[её]н|гибрид|офисн).*(?:формат|вариант)|(?:формат|вариант).*(?:удал[её]н|гибрид|офисн)/iu);
+  const workFormat = /гибрид/iu.test(rawWorkFormat) ? "гибрид" : /удал[её]н/iu.test(rawWorkFormat) ? "удалённо" : /офис/iu.test(rawWorkFormat) ? "офис" : rawWorkFormat;
   const city = claimValue("report.organization.city", /(?:нахожусь|живу|адрес|город|Ростов-на-Дону|Москва|Санкт-Петербург)/iu);
-  const formatAndCity = [workFormat, city].filter((value, index, values) => value && values.findIndex((item) => item.toLocaleLowerCase("ru-RU").includes(value.toLocaleLowerCase("ru-RU")) || value.toLocaleLowerCase("ru-RU").includes(item.toLocaleLowerCase("ru-RU"))) === index).join("; ");
+  const formatAndCity = [workFormat, city].filter((value, index, values) => value && values.findIndex((item) => item.toLocaleLowerCase("ru-RU").includes(value.toLocaleLowerCase("ru-RU")) || value.toLocaleLowerCase("ru-RU").includes(item.toLocaleLowerCase("ru-RU"))) === index).join(", ");
   return [
     `Формат: ${formatAndCity || groundedValue([/^conditions\.(?:work_format_city|workFormatCity|work_format_and_city|workFormat|location_and_mobility|location)$/i])};`,
     `Доход: ${claimValue("report.organization.income") || groundedValue([/^conditions\.(?:expected_net_income|expectedNetIncome|compensation)$/i, /^stopFactor\.compensationExpectation$/i])};`,
