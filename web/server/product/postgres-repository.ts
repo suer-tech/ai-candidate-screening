@@ -6,6 +6,7 @@ import { projectCandidate, type ReadyReportProjection, type RuntimeProjectionRow
 import { ProductConflictError, ProductNotFoundError, VacancyLifecycleConflictError, type ProductRepository, type ResultDocumentDescriptor, type StoredCandidate, type VacancyOperation } from "./application.ts";
 import { VacancyGenerationPublicError, type GeneratedVacancyProfile, type VacancyGenerationErrorCode, type VacancyGenerationOperation } from "./vacancy-generation.ts";
 import { renderVacancyGenerationPrompt } from "./prompt-contracts.ts";
+import { hrSafeReportText } from "../candidate-pipeline/reports.ts";
 
 type Row = Record<string, unknown>;
 function parse<T>(value: unknown): T { return typeof value === "string" ? JSON.parse(value) as T : value as T; }
@@ -85,22 +86,116 @@ function sourceLabel(locator: Record<string, unknown>) {
   return [locator.fileName, locator.page ? `стр. ${locator.page}` : undefined, locator.section].filter(Boolean).join(" · ") || "Материалы кандидата";
 }
 
-export function projectAssessment(snapshotValue: unknown, evidenceValue: unknown): CandidateAiOverview | undefined {
+function claimSourceLabel(locatorValue: unknown, sourceClass: unknown) {
+  const locator = typeof locatorValue === "string" ? locatorValue : "";
+  const lowered = `${String(sourceClass ?? "")} ${locator}`.toLocaleLowerCase("ru");
+  const page = locator.match(/(?:page|стр(?:аница)?)[=:](\d+)/iu)?.[1];
+  const utterance = locator.match(/(?:utterance(?:Id)?|реплик[аи])\s*[=:]\s*(?:utterance-)?(\d+)/iu)?.[1];
+  const time = locator.match(/(?:time|таймкод)[=:]([^;]+)/iu)?.[1]?.trim();
+  const startMs = Number(locator.match(/(?:startMs|start)\s*[=:]\s*(\d+)/iu)?.[1]);
+  const endMs = Number(locator.match(/(?:endMs|end)\s*[=:]\s*(\d+)/iu)?.[1]);
+  const formatTime = (value: number) => `${String(Math.floor(value / 60_000)).padStart(2, "0")}:${String(Math.floor((value % 60_000) / 1_000)).padStart(2, "0")}`;
+  const interval = Number.isFinite(startMs) ? `${formatTime(startMs)}${Number.isFinite(endMs) && endMs > startMs ? `–${formatTime(endMs)}` : ""}` : time;
+  const name = locator.match(/(?:name|fileName)[=:]([^;]+)/iu)?.[1]?.trim();
+  if (/interview|transcript|стенограмм|интервью/u.test(lowered)) return ["Интервью", interval, !interval && utterance ? `реплика ${utterance}` : undefined].filter(Boolean).join(" · ");
+  if (/resume|резюме/u.test(lowered)) return ["Резюме", page ? `стр. ${page}` : undefined].filter(Boolean).join(" · ");
+  if (/recommend|рекомендац/u.test(lowered)) return ["Рекомендация", page ? `стр. ${page}` : undefined].filter(Boolean).join(" · ");
+  return [name || "Документ кандидата", page ? `стр. ${page}` : undefined].filter(Boolean).join(" · ");
+}
+
+function hrText(value: unknown) {
+  return typeof value === "string" ? hrSafeReportText(value).replace(/\s+/g, " ").trim() : "";
+}
+
+function normalizedDecisionText(value: unknown) {
+  return hrText(value).toLocaleLowerCase("ru").replace(/[«»"'.,;:!?—–\-()]/g, " ").replace(/\s+/g, " ").trim();
+}
+
+export function projectAssessment(snapshotValue: unknown, evidenceValue: unknown, claimsValue?: unknown, vacancyValue?: unknown): CandidateAiOverview | undefined {
   const snapshot = record(snapshotValue);
   const structured = record(snapshot.structuredAssessment);
   if (!Object.keys(structured).length) return undefined;
-  const stopFactors = overviewItems(structured.stopFactors);
-  const risks = overviewItems(structured.risks);
-  const competencies = overviewItems(structured.competencies);
-  const accessToKe = overviewItems(structured.accessToKe);
-  const observations = overviewItems(structured.observations);
+  const evidenceBundle = record(evidenceValue);
+  const claimsRef = typeof evidenceBundle.claimsRef === "string" ? evidenceBundle.claimsRef : "";
+  const resolvedArtifacts = record(evidenceBundle.resolvedArtifacts);
+  const claimsArtifact = record(claimsValue ?? resolvedArtifacts[claimsRef]);
+  const facts = Array.isArray(evidenceBundle.facts) ? evidenceBundle.facts : [];
+  const rawClaims = Array.isArray(claimsArtifact.claims) ? claimsArtifact.claims : [];
+  const rawSignals = Array.isArray(claimsArtifact.unmappedSignals) ? claimsArtifact.unmappedSignals : [];
+  const internalEvidence = [...rawClaims, ...rawSignals].flatMap((entry) => {
+    const item = record(entry);
+    const internalId = [item.claimId, item.signalId, item.id].find((value) => typeof value === "string");
+    const quote = hrText(item.text ?? item.value);
+    if (typeof internalId !== "string" || !quote) return [];
+    return [{ internalId, quote, locator: item.locator, sourceClass: item.sourceClass, relation: String(item.relation ?? item.observationType ?? "CONTEXT"), criterionIds: Array.isArray(item.criterionIds) ? item.criterionIds.filter((value): value is string => typeof value === "string") : [] }];
+  });
+  const publicIdByInternal = new Map(internalEvidence.map((item, index) => [item.internalId, `evidence-${String(index + 1).padStart(3, "0")}`]));
+  const concreteBasisByPublicId = new Map(internalEvidence.map((item) => [publicIdByInternal.get(item.internalId)!, {
+    quote: item.quote, source: claimSourceLabel(item.locator, item.sourceClass),
+  }]));
+  const legacyPublicIdByInternal = new Map(facts.flatMap((entry, index) => {
+    const fact = record(entry); return typeof fact.id === "string" ? [[fact.id, `evidence-legacy-${String(index + 1).padStart(3, "0")}`] as const] : [];
+  }));
+  const publicFactIds = (value: unknown) => Array.isArray(value) ? value.flatMap((id) => typeof id === "string"
+    ? [publicIdByInternal.get(id) ?? legacyPublicIdByInternal.get(id)].filter((item): item is string => Boolean(item)) : []) : [];
+  const backedItems = (value: unknown) => overviewItems(value).flatMap((item) => {
+    const factIds = publicFactIds(item.factIds);
+    if (!factIds.length) return [];
+    const safeName = hrText(item.name);
+    const safeReason = hrText(item.reason);
+    const basis = concreteBasisByPublicId.get(factIds[0]);
+    const reasonIsGeneric = !safeReason
+      || /^(?:Вывод основан на указанном фрагменте материалов кандидата\.?|Дополнительн(?:ое наблюдение|ая сильная сторона из материалов)\s*:?)$/iu.test(safeReason);
+    const reason = reasonIsGeneric && basis ? `${basis.source}: ${basis.quote}` : safeReason;
+    return [{ ...item, name: safeName, reason: reason || undefined, factIds }];
+  });
+  const stopFactors = backedItems(structured.stopFactors);
+  const explicitRisks = backedItems(structured.risks);
+  const explicitCompetencies = backedItems(structured.competencies);
+  const matrixCriteria = record(structured.matrixCriteria);
+  const matrixRows = Array.isArray(structured.matrixRows) ? structured.matrixRows.flatMap((value) => {
+    const row = record(value);
+    if (typeof row.criterionId !== "string") return [];
+    const criterion = record(matrixCriteria[row.criterionId]);
+    const evidenceIds = Array.isArray(row.evidence) ? row.evidence.flatMap((value) => {
+      const evidence = record(value); return typeof evidence.claimId === "string" ? [evidence.claimId] : [];
+    }) : [];
+    const factIds = publicFactIds([...evidenceIds, ...(Array.isArray(row.supportingClaimIds) ? row.supportingClaimIds : []), ...(Array.isArray(row.contradictingClaimIds) ? row.contradictingClaimIds : [])]);
+    return [{ name: hrText(criterion.sourceText ?? criterion.interpretation) || "Пункт вакансии", category: String(criterion.category ?? "additional"), state: String(row.state ?? ""),
+      reason: hrText(row.conclusion ?? row.reason), factIds, missingData: hrText(row.missingData), followUpQuestion: hrText(row.followUpQuestion) }];
+  }) : [];
+  const evidenceBackedRows = matrixRows.filter((item) => item.factIds.length > 0);
+  const positiveMatrixRows = evidenceBackedRows.filter((item) => ["Соответствует", "Подтверждено"].includes(item.state));
+  const negativeMatrixRows = evidenceBackedRows.filter((item) => ["Не соответствует", "Не подтверждено"].includes(item.state));
+  const derivedCompetencies = positiveMatrixRows.filter((item) => item.category === "competency").map(({ category: _category, missingData: _missingData, followUpQuestion: _followUpQuestion, ...item }) => item);
+  const competencies = explicitCompetencies.length ? explicitCompetencies : derivedCompetencies;
+  const strengths = positiveMatrixRows.map(({ category: _category, missingData: _missingData, followUpQuestion: _followUpQuestion, ...item }) => item);
+  const risks = explicitRisks.length ? explicitRisks : negativeMatrixRows.map(({ category: _category, missingData: _missingData, followUpQuestion: _followUpQuestion, ...item }) => item);
+  const accessToKe = backedItems(structured.accessToKe);
+  const observations = backedItems(structured.observations);
   const abcStates = record(structured.abcStates);
   const abcEvidence = record(structured.abcEvidence);
-  const abc = Object.entries(abcStates).map(([direction, grade]) => {
-    const basis = record(abcEvidence[direction]);
-    return { direction: ABC_LABELS[direction] ?? direction, grade: String(grade), reason: typeof basis.reason === "string" ? basis.reason : undefined,
-      factIds: Array.isArray(basis.factIds) ? basis.factIds.filter((id): id is string => typeof id === "string") : [] };
-  });
+  const vacancy = record(vacancyValue);
+  const vacancyDirections = Array.isArray(vacancy.abcDirections) ? vacancy.abcDirections.flatMap((value) => {
+    const direction = record(value);
+    const id = typeof direction.id === "string" ? direction.id.trim() : "";
+    const title = [direction.name, direction.title].find((item) => typeof item === "string" && item.trim());
+    if (!id && typeof title !== "string") return [];
+    return [{ id: id || String(title), direction: typeof title === "string" ? hrText(title) : ABC_LABELS[id] ?? hrText(id),
+      gradeA: hrText(direction.gradeA), gradeB: hrText(direction.gradeB), gradeC: hrText(direction.gradeC) }];
+  }) : [];
+  const stateDirectionIds = Object.keys(abcStates).filter((key) => !/^criterion-/i.test(key));
+  const abcConfigured = vacancyDirections.length > 0 || structured.abcConfigured === true || stateDirectionIds.length > 0;
+  const projectedDirections = vacancyDirections.length ? vacancyDirections : stateDirectionIds.map((id) => ({ id, direction: ABC_LABELS[id] ?? hrText(id), gradeA: "", gradeB: "", gradeC: "" }));
+  const abc = abcConfigured ? projectedDirections.map((direction) => {
+    const basis = record(abcEvidence[direction.id]);
+    const definingConditions = Array.isArray(basis.definingConditions) ? basis.definingConditions.flatMap((value) => {
+      const condition = hrText(value); return condition ? [condition] : [];
+    }) : [];
+    return { direction: direction.direction, grade: typeof abcStates[direction.id] === "string" ? String(abcStates[direction.id]) : "Недостаточно данных",
+      reason: hrText(basis.reason) || undefined, factIds: publicFactIds(basis.factIds), gradeA: direction.gradeA || undefined, gradeB: direction.gradeB || undefined,
+      gradeC: direction.gradeC || undefined, definingConditions: definingConditions.length ? definingConditions : undefined };
+  }) : [{ direction: "ABC-профиль не настроен для вакансии", grade: "Не настроен", reason: "В профиле вакансии нет ABC-направлений.", factIds: [] }];
   const criterionByFactId = new Map<string, string>();
   for (const item of [
     ...abc.map((entry) => ({ name: entry.direction, factIds: entry.factIds })),
@@ -114,30 +209,44 @@ export function projectAssessment(snapshotValue: unknown, evidenceValue: unknown
     }
   }
   const referenced = new Set([...stopFactors, ...risks, ...competencies, ...accessToKe].flatMap((item) => item.factIds).concat(abc.flatMap((item) => item.factIds)));
-  const evidenceBundle = record(evidenceValue);
-  const facts = Array.isArray(evidenceBundle.facts) ? evidenceBundle.facts : [];
-  const prioritized = [...facts].sort((left, right) => Number(referenced.has(String(record(right).id))) - Number(referenced.has(String(record(left).id))));
-  const evidence = prioritized.slice(0, 16).flatMap((entry) => {
+  const legacyEvidence = [...facts].flatMap((entry) => {
     const fact = record(entry);
     if (typeof fact.id !== "string") return [];
     const locator = record(fact.locator);
-    return [{ id: fact.id, technicalType: typeof fact.predicate === "string" ? fact.predicate : undefined,
-      label: evidenceLabel(fact.predicate), claim: compact(fact.value, 180), source: sourceLabel(locator), criterion: criterionByFactId.get(fact.id) ?? "Общий анализ",
+    return [{ id: legacyPublicIdByInternal.get(fact.id)!, technicalType: typeof fact.predicate === "string" ? fact.predicate : undefined,
+      label: evidenceLabel(fact.predicate), claim: compact(fact.value, 180), source: sourceLabel(locator), criterion: criterionByFactId.get(legacyPublicIdByInternal.get(fact.id)!) ?? "Общий анализ",
       quote: compact(locator.exactText), page: typeof locator.page === "number" ? locator.page : undefined,
       timecode: locator.kind === "transcript" ? sourceLabel(locator).split(" · ").at(-1) : undefined }];
   });
-  const recommendationBasis = stopFactors.find((item) => item.state === "Подтверждено")?.reason
-    ?? risks[0]?.reason ?? competencies.find((item) => item.reason)?.reason
-    ?? "Предметное основание рекомендации отсутствует в актуальной версии оценки.";
-  const summaryParts = [
-    ...observations.slice(0, 2).map((item) => item.reason),
-    risks.find((item) => item.reason)?.reason,
-    competencies.find((item) => item.reason)?.reason,
-    abc.find((item) => item.reason)?.reason,
-  ].filter((value): value is string => typeof value === "string" && Boolean(value.trim()));
-  const summary = compact([...new Set(summaryParts)].slice(0, 3).join(" "), 520)
+  const nameByInternalId = new Map<string, string>();
+  for (const row of matrixRows) for (const publicId of row.factIds) {
+    const internalId = [...publicIdByInternal].find(([, value]) => value === publicId)?.[0];
+    if (internalId) nameByInternalId.set(internalId, row.name);
+  }
+  const evidence = internalEvidence.map((item) => ({ id: publicIdByInternal.get(item.internalId)!, label: item.relation === "CONTRADICTS" ? "Основание несоответствия" : "Основание вывода",
+    claim: item.quote, source: claimSourceLabel(item.locator, item.sourceClass), criterion: nameByInternalId.get(item.internalId) ?? "Общий анализ", quote: item.quote })).concat(legacyEvidence);
+  const recommendationBasis = hrText(snapshot.recommendationReason)
+    || stopFactors.find((item) => item.state === "Подтверждено")?.reason
+    || risks[0]?.reason || competencies.find((item) => item.reason)?.reason
+    || "Предметное основание рекомендации отсутствует в актуальной версии оценки.";
+  const normalizedBasis = normalizedDecisionText(recommendationBasis);
+  const summaryPart = (item: { name?: string; state?: string; reason?: string } | undefined) => {
+    const reason = hrText(item?.reason);
+    if (reason && normalizedDecisionText(reason) !== normalizedBasis) return reason;
+    const name = hrText(item?.name);
+    return name && normalizedDecisionText(name) !== normalizedBasis ? `${name}${item?.state ? `: ${hrText(item.state)}` : ""}.` : "";
+  };
+  const positivePart = summaryPart(strengths.find((item) => item.reason) ?? competencies.find((item) => item.reason));
+  const attentionPart = summaryPart(stopFactors.find((item) => item.reason) ?? risks.find((item) => item.reason));
+  const used = new Set([positivePart, attentionPart].map(normalizedDecisionText).filter(Boolean));
+  const additionalPart = [
+    ...observations.map((item) => summaryPart(item)),
+    ...abc.map((item) => summaryPart({ name: item.direction, state: item.grade, reason: item.reason })),
+  ].find((value) => value && !used.has(normalizedDecisionText(value))) ?? "";
+  const summaryParts = [positivePart, attentionPart, additionalPart].filter(Boolean);
+  const summary = summaryParts.join(" ")
     || `Анализ завершён${typeof snapshot.recommendation === "string" ? ` с рекомендацией «${snapshot.recommendation}»` : ""}. Детальные основания приведены в критериях и доказательствах.`;
-  return { summary, recommendationBasis, stopFactors, abc, competencies, risks, accessToKe, evidence };
+  return { summary, recommendationBasis: hrText(recommendationBasis), stopFactors, abcConfigured, abc, criteria: matrixRows, competencies, strengths, risks, accessToKe, evidence };
 }
 
 export class PostgresProductRepository implements ProductRepository {
@@ -333,7 +442,8 @@ export class PostgresProductRepository implements ProductRepository {
     const canonical = await this.sql<{ file_name: string; drive_file_id: string; validation_json: string; analysis_version: number }[]>`SELECT d.file_name,d.drive_file_id,d.validation_json,r.analysis_version
       FROM candidate_report_documents d JOIN candidate_report_versions r ON r.id=d.report_version_id
       WHERE r.candidate_id=${candidatePk} AND r.analysis_version=${version} AND r.state='PUBLISHED' AND d.type=${type} AND d.drive_file_id IS NOT NULL
-      AND (SELECT count(DISTINCT pair.type) FROM candidate_report_documents pair WHERE pair.report_version_id=r.id AND pair.drive_file_id IS NOT NULL AND pair.type IN ('candidate-results','abc-test'))=2 LIMIT 1`;
+      AND ((d.type='candidate-report' AND (SELECT count(*) FROM candidate_report_documents single WHERE single.report_version_id=r.id AND single.drive_file_id IS NOT NULL AND single.type='candidate-report')=1)
+        OR (d.type IN ('candidate-results','abc-test') AND (SELECT count(DISTINCT pair.type) FROM candidate_report_documents pair WHERE pair.report_version_id=r.id AND pair.drive_file_id IS NOT NULL AND pair.type IN ('candidate-results','abc-test'))=2)) LIMIT 1`;
     if (!canonical[0] || parse<Record<string, unknown>>(canonical[0].validation_json).valid === false) return null;
     const validation = parse<Record<string, unknown>>(canonical[0].validation_json);
     return { candidateId, vacancyId: candidate.vacancyId, version: canonical[0].analysis_version, type, storageId: canonical[0].drive_file_id,
@@ -357,34 +467,58 @@ export class PostgresProductRepository implements ProductRepository {
       this.sql<Row[]>`SELECT g.candidate_id,r.id AS run_id,r.state AS run_state,r.workflow_version,g.created_at AS run_started_at,r.last_progress_at,t.task_key,t.state AS task_state,t.attempt_count,a.error_code,
           compilation.state AS matrix_state,compilation.repair_cycles AS matrix_repair_count,compilation.terminal_error_code AS matrix_terminal_error_code,shadow_run.state AS matrix_shadow_state
         FROM agent_goals g JOIN agent_runs r ON r.goal_id=g.id LEFT JOIN agent_tasks t ON t.run_id=r.id LEFT JOIN agent_attempts a ON a.task_id=t.id AND a.attempt_number=t.attempt_count
-        LEFT JOIN vacancy_matrix_compilations compilation ON compilation.profile_version=g.profile_version
+        LEFT JOIN vacancy_matrix_compilations compilation
+          ON compilation.profile_version=g.profile_version
+         AND compilation.workflow_identity=r.workflow_version
         LEFT JOIN LATERAL (SELECT sr.state FROM agent_goals sg JOIN agent_runs sr ON sr.goal_id=sg.id WHERE sg.goal_type='candidate-analysis-matrix-shadow/v1' AND sg.candidate_id=g.candidate_id AND sg.input_version=g.input_version AND sg.profile_version=g.profile_version ORDER BY sr.last_progress_at DESC LIMIT 1) shadow_run ON TRUE
         WHERE g.goal_type IN ('candidate-analysis/v1','candidate-analysis-matrix/v1') ORDER BY g.candidate_id,g.created_at DESC,r.last_progress_at DESC,t.id`,
-      this.sql<Row[]>`SELECT r.candidate_id,r.analysis_version,r.run_id,r.state,d.id AS document_id,d.type,d.file_name,d.drive_file_id,a.recommendation,run.last_progress_at,
+      this.sql<Row[]>`WITH RECURSIVE report_lineage(report_run_id,id,depth) AS (
+          SELECT DISTINCT published.run_id,published.run_id,0 FROM candidate_report_versions published WHERE published.state='PUBLISHED'
+          UNION ALL
+          SELECT lineage.report_run_id,source.recovery_source_run_id,lineage.depth+1
+          FROM report_lineage lineage JOIN agent_runs source ON source.id=lineage.id
+          WHERE source.recovery_source_run_id IS NOT NULL AND lineage.depth<32
+        )
+        SELECT r.candidate_id,r.analysis_version,r.run_id,r.state,d.id AS document_id,d.type,d.file_name,d.drive_file_id,a.recommendation,run.last_progress_at,
           ROUND(EXTRACT(EPOCH FROM (run.last_progress_at::timestamptz - timing.started_at::timestamptz)) / 60)::integer AS elapsed_minutes,
           snapshot_blob.content AS assessment_blob,
           evidence_blob.content AS evidence_blob,
+          claims_blob.content AS claims_blob,
           transcript.run_id AS transcript_run_id,
           transcript.utterances AS transcript_utterances,
           transcript.checksum AS transcript_checksum
         FROM candidate_report_versions r JOIN candidate_report_documents d ON d.report_version_id=r.id JOIN candidate_assessments a ON a.id=r.assessment_id JOIN agent_runs run ON run.id=r.run_id
         LEFT JOIN LATERAL (SELECT MIN(attempt.started_at) AS started_at FROM agent_tasks timing_task JOIN agent_attempts attempt ON attempt.task_id=timing_task.id WHERE timing_task.run_id=r.run_id) timing ON TRUE
         JOIN candidate_domain_artifacts snapshot ON snapshot.payload_ref=(a.decision_evidence_json::jsonb->>'assessmentRef')
-        JOIN artifact_blobs snapshot_blob ON snapshot_blob.checksum=snapshot.checksum AND snapshot_blob.scope=('candidate:' || r.candidate_id || ':run:' || r.run_id)
-        LEFT JOIN candidate_domain_artifacts evidence ON evidence.run_id=r.run_id AND evidence.kind='evidence-bundle'
-        LEFT JOIN artifact_blobs evidence_blob ON evidence_blob.checksum=evidence.checksum AND evidence_blob.scope=('candidate:' || r.candidate_id || ':run:' || r.run_id)
+        JOIN artifact_blobs snapshot_blob ON snapshot_blob.checksum=snapshot.checksum AND snapshot_blob.scope=('candidate:' || r.candidate_id || ':run:' || snapshot.run_id)
         LEFT JOIN LATERAL (
-          SELECT r.run_id AS run_id,'transcript-bundle' AS kind,transcript_blob.checksum,
+          SELECT domain.* FROM report_lineage lineage JOIN candidate_domain_artifacts domain ON domain.run_id=lineage.id
+          WHERE lineage.report_run_id=r.run_id AND domain.kind IN ('evidence-bundle','matrix-evidence')
+          ORDER BY lineage.depth,domain.created_at_utc DESC LIMIT 1
+        ) evidence ON TRUE
+        LEFT JOIN artifact_blobs evidence_blob ON evidence_blob.checksum=evidence.checksum AND evidence_blob.scope=('candidate:' || r.candidate_id || ':run:' || evidence.run_id)
+        LEFT JOIN candidate_domain_artifacts claims ON claims.payload_ref=(convert_from(evidence_blob.content,'UTF8')::jsonb->>'claimsRef') AND claims.candidate_id=r.candidate_id
+        LEFT JOIN artifact_blobs claims_blob ON claims_blob.checksum=claims.checksum AND claims_blob.scope=('candidate:' || r.candidate_id || ':run:' || claims.run_id)
+        LEFT JOIN LATERAL (
+          SELECT lineage.id AS run_id,'transcript-bundle' AS kind,transcript_blob.checksum,
             convert_from(transcript_blob.content,'UTF8')::jsonb->'normalized'->'utterances' AS utterances
-          FROM artifact_blobs transcript_blob
-          WHERE transcript_blob.scope=('candidate:' || r.candidate_id || ':run:' || r.run_id)
-            AND transcript_blob.id LIKE ('candidate:' || r.candidate_id || ':' || r.run_id || ':transcript-bundle:%')
-          ORDER BY transcript_blob.created_at_utc DESC LIMIT 1
-        ) transcript ON transcript.run_id=r.run_id AND transcript.kind='transcript-bundle'
+          FROM report_lineage lineage JOIN artifact_blobs transcript_blob
+            ON transcript_blob.scope=('candidate:' || r.candidate_id || ':run:' || lineage.id)
+          WHERE lineage.report_run_id=r.run_id
+            AND transcript_blob.id LIKE ('candidate:' || r.candidate_id || ':' || lineage.id || ':transcript-bundle:%')
+          ORDER BY lineage.depth,transcript_blob.created_at_utc DESC LIMIT 1
+        ) transcript ON transcript.kind='transcript-bundle'
         WHERE r.state='PUBLISHED' AND d.drive_file_id IS NOT NULL ORDER BY r.candidate_id,r.analysis_version DESC,d.type`,
       this.sql<Row[]>`SELECT DISTINCT ON (candidate_id) candidate_id,manifest_json
         FROM candidate_input_versions ORDER BY candidate_id,sequence DESC`,
     ]);
+    const parsedVacancies = vacancyRows.map((row) => parse<VacancyRecord>(row.record_json));
+    const vacancyById = new Map(parsedVacancies.map((vacancy) => [vacancy.id, vacancy]));
+    const vacancyByCandidate = new Map(candidateRows.flatMap((row) => {
+      const candidate = parse<StoredCandidate>(row.record_json);
+      const vacancy = vacancyById.get(candidate.vacancyId);
+      return vacancy ? [[row.id, vacancy] as const] : [];
+    }));
     const materialsByCandidate = new Map<number, CandidateRecord["materials"]>();
     for (const row of materialRows) {
       const manifest = parse<{ entries?: Array<Record<string, unknown>> }>(row.manifest_json);
@@ -410,11 +544,11 @@ export class PostgresProductRepository implements ProductRepository {
       const decodeBlobJson = (value: unknown) => value instanceof Uint8Array || Buffer.isBuffer(value)
         ? parse(new TextDecoder().decode(value)) : undefined;
       const projection = existing ?? { runId: String(row.run_id), analysisVersion: Number(row.analysis_version), completedAt: String(row.last_progress_at), elapsedMinutes: Number(row.elapsed_minutes), recommendation: String(row.recommendation) as ReadyReportProjection["recommendation"],
-        assessment: projectAssessment(decodeBlobJson(row.assessment_blob), decodeBlobJson(row.evidence_blob)),
+        assessment: projectAssessment(decodeBlobJson(row.assessment_blob), decodeBlobJson(row.evidence_blob), decodeBlobJson(row.claims_blob), vacancyByCandidate.get(candidateId)),
         transcript: projectTranscript(row.transcript_run_id, row.transcript_utterances), documents: [] };
       projection.documents.push({ id: String(row.document_id), type: String(row.type) as ResultDocumentType, fileName: String(row.file_name), driveFileId: String(row.drive_file_id) }); reportsByCandidate.set(candidateId, projection);
     }
-    return { candidates: candidateRows.map((row) => ({ candidatePk: row.id, candidate: { ...parse<StoredCandidate>(row.record_json), revision: row.revision } })).map(({ candidatePk, candidate }) => projectCandidate({ ...candidate, materials: materialsByCandidate.get(candidatePk) ?? candidate.materials }, runtimeByCandidate.get(candidatePk) ?? [], reportsByCandidate.get(candidatePk))), vacancies: vacancyRows.map((row) => parse<VacancyRecord>(row.record_json)) };
+    return { candidates: candidateRows.map((row) => ({ candidatePk: row.id, candidate: { ...parse<StoredCandidate>(row.record_json), revision: row.revision } })).map(({ candidatePk, candidate }) => projectCandidate({ ...candidate, materials: materialsByCandidate.get(candidatePk) ?? candidate.materials }, runtimeByCandidate.get(candidatePk) ?? [], reportsByCandidate.get(candidatePk))), vacancies: parsedVacancies };
   }
   private operation(row: Row): VacancyOperation {
     return { operationId: String(row.operation_id), vacancyId: String(row.vacancy_id), normalizedTitle: String(row.normalized_title), input: parse<VacancyCreateInput>(row.input_json), state: String(row.state) as VacancyOperation["state"], folderId: row.folder_id ? String(row.folder_id) : undefined };

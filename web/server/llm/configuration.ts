@@ -30,6 +30,7 @@ export const LLM_CAPABILITIES = [
   "abc_matrix_assessment",
   "critical_row_verification",
   "invalid_row_repair",
+  "candidate_report_composer",
 ] as const;
 
 export type LogicalLlmCapability = (typeof LLM_CAPABILITIES)[number];

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="SEC-022: immutable matrix history allows only exact lifecycle cleanup scope and preserves shared matrix" time="2.171859" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-cleanup-immutability.postgres.acceptance.test.ts" failure="IMMUTABLE_ROW:candidate_source_claims">
+		<failure type="testCodeFailure" message="IMMUTABLE_ROW:candidate_source_claims">
+[Error [ERR_TEST_FAILURE]: IMMUTABLE_ROW:candidate_source_claims] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: Error [PostgresError]: IMMUTABLE_ROW:candidate_source_claims
+      at ErrorResponse (file:///C:/Users/user2/Documents/Cursor/hh/web/node_modules/postgres/src/connection.js:815:30)
+      at handle (file:///C:/Users/user2/Documents/Cursor/hh/web/node_modules/postgres/src/connection.js:489:6)
+      at Socket.data (file:///C:/Users/user2/Documents/Cursor/hh/web/node_modules/postgres/src/connection.js:324:9)
+      at Socket.emit (node:events:508:28)
+      at addChunk (node:internal/streams/readable:563:12)
+      at readableAddChunkPushByteMode (node:internal/streams/readable:514:3)
+      at Readable.push (node:internal/streams/readable:394:5)
+      at TCP.onStreamRead (node:internal/stream_base_commons:189:23)
+      at cachedError (file:///C:/Users/user2/Documents/Cursor/hh/web/node_modules/postgres/src/query.js:170:23)
+      at new Query (file:///C:/Users/user2/Documents/Cursor/hh/web/node_modules/postgres/src/query.js:36:24)
+      at sql (file:///C:/Users/user2/Documents/Cursor/hh/web/node_modules/postgres/src/index.js:112:11)
+      at &lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\server\product\postgres-repository.ts:433:29) {
+    severity_local: 'ERROR',
+    severity: 'ERROR',
+    code: '55000',
+    where: 'PL/pgSQL function hh_reject_mutation() line 3 at RAISE\nSQL statement "DELETE FROM ONLY "public"."candidate_source_claims" WHERE $1 OPERATOR(pg_catalog.=) "candidate_id""',
+    file: 'pl_exec.c',
+    line: '3911',
+    routine: 'exec_stmt_raise'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 1 -->
+	<!-- suites 0 -->
+	<!-- pass 0 -->
+	<!-- fail 1 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 2378.0743 -->
+</testsuites>

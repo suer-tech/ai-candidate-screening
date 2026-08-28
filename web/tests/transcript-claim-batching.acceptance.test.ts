@@ -13,7 +13,8 @@ type BuildClaimBatches = (input: Readonly<{
   matrix: unknown;
   materials: unknown;
   scope: unknown;
-  maxSerializedBytes: number;
+  maxContextTokens: number;
+  countContextTokens: (request: Readonly<Record<string, unknown>>) => number;
   overlapUtterances: number;
 }>) => readonly ClaimBatch[];
 
@@ -37,7 +38,7 @@ function occurrenceBatches(batches: readonly ClaimBatch[], utteranceId: number):
   return batches.filter((batch) => utteranceIds(batch.request).includes(utteranceId)).map((batch) => batch.batchId);
 }
 
-test("MDA-CLAIM-BATCH-RED-001: deterministic bounded windows cover a multi-megabyte transcript with Q/A overlap", async () => {
+test("MDA-CLAIM-BATCH-001: token-bounded full-envelope windows cover a multi-megabyte transcript with Q/A overlap", async () => {
   const buildBatches = await loadBatchBuilder();
   const utterances = Array.from({ length: 320 }, (_, index) => ({
     utteranceId: `UTT-${String(index).padStart(4, "0")}`,
@@ -53,6 +54,15 @@ test("MDA-CLAIM-BATCH-RED-001: deterministic bounded windows cover a multi-megab
       "контекст ".repeat(700),
     ].join(" "),
   }));
+  const contextWindowTokens = 32_000;
+  const systemPromptTokens = 1_100;
+  const responseSchemaTokens = 1_600;
+  const outputReservationTokens = 4_000;
+  const safetyMarginTokens = 2_000;
+  const maxContextTokens = contextWindowTokens - systemPromptTokens - responseSchemaTokens - outputReservationTokens - safetyMarginTokens;
+  const countContextTokens = (request: Readonly<Record<string, unknown>>) => systemPromptTokens + responseSchemaTokens
+    + Math.ceil(JSON.stringify(request).length / 3.2);
+  const secondaryTransportByteCap = 2 * 1024 * 1024;
   const input = {
     matrix: { matrixId: "matrix-v1", criteria: [{ criterionId: "criterion-budget" }] },
     materials: {
@@ -62,7 +72,8 @@ test("MDA-CLAIM-BATCH-RED-001: deterministic bounded windows cover a multi-megab
       transcript: { normalized: { utterances } },
     },
     scope: { candidateId: "candidate-1", runId: "run-1", inputVersion: "input-1", profileVersion: "profile-1" },
-    maxSerializedBytes: 64 * 1024,
+    maxContextTokens,
+    countContextTokens,
     overlapUtterances: 2,
   } as const;
 
@@ -78,9 +89,11 @@ test("MDA-CLAIM-BATCH-RED-001: deterministic bounded windows cover a multi-megab
   for (const batch of first) {
     assert.ok(batch.batchId.length > 0, "each extraction batch needs a stable ID");
     assert.ok(
-      Buffer.byteLength(JSON.stringify(batch.request), "utf8") <= input.maxSerializedBytes,
-      `${batch.batchId} exceeds the configured serialized request budget`,
+      countContextTokens(batch.request as Readonly<Record<string, unknown>>) <= input.maxContextTokens,
+      `${batch.batchId} exceeds the token-aware full-envelope input budget`,
     );
+    assert.ok(Buffer.byteLength(JSON.stringify(batch.request), "utf8") <= secondaryTransportByteCap,
+      `${batch.batchId} exceeds the secondary transport byte guard`);
   }
 
   const covered = new Set(first.flatMap((batch) => utteranceIds(batch.request)));
@@ -137,7 +150,7 @@ test("MDA-CLAIM-BATCH-RED-001: deterministic bounded windows cover a multi-megab
   assert.deepEqual(new Set(conflicts[0].claimIds), new Set(["claim-side-a", "claim-side-b"]), "global conflict must preserve both cross-batch sides");
 });
 
-test("MDA-CLAIM-BATCH-RED-002: production extracts every batch then runs one global pass over aggregated claims", () => {
+test("MDA-CLAIM-BATCH-002: production extracts every token-bounded batch then runs one global pass over aggregated claims", () => {
   const source = readFileSync(new URL("../server/candidate-pipeline/production-runtime.ts", import.meta.url), "utf8");
   const claimsStart = source.indexOf('toolKey === "candidate.matrix-claims/v1"');
   const evidenceStart = source.indexOf('toolKey === "candidate.matrix-evidence/v1"', claimsStart);
@@ -147,6 +160,9 @@ test("MDA-CLAIM-BATCH-RED-002: production extracts every batch then runs one glo
   const evidenceSource = source.slice(evidenceStart, rowsStart);
 
   assert.match(claimsSource, /buildCriterionClaimExtractionBatches\s*\(/, "production must build deterministic bounded extraction batches");
+  assert.match(claimsSource, /countOpenAiCompatibleContextTokens/, "production batching must use provider-compatible token accounting");
+  assert.match(claimsSource, /maxContextTokens/, "production must pass the reserved full-envelope token budget to the batch planner");
+  assert.doesNotMatch(claimsSource, /maxSerializedBytes/, "serialized bytes are not the primary batch-sizing budget");
   assert.doesNotMatch(
     claimsSource,
     /call\s*\(\s*["']criterion_claim_extraction["']\s*,\s*\{\s*matrix\s*,\s*materials\s*,/,

@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="WF-041: matrix-v2 predecessor is never a recovery source for matrix-v3" time="0.004586" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-v3-version-safe-recovery.acceptance.test.ts"/>
+	<testcase name="WF-041: recovery reuses only the continuous successful artifact-valid prefix" time="0.003182" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-v3-version-safe-recovery.acceptance.test.ts" failure="successful tasks after the first failed stage are not reusable&#10;+ actual - expected&#10;&#10;+ 'SUCCEEDED'&#10;- 'PENDING'&#10;">
+		<failure type="testCodeFailure" message="successful tasks after the first failed stage are not reusable&#10;+ actual - expected&#10;&#10;+ 'SUCCEEDED'&#10;- 'PENDING'">
+[Error [ERR_TEST_FAILURE]: successful tasks after the first failed stage are not reusable
++ actual - expected
+
++ 'SUCCEEDED'
+- 'PENDING'
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: successful tasks after the first failed stage are not reusable
+  + actual - expected
+  
+  + 'SUCCEEDED'
+  - 'PENDING'
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-v3-version-safe-recovery.acceptance.test.ts:76:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'SUCCEEDED',
+    expected: 'PENDING',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="WF-041: missing or wrong-schema artifact breaks the reusable prefix" time="0.001244" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-v3-version-safe-recovery.acceptance.test.ts" failure="Expected values to be strictly equal:&#10;+ actual - expected&#10;&#10;+ 'SUCCEEDED'&#10;- 'RUNNABLE'&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly equal:&#10;+ actual - expected&#10;&#10;+ 'SUCCEEDED'&#10;- 'RUNNABLE'">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly equal:
++ actual - expected
+
++ 'SUCCEEDED'
+- 'RUNNABLE'
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'SUCCEEDED'
+  - 'RUNNABLE'
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-v3-version-safe-recovery.acceptance.test.ts:88:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'SUCCEEDED',
+    expected: 'RUNNABLE',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="MDA-009: matrix-v2 does not block matrix-v3 and the second matrix-v3 reuses its checksum" time="0.001169" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-v3-version-safe-recovery.acceptance.test.ts" failure="shared-matrix SQL must bind workflow identity: SELECT state,owner_id,fencing_token,lease_expires_at_utc,matrix_id,attempt,terminal_error_code FROM vacancy_matrix_compilations WHERE profile_version= ? FOR UPDATE">
+		<failure type="testCodeFailure" message="shared-matrix SQL must bind workflow identity: SELECT state,owner_id,fencing_token,lease_expires_at_utc,matrix_id,attempt,terminal_error_code FROM vacancy_matrix_compilations WHERE profile_version= ? FOR UPDATE">
+[Error [ERR_TEST_FAILURE]: shared-matrix SQL must bind workflow identity: SELECT state,owner_id,fencing_token,lease_expires_at_utc,matrix_id,attempt,terminal_error_code FROM vacancy_matrix_compilations WHERE profile_version= ? FOR UPDATE] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: shared-matrix SQL must bind workflow identity: SELECT state,owner_id,fencing_token,lease_expires_at_utc,matrix_id,attempt,terminal_error_code FROM vacancy_matrix_compilations WHERE profile_version= ? FOR UPDATE
+      at sql (C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-v3-version-safe-recovery.acceptance.test.ts:102:12)
+      at &lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\server\candidate-pipeline\matrix-postgres-repository.ts:11:26)
+      at &lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\server\storage\postgres.ts:26:46)
+      at sql.begin (C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-v3-version-safe-recovery.acceptance.test.ts:116:91)
+      at withTransaction (C:\Users\user2\Documents\Cursor\hh\web\server\storage\postgres.ts:26:17)
+      at PostgresVacancyMatrixRepository.claimCompilation (C:\Users\user2\Documents\Cursor\hh\web\server\candidate-pipeline\matrix-postgres-repository.ts:10:12)
+      at claim (C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-v3-version-safe-recovery.acceptance.test.ts:122:94)
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\matrix-v3-version-safe-recovery.acceptance.test.ts:123:20)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 4 -->
+	<!-- suites 0 -->
+	<!-- pass 1 -->
+	<!-- fail 3 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 252.2928 -->
+</testsuites>

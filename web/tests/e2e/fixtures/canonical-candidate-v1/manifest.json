@@ -88,7 +88,7 @@
       "verify-critical-risk": "responses/critical-risk-verification-current.json",
       "candidate-assessment": "responses/assessment-current.json"
     },
-    "assessmentRouting": "matrix-v2",
+    "assessmentRouting": "matrix-v3",
     "matrixContract": {
       "sharedPerProfileVersion": true,
       "cleanCriticBeforePublish": true,

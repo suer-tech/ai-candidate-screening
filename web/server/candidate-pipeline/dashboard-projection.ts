@@ -18,7 +18,7 @@ const PROGRESS_BY_TASK: Readonly<Record<string, { percent: number; milestone: st
   evidence: { percent: 55, milestone: "Доказательства собраны" },
   assessment: { percent: 70, milestone: "Оценка сформирована" },
   validation: { percent: 80, milestone: "Результат проверен" },
-  reports: { percent: 90, milestone: "Отчёты сформированы" },
+  reports: { percent: 90, milestone: "Отчёт сформирован" },
   publication: { percent: 100, milestone: "Результат опубликован" },
 });
 
@@ -45,10 +45,9 @@ function runtimeElapsedMinutes(candidate: CandidateRecord, run: RuntimeProjectio
 export function projectCandidate(candidate: CandidateRecord, runtime: readonly RuntimeProjectionRow[], report?: ReadyReportProjection, now = new Date()): CandidateRecord {
   const latestRun = runtime[0];
   const currentReport = report
-    && candidate.status !== "WAITING_FOR_STABILITY"
-    && (!latestRun || report.runId === latestRun.runId)
-    && report.documents.length === 2
-    && new Set(report.documents.map((item) => item.type)).size === 2;
+    && (latestRun ? report.runId === latestRun.runId : candidate.status !== "WAITING_FOR_STABILITY")
+    && ((report.documents.length === 1 && report.documents[0]?.type === "candidate-report")
+      || (report.documents.length === 2 && new Set(report.documents.map((item) => item.type)).size === 2));
   if (currentReport) {
     return { ...candidate, status: "READY", elapsedMinutes: report.elapsedMinutes, progressPercent: 100, progressMilestone: "Результат опубликован", transcript: report.transcript ? structuredClone(report.transcript) : undefined, failedStage: undefined, failureReason: undefined, automaticRetriesExhausted: undefined, result: {
       version: report.analysisVersion,
@@ -56,7 +55,7 @@ export function projectCandidate(candidate: CandidateRecord, runtime: readonly R
       recommendation: report.recommendation,
       aiOverview: report.assessment ? structuredClone(report.assessment) : undefined,
       summary: report.assessment?.summary ?? "Предметная выжимка отсутствует в актуальной версии оценки.",
-      documents: report.documents.map((document) => ({ id: document.id, type: document.type, fileName: document.fileName, version: report.analysisVersion, candidateId: candidate.id, vacancyId: candidate.vacancyId, published: Boolean(document.driveFileId), valid: true })) as [ResultDocument, ResultDocument],
+      documents: report.documents.map((document) => ({ id: document.id, type: document.type, fileName: document.fileName, version: report.analysisVersion, candidateId: candidate.id, vacancyId: candidate.vacancyId, published: Boolean(document.driveFileId), valid: true })) as [ResultDocument] | [ResultDocument, ResultDocument],
     } };
   }
   const withoutStaleResult = candidate.status === "READY"

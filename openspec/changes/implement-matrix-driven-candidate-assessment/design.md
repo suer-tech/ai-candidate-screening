@@ -1,120 +1,155 @@
 ## Context
 
-См. [proposal.md](proposal.md) для мотивации и `specs/` для поведенческих контрактов. Production candidate pipeline уже работает поверх PostgreSQL, protected LLM gateway и durable runtime с task DAG, tool registry, grants, budgets, checkpoints, obstacle fingerprints, repair/replan и outbox. Текущий assessment path, однако, сохраняет плоские facts, обрезает итоговый контекст и вызывает одну assessment capability без shared vacancy-matrix artifact.
+В `candidate-report` добавляется отдельная `sourceMaterials` проекция из immutable input manifest. Она не смешивается с evidence catalog: evidence указывает точные страницы/таймкоды, а source materials даёт HR кликабельный переход к самому файлу. Renderer создаёт PDF URI annotation только для валидной HTTPS-цели с разрешённым Google host/path; иначе имя остаётся обычным текстом. Целевой URL не включается в видимый body отчёта.
 
-Рабочее дерево содержит несколько незавершённых OpenSpec changes и пользовательские изменения. Реализация должна расширять существующие PostgreSQL/runtime boundaries, не создавать параллельную платформу и не изменять несвязанные файлы.
+См. proposal.md. Matrix-v2 уже реализует shared compilation, token-based transcript batching, claims, conflicts, row evaluation, verification и reports, но фактический результат показывает системный перекос: положительные сведения обесцениваются без независимого источника, verification переписывает строки в `Недостаточно данных`, open pass ориентирован на риски, а report projection оставляет competencies/ABC/access пустыми. Новая ревизия сохраняет durable artifacts, batching и provenance, но возвращает матрице первоначальную роль coverage-чеклиста.
 
 ## Goals / Non-Goals
 
 **Goals:**
 
-- Встроить матричный workflow в существующий durable DAG и protected tracing.
-- Получить одну аудируемую матрицу на `profileVersion`, независимо от порядка и числа кандидатов.
-- Сохранить полный provenance от профиля и материалов до строки оценки и рекомендации.
-- Сделать семантические стадии LLM-управляемыми, но bounded, schema-constrained и воспроизводимыми.
-- Обеспечить shadow rollout и безопасное сосуществование с legacy workflow.
+- Гарантировать технически наблюдаемый обход каждого пункта матрицы на extraction и evaluation stages.
+- Считать резюме и ответы кандидата нормальными HR-источниками с явной provenance.
+- Назначать один итоговый статус каждому критерию только после объединения всех частей материалов.
+- Сохранить полезные проверки, не позволяя им блокировать кандидата или стирать содержательный вывод из-за отсутствия внешнего подтверждения.
+- Всегда формировать отчёт, явно отмечая технический fallback, если отдельную строку получить не удалось.
 
 **Non-Goals:**
 
-- Свободный ReAct-loop или возможность модели создавать tools, SQL и кадровые правила.
-- Автоматическая регенерация опубликованной матрицы после обновления модели или prompt.
-- Ручное редактирование матрицы либо результата анализа HR.
-- Автоматический пересчёт существующих результатов.
-- Общий числовой score, рейтинг или выбор лучшего кандидата.
+- Внешняя проверка биографии кандидата.
+- Доказательство истинности каждого самоописания.
+- Числовой рейтинг кандидатов.
+- Свободный агентский loop или неограниченные retries.
+- Ручное редактирование опубликованного машинного результата.
 
 ## Decisions
 
-### 1. Matrix artifact является shared immutable domain artifact
+### Decision: веб-резюме решения собирается без отдельного LLM-вызова
 
-Добавляются сущности:
+`Резюме для принятия решения` является детерминированной HR-проекцией уже сохранённых evidence-backed strengths/competencies, risks/negative rows и unknown rows. Оно не участвует в расчёте рекомендации и не меняет результат анализа: `Итог AI` и recommendation reason читаются из validated assessment. Проекция сохраняет доступную положительную сторону даже при отрицательном результате, добавляет существенную зону внимания и исключает дословный повтор recommendation reason, который показывается отдельно под итогом.
 
-- `vacancy_matrix_compilations`: одна активная compilation identity на `profile_version`, состояние, owner/lease, attempt, budget и terminal error;
-- `vacancy_matrices`: опубликованный artifact, schema/policy/skill/model versions, canonical payload, checksum и protected trace refs;
-- `candidate_source_claims`: candidate/run/input scoped утверждения с ролью, locator, evidence class и criterion links;
-- `candidate_evidence_conflicts`: обе стороны конфликта и global-pass provenance;
-- `candidate_matrix_rows`: отдельная строка результата с evidence links и verification state.
+### Decision: candidate-scoped matrix history использует cleanup-aware immutable guard
 
-Уникальный publish key — `profileVersion`. Compiler metadata включается в provenance и checksum, но не позволяет создать вторую действующую матрицу для той же версии. Альтернатива с ключом `(profileVersion, compilerPolicyVersion)` отклонена: она нарушает сопоставимость кандидатов одной версии.
+`candidate_source_claims`, `candidate_evidence_conflicts` и `candidate_matrix_rows` используют тот же transaction-local `hh.cleanup_run_ids`, что и остальная append-only история runtime. Guard разрешает только `DELETE`, только если `OLD.run_id` входит в точный scope; любые `UPDATE`, прямые удаления и удаления с чужим scope остаются запрещены. Shared `vacancy_matrices` сохраняет безусловную неизменяемость и не удаляется вместе с кандидатом.
 
-### 2. Shared compilation использует durable claim, а не candidate-local lock
+### 0. Пользовательский PDF повторяет компактную HR-логику образца
 
-Первый run создаёт или claims compilation record. Остальные runs фиксируют dependency на этот record и ожидают published artifact. Lease можно восстановить после падения worker; fencing token запрещает прежнему владельцу публиковать после потери lease. Terminal failure распространяется ожидающим runs как одна safe error identity. Новый ручной запуск может создать successor attempt только пока матрица не опубликована.
+Единый `candidate-report` является последовательным одноколоночным HR-документом, а не выгрузкой внутренних assessment artifacts. Его стабильный порядок: шапка кандидата/вакансии; исходные материалы; организационные моменты; ревью; ключевые доказательства; ABC по направлениям; технический чек; мотивация и соответствие роли; риски; решение; финальное HR-резюме.
 
-### 3. Skills — типизированные LLM artifacts внутри продукта
+Recommendation показывается только в разделе `Решение`, ближе к концу документа. Отдельный верхний recommendation callout для `candidate-report` не рисуется. `Критерии вакансии`, `Матрица оценки`, `Стоп-факторы`, `Вопросы для уточнения` и `Сильные стороны` не создаются как самостоятельные карточки: их релевантное содержание синтезируется в ревью, ключевые доказательства, риски и решение. Полные строки и provenance остаются в веб-представлении и audit model, поэтому компактность PDF не удаляет исходный структурированный результат.
 
-Skill состоит из instruction artifact, response schema, capability configuration и allowlist tools. Начальный набор:
+Технический чек группируется по понятным HR-подтемам, которые реально присутствуют в evidence (например, таск-трекеры, календарь/встречи, документы/таблицы, AI-инструменты, формат работы), без пустых шаблонных подразделов. Финальное HR-резюме обязательно и не повторяет дословно предложения из ревью или решения.
 
-- `compile-vacancy-matrix/v1`, `critique-vacancy-matrix/v2`;
-- `extract-claims-for-criteria/v1`, `discover-unmapped-signals/v1`;
-- `consolidate-evidence/v1`, `detect-global-conflicts/v1`;
-- `fill-matrix-rows/v1`, `assess-abc-direction/v1`;
-- `assess-unmapped-risk/v1`, `verify-critical-risk/v1`;
-- `verify-critical-row/v1`, `repair-invalid-rows/v1`.
+### 1. Матрица является компактным coverage manifest
 
-Каждый вызов — отдельная task attempt существующего durable runtime. Модель не управляет plan graph и не пишет напрямую в итоговые таблицы. Альтернатива с Codex `SKILL.md` отклонена: эти навыки являются production LLM contracts, а не инструкциями разработчика.
+Canonical row сохраняет `criterionId`, `section`, точные `sourceRefs/sourceText`, нейтральную `interpretation`, stop-factor marker и исходный порядок. Сложные operators/children MAY сохраняться для совместимости existing artifacts, но новые prompts не должны создавать дерево без явной структуры источника. Одна смысловая bullet/формулировка становится одной строкой; примеры и expected evidence остаются контекстом строки.
 
-### 4. Compiler и critic разделены контекстом и capability
+Альтернатива «атомарный узел на каждый признак» отклонена: она увеличивает матрицу, создаёт скрытые требования и усиливает отрицательный вес отдельных слов.
 
-Compiler получает полный canonical profile JSON без материалов кандидата. Critic получает профиль, предложенную матрицу, schema и policy, но не reasoning компилятора. Для critic конфигурируется отдельная capability; другая модель предпочтительна, но одинаковая модель допускается с отдельным чистым вызовом и явной provenance отметкой.
+### 2. Critic — один fail-soft editor, а не gate
 
-Critic вызывается ровно один раз и всегда возвращает окончательный полный successor draft. При отсутствии замечаний он возвращает draft без смысловых изменений со статусом `PASS`; при наличии замечаний сам вносит их в successor и возвращает `CORRECTED` вместе с audit-списком изменений. Отдельный repair skill и повторный critic call не используются. Семантическое несогласие критика не может исчерпать цикл и остановить обработку кандидата: после одного critic-editor call runtime канонизирует полученный successor и продолжает workflow.
+Compiler делает self-check. Critic получает профиль, sourceFragments и draft, проверяет только coverage/fidelity/over-splitting/stop-factor origin и возвращает полный successor один раз. При timeout, пустом или непригодном ответе runtime канонизирует технически валидный compiler draft и пишет warning provenance. Отдельного semantic repair loop нет.
 
-### 5. Canonical matrix schema хранит дерево, UI получает проекцию
+### 3. Transcript batching строит coverage grid
 
-Matrix root содержит версии и упорядоченные criterion groups. Узел содержит стабильный runtime-assigned `criterionId`, `sourceRefs`, `sourceText`, `interpretation`, `category`, LLM-определённый `required`, `hardRequired`, `operator`, children, `evaluationRule`, `expectedEvidence`, `allowedStates`, `decisionEffect`, `missingDataQuestion` и interpretation notes. Отдельный пользовательский список обязательных требований не создаётся. `hardRequired` является машинной проекцией принадлежности sourceRef разделу стоп-факторов, а не самостоятельным положительным требованием.
+Транскрипт делится по полному provider token budget без разрыва utterance; overlap сохраняет вопрос/ответ и соседние реплики. Каждый extraction request содержит компактные matrix rows и `requestedCriterionIds`. Output содержит ровно одну entry на каждый requested ID:
 
-LLM создаёт semantic draft с temporary IDs. После единственного critic-editor call runtime проверяет итоговый successor, назначает стабильные IDs и вычисляет checksum. Порядок, явно заданный профилем, сохраняется; canonicalization не сортирует пользовательские списки по алфавиту.
+```text
+criterionId
+scanResult: FOUND | NOT_FOUND_IN_BATCH
+evidence[]: relation, quote, locator, utteranceIds, speaker, sourceType
+```
 
-### 6. Best-effort не отменяет запрет усиления смысла
+Batch extractor не возвращает состояние кандидата. Deterministic harness сравнивает множества requested/returned IDs, запрещает duplicate/unknown IDs и повторяет только missing IDs. Overlap duplicates удаляются по `(criterionId, locator/utteranceId, relation)`.
 
-Качественный текст компилируется в наблюдаемое правило без числового порога. LLM-компилятор определяет requiredness из полной структуры и семантики зафиксированного профиля, объясняет классификацию и не использует материалы кандидата. `hardRequired: true` допустим только для sourceRef из раздела стоп-факторов; технический gate проверяет это соответствие, а critic — requiredness, полноту и семантическое искажение.
+Для очень большой матрицы harness MAY разбивать её на criterion groups, но каждый source-batch × criterion-group остаётся явной ячейкой coverage grid.
 
-### 7. Evidence pipeline работает через claims и context retrieval
+### 4. Gap-search повышает recall без второй оценки
 
-Нормализованные документы и transcript segments остаются первичными locators. Criterion-directed retrieval выбирает перекрывающиеся смысловые окна, сохраняя вопрос/ответ и соседние реплики. Claim extraction сохраняет утверждение источника, а не объявляет его истинным фактом. Open pass создаёт informational signals и не принимает отказное решение. Отдельный `assess-unmapped-risk/v1` может предложить candidate-scoped `criticalUnmappedRisk`, после чего `verify-critical-risk/v1` в чистом контексте независимо проверяет evidence, существенность для роли и допустимость признаков.
+После первичного merge выбираются критерии с нулём `FOUND` во всех материалах. Один bounded gap-search повторно сканирует только их. Он возвращает те же evidence entries и не назначает status. Отсутствие результата gap-search не блокирует дальнейшую оценку.
 
-После batch extraction отдельные стадии консолидации и global conflict detection читают весь набор claims. Дедупликация сохраняет distinction между повтором самоописания и независимым источником. Decision-driving evaluator может через read-context tool получить полный исходный фрагмент; 240-символьная обрезка не является его доказательным входом.
+### 5. Claims описывают источник, а не уровень доверия
 
-### 8. Sensitive-context filter применяется до semantic decision stages
+Candidate answer, resume statement и provided document являются decision-admissible HR-сведениями при корректной атрибуции и релевантности. `sourceType` и формулировка «со слов кандидата» сохраняются, но independent source count не является gate. Interviewer question остаётся context; unknown speaker не приписывается кандидату.
 
-Нормализатор создаёт decision-safe projection, маскируя запрещённые признаки и изображения, но сохраняет locator identity для аудита доступа. Разрешённые профильные параметры локации, графика, командировок, права на работу и профессиональных допусков сохраняются. Prompt envelope явно объявляет candidate materials untrusted data и запрещает исполнять содержащиеся в них инструкции.
+### 6. Conflict detection выполняется после глобального merge
 
-### 9. Row evaluation и critical verification разделены
+Consolidator группирует claims без смыслового verdict. Conflict pass видит claims из всех transcript batches и документов. Prompt отличает прямую несовместимость об одном периоде/условии от дополнения, разной детализации, разных периодов, отсутствия упоминания и явной коррекции. Conflict хранится как evidence для конкретной строки; отдельного глобального блокирующего состояния нет.
 
-Связанные criterion IDs можно обрабатывать одним вызовом, но output обязан содержать отдельную запись для каждой строки. Deterministic gate проверяет coverage, ID, state, evidence locator, conflict sides и successful provenance. Invalid/missing rows передаются точечному repair skill.
+### 7. Каждый criterion оценивается ровно один раз
 
-Отдельно в чистом контексте проверяются все stop factors/`hardRequired`, обязательные строки, conflicts и строки, способные изменить предварительную рекомендацию. Candidate-scoped critical unmapped risk проверяется отдельным skill и не добавляет критерий в shared vacancy matrix. Verification подтверждает строку/риск либо возвращает violation для bounded repair.
+После merge критерии распределяются по evaluation batches по 5–10 rows. Один criterionId принадлежит ровно одному evaluation batch. Evaluator видит весь evidence bundle конкретных IDs и возвращает только:
 
-### 10. Recommendation остаётся детерминированной
+```text
+Соответствует | Не соответствует | Недостаточно данных
+```
 
-Formula adapter получает только validated row states, matrix decision effects и independently verified candidate-scoped risks. Приоритет: подтверждённое срабатывание stop factor/`hardRequired`, доказанный `required` mismatch либо подтверждённый `criticalUnmappedRisk` → отказ; затем обязательная неопределённость/conflict → недостаточно данных; затем некритичный risk, limitation или partial match → оговорки; затем положительный результат. ABC и непроверенные unmapped informational signals не меняют категорию автоматически. Formula inputs и выбранная ветвь сохраняются в snapshot.
+`Соответствует` допускает caveat в reason. `Не соответствует` требует прямого существенного отрицательного основания. `Недостаточно данных` используется при отсутствии содержательной информации или неразрешимом существенном конфликте, но не из-за отсутствия внешней проверки.
 
-### 11. Budgets конфигурируются поверх жёстких верхних границ
+Evaluation harness проверяет exact ID coverage. Missing IDs получают один targeted retry; после неудачи runtime создаёт явно техническую `Недостаточно данных` row и продолжает.
 
-На compilation attempt допускаются один compiler call и ровно один critic-editor call, не считая инфраструктурного schema/provider retry самого gateway. Один provider call имеет timeout до 10 минут. Отдельные repair calls, повторная критика и obstacle-fingerprint loop отсутствуют. 30 минут остаются метрикой, не wall-time failure.
+Каждая нормальная строка evaluator возвращает не только состояние и объяснение, но и `evidence[]` с `claimId`, точным разрешённым `sourceRef`, дословной короткой цитатой, отношением `SUPPORTS|CONTRADICTS|CONTEXT` и объяснением связи с критерием. Runtime сверяет эти поля с объединённым claim graph: модель не может придумать locator или цитату. Для `Соответствует` и `Не соответствует` требуется хотя бы одно содержательное evidence; для `Недостаточно данных` пустой evidence допустим только с явными `missingData` и `followUpQuestion`.
 
-Candidate-stage budgets задаются существующим runtime ledger отдельно по calls, tokens/cost, attempts и wall time. Превышение hard budget прекращает новые calls и приводит к типизированной terminal error без частичной публикации.
+### 8. Проверка decision-driving выводов становится узкой и fail-soft
 
-### 12. Rollout фиксирует workflowVersion на старте run
+Verifier вызывается только для сработавшего stop factor и существенно отказного non-stop вывода. Request включает criterion source text, final row и полные цитаты/locators, а не только claim IDs. Verifier возвращает окончательную исправленную row один раз. Omitted result, timeout или schema failure означает preserve original row. Никакое отсутствие независимого источника не разрешает понижение.
 
-Routing имеет режимы `disabled`, `shadow`, `production`. В shadow новый DAG читает те же immutable inputs, но пишет отдельные artifact kinds и не получает grants на Drive publication/Telegram. Сравнение выполняется offline по structural и semantic gates. После production cutover новые runs фиксируют новую workflowVersion; уже начатые legacy runs не переключаются. Rollback меняет routing только для новых runs.
+### 9. Open pass сбалансирован и не имеет собственного risk cascade
+
+В extraction output вместе с criterion evidence возвращаются candidate-scoped `additionalObservations` типов `STRENGTH`, `CONCERN`, `QUESTION`. Они дедуплицируются глобально и передаются final synthesis. Отдельные `assess-unmapped-risk` и `verify-critical-risk` больше не определяют recommendation. Existing artifacts могут читаться для backward compatibility, но новые runs их не требуют.
+
+### 10. Recommendation — один целостный LLM synthesis
+
+Confirmed explicit stop factor остаётся deterministic override `Не рекомендовать`. Для остальных случаев final synthesis получает все rows, categories, evidence-backed strengths/concerns/questions и объясняет выбранную категорию. Флаг `required` MAY быть context, но не самостоятельная формула отказа. Существенный отрицательный эпизод вне матрицы может привести к отказу только через явное объяснение role impact в итоговом synthesis.
+
+### 11. Report projection выводится из строк
+
+`competencies`, `strengths`, `accessToKe`, ABC/result sections больше не hard-code пустые массивы. Projection группирует rows по исходному section/category:
+
+- `Соответствует` → strengths/competencies/confirmed results;
+- `Не соответствует` → limitations/risks;
+- `Недостаточно данных` → questions;
+- balanced observations дополняют соответствующие разделы.
+
+Единый HR presentation adapter разрешает claim IDs в цитаты и человекочитаемые места (`Резюме, стр. N`, `Интервью, реплика/таймкод`, название документа). Внутренние `claim-*`, `criterion-*`, artifact URI, имена schema/policy и формулировки critic/verifier не попадают в веб или PDF. Все производные утверждения — strengths, competencies, risks, recommendation basis — строятся только из строк или дополнительных наблюдений, для которых сохранено evidence.
+
+ABC является отдельной проекцией направлений вакансии, а не переименованием matrix criteria. Capability получает только направления с заполненными описаниями A, B и C и возвращает их `directionId`. Если такого профиля нет, capability не вызывается, а HR видит состояние «ABC-профиль не настроен для вакансии» без технического списка критериев.
+
+### 12. Fail-soft завершение является продуктовым инвариантом
+
+Compiler должен вернуть технически валидную матрицу; после этого ошибки critic, gap-search, balanced open pass, conflict helper или verifier становятся warnings. Core row evaluator имеет targeted fallback. Candidate run достигает report generation даже при partial auxiliary degradation; отчёт явно показывает coverage warning и technical fallback count.
+
+### 13. Recovery ограничен полной compatibility identity
+
+Coverage-first revision фиксируется как `matrix-v3`, а shared matrix key состоит из `profileVersion + workflowVersion`. Поэтому уже опубликованная `matrix-v2` той же версии вакансии остаётся immutable, но не препятствует созданию отдельной compact `matrix-v3`.
+
+Manual recovery MAY переиспользовать только непрерывный префикс успешных задач failed run при точном совпадении input version, profile version, goal type, workflow version и policy version. Перед пометкой задачи reused runtime MUST убедиться, что её domain artifact существует в lineage и соответствует ожидаемой schema family текущего workflow. При любом несовпадении recovery начинается с первой несовместимой задачи; старые `matrix-v2` claims/rows/validation никогда не подмешиваются в `matrix-v3`.
+
+### 14. Один цельный отчёт собирается поверх завершённой оценки
+
+Новые runs создают один versioned `candidate-report` вместо пары `abc-test` + `candidate-results`. Это самостоятельная HR-проекция, а не склейка прежних документов. Она содержит фиксированную последовательность: идентификация и источники; организационные условия; рекомендация и executive summary; ABC-направления; ключевые кейсы; критерии вакансии; техническая проверка; мотивация; сильные стороны; риски; стоп-факторы; вопросы; следующий шаг; компактное приложение с матрицей.
+
+После validation вызывается один versioned report-composer. На вход передаются только компактные итоговые artifacts: неизменяемая рекомендация и её основание, ABC states, matrix rows, дополнительные наблюдения и HR-safe evidence catalog. Полные резюме и стенограмма повторно не передаются. Composer MAY сокращать, группировать и устранять повторы, но MUST NOT менять recommendation, ABC grade или row state, придумывать факты/locators и оставлять содержательное утверждение без `evidenceIds`.
+
+Runtime проверяет ссылки composer против переданного каталога и точное сохранение decision fields. Timeout, invalid schema, неизвестная ссылка либо искажение решения не останавливают reports stage: deterministic fallback строит тот же единый report model напрямую из validated HR projection. Audit хранит composer trace/warning, пользовательский PDF не показывает технические идентификаторы.
+
+Document processor получает singular endpoint и возвращает один PDF/checksum. Repository, Drive и notification outbox публикуют одну immutable report version/file. Legacy pair endpoint и чтение старых report types сохраняются только для уже существующих результатов и совместимости, но новые runs их не вызывают.
 
 ## Risks / Trade-offs
 
-- [LLM-компилятор стабильно искажает сложный профиль] → независимый critic, exact source refs, bounded repair, shadow benchmark и запрет публикации при unresolved severe violation.
-- [Первая обработка вакансии становится дольше] → shared artifact, один раз на `profileVersion`, отдельные метрики и отсутствие искусственного 30-минутного hard stop.
-- [Shared compilation блокирует несколько кандидатов] → durable lease/fencing, один recoverable attempt и единая наблюдаемая dependency вместо конкурирующих вызовов.
-- [Большая матрица увеличивает токены] → группировка связанных строк, context retrieval и точечный repair без пропуска criterion IDs.
-- [Sensitive-data masking ухудшает читаемость локатора] → разделить immutable raw locator и decision-safe projection, ограничить доступ к raw context.
-- [Одинаковая модель compiler/critic коррелирует ошибки] → отдельные capability/context и provenance; возможность настроить другой model route без изменения бизнес-логики.
-- [Новый workflow расходится с legacy PDF projection] → один validated snapshot как источник обоих PDF и shadow comparison до side-effect grants.
+- [Самоописание может быть неточным] → показывать provenance «со слов кандидата», точные цитаты и вопросы HR, не выдавая это за background check.
+- [Coverage ledger увеличивает output] → компактная entry schema, criterion grouping и targeted retry вместо полного повторного вызова.
+- [Модель может вернуть NOT_FOUND при существующем фрагменте] → один targeted gap-search по нулевым критериям.
+- [Fail-soft скрывает деградацию provider] → observable warning, coverage counters и technicalFallbackCount в protected operational projection.
+- [Holistic recommendation менее детерминирована] → pinned versioned prompt/schema, обязательное explanation и deterministic stop-factor override.
 
 ## Migration Plan
 
-1. Добавить forward-only PostgreSQL migration и repositories без изменения legacy reads.
-2. Зарегистрировать schemas, skills, capabilities, tool grants и synthetic fixtures.
-3. Подключить shared matrix compilation в `shadow`, сохраняя отдельные artifacts.
-4. Подключить claims/evidence/row evaluation и отчётную проекцию без visible side effects.
-5. Пройти независимый acceptance-набор, четыре обязательных E2E и shadow quality gate.
-6. Включить `production` только для новых runs; наблюдать failures, latency, repair и semantic violations.
-7. При rollback перевести новые runs в `disabled`/legacy; существующие runs завершить по зафиксированной workflowVersion.
+1. Зафиксировать независимый acceptance RED новой coverage-first семантики.
+2. Добавить новые versioned prompt/schema identities и coverage harness, сохранив чтение existing matrix-v2 artifacts.
+3. Переключить новые candidate runs на coverage extraction, gap-search, single row evaluation и holistic synthesis.
+4. Исправить report projection из строк и balanced observations.
+5. Выполнить focused acceptance/regression и обязательные production-like E2E на immutable build/config/fixture identity.
+6. Старые опубликованные результаты не пересчитывать; rollback routing влияет только на новые runs.
+7. Failed `matrix-v3` run возобновлять с первой незавершённой либо несовместимой стадии; failed `matrix-v2` запуск после обновления начинает новый `matrix-v3` workflow без reuse candidate-scoped artifacts.
+8. Переключить reports checkpoint на единый `candidate-report`; failed run с совместимыми upstream artifacts возобновлять непосредственно с его composition/render/publish.

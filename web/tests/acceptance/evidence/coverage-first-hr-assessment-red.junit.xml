@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="MDA-002 RED: canonical matrix rejects over-splitting of one semantic profile item" time="0.009299" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\coverage-first-hr-assessment.acceptance.test.ts" failure="Missing expected exception.">
+		<failure type="testCodeFailure" message="Missing expected exception.">
+[Error [ERR_TEST_FAILURE]: Missing expected exception.] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\coverage-first-hr-assessment.acceptance.test.ts:50:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /MATRIX_(?:PROFILE_)?OVER_SPLIT|MATRIX_COMPACTNESS_VIOLATION/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="MDA-002 RED: canonical matrix rejects a requirement or threshold absent from source" time="0.000315" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\coverage-first-hr-assessment.acceptance.test.ts" failure="Missing expected exception.">
+		<failure type="testCodeFailure" message="Missing expected exception.">
+[Error [ERR_TEST_FAILURE]: Missing expected exception.] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\coverage-first-hr-assessment.acceptance.test.ts:59:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /MATRIX_INVENTED_(?:REQUIREMENT|THRESHOLD)|MATRIX_FIDELITY_VIOLATION/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="ASM-014/ASM-070: candidate interview and resume self-report are admissible HR evidence without an independent-source gate" time="0.000232" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\coverage-first-hr-assessment.acceptance.test.ts"/>
+	<testcase name="REP-020 RED: positive matrix rows populate non-empty strengths and competencies" time="0.000691" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\coverage-first-hr-assessment.acceptance.test.ts" failure="positive row did not create strengths: {&amp;quot;summary&amp;quot;:&amp;quot;Анализ завершён с рекомендацией «Рекомендовать». Детальные основания приведены в критериях и доказательствах.&amp;quot;,&amp;quot;recommendationBasis&amp;quot;:&amp;quot;Предметное основание рекомендации отсутствует в актуальной версии оценки.&amp;quot;,&amp;quot;stopFactors&amp;quot;:[],&amp;quot;abc&amp;quot;:[],&amp;quot;competencies&amp;quot;:[],&amp;quot;risks&amp;quot;:[],&amp;quot;accessToKe&amp;quot;:[],&amp;quot;evidence&amp;quot;:[{&amp;quot;id&amp;quot;:&amp;quot;claim-interview&amp;quot;,&amp;quot;technicalType&amp;quot;:&amp;quot;competency_evidence&amp;quot;,&amp;quot;label&amp;quot;:&amp;quot;Подтверждение компетенции&amp;quot;,&amp;quot;claim&amp;quot;:&amp;quot;Организовал встречу и follow-up заранее&amp;quot;,&amp;quot;source&amp;quot;:&amp;quot;Кандидат · 00:12&amp;quot;,&amp;quot;criterion&amp;quot;:&amp;quot;Общий анализ&amp;quot;,&amp;quot;quote&amp;quot;:&amp;quot;Я заранее собрал контекст и организовал встречу&amp;quot;,&amp;quot;timecode&amp;quot;:&amp;quot;00:12&amp;quot;}]}">
+		<failure type="testCodeFailure" message="positive row did not create strengths: {&amp;quot;summary&amp;quot;:&amp;quot;Анализ завершён с рекомендацией «Рекомендовать». Детальные основания приведены в критериях и доказательствах.&amp;quot;,&amp;quot;recommendationBasis&amp;quot;:&amp;quot;Предметное основание рекомендации отсутствует в актуальной версии оценки.&amp;quot;,&amp;quot;stopFactors&amp;quot;:[],&amp;quot;abc&amp;quot;:[],&amp;quot;competencies&amp;quot;:[],&amp;quot;risks&amp;quot;:[],&amp;quot;accessToKe&amp;quot;:[],&amp;quot;evidence&amp;quot;:[{&amp;quot;id&amp;quot;:&amp;quot;claim-interview&amp;quot;,&amp;quot;technicalType&amp;quot;:&amp;quot;competency_evidence&amp;quot;,&amp;quot;label&amp;quot;:&amp;quot;Подтверждение компетенции&amp;quot;,&amp;quot;claim&amp;quot;:&amp;quot;Организовал встречу и follow-up заранее&amp;quot;,&amp;quot;source&amp;quot;:&amp;quot;Кандидат · 00:12&amp;quot;,&amp;quot;criterion&amp;quot;:&amp;quot;Общий анализ&amp;quot;,&amp;quot;quote&amp;quot;:&amp;quot;Я заранее собрал контекст и организовал встречу&amp;quot;,&amp;quot;timecode&amp;quot;:&amp;quot;00:12&amp;quot;}]}">
+[Error [ERR_TEST_FAILURE]: positive row did not create strengths: {"summary":"Анализ завершён с рекомендацией «Рекомендовать». Детальные основания приведены в критериях и доказательствах.","recommendationBasis":"Предметное основание рекомендации отсутствует в актуальной версии оценки.","stopFactors":[],"abc":[],"competencies":[],"risks":[],"accessToKe":[],"evidence":[{"id":"claim-interview","technicalType":"competency_evidence","label":"Подтверждение компетенции","claim":"Организовал встречу и follow-up заранее","source":"Кандидат · 00:12","criterion":"Общий анализ","quote":"Я заранее собрал контекст и организовал встречу","timecode":"00:12"}]}] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: positive row did not create strengths: {"summary":"Анализ завершён с рекомендацией «Рекомендовать». Детальные основания приведены в критериях и доказательствах.","recommendationBasis":"Предметное основание рекомендации отсутствует в актуальной версии оценки.","stopFactors":[],"abc":[],"competencies":[],"risks":[],"accessToKe":[],"evidence":[{"id":"claim-interview","technicalType":"competency_evidence","label":"Подтверждение компетенции","claim":"Организовал встречу и follow-up заранее","source":"Кандидат · 00:12","criterion":"Общий анализ","quote":"Я заранее собрал контекст и организовал встречу","timecode":"00:12"}]}
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\coverage-first-hr-assessment.acceptance.test.ts:103:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="MDA-004 RED: every document/transcript batch explicitly requests the exact criterion ID set" time="0.002314" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\criterion-batch-coverage-ledger.acceptance.test.ts"/>
+	<testcase name="MDA-004 RED: ledger validator rejects duplicate and unknown returned criterion IDs" time="0.001200" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\criterion-batch-coverage-ledger.acceptance.test.ts" failure="public deterministic coverage-ledger validation boundary is missing&#10;+ actual - expected&#10;&#10;+ 'undefined'&#10;- 'function'&#10;">
+		<failure type="testCodeFailure" message="public deterministic coverage-ledger validation boundary is missing&#10;+ actual - expected&#10;&#10;+ 'undefined'&#10;- 'function'">
+[Error [ERR_TEST_FAILURE]: public deterministic coverage-ledger validation boundary is missing
++ actual - expected
+
++ 'undefined'
+- 'function'
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: public deterministic coverage-ledger validation boundary is missing
+  + actual - expected
+  
+  + 'undefined'
+  - 'function'
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\criterion-batch-coverage-ledger.acceptance.test.ts:58:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'undefined',
+    expected: 'function',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="MDA-004/MDA-005 RED: targeted missing-ID retry, overlap dedupe and one zero-criterion gap-search" time="0.000406" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\criterion-batch-coverage-ledger.acceptance.test.ts" failure="public criterion coverage workflow boundary is missing&#10;+ actual - expected&#10;&#10;+ 'undefined'&#10;- 'function'&#10;">
+		<failure type="testCodeFailure" message="public criterion coverage workflow boundary is missing&#10;+ actual - expected&#10;&#10;+ 'undefined'&#10;- 'function'">
+[Error [ERR_TEST_FAILURE]: public criterion coverage workflow boundary is missing
++ actual - expected
+
++ 'undefined'
+- 'function'
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: public criterion coverage workflow boundary is missing
+  + actual - expected
+  
+  + 'undefined'
+  - 'function'
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\criterion-batch-coverage-ledger.acceptance.test.ts:68:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'undefined',
+    expected: 'function',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="MDA-004 RED: versioned extraction response schema exposes coverage entries, not claims-only output" time="0.000921" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\criterion-batch-coverage-ledger.acceptance.test.ts"/>
+	<!-- tests 8 -->
+	<!-- suites 0 -->
+	<!-- pass 3 -->
+	<!-- fail 5 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 216.624 -->
+</testsuites>

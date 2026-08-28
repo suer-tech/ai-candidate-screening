@@ -16,7 +16,7 @@ export const WORKFLOW_STATUS = {
 export const WORKFLOW_LABELS = { ...WORKFLOW_STATUS, WAITING_FOR_HUMAN: "Требуется действие" } as const;
 export type WorkflowStatus = keyof typeof WORKFLOW_LABELS;
 export type Recommendation = "Не рекомендовать" | "Недостаточно данных" | "Рекомендовать с оговорками" | "Рекомендовать";
-export type ResultDocumentType = "candidate-results" | "abc-test";
+export type ResultDocumentType = "candidate-report" | "candidate-results" | "abc-test";
 export type CandidateId = string | number;
 
 export type ResultDocument = {
@@ -62,7 +62,9 @@ export type CandidateAiOverview = {
   summary?: string;
   recommendationBasis: string;
   stopFactors: AssessmentOverviewItem[];
-  abc: Array<{ direction: string; grade: string; reason?: string; factIds: string[] }>;
+  abc: Array<{ direction: string; grade: string; reason?: string; factIds: string[]; gradeA?: string; gradeB?: string; gradeC?: string; definingConditions?: string[] }>;
+  abcConfigured?: boolean;
+  criteria?: Array<{ name: string; category: string; state: string; reason?: string; factIds: string[]; missingData?: string; followUpQuestion?: string }>;
   strengths?: AssessmentOverviewItem[];
   competencies: AssessmentOverviewItem[];
   risks: AssessmentOverviewItem[];
@@ -96,7 +98,7 @@ export type ResultPair = {
   summary: string;
   recommendation: Recommendation;
   aiOverview?: CandidateAiOverview;
-  documents: readonly [ResultDocument, ResultDocument];
+  documents: readonly [ResultDocument] | readonly [ResultDocument, ResultDocument];
 };
 
 export type CandidateTranscriptUtterance = {
@@ -420,7 +422,11 @@ export async function createVacancyWithDrive(state: VacancyCreateState, input: V
 
 export function validateResultPair(candidate: CandidateRecord) {
   if (candidate.status !== "READY" || !candidate.result) return false;
-  const [first, second] = candidate.result.documents;
+  const documents = candidate.result.documents;
+  if (documents.length === 1) return documents[0].type === "candidate-report"
+    && documents[0].candidateId === candidate.id && documents[0].vacancyId === candidate.vacancyId
+    && documents[0].version === candidate.result.version && documents[0].published && documents[0].valid;
+  const [first, second] = documents;
   return first.type !== second.type && [first, second].every((document) => document.candidateId === candidate.id && document.vacancyId === candidate.vacancyId && document.version === candidate.result?.version && document.published && document.valid);
 }
 

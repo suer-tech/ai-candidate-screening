@@ -45,7 +45,7 @@ export interface MatrixCompilationSkills {
 }
 
 export type MatrixCompilationResult =
-  | { state: "PUBLISHED" | "REUSED"; matrixId: string; matrix: VacancyMatrix; checksum: string; llmCalls: number; repairCycles: number; elapsedMetricExceeded: boolean; sameModelCritic: boolean }
+  | { state: "PUBLISHED" | "REUSED"; matrixId: string; matrix: VacancyMatrix; checksum: string; llmCalls: number; repairCycles: number; elapsedMetricExceeded: boolean; sameModelCritic: boolean; criticFallback?: boolean }
   | { state: "WAITING"; profileVersion: string }
   | { state: "FAILED"; errorCode: string };
 
@@ -85,14 +85,6 @@ export async function compileVacancyMatrix(input: {
   try {
     const draft = await input.skills.compile({ profileVersion: input.profileVersion, canonicalProfile: structuredClone(input.canonicalProfile), sourceFragments: structuredClone(input.sourceFragments) });
     llmCalls += 1; traces.push(draft.traceRef); models.compiler = draft.model;
-    const critic = await input.skills.critique({
-      profileVersion: input.profileVersion,
-      canonicalProfile: structuredClone(input.canonicalProfile),
-      sourceFragments: structuredClone(input.sourceFragments),
-      draft: structuredClone(draft),
-      policy: { compilerPolicyVersion: input.compilerPolicyVersion, singlePassEditor: true },
-    });
-    llmCalls += 1; traces.push(critic.traceRef); models.critic = critic.model;
     const canonicalize = (criteria: MatrixCriterionDraft[]) => canonicalizeVacancyMatrix({
       profileVersion: input.profileVersion,
       compilerPolicyVersion: input.compilerPolicyVersion,
@@ -102,15 +94,27 @@ export async function compileVacancyMatrix(input: {
       criteria,
     });
     let matrix: VacancyMatrix;
+    let criticFallback = false;
     try {
-      matrix = canonicalize(critic.successor.criteria);
+      const critic = await input.skills.critique({
+        profileVersion: input.profileVersion,
+        canonicalProfile: structuredClone(input.canonicalProfile),
+        sourceFragments: structuredClone(input.sourceFragments),
+        draft: structuredClone(draft),
+        policy: { compilerPolicyVersion: input.compilerPolicyVersion, singlePassEditor: true, failSoft: true },
+      });
+      llmCalls += 1; traces.push(critic.traceRef); models.critic = critic.model;
+      try { matrix = canonicalize(critic.successor.criteria); }
+      catch { criticFallback = true; matrix = canonicalize(draft.criteria); }
     } catch {
+      criticFallback = true;
+      models.critic = "unavailable";
       matrix = canonicalize(draft.criteria);
     }
     const published = await input.store.publishMatrix({ ownerId: input.ownerId, fencingToken: claim.fencingToken, matrix, modelVersions: models, protectedTraceRefs: traces });
     return { state: published.reused ? "REUSED" : "PUBLISHED", ...published, matrix, llmCalls, repairCycles,
       elapsedMetricExceeded: now().getTime() - startedAt > MATRIX_COMPILATION_LIMITS.elapsedMetricMs,
-      sameModelCritic: models.compiler === models.critic };
+      sameModelCritic: models.compiler === models.critic, criticFallback };
   } catch (error) {
     const errorCode = safeCode(error);
     await input.store.failCompilation({ profileVersion: input.profileVersion, ownerId: input.ownerId, fencingToken: claim.fencingToken, errorCode });

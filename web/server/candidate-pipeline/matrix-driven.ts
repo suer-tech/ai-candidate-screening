@@ -1,8 +1,9 @@
 import { createHash } from "node:crypto";
 import type { Recommendation } from "./types.ts";
+import { COVERAGE_FIRST_WORKFLOW_VERSION } from "./recovery-contracts.ts";
 
 export const MATRIX_SCHEMA_VERSION = "vacancy-matrix/v1" as const;
-export const MATRIX_WORKFLOW_VERSION = "matrix-v2" as const;
+export const MATRIX_WORKFLOW_VERSION = COVERAGE_FIRST_WORKFLOW_VERSION;
 
 export function isMatrixWorkflowVersion(value: string): boolean {
   return /^matrix-v[1-9]\d*(?:-shadow)?$/.test(value);
@@ -11,7 +12,7 @@ export function isMatrixWorkflowVersion(value: string): boolean {
 export type MatrixOperator = "ALL_OF" | "ANY_OF" | "AT_LEAST_N" | "INFORMATIONAL";
 export type MatrixCategory = "required-experience" | "desired-experience" | "competency" | "abc" | "stop-factor" | "access-to-ke" | "risk" | "additional";
 export type MatrixDecisionEffect = "stop-factor" | "hard-required" | "required-gap" | "risk" | "caveat" | "informational";
-export type MatrixRowState = "Подтверждено" | "Частично подтверждено" | "Не подтверждено" | "Недостаточно данных" | "Противоречие источников" | "Не применимо";
+export type MatrixRowState = "Соответствует" | "Не соответствует" | "Подтверждено" | "Частично подтверждено" | "Не подтверждено" | "Недостаточно данных" | "Противоречие источников" | "Не применимо";
 
 export type MatrixCriterionDraft = {
   temporaryId: string;
@@ -63,6 +64,7 @@ export type CandidateSourceClaim = {
   criterionIds: string[];
   sourceClass: string;
   directness: "direct" | "indirect";
+  relation?: "SUPPORTS" | "CONTRADICTS" | "CONTEXT";
 };
 
 export type CandidateMatrixRow = {
@@ -72,10 +74,50 @@ export type CandidateMatrixRow = {
   checkedSourceIds: string[];
   state: MatrixRowState;
   reason: string;
+  conclusion?: string;
+  evidence?: CandidateRowEvidence[];
   missingData: string;
   followUpQuestion: string;
   verificationState: "NOT_REQUIRED" | "PENDING" | "VERIFIED" | "REJECTED";
 };
+
+export type CandidateRowEvidence = {
+  claimId: string;
+  sourceRef: string;
+  quote: string;
+  relation: "SUPPORTS" | "CONTRADICTS" | "CONTEXT";
+  explanation: string;
+};
+
+export type CriticalVerificationDecision = {
+  criterionId: string;
+  decision: "VERIFIED" | "REJECTED";
+  reason?: string;
+  violationIds?: string[];
+};
+
+export function applyCriticalVerificationDecisions(
+  rows: readonly CandidateMatrixRow[],
+  results: readonly CriticalVerificationDecision[],
+): CandidateMatrixRow[] {
+  const knownIds = new Set(rows.map((row) => row.criterionId));
+  const decisions = new Map<string, CriticalVerificationDecision>();
+  for (const result of results) {
+    if (!knownIds.has(result.criterionId)) throw new Error("MATRIX_CRITICAL_VERIFICATION_UNKNOWN_CRITERION");
+    if (decisions.has(result.criterionId)) throw new Error("MATRIX_CRITICAL_VERIFICATION_DUPLICATE_CRITERION");
+    if (!['VERIFIED', 'REJECTED'].includes(result.decision)) throw new Error("MATRIX_CRITICAL_VERIFICATION_DECISION_INVALID");
+    decisions.set(result.criterionId, result);
+  }
+  return rows.map((row) => {
+    const result = decisions.get(row.criterionId);
+    if (!result) return row.verificationState === "PENDING"
+      ? { ...row, verificationState: "VERIFIED" }
+      : { ...row };
+    if (result.decision === "VERIFIED") return { ...row, verificationState: "VERIFIED" };
+    const verifierReason = result.reason?.trim();
+    return { ...row, verificationState: "REJECTED", reason: verifierReason ? `${row.reason} Проверяющий отметил: ${verifierReason}` : row.reason };
+  });
+}
 
 export type CriticalUnmappedRisk = {
   riskId: string;
@@ -89,6 +131,27 @@ export type CriticalUnmappedRisk = {
   assessmentTraceRef: string;
   verificationTraceRef: string;
 };
+
+export type UnmappedRiskSignal = {
+  signalId: string;
+  text: string;
+  locator: string;
+  sourceClass: string;
+  decisionEffect: string;
+};
+
+export function projectUnmappedRiskEvidence(matrix: unknown, signals: readonly UnmappedRiskSignal[]) {
+  return {
+    matrix,
+    signals: signals.map((signal) => ({
+      signalId: signal.signalId,
+      text: signal.text,
+      locator: signal.locator,
+      sourceClass: signal.sourceClass,
+      decisionEffect: signal.decisionEffect,
+    })),
+  };
+}
 
 function stable(value: unknown): string {
   if (Array.isArray(value)) return `[${value.map(stable).join(",")}]`;
@@ -114,6 +177,11 @@ function validateDraftNode(node: MatrixCriterionDraft, sourceFragments: Record<s
   if (ids.has(node.temporaryId)) throw new Error("MATRIX_TEMPORARY_ID_DUPLICATE");
   ids.add(node.temporaryId);
   if (!Array.isArray(node.sourceRefs) || !node.sourceRefs.length || node.sourceRefs.some((ref) => !Object.prototype.hasOwnProperty.call(sourceFragments, ref))) throw new Error("MATRIX_SOURCE_REF_INVALID");
+  const sourceText = requiredText(node.sourceText, "MATRIX_SOURCE_TEXT_INVALID");
+  if (!node.sourceRefs.some((ref) => sourceFragments[ref].includes(sourceText))) throw new Error("MATRIX_FIDELITY_VIOLATION");
+  const sourceNumbers = new Set(node.sourceRefs.flatMap((ref) => sourceFragments[ref].match(/\d+(?:[.,]\d+)?/g) ?? []));
+  const generatedNumbers = `${node.interpretation} ${node.evaluationRule}`.match(/\d+(?:[.,]\d+)?/g) ?? [];
+  if (generatedNumbers.some((value) => !sourceNumbers.has(value))) throw new Error("MATRIX_INVENTED_THRESHOLD");
   if (!Array.isArray(node.allowedStates) || !node.allowedStates.length) throw new Error("MATRIX_ALLOWED_STATES_INVALID");
   const stopFactorRefs = node.sourceRefs.map(sourceRefIsStopFactor);
   if (stopFactorRefs.some(Boolean) && !stopFactorRefs.every(Boolean)) throw new Error("MATRIX_STOP_FACTOR_SOURCE_MIXED");
@@ -125,7 +193,7 @@ function validateDraftNode(node: MatrixCriterionDraft, sourceFragments: Record<s
   return Object.freeze({
     criterionId: `criterion-${path.map((part) => String(part).padStart(3, "0")).join(".")}`,
     sourceRefs: [...node.sourceRefs],
-    sourceText: requiredText(node.sourceText, "MATRIX_SOURCE_TEXT_INVALID"),
+    sourceText,
     interpretation: requiredText(node.interpretation, "MATRIX_INTERPRETATION_INVALID"),
     category: node.category,
     required: Boolean(node.required),
@@ -154,6 +222,12 @@ export function canonicalizeVacancyMatrix(input: {
   requiredText(input.profileVersion, "MATRIX_PROFILE_VERSION_INVALID");
   if (!Array.isArray(input.criteria) || !input.criteria.length) throw new Error("MATRIX_CRITERIA_EMPTY");
   const ids = new Set<string>();
+  const topLevelSourcePoints = new Set<string>();
+  for (const criterion of input.criteria) for (const sourceRef of criterion.sourceRefs ?? []) {
+    const sourcePoint = `${sourceRef}\u0000${String(criterion.sourceText ?? "").trim()}`;
+    if (topLevelSourcePoints.has(sourcePoint)) throw new Error("MATRIX_OVER_SPLIT");
+    topLevelSourcePoints.add(sourcePoint);
+  }
   const criteria = input.criteria.map((criterion, index) => validateDraftNode(criterion, input.sourceFragments, [index + 1], ids));
   const body = {
     schemaVersion: MATRIX_SCHEMA_VERSION,
@@ -200,18 +274,36 @@ export class InMemoryVacancyMatrixRegistry {
   }
 }
 
-export function validateCandidateMatrixRows(criterionIds: readonly string[], rows: readonly CandidateMatrixRow[]) {
+export function validateCandidateMatrixRows(criterionIds: readonly string[], rows: readonly CandidateMatrixRow[], claims?: readonly CandidateSourceClaim[]) {
   const allowed = new Set(criterionIds);
   const observed = new Set<string>();
   const duplicateIds: string[] = [];
   const unknownIds: string[] = [];
+  const invalidEvidenceIds: string[] = [];
+  const claimById = claims ? new Map(claims.map((claim) => [claim.claimId, claim])) : undefined;
   for (const row of rows) {
     if (observed.has(row.criterionId)) duplicateIds.push(row.criterionId);
     observed.add(row.criterionId);
     if (!allowed.has(row.criterionId)) unknownIds.push(row.criterionId);
+    if (claimById) {
+      const evidence = Array.isArray(row.evidence) ? row.evidence : [];
+      const verdictNeedsEvidence = row.state === "Соответствует" || row.state === "Не соответствует";
+      const insufficientIsExplained = row.state !== "Недостаточно данных" || (Boolean(row.missingData?.trim()) && Boolean(row.followUpQuestion?.trim()));
+      const evidenceIsGrounded = evidence.every((item) => {
+        const claim = claimById.get(item.claimId);
+        return Boolean(claim
+          && claim.criterionIds.includes(row.criterionId)
+          && item.sourceRef === claim.locator
+          && item.quote.trim().length > 0
+          && claim.text.includes(item.quote.trim())
+          && item.relation === (claim.relation ?? "CONTEXT")
+          && item.explanation.trim().length > 0);
+      });
+      if ((verdictNeedsEvidence && evidence.length === 0) || !insufficientIsExplained || !evidenceIsGrounded) invalidEvidenceIds.push(row.criterionId);
+    }
   }
   const missingCriterionIds = criterionIds.filter((id) => !observed.has(id));
-  return { decision: missingCriterionIds.length || duplicateIds.length || unknownIds.length ? "REJECTED" as const : "PASS" as const, missingCriterionIds, duplicateIds, unknownIds };
+  return { decision: missingCriterionIds.length || duplicateIds.length || unknownIds.length || invalidEvidenceIds.length ? "REJECTED" as const : "PASS" as const, missingCriterionIds, duplicateIds, unknownIds, invalidEvidenceIds };
 }
 
 export function assessAbcConditionCoverage(definingConditions: readonly string[], coveredConditions: readonly string[], admissibleLocatorCount: number) {

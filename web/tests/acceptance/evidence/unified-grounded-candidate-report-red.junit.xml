@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="REP-023: matrix-v3 plan has one report artifact and one publication, while legacy pair is not used for new runs" time="0.004122" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\unified-grounded-candidate-report.acceptance.test.ts" failure="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;+ [&#10;+   'new run uses candidate.report-pair/v1 instead of singular candidate.report/v1',&#10;+   'report outputs are not singular: [&amp;quot;abc-pdf&amp;quot;,&amp;quot;result-pdf&amp;quot;]',&#10;+   'publication contract is not exactly one candidate report',&#10;+   'new matrix-v3 plan still invokes legacy pair contract'&#10;+ ]&#10;- []&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;+ [&#10;+   'new run uses candidate.report-pair/v1 instead of singular candidate.report/v1',&#10;+   'report outputs are not singular: [&amp;quot;abc-pdf&amp;quot;,&amp;quot;result-pdf&amp;quot;]',&#10;+   'publication contract is not exactly one candidate report',&#10;+   'new matrix-v3 plan still invokes legacy pair contract'&#10;+ ]&#10;- []">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly deep-equal:
++ actual - expected
+
++ [
++   'new run uses candidate.report-pair/v1 instead of singular candidate.report/v1',
++   'report outputs are not singular: ["abc-pdf","result-pdf"]',
++   'publication contract is not exactly one candidate report',
++   'new matrix-v3 plan still invokes legacy pair contract'
++ ]
+- []
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + [
+  +   'new run uses candidate.report-pair/v1 instead of singular candidate.report/v1',
+  +   'report outputs are not singular: ["abc-pdf","result-pdf"]',
+  +   'publication contract is not exactly one candidate report',
+  +   'new matrix-v3 plan still invokes legacy pair contract'
+  + ]
+  - []
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\unified-grounded-candidate-report.acceptance.test.ts:40:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'new run uses candidate.report-pair/v1 instead of singular candidate.report/v1', 'report outputs are not singular: ["abc-pdf","result-pdf"]', 'publication contract is not exactly one candidate report', 'new matrix-v3 plan still invokes legacy pair contract' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="REP-023: candidate-report model exposes every mandatory HR section exactly once" time="0.000471" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\unified-grounded-candidate-report.acceptance.test.ts" failure="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;+ [&#10;+   'candidate-report type unsupported: TypeError: REQUIRED[type] is not iterable',&#10;+   'identity: expected exactly once',&#10;+   'sources: expected exactly once',&#10;+   'organizational-conditions: expected exactly once',&#10;+   'recommendation: expected exactly once',&#10;+   'executive-summary: expected exactly once',&#10;+   'abc-directions: expected exactly once',&#10;+   'key-cases: expected exactly once',&#10;+   'vacancy-criteria: expected exactly once',&#10;+   'technical-validation: expected exactly once',&#10;+   'motivation: expected exactly once',&#10;+   'strengths: expected exactly once',&#10;+   'risks: expected exactly once',&#10;+   'stop-factors: expected exactly once',&#10;+   'questions: expected exactly once',&#10;+   'next-step: expected exactly once',&#10;+   'matrix: expected exactly once'&#10;+ ]&#10;- []&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;+ [&#10;+   'candidate-report type unsupported: TypeError: REQUIRED[type] is not iterable',&#10;+   'identity: expected exactly once',&#10;+   'sources: expected exactly once',&#10;+   'organizational-conditions: expected exactly once',&#10;+   'recommendation: expected exactly once',&#10;+   'executive-summary: expected exactly once',&#10;+   'abc-directions: expected exactly once',&#10;+   'key-cases: expected exactly once',&#10;+   'vacancy-criteria: expected exactly once',&#10;+   'technical-validation: expected exactly once',&#10;+   'motivation: expected exactly once',&#10;+   'strengths: expected exactly once',&#10;+   'risks: expected exactly once',&#10;+   'stop-factors: expected exactly once',&#10;+   'questions: expected exactly once',&#10;+   'next-step: expected exactly once',&#10;+   'matrix: expected exactly once'&#10;+ ]&#10;- []">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly deep-equal:
++ actual - expected
+
++ [
++   'candidate-report type unsupported: TypeError: REQUIRED[type] is not iterable',
++   'identity: expected exactly once',
++   'sources: expected exactly once',
++   'organizational-conditions: expected exactly once',
++   'recommendation: expected exactly once',
++   'executive-summary: expected exactly once',
++   'abc-directions: expected exactly once',
++   'key-cases: expected exactly once',
++   'vacancy-criteria: expected exactly once',
++   'technical-validation: expected exactly once',
++   'motivation: expected exactly once',
++   'strengths: expected exactly once',
++   'risks: expected exactly once',
++   'stop-factors: expected exactly once',
++   'questions: expected exactly once',
++   'next-step: expected exactly once',
++   'matrix: expected exactly once'
++ ]
+- []
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + [
+  +   'candidate-report type unsupported: TypeError: REQUIRED[type] is not iterable',
+  +   'identity: expected exactly once',
+  +   'sources: expected exactly once',
+  +   'organizational-conditions: expected exactly once',
+  +   'recommendation: expected exactly once',
+  +   'executive-summary: expected exactly once',
+  +   'abc-directions: expected exactly once',
+  +   'key-cases: expected exactly once',
+  +   'vacancy-criteria: expected exactly once',
+  +   'technical-validation: expected exactly once',
+  +   'motivation: expected exactly once',
+  +   'strengths: expected exactly once',
+  +   'risks: expected exactly once',
+  +   'stop-factors: expected exactly once',
+  +   'questions: expected exactly once',
+  +   'next-step: expected exactly once',
+  +   'matrix: expected exactly once'
+  + ]
+  - []
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\unified-grounded-candidate-report.acceptance.test.ts:50:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'candidate-report type unsupported: TypeError: REQUIRED[type] is not iterable', 'identity: expected exactly once', 'sources: expected exactly once', 'organizational-conditions: expected exactly once', 'recommendation: expected exactly once', 'executive-summary: expected exactly once', 'abc-directions: expected exactly once', 'key-cases: expected exactly once', 'vacancy-criteria: expected exactly once', 'technical-validation: expected exactly once', 'motivation: expected exactly once', 'strengths: expected exactly once', 'risks: expected exactly once', 'stop-factors: expected exactly once', 'questions: expected exactly once', 'next-step: expected exactly once', 'matrix: expected exactly once' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="REP-023: report composer artifacts accept compact validated decisions, not raw materials" time="0.000503" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\unified-grounded-candidate-report.acceptance.test.ts"/>
+	<testcase name="REP-023: composer validation preserves decisions, resolves evidence, deduplicates narrative and fails soft" time="0.000519" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\unified-grounded-candidate-report.acceptance.test.ts" failure="public fail-soft candidate-report composition boundary is missing&#10;+ actual - expected&#10;&#10;+ 'undefined'&#10;- 'function'&#10;">
+		<failure type="testCodeFailure" message="public fail-soft candidate-report composition boundary is missing&#10;+ actual - expected&#10;&#10;+ 'undefined'&#10;- 'function'">
+[Error [ERR_TEST_FAILURE]: public fail-soft candidate-report composition boundary is missing
++ actual - expected
+
++ 'undefined'
+- 'function'
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: public fail-soft candidate-report composition boundary is missing
+  + actual - expected
+  
+  + 'undefined'
+  - 'function'
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\unified-grounded-candidate-report.acceptance.test.ts:68:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'undefined',
+    expected: 'function',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="REP-023: singular document endpoint returns one candidate-report PDF" time="0.048668" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\unified-grounded-candidate-report.acceptance.test.ts" failure="Expected values to be strictly equal:&#10;&#10;404 !== 200&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly equal:&#10;&#10;404 !== 200">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly equal:
+
+404 !== 200
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  404 !== 200
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\unified-grounded-candidate-report.acceptance.test.ts:102:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 404,
+    expected: 200,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="REP-023: production orchestration is singular/fail-soft; legacy pair remains read compatibility only" time="0.004877" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\unified-grounded-candidate-report.acceptance.test.ts" failure="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;+ [&#10;+   'new reports stage does not call singular renderer',&#10;+   'new reports stage still calls legacy pair renderer',&#10;+   'reports stage has no deterministic composer fallback path'&#10;+ ]&#10;- []&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;+ [&#10;+   'new reports stage does not call singular renderer',&#10;+   'new reports stage still calls legacy pair renderer',&#10;+   'reports stage has no deterministic composer fallback path'&#10;+ ]&#10;- []">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly deep-equal:
++ actual - expected
+
++ [
++   'new reports stage does not call singular renderer',
++   'new reports stage still calls legacy pair renderer',
++   'reports stage has no deterministic composer fallback path'
++ ]
+- []
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + [
+  +   'new reports stage does not call singular renderer',
+  +   'new reports stage still calls legacy pair renderer',
+  +   'reports stage has no deterministic composer fallback path'
+  + ]
+  - []
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\unified-grounded-candidate-report.acceptance.test.ts:120:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'new reports stage does not call singular renderer', 'new reports stage still calls legacy pair renderer', 'reports stage has no deterministic composer fallback path' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 6 -->
+	<!-- suites 0 -->
+	<!-- pass 1 -->
+	<!-- fail 5 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 333.9039 -->
+</testsuites>

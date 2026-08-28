@@ -14,6 +14,7 @@ const MAX_ATTEMPTS_BY_TOOL: Readonly<Record<string, number>> = Object.freeze({
   "candidate.assessment/v1": 3,
   "candidate.validation/v1": 3,
   "candidate.report-pair/v1": 3,
+  "candidate.report/v1": 3,
   "candidate.drive-publication/v1": 3,
   "candidate.telegram/v1": 3,
 });

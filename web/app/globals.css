@@ -416,6 +416,10 @@ html[data-theme="dark"] .generate-field-button{background:#172b42;border-color:#
 .criterion-row-copy>span{margin:5px 0;color:var(--ink);font-size:12px;line-height:1.5}
 .criterion-row-copy>small{color:var(--blue);font-size:11px!important}
 .criterion-fact>b{color:var(--evidence-verified-ink)}
+.criterion-fact.is-match>b{color:var(--evidence-verified-ink)}
+.criterion-fact.is-mismatch>b{color:var(--risk-ink)}
+.criterion-fact>small{display:block;margin-top:8px;color:var(--blue)}
+.criterion-evidence-empty{margin:0;padding:11px;border:1px solid var(--warning-amber);border-radius:9px;background:var(--warning-soft);color:var(--warning-ink);font-size:11px;line-height:1.5}
 .grouped-evidence-icon{display:block;width:17px;height:17px;color:var(--evidence-verified-ink)}
 .criterion-row-chevron{width:26px;height:26px;display:grid;place-items:center;border-radius:8px;background:var(--blue-soft);color:var(--blue);transition:transform .22s ease,background .2s ease}
 .criterion-row-chevron-icon{display:block;width:12px;height:12px}

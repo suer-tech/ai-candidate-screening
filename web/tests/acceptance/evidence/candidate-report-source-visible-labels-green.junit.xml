@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="REP-024: public HR source-line projection hides internal role labels and preserves the projection model" time="0.002337" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\candidate-report-source-visible-labels.acceptance.test.ts"/>
+	<testcase name="REP-024: visible PDF source rows are filename-only while their exact Google Link annotations remain clickable" time="1.519405" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\candidate-report-source-visible-labels.acceptance.test.ts"/>
+	<testcase name="REP-024: production fallback delegates source body to the shared filename-only projection" time="0.001120" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\candidate-report-source-visible-labels.acceptance.test.ts"/>
+	<!-- tests 3 -->
+	<!-- suites 0 -->
+	<!-- pass 3 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 1783.712 -->
+</testsuites>

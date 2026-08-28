@@ -411,6 +411,7 @@ function createCanonicalToolAdapters() {
       "candidate.assessment/v1": "idempotent-write",
       "candidate.validation/v1": "read-only",
       "candidate.report-pair/v1": "idempotent-write",
+      "candidate.report/v1": "idempotent-write",
       "candidate.drive-publication/v1": "reversible-write",
       "candidate.telegram/v1": "irreversible-write",
     };

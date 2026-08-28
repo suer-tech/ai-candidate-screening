@@ -3356,7 +3356,7 @@ function CandidateDetail({
                     </div>
                     <span>Версия {candidate.result!.version}</span>
                   </div>
-                  <p className="lead">{candidateDecisionSummary(candidate)}</p>
+                  {candidateDecisionSummary(candidate) && <p className="lead">{candidateDecisionSummary(candidate)}</p>}
                   <div className={`ai-recommendation-callout recommendation-${recommendationStyle!.tone}`}>
                     <RecommendationIcon tone={recommendationStyle!.tone} />
                     <div><b>Итог AI</b><p>{candidate.result!.recommendation}</p>{candidate.result!.aiOverview && <small>{candidateRecommendationBasis(candidate.result!.aiOverview)}</small>}</div>
@@ -3438,17 +3438,20 @@ function AiOverviewDetails({
   if (overview.state === "error") return <AssessmentUnavailable />;
   const evidence = Array.isArray(overview.evidence) ? overview.evidence : [];
   const renderedFactIds = new Set<string>();
-  const linkedCriteria = <T extends { factIds?: string[] }>(items: T[], criterionName: (item: T) => string) => items.flatMap((criterion) => {
+  const linkedCriteria = <T extends { factIds?: string[] }>(items: T[], criterionName: (item: T) => string, retainEmpty = false) => items.flatMap((criterion) => {
     const declaredFactIds = Array.isArray(criterion.factIds) ? criterion.factIds : [];
-    const facts = evidence.filter((item) => !renderedFactIds.has(item.id)
-      && (item.criterion === criterionName(criterion) || declaredFactIds.includes(item.id)));
-    if (!facts.length) return [];
+    const facts = evidence.filter((item) => item.criterion === criterionName(criterion) || declaredFactIds.includes(item.id));
+    if (!facts.length && !retainEmpty) return [];
     facts.forEach((fact) => renderedFactIds.add(fact.id));
     return [{ criterion, facts, linkedFactCount: facts.length }];
   });
-  const abcCriteria = linkedCriteria(Array.isArray(overview.abc) ? overview.abc : [], (criterion) => criterion.direction);
-  const additionalCriteria = linkedCriteria(Array.isArray(overview.competencies) ? overview.competencies : [], (criterion) => criterion.name);
-  const unmatchedCriteria = evidence.filter((item) => !renderedFactIds.has(item.id));
+  const allMatrixCriteria = Array.isArray(overview.criteria) ? overview.criteria : [];
+  const abcCriteria = linkedCriteria(Array.isArray(overview.abc) ? overview.abc : [], (criterion) => criterion.direction, true);
+  const additionalCriteria = linkedCriteria(allMatrixCriteria.filter((criterion) => criterion.category === "additional"), (criterion) => criterion.name, true);
+  const summarizedFactIds = new Set([
+    ...(overview.competencies ?? []), ...(overview.strengths ?? []), ...(overview.risks ?? []), ...(overview.stopFactors ?? []), ...(overview.accessToKe ?? []),
+  ].flatMap((item) => Array.isArray(item.factIds) ? item.factIds : []));
+  const unmatchedCriteria = evidence.filter((item) => !renderedFactIds.has(item.id) && !summarizedFactIds.has(item.id));
   const groupedAdditionalEvidence = Array.from(unmatchedCriteria.reduce((groups, fact) => {
     const rawCriterion = fact.criterion?.trim() || "Общий анализ";
     const criterion = /^[a-z][a-z0-9]*(?:[_.:-][a-z0-9]+)+$/i.test(rawCriterion) ? "Общий анализ" : rawCriterion;
@@ -3456,7 +3459,7 @@ function AiOverviewDetails({
     current.push(fact);
     groups.set(criterion, current);
     return groups;
-  }, new Map<string, CandidateEvidenceItem[]>()));
+  }, new Map<string, CandidateEvidenceItem[]>())).filter(([criterion]) => criterion !== "Общий анализ");
   return (
     <>
       <DecisionOutcomes overview={overview} />
@@ -3468,15 +3471,23 @@ function AiOverviewDetails({
           </div>
         </div>
         <section className="assessment-subsection abc-criteria-subsection" aria-labelledby="abc-criteria-heading">
-          <h3 id="abc-criteria-heading">ABC-критерии</h3>
+          <h3 id="abc-criteria-heading">Расшифровка ABC-оценки</h3>
         {abcCriteria.map(({ criterion, facts, linkedFactCount }, index) => {
-          const rowKey = `abc:${criterion.direction}`;
+          const rowKey = `abc:${criterion.direction}:${index}`;
+          const definitions = [["A", criterion.gradeA], ["B", criterion.gradeB], ["C", criterion.gradeC]]
+            .filter((entry): entry is [string, string] => typeof entry[1] === "string" && Boolean(entry[1].trim()))
+            .map(([grade, definition]) => `${grade} — ${definition}`);
+          const inferredConditions = Array.isArray(criterion.definingConditions) && criterion.definingConditions.length
+            ? `Учтённые признаки: ${criterion.definingConditions.join("; ")}` : "";
+          const scale = definitions.length ? `Критерии уровней: ${definitions.join("; ")}`
+            : "Использована стандартная шкала: A — выше ожиданий роли; B — соответствует ожиданиям роли; C — ниже ожиданий или требуется заметная поддержка";
+          const reason = [criterion.reason, inferredConditions, scale].filter(Boolean).join(" ");
           return <CriterionDisclosureRow
             key={rowKey}
-            badge={criterion.grade}
+            badge={["A", "B", "C"].includes(criterion.grade) ? criterion.grade : "?"}
             badgeClass={["A", "B", "C"].includes(criterion.grade) ? `grade-${criterion.grade.toLowerCase()}` : "grade-neutral"}
             title={criterion.direction}
-            reason={criterion.reason ?? "Основание доступно в доказательствах"}
+            reason={reason}
             facts={facts}
             factCount={linkedFactCount}
             evidenceId={`criterion-evidence-abc-${index}`}
@@ -3489,7 +3500,7 @@ function AiOverviewDetails({
           <h3 id="additional-criteria-heading">Дополнительные критерии</h3>
         {additionalCriteria.map(({ criterion: item, facts, linkedFactCount }, index) => {
           const rowKey = `competency:${item.name}:${index}`;
-          return <CriterionDisclosureRow key={rowKey} rowClassName="competency-detail-row" badge="✓" badgeClass="grade-a" title={item.name} reason={item.reason} facts={facts} factCount={linkedFactCount} evidenceId={`criterion-evidence-additional-${index}`} open={openCriterion === rowKey} onToggle={() => setOpenCriterion((current) => current === rowKey ? null : rowKey)} />;
+          return <CriterionDisclosureRow key={rowKey} rowClassName="competency-detail-row" badge={item.state === "Соответствует" ? "✓" : item.state === "Не соответствует" ? "×" : "?"} badgeClass={item.state === "Соответствует" ? "grade-a" : item.state === "Не соответствует" ? "grade-c" : "grade-neutral"} title={item.name} reason={item.reason || item.missingData} facts={facts} factCount={linkedFactCount} emptyEvidenceLabel={item.state === "Недостаточно данных" ? "В материалах сведения не найдены" : undefined} evidenceId={`criterion-evidence-additional-${index}`} open={openCriterion === rowKey} onToggle={() => setOpenCriterion((current) => current === rowKey ? null : rowKey)} />;
         })}
         {groupedAdditionalEvidence.map(([criterion, facts], index) => {
           const rowKey = `evidence:${criterion}`;
@@ -3512,6 +3523,7 @@ function CriterionDisclosureRow({
   open,
   onToggle,
   rowClassName = "",
+  emptyEvidenceLabel,
 }: {
   badge: ReactNode;
   badgeClass: string;
@@ -3523,11 +3535,12 @@ function CriterionDisclosureRow({
   open: boolean;
   onToggle: () => void;
   rowClassName?: string;
+  emptyEvidenceLabel?: string;
 }) {
   return <div className={`criterion-detail-item criterion-detail-row ${rowClassName} ${open ? "is-open" : ""}`.trim()}>
     <button className="criterion-row-trigger" type="button" aria-expanded={open} aria-controls={evidenceId} onClick={onToggle}>
       <span className={`assessment-grade ${badgeClass}`}>{badge}</span>
-      <span className="criterion-row-copy"><b>{title}</b>{reason && <span>{reason}</span>}<small>{formatEvidenceCount(factCount)}</small></span>
+      <span className="criterion-row-copy"><b>{title}</b>{reason && <span>{reason}</span>}<small>{factCount === 0 && emptyEvidenceLabel ? emptyEvidenceLabel : formatEvidenceCount(factCount)}</small></span>
       <span className="criterion-row-chevron" aria-hidden="true">
         <svg className="criterion-row-chevron-icon" viewBox="0 0 16 16" focusable="false">
           <path d="M4 6L8 10L12 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -3536,7 +3549,16 @@ function CriterionDisclosureRow({
     </button>
     <div className="criterion-evidence-area" id={evidenceId} aria-hidden={!open}>
       <div className="criterion-evidence-content">
-        {facts.map((fact) => <div className="criterion-fact" key={fact.id}><b>{contextualEvidenceLabel(fact, title)}</b>{fact.claim && <p>{fact.claim}</p>}<small>{candidateEvidenceSource(fact)}</small>{fact.quote && <blockquote>«{fact.quote}»</blockquote>}</div>)}
+        {facts.length ? facts.map((fact) => {
+          const label = contextualEvidenceLabel(fact, title);
+          const essence = fact.claim?.trim() || fact.quote?.trim();
+          const mismatch = /несоответ|противореч/i.test(label);
+          return <div className={`criterion-fact ${mismatch ? "is-mismatch" : "is-match"}`} key={fact.id}>
+            <b>{label}</b>
+            {essence && <p>{essence}</p>}
+            <small>Источник: {candidateEvidenceSource(fact)}</small>
+          </div>;
+        }) : emptyEvidenceLabel ? <p className="criterion-evidence-empty">{emptyEvidenceLabel}. Это означает «Недостаточно данных», а не неподтверждённый вывод о кандидате.</p> : null}
       </div>
     </div>
   </div>;
@@ -3585,10 +3607,11 @@ function AssessmentAside({ overview }: { overview: NonNullable<NonNullable<UiCan
   const abc = Array.isArray(overview.abc) ? overview.abc : [];
   const accessToKe = Array.isArray(overview.accessToKe) ? overview.accessToKe : [];
   const matchPercent = calculateAbcMatchPercent(abc);
+  const abcConfigured = overview.abcConfigured !== false;
   return <>
     <article className="panel assessment-score-card candidate-matching-score-region"><div className="matching-score-heading" role={matchPercent === null ? undefined : "meter"} aria-label={matchPercent === null ? "Оценка ещё не готова" : `Расчётный индекс ABC: ${matchPercent}%`} aria-valuenow={matchPercent ?? undefined} aria-valuemin={matchPercent === null ? undefined : 0} aria-valuemax={matchPercent === null ? undefined : 100}><div><h2 className="matching-region-heading">Оценка соответствия</h2><h3>ABC-профиль</h3></div><strong>{matchPercent === null ? "—" : `${matchPercent}%`}</strong></div>
-      {matchPercent === null && <p className="assessment-empty">Оценка ещё не готова</p>}
-      <div className="assessment-score-list">{abc.map((item) => { const percent = abcGradePercent(item.grade); return <div key={item.direction}><span className={`assessment-grade ${percent === null ? "grade-neutral" : `grade-${item.grade.toLowerCase()}`}`}>{percent === null ? "—" : item.grade}</span><p><b>{item.direction}</b><i role={percent === null ? undefined : "meter"} aria-label={percent === null ? `${item.direction}: оценка ещё не готова` : `${item.direction}: ${percent}% по индексу ABC`} aria-valuenow={percent ?? undefined} aria-valuemin={percent === null ? undefined : 0} aria-valuemax={percent === null ? undefined : 100} className="grade-bar"><em style={{ width: percent === null ? "0" : `${percent}%` }} /></i></p><strong>{percent === null ? "—" : `${percent}%`}</strong></div>; })}</div>
+      {matchPercent === null && <p className="assessment-empty">{abcConfigured ? "Недостаточно данных для ABC-оценки" : "ABC-профиль не настроен для вакансии"}</p>}
+      {abcConfigured && <div className="assessment-score-list">{abc.map((item) => { const percent = abcGradePercent(item.grade); return <div key={item.direction}><span className={`assessment-grade ${percent === null ? "grade-neutral" : `grade-${item.grade.toLowerCase()}`}`}>{percent === null ? "—" : item.grade}</span><p><b>{item.direction}</b><i role={percent === null ? undefined : "meter"} aria-label={percent === null ? `${item.direction}: недостаточно данных` : `${item.direction}: ${percent}% по индексу ABC`} aria-valuenow={percent ?? undefined} aria-valuemin={percent === null ? undefined : 0} aria-valuemax={percent === null ? undefined : 100} className="grade-bar"><em style={{ width: percent === null ? "0" : `${percent}%` }} /></i></p><strong>{percent === null ? "—" : `${percent}%`}</strong></div>; })}</div>}
     </article>
     <section className="panel ke-access-card candidate-ke-region">
       <article className="ke-access-content">
@@ -3639,11 +3662,18 @@ function genericDecisionText(value: string | undefined) {
 
 function candidateDecisionSummary(candidate: UiCandidate) {
   const overview = candidate.result?.aiOverview;
-  if (!genericDecisionText(candidate.result?.summary)) return candidate.result!.summary;
-  if (!genericDecisionText(overview?.summary)) return overview!.summary!;
-  return overview?.competencies.find((item) => item.reason)?.reason
+  const summary = !genericDecisionText(candidate.result?.summary) ? candidate.result!.summary
+    : !genericDecisionText(overview?.summary) ? overview!.summary!
+    : overview?.competencies.find((item) => item.reason)?.reason
     ?? overview?.abc.find((item) => item.reason)?.reason
     ?? "Предметная выжимка отсутствует в актуальной версии оценки.";
+  if (!overview) return summary;
+  const normalizedBasis = normalizedDecisionText(candidateRecommendationBasis(overview));
+  if (!normalizedBasis) return summary;
+  const withoutRepeatedBasis = summary.split(/(?<=[.!?])\s+/u)
+    .filter((sentence) => normalizedDecisionText(sentence) !== normalizedBasis)
+    .join(" ").trim();
+  return withoutRepeatedBasis || "";
 }
 
 function candidateRecommendationBasis(overview: NonNullable<NonNullable<UiCandidate["result"]>["aiOverview"]>) {
@@ -3652,6 +3682,10 @@ function candidateRecommendationBasis(overview: NonNullable<NonNullable<UiCandid
     ?? (overview.risks ?? []).find((item) => item.reason)?.reason
     ?? (overview.abc ?? []).find((item) => item.reason)?.reason
     ?? "Предметное основание рекомендации отсутствует в актуальной версии оценки.";
+}
+
+function normalizedDecisionText(value: string | undefined) {
+  return value?.toLocaleLowerCase("ru").replace(/[«»"'.,;:!?—–\-()]/g, " ").replace(/\s+/g, " ").trim() ?? "";
 }
 
 function AssessmentUnavailable() {
@@ -3722,30 +3756,11 @@ function MaterialsPanel({
             </small>
           </p>
           <div className="result-materials-actions">
-            <button
-              onClick={() =>
-                onPreview({
-                  candidateId: candidate.id,
-                  type: "candidate-results",
-                  version: candidate.result!.version,
-                  title: "Итоги",
-                })
-              }
-            >
-              Итоги
-            </button>
-            <button
-              onClick={() =>
-                onPreview({
-                  candidateId: candidate.id,
-                  type: "abc-test",
-                  version: candidate.result!.version,
-                  title: "ABC-тест",
-                })
-              }
-            >
-              ABC-тест
-            </button>
+            {candidate.result!.documents.map((document) => {
+              const title = document.type === "candidate-report" ? "Отчёт по кандидату" : document.type === "abc-test" ? "ABC-тест" : "Итоги";
+              return <button key={document.id} onClick={() => onPreview({ candidateId: candidate.id, type: document.type,
+                version: candidate.result!.version, title })}>{title}</button>;
+            })}
           </div>
         </div>
       )}

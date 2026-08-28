@@ -26,8 +26,8 @@ const matrixTasks: readonly PlanTaskTemplate[] = [
   { key: "critical-verification", tool: "candidate.matrix-verify/v1", dependencies: ["rows"], expectedOutputs: ["verified-critical-rows"] },
   { key: "recommendation", tool: "candidate.matrix-recommendation/v1", dependencies: ["critical-verification"], expectedOutputs: ["assessment-snapshot", "deterministic-recommendation"] },
   { key: "validation", tool: "candidate.validation/v1", dependencies: ["recommendation"], expectedOutputs: ["validated-assessment"] },
-  { key: "reports", tool: "candidate.report-pair/v1", dependencies: ["validation"], expectedOutputs: ["abc-pdf", "result-pdf"], completionGate: "validated-report-pair" },
-  { key: "publication", tool: "candidate.drive-publication/v1", dependencies: ["reports"], expectedOutputs: ["published-report-pair"], completionGate: "ready-after-pair-publication" },
+  { key: "reports", tool: "candidate.report/v1", dependencies: ["validation"], expectedOutputs: ["candidate-report-pdf"], completionGate: "validated-candidate-report" },
+  { key: "publication", tool: "candidate.drive-publication/v1", dependencies: ["reports"], expectedOutputs: ["published-candidate-report"], completionGate: "ready-after-report-publication" },
   { key: "notification", tool: "candidate.telegram/v1", dependencies: ["publication"], expectedOutputs: ["delivery-outcome"], completionGate: "logical-notification-created" },
 ];
 const matrixShadowTasks = matrixTasks
@@ -65,6 +65,7 @@ export function registerCanonicalCandidatePipeline(tools: ToolRegistry, goals: G
     tool("candidate.matrix-conflict-submit/v1", "idempotent-write", "artifact"),
     tool("candidate.validation/v1", "read-only", "artifact"),
     { ...tool("candidate.report-pair/v1", "idempotent-write", "artifact"), compensation: "candidate.report-delete/v1" },
+    { ...tool("candidate.report/v1", "idempotent-write", "artifact"), compensation: "candidate.report-delete/v1" },
     { ...tool("candidate.drive-publication/v1", "reversible-write", "artifact", ["GOOGLE_DRIVE_OAUTH_CONNECTION"]), compensation: "candidate.drive-publication-delete/v1" },
     tool("candidate.telegram/v1", "irreversible-write", "artifact", ["TELEGRAM_BOT_TOKEN", "TELEGRAM_RECIPIENT_REFS"]),
     tool("candidate.cleanup-block-triggers/v1", "idempotent-write", "artifact"),

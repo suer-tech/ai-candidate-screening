@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="MDA-010: row acceptance resolves exact claim/source/quote and rejects ungrounded verdicts" time="0.001874" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\hr-safe-grounded-matrix-projection.acceptance.test.ts" failure="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;+ [&#10;+   'positive row without evidence was accepted',&#10;+   'negative row without evidence was accepted',&#10;+   'invented claimId was accepted',&#10;+   'invented sourceRef was accepted',&#10;+   'invented quote was accepted',&#10;+   'empty insufficient row without missingData and follow-up was accepted'&#10;+ ]&#10;- []&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;+ [&#10;+   'positive row without evidence was accepted',&#10;+   'negative row without evidence was accepted',&#10;+   'invented claimId was accepted',&#10;+   'invented sourceRef was accepted',&#10;+   'invented quote was accepted',&#10;+   'empty insufficient row without missingData and follow-up was accepted'&#10;+ ]&#10;- []">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly deep-equal:
++ actual - expected
+
++ [
++   'positive row without evidence was accepted',
++   'negative row without evidence was accepted',
++   'invented claimId was accepted',
++   'invented sourceRef was accepted',
++   'invented quote was accepted',
++   'empty insufficient row without missingData and follow-up was accepted'
++ ]
+- []
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + [
+  +   'positive row without evidence was accepted',
+  +   'negative row without evidence was accepted',
+  +   'invented claimId was accepted',
+  +   'invented sourceRef was accepted',
+  +   'invented quote was accepted',
+  +   'empty insufficient row without missingData and follow-up was accepted'
+  + ]
+  - []
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\hr-safe-grounded-matrix-projection.acceptance.test.ts:39:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'positive row without evidence was accepted', 'negative row without evidence was accepted', 'invented claimId was accepted', 'invented sourceRef was accepted', 'invented quote was accepted', 'empty insufficient row without missingData and follow-up was accepted' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="REP-022: dashboard resolves claimsRef and exposes every row with human evidence, without internal IDs" time="0.000761" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\hr-safe-grounded-matrix-projection.acceptance.test.ts" failure="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;+ [&#10;+   'expected evidence for both rows through claimsRef, actual=0',&#10;+   'human quotes from separate claims artifact are missing',&#10;+   'human-readable source locations are missing',&#10;+   'dashboard leaks claim-role-1',&#10;+   'dashboard leaks claim-risk-1'&#10;+ ]&#10;- []&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;+ [&#10;+   'expected evidence for both rows through claimsRef, actual=0',&#10;+   'human quotes from separate claims artifact are missing',&#10;+   'human-readable source locations are missing',&#10;+   'dashboard leaks claim-role-1',&#10;+   'dashboard leaks claim-risk-1'&#10;+ ]&#10;- []">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly deep-equal:
++ actual - expected
+
++ [
++   'expected evidence for both rows through claimsRef, actual=0',
++   'human quotes from separate claims artifact are missing',
++   'human-readable source locations are missing',
++   'dashboard leaks claim-role-1',
++   'dashboard leaks claim-risk-1'
++ ]
+- []
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + [
+  +   'expected evidence for both rows through claimsRef, actual=0',
+  +   'human quotes from separate claims artifact are missing',
+  +   'human-readable source locations are missing',
+  +   'dashboard leaks claim-role-1',
+  +   'dashboard leaks claim-risk-1'
+  + ]
+  - []
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\hr-safe-grounded-matrix-projection.acceptance.test.ts:66:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'expected evidence for both rows through claimsRef, actual=0', 'human quotes from separate claims artifact are missing', 'human-readable source locations are missing', 'dashboard leaks claim-role-1', 'dashboard leaks claim-risk-1' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="MDA-011: absent vacancy ABC is shown as not configured and never projected from criterion IDs" time="0.005324" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\hr-safe-grounded-matrix-projection.acceptance.test.ts" failure="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;+ [&#10;+   'technical main-matrix criterion was projected as ABC direction',&#10;+   'dashboard does not explicitly say ABC is not configured',&#10;+   'rows stage invokes abc_matrix_assessment without a complete A/B/C vacancy-direction gate'&#10;+ ]&#10;- []&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;+ [&#10;+   'technical main-matrix criterion was projected as ABC direction',&#10;+   'dashboard does not explicitly say ABC is not configured',&#10;+   'rows stage invokes abc_matrix_assessment without a complete A/B/C vacancy-direction gate'&#10;+ ]&#10;- []">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly deep-equal:
++ actual - expected
+
++ [
++   'technical main-matrix criterion was projected as ABC direction',
++   'dashboard does not explicitly say ABC is not configured',
++   'rows stage invokes abc_matrix_assessment without a complete A/B/C vacancy-direction gate'
++ ]
+- []
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + [
+  +   'technical main-matrix criterion was projected as ABC direction',
+  +   'dashboard does not explicitly say ABC is not configured',
+  +   'rows stage invokes abc_matrix_assessment without a complete A/B/C vacancy-direction gate'
+  + ]
+  - []
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\hr-safe-grounded-matrix-projection.acceptance.test.ts:77:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'technical main-matrix criterion was projected as ABC direction', 'dashboard does not explicitly say ABC is not configured', 'rows stage invokes abc_matrix_assessment without a complete A/B/C vacancy-direction gate' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="REP-022: both PDF models contain human quote/location and no runtime identifiers or verifier prose" time="1.431155" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\hr-safe-grounded-matrix-projection.acceptance.test.ts" failure="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;+ [&#10;+   'abc-test leaked claim-role-1',&#10;+   'abc-test leaked criterion-role',&#10;+   'abc-test leaked artifactId',&#10;+   'abc-test leaked candidate:///',&#10;+   'abc-test leaked matrix-claims/v2',&#10;+   'abc-test leaked candidate-policy-v1',&#10;+   'candidate-results leaked claim-role-1',&#10;+   'candidate-results leaked criterion-role',&#10;+   'candidate-results leaked artifactId',&#10;+   'candidate-results leaked candidate:///',&#10;+   'candidate-results leaked matrix-claims/v2',&#10;+   'candidate-results leaked candidate-policy-v1'&#10;+ ]&#10;- []&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;+ [&#10;+   'abc-test leaked claim-role-1',&#10;+   'abc-test leaked criterion-role',&#10;+   'abc-test leaked artifactId',&#10;+   'abc-test leaked candidate:///',&#10;+   'abc-test leaked matrix-claims/v2',&#10;+   'abc-test leaked candidate-policy-v1',&#10;+   'candidate-results leaked claim-role-1',&#10;+   'candidate-results leaked criterion-role',&#10;+   'candidate-results leaked artifactId',&#10;+   'candidate-results leaked candidate:///',&#10;+   'candidate-results leaked matrix-claims/v2',&#10;+   'candidate-results leaked candidate-policy-v1'&#10;+ ]&#10;- []">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly deep-equal:
++ actual - expected
+
++ [
++   'abc-test leaked claim-role-1',
++   'abc-test leaked criterion-role',
++   'abc-test leaked artifactId',
++   'abc-test leaked candidate:///',
++   'abc-test leaked matrix-claims/v2',
++   'abc-test leaked candidate-policy-v1',
++   'candidate-results leaked claim-role-1',
++   'candidate-results leaked criterion-role',
++   'candidate-results leaked artifactId',
++   'candidate-results leaked candidate:///',
++   'candidate-results leaked matrix-claims/v2',
++   'candidate-results leaked candidate-policy-v1'
++ ]
+- []
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + [
+  +   'abc-test leaked claim-role-1',
+  +   'abc-test leaked criterion-role',
+  +   'abc-test leaked artifactId',
+  +   'abc-test leaked candidate:///',
+  +   'abc-test leaked matrix-claims/v2',
+  +   'abc-test leaked candidate-policy-v1',
+  +   'candidate-results leaked claim-role-1',
+  +   'candidate-results leaked criterion-role',
+  +   'candidate-results leaked artifactId',
+  +   'candidate-results leaked candidate:///',
+  +   'candidate-results leaked matrix-claims/v2',
+  +   'candidate-results leaked candidate-policy-v1'
+  + ]
+  - []
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\hr-safe-grounded-matrix-projection.acceptance.test.ts:95:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'abc-test leaked claim-role-1', 'abc-test leaked criterion-role', 'abc-test leaked artifactId', 'abc-test leaked candidate:///', 'abc-test leaked matrix-claims/v2', 'abc-test leaked candidate-policy-v1', 'candidate-results leaked claim-role-1', 'candidate-results leaked criterion-role', 'candidate-results leaked artifactId', 'candidate-results leaked candidate:///', 'candidate-results leaked matrix-claims/v2', 'candidate-results leaked candidate-policy-v1' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="REP-022: derived strengths, competencies and risks require displayable evidence" time="0.000570" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\hr-safe-grounded-matrix-projection.acceptance.test.ts" failure="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;+ [&#10;+   'strength was derived without displayable evidence',&#10;+   'competency was derived without displayable evidence',&#10;+   'risk was derived without displayable evidence'&#10;+ ]&#10;- []&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;+ [&#10;+   'strength was derived without displayable evidence',&#10;+   'competency was derived without displayable evidence',&#10;+   'risk was derived without displayable evidence'&#10;+ ]&#10;- []">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly deep-equal:
++ actual - expected
+
++ [
++   'strength was derived without displayable evidence',
++   'competency was derived without displayable evidence',
++   'risk was derived without displayable evidence'
++ ]
+- []
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + [
+  +   'strength was derived without displayable evidence',
+  +   'competency was derived without displayable evidence',
+  +   'risk was derived without displayable evidence'
+  + ]
+  - []
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\hr-safe-grounded-matrix-projection.acceptance.test.ts:104:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'strength was derived without displayable evidence', 'competency was derived without displayable evidence', 'risk was derived without displayable evidence' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 5 -->
+	<!-- suites 0 -->
+	<!-- pass 0 -->
+	<!-- fail 5 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 1726.4282 -->
+</testsuites>

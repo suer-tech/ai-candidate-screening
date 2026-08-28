@@ -2,7 +2,7 @@ import { ProductNotFoundError, readCurrentResult } from "../../../server/product
 import type { ResultDocumentType } from "../../product-model.ts";
 import { requestPrincipal } from "../../../server/auth/request-principal.ts";
 
-const DOCUMENTS = new Set<ResultDocumentType>(["candidate-results", "abc-test"]);
+const DOCUMENTS = new Set<ResultDocumentType>(["candidate-report", "candidate-results", "abc-test"]);
 const PRIVATE_HEADERS = { "cache-control": "private, no-store" };
 
 export async function GET(request: Request) {

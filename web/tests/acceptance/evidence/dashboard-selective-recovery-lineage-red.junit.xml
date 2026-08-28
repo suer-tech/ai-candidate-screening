@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="WF-023 dashboard: published selective-recovery successor projects READY with source-run AI artifacts" time="0.003155" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\dashboard-selective-recovery-lineage.acceptance.test.ts" failure="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;+ [&#10;+   'status expected READY, actual=WAITING_FOR_STABILITY',&#10;+   'progress expected 100, actual=0',&#10;+   'milestone expected published, actual=Ожидание стабильности материалов',&#10;+   'current report pair missing; result=null',&#10;+   'AI overview was not resolved through source lineage; overview=undefined',&#10;+   'source evidence artifact is absent from AI overview',&#10;+   'source transcript missing; transcript=undefined',&#10;+   'production dashboard report query has no recovery lineage traversal'&#10;+ ]&#10;- []&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;+ [&#10;+   'status expected READY, actual=WAITING_FOR_STABILITY',&#10;+   'progress expected 100, actual=0',&#10;+   'milestone expected published, actual=Ожидание стабильности материалов',&#10;+   'current report pair missing; result=null',&#10;+   'AI overview was not resolved through source lineage; overview=undefined',&#10;+   'source evidence artifact is absent from AI overview',&#10;+   'source transcript missing; transcript=undefined',&#10;+   'production dashboard report query has no recovery lineage traversal'&#10;+ ]&#10;- []">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly deep-equal:
++ actual - expected
+
++ [
++   'status expected READY, actual=WAITING_FOR_STABILITY',
++   'progress expected 100, actual=0',
++   'milestone expected published, actual=Ожидание стабильности материалов',
++   'current report pair missing; result=null',
++   'AI overview was not resolved through source lineage; overview=undefined',
++   'source evidence artifact is absent from AI overview',
++   'source transcript missing; transcript=undefined',
++   'production dashboard report query has no recovery lineage traversal'
++ ]
+- []
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + [
+  +   'status expected READY, actual=WAITING_FOR_STABILITY',
+  +   'progress expected 100, actual=0',
+  +   'milestone expected published, actual=Ожидание стабильности материалов',
+  +   'current report pair missing; result=null',
+  +   'AI overview was not resolved through source lineage; overview=undefined',
+  +   'source evidence artifact is absent from AI overview',
+  +   'source transcript missing; transcript=undefined',
+  +   'production dashboard report query has no recovery lineage traversal'
+  + ]
+  - []
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\dashboard-selective-recovery-lineage.acceptance.test.ts:85:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'status expected READY, actual=WAITING_FOR_STABILITY', 'progress expected 100, actual=0', 'milestone expected published, actual=Ожидание стабильности материалов', 'current report pair missing; result=null', 'AI overview was not resolved through source lineage; overview=undefined', 'source evidence artifact is absent from AI overview', 'source transcript missing; transcript=undefined', 'production dashboard report query has no recovery lineage traversal' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 1 -->
+	<!-- suites 0 -->
+	<!-- pass 0 -->
+	<!-- fail 1 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 178.8505 -->
+</testsuites>

@@ -7,6 +7,7 @@ import { RuntimeConflictError } from "./runtime.ts";
 import type { BudgetKind, BudgetLimits, SideEffectClass } from "./types.ts";
 import { CANDIDATE_ASSESSMENT_PROMPT_ARTIFACT, standardEditablePrompt, type EditablePromptSnapshot } from "../product/prompt-contracts.ts";
 import { candidateFailureMessage, taskFailurePolicy } from "./failure-policy.ts";
+import { COVERAGE_FIRST_WORKFLOW_VERSION, recoveryArtifactPurpose, recoveryArtifactSchema } from "../candidate-pipeline/recovery-contracts.ts";
 
 type Row = Record<string, unknown>;
 type TaskRow = { id: string; run_id: string; task_key: string; tool_key: string; state: string; revision: number; attempt_count: number; lease_owner: string | null; lease_token: number; lease_expires_at: number | null; idempotency_identity: string };
@@ -17,7 +18,11 @@ export class PostgresAgentRuntimeRepository {
 
   async createGoal(input: { goalId: string; runId: string; candidateId: number; goalType: string; workflowVersion?: string; inputVersion: string; profileVersion: string; policyVersion: string; completionCriteriaVersion: string; completionCriteria: string[]; budgets: BudgetLimits; triggerIdentity: string }) {
     const existing = await this.sql<{ id: string }[]>`SELECT id FROM agent_runs WHERE trigger_identity=${input.triggerIdentity}`; if (existing[0]) return { created: false, runId: existing[0].id };
-    const reusableGoals = await this.sql<{ id: string }[]>`SELECT id FROM agent_goals WHERE candidate_id=${input.candidateId} AND input_version=${input.inputVersion} AND profile_version=${input.profileVersion} AND goal_type=${input.goalType} LIMIT 1`;
+    const reusableGoals = await this.sql<{ id: string }[]>`SELECT id FROM agent_goals
+      WHERE candidate_id=${input.candidateId} AND input_version=${input.inputVersion}
+        AND profile_version=${input.profileVersion} AND goal_type=${input.goalType}
+        AND policy_version=${input.policyVersion}
+      LIMIT 1`;
     const goalId = reusableGoals[0]?.id ?? input.goalId;
     const goalCreated = !reusableGoals[0];
     const registries = createSyntheticRegistries(); registerCanonicalCandidatePipeline(registries.tools, registries.goals);
@@ -36,19 +41,57 @@ export class PostgresAgentRuntimeRepository {
           : [];
         const vacancy = (versionRows[0] ?? currentRows[0]) ? JSON.parse((versionRows[0] ?? currentRows[0]).record_json) as { analysisPrompt?: EditablePromptSnapshot } : {};
         const analysisPrompt = vacancy.analysisPrompt ?? standardEditablePrompt(CANDIDATE_ASSESSMENT_PROMPT_ARTIFACT);
+        const workflowVersion = input.workflowVersion ?? (input.goalType === "candidate-analysis-matrix/v1" ? COVERAGE_FIRST_WORKFLOW_VERSION : "legacy-v1");
+        const sourceRuns = !goalCreated
+          ? await transaction<{ id: string; state: string; input_version: string; profile_version: string; workflow_version: string; policy_version: string }[]>`SELECT source_run.id,source_run.state,source_goal.input_version,source_goal.profile_version,source_run.workflow_version,source_goal.policy_version
+              FROM agent_runs source_run JOIN agent_goals source_goal ON source_goal.id=source_run.goal_id
+              WHERE source_run.goal_id=${goalId} AND source_run.state IN ('FAILED','SUCCEEDED')
+                AND source_goal.input_version=${input.inputVersion} AND source_goal.profile_version=${input.profileVersion}
+                AND source_goal.goal_type=${input.goalType} AND source_goal.policy_version=${input.policyVersion}
+                AND source_run.workflow_version=${workflowVersion}
+              ORDER BY source_run.last_progress_at DESC LIMIT 1 FOR UPDATE`
+          : [];
+        const sourceRun = sourceRuns[0]?.state === "FAILED"
+          && sourceRuns[0].input_version === input.inputVersion
+          && sourceRuns[0].profile_version === input.profileVersion
+          && sourceRuns[0].policy_version === input.policyVersion
+          && sourceRuns[0].workflow_version === workflowVersion ? sourceRuns[0] : undefined;
+        const sourceTasks = sourceRun
+          ? await transaction<{ id: string; task_key: string; tool_key: string; state: string }[]>`SELECT id,run_id,task_key,tool_key,state FROM agent_tasks WHERE run_id=${sourceRun.id}`
+          : [];
+        const sourceTaskByKey = new Map(sourceTasks.map((task) => [task.task_key, task]));
+        const reusableTasks = new Map<string, typeof sourceTasks[number]>();
+        if (sourceRun) for (const plannedTask of plan) {
+          const sourceTask = sourceTaskByKey.get(plannedTask.key);
+          const expectedSchema = recoveryArtifactSchema(workflowVersion, plannedTask.tool);
+          if (!sourceTask || sourceTask.state !== "SUCCEEDED" || !expectedSchema) break;
+          const artifacts = await transaction<{ schema_version: string; provenance: string; storage_identity: string }[]>`SELECT artifact.schema_version,memory.provenance,artifact.storage_identity
+            FROM agent_memory_entries memory JOIN agent_artifact_refs artifact ON artifact.memory_entry_id=memory.id
+            WHERE memory.run_id=${sourceRun.id} AND memory.provenance=${plannedTask.tool}
+              AND memory.purpose=${recoveryArtifactPurpose(workflowVersion)} AND artifact.schema_version=${expectedSchema}
+            ORDER BY artifact.id DESC LIMIT 1`;
+          if (!artifacts[0] || artifacts[0].schema_version !== expectedSchema) break;
+          reusableTasks.set(plannedTask.key, sourceTask);
+        }
+        const recoveryBoundaryKey = sourceRun ? plan[reusableTasks.size]?.key : undefined;
         if (goalCreated) await transaction`INSERT INTO agent_goals (id,candidate_id,goal_type,input_version,profile_version,policy_version,completion_criteria_version,completion_criteria_json,state,revision,created_at) VALUES (${goalId},${input.candidateId},${input.goalType},${input.inputVersion},${input.profileVersion},${input.policyVersion},${input.completionCriteriaVersion},${JSON.stringify(input.completionCriteria)},'ACTIVE',1,${createdAt})`;
-        const workflowVersion = input.workflowVersion ?? (input.goalType === "candidate-analysis-matrix/v1" ? "matrix-v2" : "legacy-v1");
-        await transaction`INSERT INTO agent_runs (id,goal_id,trigger_identity,state,revision,current_plan_version,last_progress_at,analysis_prompt_text,analysis_prompt_artifact_id,analysis_prompt_hash,workflow_version) VALUES (${input.runId},${goalId},${input.triggerIdentity},'ACTIVE',1,1,${createdAt},${analysisPrompt.text},${analysisPrompt.artifactId},${analysisPrompt.hash},${workflowVersion})`;
+        else await transaction`UPDATE agent_goals SET state='ACTIVE',revision=revision+1 WHERE id=${goalId}`;
+        await transaction`INSERT INTO agent_runs (id,goal_id,trigger_identity,state,revision,current_plan_version,last_progress_at,analysis_prompt_text,analysis_prompt_artifact_id,analysis_prompt_hash,workflow_version,recovery_source_run_id) VALUES (${input.runId},${goalId},${input.triggerIdentity},'ACTIVE',1,1,${createdAt},${analysisPrompt.text},${analysisPrompt.artifactId},${analysisPrompt.hash},${workflowVersion},${sourceRun?.id ?? null})`;
         await transaction`INSERT INTO agent_plan_versions (id,run_id,version,reason,plan_json,created_at) VALUES (${planId},${input.runId},1,'INITIAL_PLAN',${JSON.stringify(plan)},${createdAt})`;
         for (const task of plan) {
           const id = taskId(task.key); const definition = registries.tools.get(task.tool);
+          const reusedFrom = reusableTasks.get(task.key);
+          const dependenciesReused = task.dependencies.every((dependency) => reusableTasks.has(dependency));
+          const initialState = reusedFrom ? "SUCCEEDED" : sourceRun
+            ? task.key === recoveryBoundaryKey ? "RUNNABLE" : "PENDING"
+            : task.dependencies.length === 0 || dependenciesReused ? "RUNNABLE" : "PENDING";
           const operations = task.tool === "candidate.drive-snapshot/v1" ? ["execute","list","download"] : ["candidate.document-extraction/v1","candidate.transcription/v1"].includes(task.tool) ? ["execute","download"] : task.tool === "candidate.drive-publication/v1" ? ["execute","ensure-folder","publish","cleanup"] : task.tool === "candidate.cleanup-reports/v1" ? ["execute","cleanup"] : ["execute"];
-          await transaction`INSERT INTO agent_tasks (id,run_id,plan_version_id,task_key,tool_key,state,revision,attempt_count,lease_token,idempotency_identity,preconditions_json,expected_outputs_json) VALUES (${id},${input.runId},${planId},${task.key},${task.tool},${task.dependencies.length ? "PENDING" : "RUNNABLE"},1,0,0,${`${input.runId}:plan:1:${task.key}`},${JSON.stringify(task.dependencies)},${JSON.stringify(task.expectedOutputs)})`;
+          await transaction`INSERT INTO agent_tasks (id,run_id,plan_version_id,task_key,tool_key,state,revision,attempt_count,lease_token,idempotency_identity,preconditions_json,expected_outputs_json,reused_from_task_id) VALUES (${id},${input.runId},${planId},${task.key},${task.tool},${initialState},1,0,0,${`${input.runId}:plan:1:${task.key}`},${JSON.stringify(task.dependencies)},${JSON.stringify(task.expectedOutputs)},${reusedFrom?.id ?? null})`;
           for (const dependency of task.dependencies) await transaction`INSERT INTO agent_task_dependencies (task_id,depends_on_task_id,required_outcome) VALUES (${id},${taskId(dependency)},'SUCCEEDED')`;
           await transaction`INSERT INTO agent_tool_grants (id,task_id,candidate_id,run_id,input_version,policy_version,tool_key,operations_json,side_effect_class,budget_link,expires_at) VALUES (${`${id}:grant:execute`},${id},${input.candidateId},${input.runId},${input.inputVersion},${input.policyVersion},${task.tool},${JSON.stringify(operations)},${definition.sideEffectClass},${`${input.runId}:budget:externalRequests`},${grantExpiresAt})`;
         }
         for (const [kind, limit] of Object.entries(input.budgets) as [BudgetKind, number][]) await transaction`INSERT INTO agent_budget_ledger (id,run_id,kind,limit_value,used_value,revision) VALUES (${`${input.runId}:budget:${kind}`},${input.runId},${kind},${limit},0,1)`;
-        await transaction`INSERT INTO agent_events (id,run_id,sequence,event_identity,type,actor,plan_version,safe_payload_json,created_at) VALUES (${randomUUID()},${input.runId},1,${goalCreated ? `goal-created:${goalId}` : `run-created:${input.triggerIdentity}`},${goalCreated ? 'GOAL_CREATED' : 'RUN_CREATED'},'runtime',1,${JSON.stringify({ goalType: input.goalType, workflowVersion, inputVersion: input.inputVersion, profileVersion: input.profileVersion, policyVersion: input.policyVersion, goalReused: !goalCreated })},${createdAt})`;
+        await transaction`INSERT INTO agent_events (id,run_id,sequence,event_identity,type,actor,plan_version,safe_payload_json,created_at) VALUES (${randomUUID()},${input.runId},1,${sourceRun ? `run-recovery-created:${input.runId}` : goalCreated ? `goal-created:${goalId}` : `run-created:${input.triggerIdentity}`},${sourceRun ? 'RUN_RECOVERY_CREATED' : goalCreated ? 'GOAL_CREATED' : 'RUN_CREATED'},'runtime',1,${JSON.stringify({ goalType: input.goalType, workflowVersion, inputVersion: input.inputVersion, profileVersion: input.profileVersion, policyVersion: input.policyVersion, goalReused: !goalCreated, recoverySourceRunId: sourceRun?.id, reusedTaskKeys: [...reusableTasks.keys()] })},${createdAt})`;
       });
     } catch (error) {
       const raced = await this.sql<{ id: string }[]>`SELECT id FROM agent_runs WHERE trigger_identity=${input.triggerIdentity}`; if (raced[0]) return { created: false, runId: raced[0].id }; throw error;

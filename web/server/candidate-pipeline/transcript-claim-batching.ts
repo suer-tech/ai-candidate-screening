@@ -25,13 +25,10 @@ function compactCriterion(value: unknown): UnknownRecord | undefined {
   }) : [];
   return Object.fromEntries([
     ["criterionId", source.criterionId],
+    ["section", source.category],
     ["sourceText", source.sourceText],
     ["interpretation", source.interpretation],
-    ["evaluationRule", source.evaluationRule],
-    ["required", source.required],
     ["hardRequired", source.hardRequired],
-    ["decisionEffect", source.decisionEffect],
-    ["operator", source.operator],
     ["children", children],
   ].filter(([, item]) => item !== undefined));
 }
@@ -90,6 +87,7 @@ function makeRequest(input: {
     order: input.order,
     request: {
       matrix: input.matrix,
+      requestedCriterionIds: collectCriterionIds(record(input.matrix)?.criteria),
       materials: {
         ...input.flags,
         documents: input.documents ?? [],
@@ -99,6 +97,15 @@ function makeRequest(input: {
       batch: { batchId, order: input.order, kind: input.kind },
     },
   } satisfies CriterionClaimExtractionBatch;
+}
+
+function collectCriterionIds(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item) => {
+    const criterion = record(item);
+    if (!criterion || typeof criterion.criterionId !== "string") return [];
+    return [criterion.criterionId, ...collectCriterionIds(criterion.children)];
+  });
 }
 
 function packDocuments(input: {
@@ -247,4 +254,55 @@ export function buildCriterionClaimExtractionBatches(input: Readonly<{
     overlapUtterances: input.overlapUtterances, startOrder: documents.length });
   const batches = [...documents, ...transcriptBatches];
   return batches.length ? batches : [empty];
+}
+
+export type CriterionCoverageEntry = {
+  criterionId: string;
+  scanResult: "FOUND" | "NOT_FOUND_IN_BATCH";
+  evidence: Array<{ evidenceId?: string; relation: "SUPPORTS" | "CONTRADICTS" | "CONTEXT"; quote: string; locator: string; utteranceIds?: string[] }>;
+};
+
+export function validateCriterionCoverageLedger(requested: readonly string[], returned: readonly CriterionCoverageEntry[]) {
+  const allowed = new Set(requested);
+  const observed = new Set<string>();
+  for (const entry of returned) {
+    if (observed.has(entry.criterionId)) throw new Error(`COVERAGE_DUPLICATE_CRITERION:${entry.criterionId}`);
+    if (!allowed.has(entry.criterionId)) throw new Error(`COVERAGE_UNKNOWN_CRITERION:${entry.criterionId}`);
+    observed.add(entry.criterionId);
+  }
+  return { missingCriterionIds: requested.filter((criterionId) => !observed.has(criterionId)) };
+}
+
+export async function runCriterionCoverageWorkflow(input: {
+  batches: readonly CriterionClaimExtractionBatch[];
+  criterionIds: readonly string[];
+  extract: (request: { batchId: string; requestedCriterionIds: readonly string[]; retry: boolean }) => Promise<{ entries: CriterionCoverageEntry[] }>;
+  gapSearch: (request: { requestedCriterionIds: readonly string[] }) => Promise<{ entries: CriterionCoverageEntry[] }>;
+}) {
+  const ledger: Array<{ batchId: string; entries: CriterionCoverageEntry[] }> = [];
+  for (const batch of input.batches) {
+    const primary = await input.extract({ batchId: batch.batchId, requestedCriterionIds: input.criterionIds, retry: false });
+    const primaryValidation = validateCriterionCoverageLedger(input.criterionIds, primary.entries);
+    let entries = [...primary.entries];
+    if (primaryValidation.missingCriterionIds.length) {
+      const retry = await input.extract({ batchId: batch.batchId, requestedCriterionIds: primaryValidation.missingCriterionIds, retry: true });
+      validateCriterionCoverageLedger(primaryValidation.missingCriterionIds, retry.entries);
+      entries = [...entries, ...retry.entries];
+    }
+    const finalValidation = validateCriterionCoverageLedger(input.criterionIds, entries);
+    entries.push(...finalValidation.missingCriterionIds.map((criterionId) => ({ criterionId, scanResult: "NOT_FOUND_IN_BATCH" as const, evidence: [] })));
+    ledger.push({ batchId: batch.batchId, entries: input.criterionIds.map((criterionId) => entries.find((entry) => entry.criterionId === criterionId)!) });
+  }
+  const zeroCriterionIds = input.criterionIds.filter((criterionId) => !ledger.some((cell) => cell.entries.some((entry) => entry.criterionId === criterionId && entry.scanResult === "FOUND")));
+  let gapSearchCount = 0;
+  const gapEntries: CriterionCoverageEntry[] = [];
+  if (zeroCriterionIds.length) {
+    const gap = await input.gapSearch({ requestedCriterionIds: zeroCriterionIds });
+    validateCriterionCoverageLedger(zeroCriterionIds, gap.entries);
+    gapEntries.push(...gap.entries); gapSearchCount = 1;
+  }
+  const evidence = [...ledger.flatMap((cell) => cell.entries), ...gapEntries].flatMap((entry) => entry.evidence.map((item) => ({ ...item, criterionId: entry.criterionId })));
+  const unique = new Map<string, (typeof evidence)[number]>();
+  for (const item of evidence) unique.set(`${item.criterionId}\u0000${item.locator}\u0000${item.relation}`, item);
+  return { ledger, evidence: [...unique.values()], gapSearchCount };
 }

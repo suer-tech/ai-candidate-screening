@@ -101,4 +101,76 @@
 - [x] 13.2 Добавить versioned critic-editor prompt/response artifact с `PASS|CORRECTED`, audit changes и полным successor draft.
 - [x] 13.3 Перевести shared compilation на `compile → critic-editor → canonicalize → publish`, удалить вызовы matrix repair, повторную критику и terminal repair-budget path.
 - [x] 13.4 Обновить runtime capability provisioning и provenance на новый critic-editor contract.
-- [ ] 13.5 Выполнить связанный acceptance/regression контур и обновить архитектурное описание фактического workflow.
+- [x] 13.5 Выполнить связанный acceptance/regression контур и обновить архитектурное описание фактического workflow.
+
+## 14. Coverage-first HR assessment revision
+
+- [x] 14.1 Поручить независимому acceptance-субагенту зафиксировать RED для компактной матрицы без over-splitting/invented requirements, допустимого candidate/resume self-report и непустых strengths/competencies из положительных строк.
+- [x] 14.2 Добавить RED для transcript/document batch coverage ledger: exact requested/returned criterion IDs, `FOUND|NOT_FOUND_IN_BATCH`, overlap dedupe, targeted missing-ID retry и один gap-search по нулевым критериям.
+- [x] 14.3 Упростить compiler и fail-soft critic-editor prompts/contracts до coverage/fidelity/over-splitting/stop-factor-origin; при недоступном критике публиковать технически пригодный compiler draft с warning.
+- [x] 14.4 Обновить claim extraction schema/prompt: batch не принимает решение, возвращает coverage entry по каждому ID и evidence relations `SUPPORTS|CONTRADICTS|CONTEXT`; self-report допустим как HR-сведение.
+- [x] 14.5 Реализовать deterministic extraction coverage harness, targeted retry, global aggregation/dedup и bounded gap-search без блокировки кандидата.
+- [x] 14.6 Заменить risk-only open pass сбалансированными `STRENGTH|CONCERN|QUESTION` observations и убрать обязательный assess/verify-critical-risk cascade из новых runs.
+- [x] 14.7 Обновить conflict prompt/aggregation: прямые несовместимые утверждения сохраняются, а дополнение, детализация, разные периоды, omission и явная коррекция не считаются конфликтом автоматически.
+- [x] 14.8 Перевести row evaluator на ровно три состояния `Соответствует|Не соответствует|Недостаточно данных`, exact evaluation coverage, targeted retry и технический fail-soft fallback для отсутствующей строки.
+- [x] 14.9 Ограничить semantic verifier сработавшими стоп-факторами и существенно отказными выводами, передавать точные цитаты и сохранять исходную строку при omitted/timeout/schema failure.
+- [x] 14.10 Заменить deterministic required/critical-unmapped-risk formula на versioned holistic recommendation synthesis с единственным deterministic stop-factor override.
+- [x] 14.11 Исправить assessment/report projection: положительные строки заполняют strengths, competencies, confirmed results, ABC/access sections; отрицательные — limitations/risks; неизвестные — questions; balanced observations отображаются симметрично.
+- [x] 14.12 Добавить operational coverage counters/warnings и подтвердить, что auxiliary critic/open/gap/conflict/verifier failure не препятствует созданию структурированного результата и PDF.
+- [ ] 14.13 Провести focused GREEN, связанный regression, PostgreSQL integration и обязательные `E2E-VAC-001`, `E2E-TRN-001`, `E2E-ABC-001`, `E2E-RESULT-001` на одном immutable build/config/fixture identity.
+- [x] 14.14 Обновить `docs/ARCHITECTURE.md`, `docs/index.json`, выполнить `openspec validate --strict` и `git diff --check`.
+
+## 15. Version-safe selective recovery
+
+- [x] 15.1 Поручить независимому acceptance-субагенту зафиксировать RED: `matrix-v2` не переиспользуется в `matrix-v3`, старая матрица той же profileVersion не блокирует compact compilation, missing/wrong-schema artifact обрывает reusable prefix.
+- [x] 15.2 Ввести `matrix-v3` workflow identity и forward-only storage migration для immutable shared matrices по `(profileVersion, workflowIdentity)` с чтением прежних `matrix-v2`.
+- [x] 15.3 Ограничить manual recovery совпадением input/profile/goal/workflow/policy и валидным непрерывным artifact prefix; начинать с первой failed/отсутствующей/несовместимой стадии.
+- [x] 15.4 Выполнить focused acceptance/build/regression, обновить архитектурную документацию и проверить OpenSpec strict/diff-check.
+
+## 16. Evidence-complete HR presentation
+
+- [x] 16.1 Поручить независимому acceptance-субагенту зафиксировать RED для evidence каждой положительной/отрицательной строки, запрета invented sourceRef/quote, разрешения отдельного claims artifact, HR-safe веб/PDF и состояния ненастроенного ABC.
+- [x] 16.2 Расширить versioned row-evaluation prompt/schema полями conclusion и evidence (`claimId`, `sourceRef`, `quote`, `relation`, `explanation`) и добавить точечную проверку против объединённого claim graph.
+- [x] 16.3 Реализовать единый HR presentation adapter: человекочитаемые источники, полные строки матрицы и evidence без технических IDs, URI и сообщений critic/verifier; использовать его в веб и PDF.
+- [x] 16.4 Исправить dashboard projection: разрешать `claimsRef`, отображать все criterion rows и формировать strengths/competencies/risks/recommendation basis только из evidence-backed выводов.
+- [x] 16.5 Отделить ABC directions от matrix criteria, не вызывать ABC при незаполненных A/B/C и показывать состояние «ABC-профиль не настроен для вакансии».
+- [x] 16.6 Выполнить focused acceptance/regression, проверить текущий HR-интерфейс на реальном сохранённом результате без изменения исходных artifacts, обновить docs и пересобрать сервис.
+
+## 17. Unified grounded candidate report
+
+- [x] 17.1 Поручить независимому acceptance-субагенту зафиксировать RED для единственного `candidate-report`, полного набора HR-разделов, неизменности recommendation/ABC/row states, evidence references, отсутствия дублей, fail-soft fallback и ровно одной публикации.
+- [x] 17.2 Зарегистрировать versioned `compose-candidate-report/v1` instruction/schema/capability с компактным validated input и без raw resume/transcript или tools.
+- [x] 17.3 Реализовать validation composer output и deterministic fallback, который всегда создаёт единый grounded report model без изменения кадровых решений.
+- [x] 17.4 Добавить `candidate-report` model и singular document-processor endpoint, сохранив legacy pair read/render compatibility только для старых runs.
+- [x] 17.5 Перевести production reports checkpoint, immutable storage, Drive/outbox/Telegram и dashboard projection на один публикуемый файл.
+- [x] 17.6 Выполнить focused acceptance/regression, визуальную PDF-проверку, обновить architecture/index/operator docs и пересобрать сервис.
+
+## 18. Compact sample-aligned HR report
+
+- [x] 18.1 Поручить независимому acceptance-субагенту зафиксировать RED для одиннадцати HR-разделов в порядке образца, отсутствия отдельных matrix/criteria/stop-factor/question секций и единственного расположения recommendation в решении.
+- [x] 18.2 Зарегистрировать `compose-candidate-report/v2` instruction/schema с ревью, ключевыми доказательствами, группированным техническим чеком, мотивацией/соответствием, рисками, решением и недублирующим финальным HR-резюме.
+- [x] 18.3 Перевести `candidate-report` model и production projection на компактные разделы, сохранив полную матрицу только в web/audit artifacts и legacy read compatibility.
+- [x] 18.4 Убрать верхний recommendation callout и карточную перегрузку для `candidate-report`, сохранив последовательный одноколоночный HR-формат и человекочитаемые evidence references.
+- [x] 18.5 Выполнить focused acceptance/regression и визуальную PDF-проверку на synthetic evidence без provider/Drive/Telegram effects.
+- [x] 18.6 Обновить architecture/index, выполнить OpenSpec strict/diff-check, пересобрать контейнеры и проверить startup logs.
+
+## 19. Clickable source-material links
+
+- [x] 19.1 Поручить независимому acceptance-субагенту зафиксировать RED: immutable manifest проектируется в HR-safe список, PDF содержит кликабельную `/Link` annotation на каждый разрешённый Drive/Docs resource, unsafe URL отбрасывается.
+- [x] 19.2 Добавить в `candidate-report` model отдельную HR-safe проекцию исходных материалов из immutable input manifest без results/unsupported файлов и технических IDs в видимом тексте.
+- [x] 19.3 Реализовать в PDF renderer видимые имена материалов и URI link annotations только для allowlisted Google Drive/Docs HTTPS targets; пройти fail-soft обычным текстом без invented URL.
+- [x] 19.4 Выполнить independent focused GREEN, report regression, PDF structural/visual QA, обновить architecture/index, OpenSpec strict/diff-check и пересобрать сервис.
+
+## 20. Balanced web decision summary without a new LLM call
+
+- [x] 20.1 Поручить независимому acceptance-субагенту зафиксировать RED: HR-резюме использует только существующую projection, показывает положительную и отрицательную стороны, не меняет recommendation и не повторяет recommendation reason.
+- [x] 20.2 Реализовать детерминированную сборку сбалансированного `Резюме для принятия решения` без изменений LLM prompts/schemas/runtime calls и без нового provider-вызова.
+- [x] 20.3 Выполнить focused acceptance и связанную UI/projection regression; подтвердить сохранение существующего `Итог AI` для отрицательной и положительной рекомендации.
+- [x] 20.4 Обновить architecture/index при изменении публичной projection boundary, выполнить OpenSpec strict, build и diff-check.
+
+## 21. Cleanup-aware matrix immutability
+
+- [x] 21.1 Поручить независимому acceptance-субагенту зафиксировать PostgreSQL RED: прямой UPDATE/DELETE и чужой cleanup scope запрещены, а штатное удаление архивного кандидата должно каскадно удалять candidate-scoped matrix history.
+- [x] 21.2 Добавить forward-only migration, переводящую immutable triggers `candidate_source_claims`, `candidate_evidence_conflicts`, `candidate_matrix_rows` на cleanup-aware guard без ослабления `vacancy_matrices`.
+- [x] 21.3 Выполнить migration/PostgreSQL integration и независимый GREEN, проверить lifecycle API/repository boundary на synthetic candidate без внешних эффектов.
+- [x] 21.4 Обновить architecture/index, выполнить OpenSpec strict, build/diff-check, пересобрать контейнеры и проверить health/logs.

@@ -19,7 +19,7 @@ test("canonical control fixture covers every production-like external boundary",
   assert.equal(fixture.googleMyDrive.workspaceKind, "personal-google-my-drive-oauth");
   assert.deepEqual(fixture.googleMyDrive.permissions, { readInputs: true, createOutputs: true, manageMembers: false });
   assert.equal(fixture.controlledRouterAi.mode, "deterministic-test-gateway");
-  assert.equal(fixture.controlledRouterAi.assessmentRouting, "matrix-v2");
+  assert.equal(fixture.controlledRouterAi.assessmentRouting, "matrix-v3");
   assert.equal(fixture.controlledRouterAi.matrixContract.sharedPerProfileVersion, true);
   assert.equal(fixture.controlledRouterAi.matrixContract.hardRequiredOnlyForStopFactorSourceRef, true);
   assert.equal(fixture.controlledRouterAi.matrixContract.criticalUnmappedRiskRequiresIndependentVerification, true);

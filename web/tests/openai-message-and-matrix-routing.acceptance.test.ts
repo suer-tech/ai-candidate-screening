@@ -77,17 +77,17 @@ test("LLM-TRANSPORT-003: array-valued message content reaches OpenAI-compatible 
   assert.deepEqual(messages[0].content, arrayContent);
 });
 
-test("MATRIX-ROUTING-004: production discovery pins matrix-v2 as the primary run", async () => {
+test("MATRIX-ROUTING-004: production discovery pins matrix-v3 as the primary run", async () => {
   const source = await readFile(new URL("../server/candidate-pipeline/production-discovery.ts", import.meta.url), "utf8");
   assert.match(source, /MATRIX_ASSESSMENT_ROUTING\s*===\s*["']production["']\s*\?\s*["']candidate-analysis-matrix\/v1["']\s*:\s*["']candidate-analysis\/v1["']/);
-  assert.match(source, /MATRIX_ASSESSMENT_ROUTING\s*===\s*["']production["']\s*\?\s*["']matrix-v2["']\s*:\s*["']legacy-v1["']/);
+  assert.match(source, /MATRIX_ASSESSMENT_ROUTING\s*===\s*["']production["']\s*\?\s*["']matrix-v3["']\s*:\s*["']legacy-v1["']/);
   assert.match(source, /runtime\.createGoal\(\{[\s\S]*?goalType:[\s\S]*?workflowVersion:[\s\S]*?triggerIdentity[\s\S]*?\}\)/);
 });
 
-test("MATRIX-ROUTING-005: shadow discovery keeps legacy primary and creates a matrix-v2-shadow run", async () => {
+test("MATRIX-ROUTING-005: shadow discovery keeps legacy primary and creates a matrix-v3-shadow run", async () => {
   const source = await readFile(new URL("../server/candidate-pipeline/production-discovery.ts", import.meta.url), "utf8");
   assert.match(source, /MATRIX_ASSESSMENT_ROUTING\s*===\s*["']shadow["']\)\s*await\s+runtime\.createGoal\(\{/);
-  assert.match(source, /goalType:\s*["']candidate-analysis-matrix-shadow\/v1["'][\s\S]*?workflowVersion:\s*["']matrix-v2-shadow["']/);
+  assert.match(source, /goalType:\s*["']candidate-analysis-matrix-shadow\/v1["'][\s\S]*?workflowVersion:\s*["']matrix-v3-shadow["']/);
   assert.match(source, /completionCriteria:\s*\[["']validated-assessment["']\]/);
   assert.match(source, /triggerIdentity:\s*`\$\{triggerIdentity\}:matrix-shadow`/);
 });

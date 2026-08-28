@@ -96,14 +96,16 @@ export async function startProductionDriveDiscoveryWorker() {
     const created = await runtime.createGoal({
       goalId: randomUUID(), runId: randomUUID(), candidateId: row.candidate_id,
       goalType: container.environment.MATRIX_ASSESSMENT_ROUTING === "production" ? "candidate-analysis-matrix/v1" : "candidate-analysis/v1",
-      workflowVersion: container.environment.MATRIX_ASSESSMENT_ROUTING === "production" ? "matrix-v2" : "legacy-v1",
+      workflowVersion: container.environment.MATRIX_ASSESSMENT_ROUTING === "production" ? "matrix-v3" : "legacy-v1",
       inputVersion: inputVersionId, profileVersion,
       policyVersion: "candidate-policy-v1", completionCriteriaVersion: "candidate-completion-v1",
-      completionCriteria: ["validated-report-pair", "ready-after-pair-publication"], budgets, triggerIdentity,
+      completionCriteria: container.environment.MATRIX_ASSESSMENT_ROUTING === "production"
+        ? ["validated-candidate-report", "ready-after-report-publication"]
+        : ["validated-report-pair", "ready-after-pair-publication"], budgets, triggerIdentity,
     });
     if (container.environment.MATRIX_ASSESSMENT_ROUTING === "shadow") await runtime.createGoal({
       goalId: randomUUID(), runId: randomUUID(), candidateId: row.candidate_id,
-      goalType: "candidate-analysis-matrix-shadow/v1", workflowVersion: "matrix-v2-shadow",
+      goalType: "candidate-analysis-matrix-shadow/v1", workflowVersion: "matrix-v3-shadow",
       inputVersion: inputVersionId, profileVersion,
       policyVersion: "candidate-policy-v1", completionCriteriaVersion: "candidate-completion-v1",
       completionCriteria: ["validated-assessment"], budgets, triggerIdentity: `${triggerIdentity}:matrix-shadow`,

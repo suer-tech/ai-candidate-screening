@@ -24,16 +24,18 @@ import { LlmProviderAttemptError, type ExecuteLlmAttemptDependencies } from "../
 import type { TraceCorrelation } from "../llm/tracing.ts";
 import type { JsonValue } from "../llm/value-utils.ts";
 import type { AssessmentInputs, EvidenceFact, EvidenceLocator } from "./types.ts";
-import { reportFileName, reportSectionTitle, requiredReportSections, validateReportPairModels, type ReportModel } from "./reports.ts";
+import { composeCandidateReportFailSoft, projectCandidateReportSourceLines, projectReportSourceMaterials, reportFileName, reportSectionTitle, requiredReportSections, type ReportModel } from "./reports.ts";
 import { PostgresNotificationStore, NotificationDispatcher, ServerRecipientRegistry, TelegramBotTransport } from "./notifications.ts";
 import { successTelegramTemplate } from "./operations.ts";
 import { composeProtectedAssessmentInstruction, verifiedEditablePrompt, type EditablePromptSnapshot } from "../product/prompt-contracts.ts";
 import { projectVacancyProfileForAssessment } from "./assessment-profile.ts";
 import { PostgresVacancyMatrixRepository } from "./matrix-postgres-repository.ts";
 import { compileVacancyMatrix, type MatrixCompilationSkills } from "./matrix-compilation.ts";
-import { MATRIX_WORKFLOW_VERSION, assessAbcConditionCoverage, candidateClaimIsDecisionAdmissible, decisionSafeJson, deriveMatrixRecommendation, isMatrixWorkflowVersion, matrixChecksum, validateCandidateMatrixRows, type CandidateMatrixRow, type CandidateSourceClaim, type CriticalUnmappedRisk, type MatrixCriterion } from "./matrix-driven.ts";
+import { MATRIX_WORKFLOW_VERSION, applyCriticalVerificationDecisions, candidateClaimIsDecisionAdmissible, decisionSafeJson, isMatrixWorkflowVersion, matrixChecksum, validateCandidateMatrixRows, type CandidateMatrixRow, type CandidateSourceClaim, type CriticalUnmappedRisk, type CriticalVerificationDecision, type MatrixCriterion } from "./matrix-driven.ts";
 import { normalizeMatrixCapabilityOutput, type MatrixCapability } from "./matrix-schemas.ts";
 import { buildCriterionClaimExtractionBatches } from "./transcript-claim-batching.ts";
+import { recoveryArtifactPurpose, recoveryArtifactSchema } from "./recovery-contracts.ts";
+import { deduplicateCoverageEvidence, matrixCriterionIds, technicalFallbackRow, validateExactCriterionCoverage, type BatchCoverageEntry } from "./matrix-coverage.ts";
 import { countOpenAiCompatibleContextTokens } from "../llm/token-counting.ts";
 
 type ExecutionEnvironment = CandidatePipelineEnvironment & GoogleDriveOAuthEnvironment;
@@ -64,6 +66,23 @@ export function projectAssessmentEvidenceForPrompt(evidence: AssessmentEvidenceS
     ["id", "predicate", "factIds", "resolved"].flatMap((key) => conflict[key] === undefined ? [] : [[key, conflict[key]]]),
   ));
   return { facts, conflicts };
+}
+
+type OrganizationalFact = Pick<EvidenceFact, "predicate" | "value"> & { locator?: unknown };
+
+export function projectOrganizationalConditions(facts: readonly OrganizationalFact[]): readonly string[] {
+  const groundedValue = (patterns: readonly RegExp[]) => {
+    const fact = facts.find((candidate) => patterns.some((pattern) => pattern.test(candidate.predicate))
+      && Boolean(candidate.locator && typeof candidate.locator === "object" && !Array.isArray(candidate.locator))
+      && typeof candidate.value === "string" && candidate.value.trim());
+    return fact?.value.replace(/\s+/g, " ").trim().replace(/;+$/u, "") || "не указано";
+  };
+  return [
+    `Формат: ${groundedValue([/^conditions\.(?:work_format_city|workFormatCity|work_format_and_city|workFormat|location_and_mobility|location)$/i])};`,
+    `Доход: ${groundedValue([/^conditions\.(?:expected_net_income|expectedNetIncome|compensation)$/i, /^stopFactor\.compensationExpectation$/i])};`,
+    `Готов к тестовому дню: ${groundedValue([/^conditions\.(?:trial_day_readiness|trialDayReadiness)$/i])};`,
+    `Готов к выходу: ${groundedValue([/^conditions\.(?:start_readiness|startReadiness|start_availability)$/i, /^references\.availability$/i])};`,
+  ];
 }
 
 function text(value: unknown, code: string) {
@@ -101,19 +120,36 @@ async function execute(database: PostgresClient, statement: string, parameters: 
 }
 
 export async function latestDomainArtifactReference(database: PostgresClient, runId: string, provenance: string) {
-  return (await queryOne<{ storage_identity: string }>(database, `SELECT ref.storage_identity FROM agent_memory_entries memory
+  return (await queryOne<{ storage_identity: string }>(database, `WITH RECURSIVE run_lineage(id,depth) AS (
+      SELECT $1::text,0
+      UNION ALL
+      SELECT source_run.recovery_source_run_id,lineage.depth+1 FROM agent_runs source_run
+      JOIN run_lineage lineage ON source_run.id=lineage.id
+      WHERE source_run.recovery_source_run_id IS NOT NULL AND lineage.depth<32
+    )
+    SELECT ref.storage_identity FROM run_lineage lineage JOIN agent_memory_entries memory ON memory.run_id=lineage.id
     JOIN agent_artifact_refs ref ON ref.memory_entry_id=memory.id
     LEFT JOIN candidate_domain_artifacts domain ON domain.run_id=memory.run_id AND domain.payload_ref=ref.storage_identity
-    WHERE memory.run_id=$1 AND memory.provenance=$2
-    ORDER BY domain.created_at_utc DESC NULLS LAST,ref.id DESC LIMIT 1`, [runId, provenance]))?.storage_identity;
+    WHERE memory.provenance=$2
+    ORDER BY lineage.depth,domain.created_at_utc DESC NULLS LAST,ref.id DESC LIMIT 1`, [runId, provenance]))?.storage_identity;
 }
 
 export async function domainArtifactReferences(database: PostgresClient, runId: string, provenance: string) {
-  const rows = await queryRows<{ storage_identity: string; checksum: string }>(database, `SELECT ref.storage_identity,ref.checksum FROM agent_memory_entries memory
+  const rows = await queryRows<{ storage_identity: string; checksum: string }>(database, `WITH RECURSIVE run_lineage(id,depth) AS (
+      SELECT $1::text,0
+      UNION ALL
+      SELECT source_run.recovery_source_run_id,lineage.depth+1 FROM agent_runs source_run
+      JOIN run_lineage lineage ON source_run.id=lineage.id
+      WHERE source_run.recovery_source_run_id IS NOT NULL AND lineage.depth<32
+    ), matching AS (
+      SELECT lineage.id,lineage.depth FROM run_lineage lineage
+      WHERE EXISTS (SELECT 1 FROM agent_memory_entries candidate_memory WHERE candidate_memory.run_id=lineage.id AND candidate_memory.provenance=$2)
+    )
+    SELECT ref.storage_identity,ref.checksum FROM matching lineage JOIN agent_memory_entries memory ON memory.run_id=lineage.id
     JOIN agent_artifact_refs ref ON ref.memory_entry_id=memory.id
     LEFT JOIN candidate_domain_artifacts domain ON domain.run_id=memory.run_id AND domain.payload_ref=ref.storage_identity
-    WHERE memory.run_id=$1 AND memory.provenance=$2
-    ORDER BY domain.created_at_utc NULLS LAST,ref.id`, [runId, provenance]);
+    WHERE memory.provenance=$2 AND lineage.depth=(SELECT MIN(depth) FROM matching)
+    ORDER BY lineage.depth,domain.created_at_utc NULLS LAST,ref.id`, [runId, provenance]);
   return rows.map((row) => ({ artifactRef: row.storage_identity, checksum: row.checksum }));
 }
 
@@ -426,6 +462,7 @@ export async function createProductionCandidateToolExecution(input: { database: 
       "abc_matrix_assessment",
       "critical_row_verification",
       "invalid_row_repair",
+      "candidate_report_composer",
     ]),
     adapter: {
       execute: async (request) => {
@@ -529,8 +566,14 @@ export async function createProductionCandidateToolExecution(input: { database: 
   const ensurePublicationDirectory = async () => {
     if (publicationDirectory) return publicationDirectory;
     const version = await queryOne<{ id: string; analysis_version: number; directory_identity: string }>(input.database,
-      `SELECT id,analysis_version,directory_identity FROM candidate_report_versions
-      WHERE candidate_id=$1 AND run_id=$2 AND state IN ('VALIDATED_PAIR','PUBLISHED') ORDER BY analysis_version DESC LIMIT 1`, [candidatePk, runId]);
+      `WITH RECURSIVE run_lineage(id,depth) AS (
+        SELECT $1::text,0 UNION ALL SELECT source.recovery_source_run_id,lineage.depth+1
+        FROM agent_runs source JOIN run_lineage lineage ON source.id=lineage.id
+        WHERE source.recovery_source_run_id IS NOT NULL AND lineage.depth<32
+      ) SELECT version.id,version.analysis_version,version.directory_identity FROM candidate_report_versions version
+      JOIN run_lineage lineage ON lineage.id=version.run_id
+      WHERE version.candidate_id=$2 AND version.state IN ('VALIDATED_REPORT','VALIDATED_PAIR','PUBLISHED')
+      ORDER BY lineage.depth,version.analysis_version DESC LIMIT 1`, [runId, candidatePk]);
     if (!version) throw new Error("REPORT_VERSION_NOT_READY_FOR_PUBLICATION");
     await authorizeFile("ensure-folder", candidate.drive_folder_id);
     await prepareDriveEffect("ensure-folder", `candidate:${candidatePk}:results`);
@@ -574,14 +617,16 @@ export async function createProductionCandidateToolExecution(input: { database: 
         const checksum = value.checksum ?? sha256(storageIdentity);
         const memoryId = `memory-${sha256([task.runId, storageIdentity]).slice(0, 24)}`;
         const refId = `artifact-ref-${sha256([storageIdentity, checksum]).slice(0, 24)}`;
+        const recoverySchema = recoveryArtifactSchema(goal.workflow_version, task.toolKey);
+        const artifactPurpose = recoverySchema ? recoveryArtifactPurpose(goal.workflow_version) : "candidate-pipeline-stage";
         await withTransaction(input.database, async (transaction) => {
           await execute(transaction, `INSERT INTO agent_memory_entries
             (id,goal_id,run_id,candidate_id,input_version,profile_version,kind,provenance,sensitivity,purpose,payload_json,immutable)
-            VALUES ($1,$2,$3,$4,$5,$6,'artifact',$7,'personal','candidate-pipeline-stage',NULL,true) ON CONFLICT DO NOTHING`,
-          [memoryId, goal.goal_id, task.runId, candidatePk, task.inputVersion, task.profileVersion, task.toolKey]);
+            VALUES ($1,$2,$3,$4,$5,$6,'artifact',$7,'personal',$8,NULL,true) ON CONFLICT DO NOTHING`,
+          [memoryId, goal.goal_id, task.runId, candidatePk, task.inputVersion, task.profileVersion, task.toolKey, artifactPurpose]);
           await execute(transaction, `INSERT INTO agent_artifact_refs
-            (id,memory_entry_id,storage_class,storage_identity,checksum,schema_version) VALUES ($1,$2,$3,$4,$5,'reference/v1')
-            ON CONFLICT DO NOTHING`, [refId, memoryId, storageClass, storageIdentity, checksum]);
+            (id,memory_entry_id,storage_class,storage_identity,checksum,schema_version) VALUES ($1,$2,$3,$4,$5,$6)
+            ON CONFLICT DO NOTHING`, [refId, memoryId, storageClass, storageIdentity, checksum, recoverySchema ?? "reference/v1"]);
         });
       },
       async outboxIntent(value) {
@@ -623,38 +668,46 @@ export async function createProductionCandidateToolExecution(input: { database: 
             bytes, checksum: expectedChecksum, operationIdentity: effectIdentity });
           await execute(input.database,
             "UPDATE candidate_report_documents SET drive_file_id=$1 WHERE id=$2 AND (drive_file_id IS NULL OR drive_file_id=$1)", [published.id, descriptor.id]);
-          const pair = await queryOne<{ count: string }>(input.database,
-            "SELECT COUNT(*) AS count FROM candidate_report_documents WHERE report_version_id=$1 AND drive_file_id IS NOT NULL", [directory.reportVersionId]);
-          if (Number(pair?.count) === 2) await withTransaction(input.database, async (transaction) => {
-            await execute(transaction, "UPDATE candidate_report_versions SET state='PUBLISHED' WHERE id=$1 AND state='VALIDATED_PAIR'", [directory.reportVersionId]);
+          const publishedDocuments = await queryOne<{ count: string; required_count: string }>(input.database,
+            "SELECT COUNT(*) FILTER (WHERE drive_file_id IS NOT NULL) AS count,COUNT(*) AS required_count FROM candidate_report_documents WHERE report_version_id=$1", [directory.reportVersionId]);
+          if (Number(publishedDocuments?.count) === Number(publishedDocuments?.required_count) && Number(publishedDocuments?.count) > 0) await withTransaction(input.database, async (transaction) => {
+            await execute(transaction, "UPDATE candidate_report_versions SET state='PUBLISHED' WHERE id=$1 AND state IN ('VALIDATED_REPORT','VALIDATED_PAIR')", [directory.reportVersionId]);
             await execute(transaction,
               `UPDATE candidates SET revision=revision+1,record_json=(record_json::jsonb || '{"status":"READY"}'::jsonb)::text WHERE id=$1`, [candidatePk]);
           });
           return { fileId: published.id, checksum: published.checksum };
         },
         reconcile: async (identity) => {
-          const existing = await oauth.repository.findByOperationIdentity(status.id, identity);
-          if (!existing) return null;
-          const type = identity.endsWith(":candidate-results") ? "candidate-results"
+          const type = identity.endsWith(":candidate-report") ? "candidate-report"
+            : identity.endsWith(":candidate-results") ? "candidate-results"
             : identity.endsWith(":abc-test") ? "abc-test" : undefined;
           if (type) {
-            const descriptor = await queryOne<{ id: string; checksum: string; report_version_id: string }>(input.database, `SELECT document.id,document.checksum,document.report_version_id
+            const descriptor = await queryOne<{ id: string; checksum: string; report_version_id: string; drive_file_id: string | null }>(input.database, `WITH RECURSIVE run_lineage(id,depth) AS (
+                SELECT $1::text,0 UNION ALL SELECT source.recovery_source_run_id,lineage.depth+1
+                FROM agent_runs source JOIN run_lineage lineage ON source.id=lineage.id
+                WHERE source.recovery_source_run_id IS NOT NULL AND lineage.depth<32
+              ) SELECT document.id,document.checksum,document.report_version_id,document.drive_file_id
               FROM candidate_report_documents document JOIN candidate_report_versions version ON version.id=document.report_version_id
-              WHERE version.candidate_id=$1 AND version.run_id=$2 AND document.type=$3
-              ORDER BY version.analysis_version DESC LIMIT 1`, [candidatePk, runId, type]);
+              JOIN run_lineage lineage ON lineage.id=version.run_id
+              WHERE version.candidate_id=$2 AND document.type=$3
+              ORDER BY lineage.depth,version.analysis_version DESC LIMIT 1`, [runId, candidatePk, type]);
+            if (descriptor?.drive_file_id) return { fileId: descriptor.drive_file_id, checksum: descriptor.checksum };
+            const existing = await oauth.repository.findByOperationIdentity(status.id, identity);
+            if (!existing) return null;
             if (!descriptor || descriptor.checksum !== existing.checksum) throw new Error("REPORT_RECONCILIATION_DESCRIPTOR_MISMATCH");
             await execute(input.database,
               "UPDATE candidate_report_documents SET drive_file_id=$1 WHERE id=$2 AND (drive_file_id IS NULL OR drive_file_id=$1)", [existing.fileId, descriptor.id]);
-            const pair = await queryOne<{ count: string }>(input.database,
-              "SELECT COUNT(*) AS count FROM candidate_report_documents WHERE report_version_id=$1 AND drive_file_id IS NOT NULL", [descriptor.report_version_id]);
-            if (Number(pair?.count) === 2) await withTransaction(input.database, async (transaction) => {
-              await execute(transaction, "UPDATE candidate_report_versions SET state='PUBLISHED' WHERE id=$1 AND state='VALIDATED_PAIR'", [descriptor.report_version_id]);
+            const publishedDocuments = await queryOne<{ count: string; required_count: string }>(input.database,
+              "SELECT COUNT(*) FILTER (WHERE drive_file_id IS NOT NULL) AS count,COUNT(*) AS required_count FROM candidate_report_documents WHERE report_version_id=$1", [descriptor.report_version_id]);
+            if (Number(publishedDocuments?.count) === Number(publishedDocuments?.required_count) && Number(publishedDocuments?.count) > 0) await withTransaction(input.database, async (transaction) => {
+              await execute(transaction, "UPDATE candidate_report_versions SET state='PUBLISHED' WHERE id=$1 AND state IN ('VALIDATED_REPORT','VALIDATED_PAIR')", [descriptor.report_version_id]);
               await execute(transaction, `UPDATE candidates SET revision=revision+1,
                 record_json=(record_json::jsonb || '{"status":"READY"}'::jsonb)::text
                 WHERE id=$1 AND record_json::jsonb->>'status'!='READY'`, [candidatePk]);
             });
+            return { fileId: existing.fileId, checksum: existing.checksum };
           }
-          return { fileId: existing.fileId, checksum: existing.checksum };
+          return null;
         },
       },
       routerAI: {
@@ -856,7 +909,7 @@ export async function createProductionCandidateToolExecution(input: { database: 
       matrix: {
         execute: async (toolKey) => {
           if (!llmDependencies || !artifactStore) throw new Error("MATRIX_RUNTIME_NOT_PROVISIONED");
-          const matrixRepository = new PostgresVacancyMatrixRepository(input.database);
+          const matrixRepository = new PostgresVacancyMatrixRepository(input.database, goal.workflow_version);
           const call = async (capability: MatrixCapability, context: Record<string, unknown>, suffix: string) => {
             const correlation = traceCorrelation(capability, suffix);
             const config = llmDependencies.configuration.resolve(capability);
@@ -892,11 +945,13 @@ export async function createProductionCandidateToolExecution(input: { database: 
                   successor: result.output.successor as never, traceRef: result.traceRef, model: result.model };
               },
             };
-            const result = await compileVacancyMatrix({ profileVersion, ownerId: runId, canonicalProfile: vacancy, sourceFragments, compilerPolicyVersion: "matrix-compiler-policy/v1", skills, store: matrixRepository,
+            const result = await compileVacancyMatrix({ profileVersion, ownerId: runId, canonicalProfile: vacancy, sourceFragments, compilerPolicyVersion: "matrix-compiler-policy/coverage-first-v1", skills, store: matrixRepository,
               allowRetry: goal.trigger_identity.startsWith("manual-reprocess:") });
             if (result.state === "WAITING") throw new Error("MATRIX_COMPILATION_WAITING");
             if (result.state === "FAILED") throw new Error(result.errorCode);
-            const stored = await storeJson("vacancy-matrix-run-ref", operationIdentity, { schemaVersion: "vacancy-matrix-run-ref/v1", matrixId: result.matrixId, checksum: result.checksum, workflowVersion: MATRIX_WORKFLOW_VERSION, sameModelCritic: result.sameModelCritic });
+            const stored = await storeJson("vacancy-matrix-run-ref", operationIdentity, { schemaVersion: "vacancy-matrix-run-ref/v1", matrixId: result.matrixId, checksum: result.checksum, workflowVersion: MATRIX_WORKFLOW_VERSION,
+              sameModelCritic: result.sameModelCritic, criticFallback: result.criticFallback ?? false,
+              warnings: result.criticFallback ? ["MATRIX_CRITIC_UNAVAILABLE_COMPILER_DRAFT_PUBLISHED"] : [] });
             return { artifactRef: stored.artifactRef, checksum: result.checksum, state: result.state };
           }
           const published = await matrixRepository.readMatrix(profileVersion);
@@ -938,9 +993,46 @@ export async function createProductionCandidateToolExecution(input: { database: 
             });
             const directedResults: Awaited<ReturnType<typeof call>>[] = [];
             const openResults: Awaited<ReturnType<typeof call>>[] = [];
+            const coverageWarnings: string[] = [];
+            const coverageEntries: BatchCoverageEntry[] = [];
+            const coverageLedger: Array<{ batchId: string; requestedCriterionIds: string[]; coverage: BatchCoverageEntry[] }> = [];
+            const allCriterionIds = matrixCriterionIds(matrix.criteria);
             for (const claimBatch of claimBatches) {
-              directedResults.push(await call("criterion_claim_extraction", claimBatch.request, `directed-${claimBatch.batchId}`));
-              openResults.push(await call("unmapped_signal_discovery", { ...claimBatch.request, policy: { informationalOnly: true, mayCreateCriteria: false } }, `open-${claimBatch.batchId}`));
+              let directed: Awaited<ReturnType<typeof call>> | undefined;
+              try { directed = await call("criterion_claim_extraction", claimBatch.request, `directed-${claimBatch.batchId}`); }
+              catch { coverageWarnings.push(`PRIMARY_EXTRACTION_FAILED:${claimBatch.batchId}`); }
+              const primaryCoverage = Array.isArray(directed?.output.coverage) ? directed.output.coverage as unknown as BatchCoverageEntry[] : [];
+              const primaryValidation = validateExactCriterionCoverage(allCriterionIds, primaryCoverage);
+              let targeted: Awaited<ReturnType<typeof call>> | undefined;
+              const retryIds = directed ? primaryValidation.missingIds : allCriterionIds;
+              if (retryIds.length || primaryValidation.duplicateIds.length || primaryValidation.unknownIds.length) {
+                try {
+                  targeted = await call("criterion_claim_extraction", { ...claimBatch.request, requestedCriterionIds: retryIds.length ? retryIds : allCriterionIds,
+                    coverageRetry: { targeted: true, reason: "MISSING_OR_INVALID_CRITERION_IDS" } }, `coverage-retry-${claimBatch.batchId}`);
+                } catch { coverageWarnings.push(`TARGETED_EXTRACTION_FAILED:${claimBatch.batchId}`); }
+              }
+              if (directed) directedResults.push(directed);
+              if (targeted) directedResults.push(targeted);
+              const combinedCoverage = [...primaryCoverage, ...(Array.isArray(targeted?.output.coverage) ? targeted.output.coverage as unknown as BatchCoverageEntry[] : [])]
+                .filter((entry, index, values) => allCriterionIds.includes(entry.criterionId) && values.findIndex((item) => item.criterionId === entry.criterionId) === index);
+              const remaining = validateExactCriterionCoverage(allCriterionIds, combinedCoverage).missingIds;
+              const completedBatchCoverage = [...combinedCoverage, ...remaining.map((criterionId) => ({ criterionId, scanResult: "NOT_FOUND_IN_BATCH" as const, evidence: [] }))];
+              coverageEntries.push(...completedBatchCoverage);
+              coverageLedger.push({ batchId: claimBatch.batchId, requestedCriterionIds: [...allCriterionIds], coverage: completedBatchCoverage });
+              if (remaining.length) coverageWarnings.push(`TECHNICAL_COVERAGE_FALLBACK:${claimBatch.batchId}:${remaining.length}`);
+              try { openResults.push(await call("unmapped_signal_discovery", { ...claimBatch.request, policy: { informationalOnly: true, balancedTypes: ["STRENGTH", "CONCERN", "QUESTION"], mayCreateCriteria: false } }, `open-${claimBatch.batchId}`)); }
+              catch { coverageWarnings.push(`BALANCED_OPEN_PASS_FAILED:${claimBatch.batchId}`); }
+            }
+            const initiallyEmptyIds = allCriterionIds.filter((criterionId) => !coverageEntries.some((entry) => entry.criterionId === criterionId && entry.scanResult === "FOUND"));
+            if (initiallyEmptyIds.length) {
+              for (const claimBatch of claimBatches) {
+                try {
+                  const gap = await call("criterion_claim_extraction", { ...claimBatch.request, requestedCriterionIds: initiallyEmptyIds,
+                    gapSearch: { boundedPass: 1, evaluateCandidate: false } }, `gap-search-${claimBatch.batchId}`);
+                  directedResults.push(gap);
+                  if (Array.isArray(gap.output.coverage)) coverageEntries.push(...gap.output.coverage as unknown as BatchCoverageEntry[]);
+                } catch { coverageWarnings.push(`GAP_SEARCH_FAILED:${claimBatch.batchId}`); }
+              }
             }
             const rawClaims = directedResults.flatMap((result) => result.output.claims as Array<Record<string, unknown>>);
             const claimsWithDuplicates: Array<CandidateSourceClaim & { decisionAdmissible: boolean }> = rawClaims.map((source, index) => {
@@ -948,150 +1040,185 @@ export async function createProductionCandidateToolExecution(input: { database: 
               if (!['candidate','interviewer','recruiter','unknown'].includes(role)) throw new Error("MATRIX_CLAIM_ROLE_INVALID");
               const criterionIds = Array.isArray(source.criterionIds) ? source.criterionIds.filter((item): item is string => typeof item === "string") : [];
               const provenance = directedResults.find((result) => (result.output.claims as Array<Record<string, unknown>>).includes(source));
-              const claim: CandidateSourceClaim = { claimId: `claim-${matrixChecksum([runId, source.locator, source.text, [...criterionIds].sort(), source.sourceClass]).slice(0, 24)}`, candidateId: String(candidatePk), runId, inputVersion, profileVersion,
+              const claim: CandidateSourceClaim = { claimId: `claim-${matrixChecksum([runId, source.locator, source.text, [...criterionIds].sort(), source.sourceClass, source.relation]).slice(0, 24)}`, candidateId: String(candidatePk), runId, inputVersion, profileVersion,
                 author: text(source.author, "MATRIX_CLAIM_AUTHOR_INVALID"), role, roleConfidence: typeof source.roleConfidence === "number" ? source.roleConfidence : undefined,
                 text: text(source.text, "MATRIX_CLAIM_TEXT_INVALID"), locator: text(source.locator, "MATRIX_CLAIM_LOCATOR_INVALID"), provenanceRef: provenance?.traceRef ?? directedResults[Math.min(index, directedResults.length - 1)]?.traceRef ?? "",
-                criterionIds, sourceClass: text(source.sourceClass, "MATRIX_CLAIM_SOURCE_CLASS_INVALID"), directness: source.directness === "indirect" ? "indirect" : "direct" };
+                criterionIds, sourceClass: text(source.sourceClass, "MATRIX_CLAIM_SOURCE_CLASS_INVALID"), directness: source.directness === "indirect" ? "indirect" : "direct",
+                relation: ["SUPPORTS", "CONTRADICTS", "CONTEXT"].includes(String(source.relation)) ? source.relation as CandidateSourceClaim["relation"] : "CONTEXT" };
               return { ...claim, decisionAdmissible: candidateClaimIsDecisionAdmissible(claim) };
             });
             const claims = [...new Map(claimsWithDuplicates.map((claim) => [claim.claimId, claim])).values()];
             for (const claim of claims) await matrixRepository.appendClaim({ candidateId: candidatePk, claim });
             const unmappedSignals = [...new Map(openResults.flatMap((result) => result.output.signals as Array<Record<string, unknown>>)
               .map((signal) => [String(signal.signalId ?? matrixChecksum([signal.locator, signal.text, signal])), signal])).values()];
-            const stored = await storeJson("matrix-claims", operationIdentity, { schemaVersion: "matrix-claims-bundle/v1", claims, unmappedSignals,
-              batches: claimBatches.map(({ batchId, order }) => ({ batchId, order })), traceRefs: [...directedResults, ...openResults].map((result) => result.traceRef) });
+            const mergedCoverage = deduplicateCoverageEvidence(coverageEntries);
+            const stored = await storeJson("matrix-claims", operationIdentity, { schemaVersion: "matrix-claims-bundle/v2", claims, unmappedSignals, coverage: mergedCoverage, coverageLedger,
+              coverageSummary: { criterionCount: allCriterionIds.length, coveredCount: mergedCoverage.filter((entry) => entry.scanResult === "FOUND").length,
+                technicalFallbackCount: coverageWarnings.filter((warning) => warning.startsWith("TECHNICAL_COVERAGE_FALLBACK")).length, gapSearchExecuted: initiallyEmptyIds.length > 0 },
+              warnings: coverageWarnings, batches: claimBatches.map(({ batchId, order }) => ({ batchId, order })), traceRefs: [...directedResults, ...openResults].map((result) => result.traceRef) });
             return { artifactRef: stored.artifactRef, checksum: stored.checksum };
           }
           if (toolKey === "candidate.matrix-evidence/v1" || toolKey === "candidate.matrix-conflict-submit/v1") {
             const claimsRef = await latestArtifact("candidate.matrix-claim-submit/v1");
             const claims = await artifactStore.getJson<Record<string, unknown>>(claimsRef);
-            const consolidated = await call("evidence_consolidation", { matrix, claims }, "consolidate");
-            const conflicts = await call("global_conflict_detection", { matrix, claims, consolidated: consolidated.output }, "global-conflicts");
-            for (const conflict of conflicts.output.conflicts as Array<Record<string, unknown>>) {
+            const warnings: string[] = [];
+            let consolidated: Awaited<ReturnType<typeof call>> | undefined;
+            let conflicts: Awaited<ReturnType<typeof call>> | undefined;
+            try { consolidated = await call("evidence_consolidation", { matrix, claims, policy: { verdictForbidden: true, selfReportAdmissible: true } }, "consolidate"); }
+            catch { warnings.push("EVIDENCE_CONSOLIDATION_FAILED"); }
+            try { conflicts = await call("global_conflict_detection", { matrix, claims, consolidated: consolidated?.output ?? { claimGroups: [] },
+              policy: { omissionIsNotConflict: true, differentPeriodsAreNotConflict: true, correctionIsNotConflict: true } }, "global-conflicts"); }
+            catch { warnings.push("GLOBAL_CONFLICT_DETECTION_FAILED"); }
+            for (const conflict of (conflicts?.output.conflicts as Array<Record<string, unknown>> | undefined ?? [])) {
               const claimIds = Array.isArray(conflict.claimIds) ? conflict.claimIds.filter((item): item is string => typeof item === "string") : [];
               if (claimIds.length < 2) throw new Error("MATRIX_CONFLICT_SIDES_MISSING");
               await matrixRepository.appendConflict({ candidateId: candidatePk, runId, inputVersion, profileVersion, predicate: text(conflict.predicate, "MATRIX_CONFLICT_PREDICATE_INVALID"), claimIds,
-                followUpQuestion: text(conflict.followUpQuestion, "MATRIX_CONFLICT_QUESTION_INVALID"), provenanceRef: conflicts.traceRef });
+                followUpQuestion: text(conflict.followUpQuestion, "MATRIX_CONFLICT_QUESTION_INVALID"), provenanceRef: conflicts!.traceRef });
             }
-            const stored = await storeJson("matrix-evidence", operationIdentity, { schemaVersion: "matrix-evidence/v1", claimsRef, claimGroups: consolidated.output.claimGroups, conflicts: conflicts.output.conflicts, traceRefs: [consolidated.traceRef, conflicts.traceRef] });
+            const stored = await storeJson("matrix-evidence", operationIdentity, { schemaVersion: "matrix-evidence/v2", claimsRef,
+              claimGroups: consolidated?.output.claimGroups ?? [], conflicts: conflicts?.output.conflicts ?? [], warnings,
+              traceRefs: [consolidated?.traceRef, conflicts?.traceRef].filter((value): value is string => Boolean(value)) });
             return { artifactRef: stored.artifactRef, checksum: stored.checksum };
           }
           if (toolKey === "candidate.matrix-rows/v1") {
             const evidenceRef = await latestArtifact("candidate.matrix-conflict-submit/v1");
             const evidence = await artifactStore.getJson<Record<string, unknown>>(evidenceRef);
-            const rows = await call("matrix_row_evaluation", { matrix, evidence }, "rows");
-            const abc = await call("abc_matrix_assessment", { matrix, evidence }, "abc");
-            for (const direction of abc.output.directions as Array<Record<string, unknown>>) {
-              const defining = Array.isArray(direction.definingConditions) ? direction.definingConditions.filter((item): item is string => typeof item === "string") : [];
-              const covered = Array.isArray(direction.coveredConditions) ? direction.coveredConditions.filter((item): item is string => typeof item === "string") : [];
-              const locators = Array.isArray(direction.evidenceLocatorIds) ? direction.evidenceLocatorIds.length : 0;
-              const sufficiency = assessAbcConditionCoverage(defining, covered, locators);
-              if (["A", "B", "C"].includes(String(direction.level)) && !sufficiency.coverageComplete) throw new Error("MATRIX_ABC_EVIDENCE_INSUFFICIENT");
+            const claimBundle = typeof evidence.claimsRef === "string"
+              ? await artifactStore.getJson<{ claims?: CandidateSourceClaim[]; coverageSummary?: unknown; warnings?: string[] }>(evidence.claimsRef)
+              : {};
+            const claims = Array.isArray(claimBundle.claims) ? claimBundle.claims : [];
+            const claimCoverage = claimBundle;
+            const ids = matrixCriterionIds(matrix.criteria);
+            const warnings: string[] = [];
+            const traceRefs: string[] = [];
+            let initial: Awaited<ReturnType<typeof call>> | undefined;
+            try { initial = await call("matrix_row_evaluation", { matrix, evidence: { ...evidence, claims }, requestedCriterionIds: ids,
+              policy: { allowedStates: ["Соответствует", "Не соответствует", "Недостаточно данных"], selfReportAdmissible: true, holisticRecommendation: true } }, "rows"); traceRefs.push(initial.traceRef); }
+            catch { warnings.push("ROW_EVALUATION_FAILED"); }
+            const accepted = new Map<string, CandidateMatrixRow>();
+            for (const row of (initial?.output.rows as unknown as CandidateMatrixRow[] | undefined ?? [])) if (ids.includes(row.criterionId) && !accepted.has(row.criterionId)
+              && validateCandidateMatrixRows([row.criterionId], [row], claims).decision === "PASS") accepted.set(row.criterionId, row);
+            let missingIds = ids.filter((id) => !accepted.has(id));
+            if (missingIds.length) {
+              try {
+                const targeted = await call("matrix_row_evaluation", { matrix, evidence: { ...evidence, claims }, requestedCriterionIds: missingIds,
+                  policy: { targetedRetry: true, allowedStates: ["Соответствует", "Не соответствует", "Недостаточно данных"], selfReportAdmissible: true, holisticRecommendation: true } }, "rows-targeted-retry");
+                traceRefs.push(targeted.traceRef);
+                for (const row of targeted.output.rows as unknown as CandidateMatrixRow[]) if (missingIds.includes(row.criterionId) && !accepted.has(row.criterionId)
+                  && validateCandidateMatrixRows([row.criterionId], [row], claims).decision === "PASS") accepted.set(row.criterionId, row);
+              } catch { warnings.push("ROW_TARGETED_RETRY_FAILED"); }
             }
-            const ids: string[] = [];
-            const visit = (criteria: readonly MatrixCriterion[]) => criteria.forEach((criterion) => { ids.push(criterion.criterionId); visit(criterion.children); });
-            visit(matrix.criteria);
-            let candidateRows = rows.output.rows as unknown as CandidateMatrixRow[];
-            let validation = validateCandidateMatrixRows(ids, candidateRows);
-            const traceRefs = [rows.traceRef, abc.traceRef];
-            if (validation.decision !== "PASS") {
-              const repaired = await call("invalid_row_repair", { matrix, evidence, currentRows: candidateRows, missingCriterionIds: validation.missingCriterionIds, duplicateIds: validation.duplicateIds, unknownIds: validation.unknownIds }, "row-repair");
-              const replacements = new Map((repaired.output.rows as unknown as CandidateMatrixRow[]).map((row) => [row.criterionId, row]));
-              candidateRows = ids.map((id) => replacements.get(id) ?? candidateRows.find((row) => row.criterionId === id)).filter((row): row is CandidateMatrixRow => Boolean(row));
-              validation = validateCandidateMatrixRows(ids, candidateRows); traceRefs.push(repaired.traceRef);
-            }
-            if (validation.decision !== "PASS") throw new Error("MATRIX_ROW_COVERAGE_INVALID");
-            const claimsRef = typeof evidence.claimsRef === "string" ? evidence.claimsRef : undefined;
-            if (!claimsRef) throw new Error("MATRIX_CLAIMS_REFERENCE_MISSING");
-            const claimBundle = await artifactStore.getJson<{ claims?: Array<{ claimId: string; decisionAdmissible?: boolean }> }>(claimsRef);
-            const admissibility = new Map((claimBundle.claims ?? []).map((claim) => [claim.claimId, claim.decisionAdmissible !== false]));
-            if (candidateRows.some((row) => row.state === "Подтверждено" && row.supportingClaimIds.length === 1 && admissibility.get(row.supportingClaimIds[0]) === false)) throw new Error("MATRIX_SPEAKER_ROLE_GATE_FAILED");
-            const stored = await storeJson("matrix-rows", operationIdentity, { schemaVersion: "candidate-matrix-rows-bundle/v1", matrixId: published.matrixId, evidenceRef, rows: candidateRows, abcDirections: abc.output.directions, traceRefs });
+            missingIds = ids.filter((id) => !accepted.has(id));
+            for (const id of missingIds) accepted.set(id, technicalFallbackRow(id));
+            if (missingIds.length) warnings.push(`TECHNICAL_ROW_FALLBACK:${missingIds.length}`);
+            const candidateRows = ids.map((id) => accepted.get(id)!);
+            let abcDirections: unknown[] = [];
+            const vacancy = await vacancyContext();
+            const availableAbcDirections = Array.isArray(vacancy.vacancy?.abcDirections) ? vacancy.vacancy.abcDirections.filter((direction) =>
+              direction && typeof direction === "object" && !Array.isArray(direction)
+              && typeof direction.id === "string" && direction.id.trim()
+              && [direction.name, direction.title].some((name) => typeof name === "string" && name.trim())) : [];
+            if (availableAbcDirections.length) try {
+              const abc = await call("abc_matrix_assessment", { directions: availableAbcDirections, evidence: { ...evidence, claims }, policy: {
+                bestFit: true, fullCoverageRequired: true, selfReportAdmissible: true, inferMissingLevelDefinitions: true,
+                fallbackScale: { A: "выше ожиданий роли", B: "соответствует ожиданиям роли", C: "ниже ожиданий или требует заметной поддержки" },
+                insufficientOnlyWhenNoRelevantCandidateEvidence: true,
+              } }, "abc");
+              traceRefs.push(abc.traceRef); abcDirections = abc.output.directions as unknown[];
+            } catch { warnings.push("ABC_ASSESSMENT_SKIPPED"); }
+            else warnings.push("ABC_PROFILE_NOT_CONFIGURED");
+            const stored = await storeJson("matrix-rows", operationIdentity, { schemaVersion: "candidate-matrix-rows-bundle/v3", matrixId: published.matrixId, evidenceRef, rows: candidateRows, abcDirections,
+              recommendation: String(initial?.output.recommendation ?? (missingIds.length === ids.length ? "Недостаточно данных" : "Рекомендовать с оговорками")),
+              recommendationReason: String(initial?.output.recommendationReason ?? "Рекомендация сформирована по доступным строкам; часть оценки потребовала технического fallback."),
+              coverageSummary: { extraction: claimCoverage.coverageSummary, evaluation: { criterionCount: ids.length, evaluatedCount: ids.length, technicalFallbackCount: missingIds.length } },
+              warnings: [...(claimCoverage.warnings ?? []), ...(Array.isArray(evidence.warnings) ? evidence.warnings.filter((item): item is string => typeof item === "string") : []), ...warnings], traceRefs });
             return { artifactRef: stored.artifactRef, checksum: stored.checksum };
           }
           if (toolKey === "candidate.matrix-verify/v1") {
             const rowsRef = await latestArtifact("candidate.matrix-rows/v1");
             const rows = await artifactStore.getJson<Record<string, unknown>>(rowsRef);
-            const verified = await call("critical_row_verification", { matrix, rows, policy: { verify: ["stopFactor", "hardRequired", "required", "conflict", "recommendation-changing"] } }, "verify");
             const bundleRows = Array.isArray(rows.rows) ? rows.rows as CandidateMatrixRow[] : [];
-            const decisions = new Map((verified.output.results as Array<Record<string, unknown>>).map((result) => [String(result.criterionId), String(result.decision)]));
-            const criteria = new Map<string, MatrixCriterion>();
-            const visit = (items: readonly MatrixCriterion[]) => items.forEach((item) => { criteria.set(item.criterionId, item); visit(item.children); });
+            const criterion = new Map<string, MatrixCriterion>();
+            const visit = (criteria: readonly MatrixCriterion[]) => criteria.forEach((item) => { criterion.set(item.criterionId, item); visit(item.children); });
             visit(matrix.criteria);
-            const criticalIds = bundleRows.filter((row) => { const item = criteria.get(row.criterionId); return item?.required || item?.hardRequired || item?.decisionEffect === "stop-factor" || item?.decisionEffect === "hard-required" || row.state === "Противоречие источников"; }).map((row) => row.criterionId);
-            if (criticalIds.some((id) => !decisions.has(id))) throw new Error("MATRIX_CRITICAL_VERIFICATION_INCOMPLETE");
-            for (const row of bundleRows) await matrixRepository.appendRow({ candidateId: candidatePk, runId, inputVersion, profileVersion, matrixId: published.matrixId,
-              row: { ...row, verificationState: decisions.get(row.criterionId) === "REJECTED" ? "REJECTED" : decisions.has(row.criterionId) ? "VERIFIED" : row.verificationState }, verificationTraceRef: verified.traceRef });
-            const evidenceRef = typeof rows.evidenceRef === "string" ? rows.evidenceRef : undefined;
-            if (!evidenceRef) throw new Error("MATRIX_EVIDENCE_REFERENCE_MISSING");
-            const evidence = await artifactStore.getJson<{ claimsRef?: string }>(evidenceRef);
-            if (!evidence.claimsRef) throw new Error("MATRIX_CLAIMS_REFERENCE_MISSING");
-            const claimBundle = await artifactStore.getJson<{ unmappedSignals?: Array<Record<string, unknown>> }>(evidence.claimsRef);
-            const signals = claimBundle.unmappedSignals ?? [];
-            const signalLocators = new Set(signals.map((signal) => typeof signal.locator === "string" ? signal.locator : "").filter(Boolean));
-            const contextRef = await latestArtifact("candidate.matrix-context-read/v1");
-            const context = await artifactStore.getJson<{ materials?: Record<string, unknown> }>(contextRef);
-            if (!context.materials) throw new Error("MATRIX_DECISION_SAFE_CONTEXT_INVALID");
-            const assessedRisks = await call("unmapped_risk_assessment", { matrix, signals, materials: context.materials,
-              policy: { candidateScopedOnly: true, sensitiveAttributesForbidden: true, mayCreateCriteria: false, mayCreateStopFactors: false } }, "unmapped-risk");
-            const proposals = assessedRisks.output.proposals as Array<Record<string, unknown>>;
-            const criticalProposals = proposals.filter((proposal) => proposal.decision === "PROPOSE_CRITICAL");
-            const verifiedRisks = criticalProposals.length
-              ? await call("critical_risk_verification", { matrix, proposals: criticalProposals, signals, materials: context.materials,
-                  policy: { cleanContext: true, assessorReasoningExcluded: true, sensitiveAttributesForbidden: true, requireRoleImpact: true } }, "critical-risk")
-              : undefined;
-            if (verifiedRisks && verifiedRisks.traceRef === assessedRisks.traceRef) throw new Error("MATRIX_CRITICAL_RISK_VERIFIER_NOT_INDEPENDENT");
-            const riskDecisions = new Map((verifiedRisks?.output.results as Array<Record<string, unknown>> | undefined ?? []).map((result) => [String(result.riskId), String(result.decision)]));
-            const criticalRiskIds = new Set(criticalProposals.map((proposal) => text(proposal.riskId, "MATRIX_CRITICAL_RISK_ID_INVALID")));
-            if ([...criticalRiskIds].some((riskId) => !riskDecisions.has(riskId))) throw new Error("MATRIX_CRITICAL_RISK_VERIFICATION_INCOMPLETE");
-            if ([...riskDecisions].some(([riskId]) => !criticalRiskIds.has(riskId))) throw new Error("MATRIX_CRITICAL_RISK_VERIFICATION_UNKNOWN_ID");
-            const criticalRisks: CriticalUnmappedRisk[] = proposals.map((proposal) => {
-              const decision = String(proposal.decision);
-              const evidenceLocators = Array.isArray(proposal.evidenceLocators) ? proposal.evidenceLocators.filter((item): item is string => typeof item === "string" && item.length > 0) : [];
-              if (!evidenceLocators.length) throw new Error("MATRIX_CRITICAL_RISK_LOCATOR_MISSING");
-              if (evidenceLocators.some((locator) => !signalLocators.has(locator))) throw new Error("MATRIX_CRITICAL_RISK_LOCATOR_INVALID");
-              return { riskId: text(proposal.riskId, "MATRIX_CRITICAL_RISK_ID_INVALID"), signalIds: Array.isArray(proposal.signalIds) ? proposal.signalIds.filter((item): item is string => typeof item === "string") : [],
-                title: text(proposal.title, "MATRIX_CRITICAL_RISK_TITLE_INVALID"), reason: text(proposal.reason, "MATRIX_CRITICAL_RISK_REASON_INVALID"),
-                roleImpact: text(proposal.roleImpact, "MATRIX_CRITICAL_RISK_ROLE_IMPACT_INVALID"), evidenceLocators,
-                assessmentDecision: decision === "PROPOSE_CRITICAL" ? "PROPOSE_CRITICAL" : decision === "CAVEAT" ? "CAVEAT" : "INFORMATIONAL",
-                verificationDecision: decision === "PROPOSE_CRITICAL" ? (riskDecisions.get(String(proposal.riskId)) as CriticalUnmappedRisk["verificationDecision"] ?? "REJECTED") : "NOT_CRITICAL",
-                assessmentTraceRef: assessedRisks.traceRef, verificationTraceRef: verifiedRisks?.traceRef ?? "NOT_APPLICABLE" };
+            const verificationTargets = bundleRows.filter((row) => {
+              const item = criterion.get(row.criterionId);
+              const triggeredStop = item?.hardRequired && ["Соответствует", "Подтверждено"].includes(row.state);
+              const materialRejection = !item?.hardRequired && String(rows.recommendation) === "Не рекомендовать" && ["Не соответствует", "Не подтверждено"].includes(row.state);
+              return triggeredStop || materialRejection;
             });
-            const stored = await storeJson("matrix-verification", operationIdentity, { schemaVersion: "matrix-verification/v1", rowsRef, results: verified.output.results,
-              criticalRisks, traceRefs: [verified.traceRef, assessedRisks.traceRef, ...(verifiedRisks ? [verifiedRisks.traceRef] : [])], traceRef: verified.traceRef });
+            const evidenceRef = typeof rows.evidenceRef === "string" ? rows.evidenceRef : undefined;
+            let claims: unknown[] = [];
+            if (evidenceRef) {
+              const evidence = await artifactStore.getJson<{ claimsRef?: string }>(evidenceRef);
+              if (evidence.claimsRef) claims = (await artifactStore.getJson<{ claims?: unknown[] }>(evidence.claimsRef)).claims ?? [];
+            }
+            let verificationResults: CriticalVerificationDecision[] = [];
+            let verificationTraceRef = "NOT_REQUIRED";
+            const warnings: string[] = [];
+            if (verificationTargets.length) {
+              try {
+                const verified = await call("critical_row_verification", { matrix, rows: verificationTargets, claims,
+                  policy: { verifyOnly: ["triggered-stop-factor", "material-rejection"], exactQuotesProvided: true, selfReportAdmissible: true, failSoft: true } }, "verify");
+                verificationResults = verified.output.results as CriticalVerificationDecision[]; verificationTraceRef = verified.traceRef;
+              } catch { warnings.push("CRITICAL_ROW_VERIFICATION_FAILED_PRESERVED_ORIGINAL"); }
+            }
+            const adjustedRows = applyCriticalVerificationDecisions(bundleRows, verificationResults);
+            for (const row of adjustedRows) await matrixRepository.appendRow({ candidateId: candidatePk, runId, inputVersion, profileVersion, matrixId: published.matrixId,
+              row, verificationTraceRef });
+            const stored = await storeJson("matrix-verification", operationIdentity, { schemaVersion: "matrix-verification/v2", rowsRef, results: verificationResults, adjustedRows,
+              criticalRisks: [], warnings, traceRefs: verificationTraceRef === "NOT_REQUIRED" ? [] : [verificationTraceRef], traceRef: verificationTraceRef });
             return { artifactRef: stored.artifactRef, checksum: stored.checksum };
           }
           if (toolKey === "candidate.matrix-recommendation/v1") {
             const rowsRef = await latestArtifact("candidate.matrix-rows/v1");
             const verificationRef = await latestArtifact("candidate.matrix-verify/v1");
-            const verification = await artifactStore.getJson<{ results?: Array<{ decision?: string }>; criticalRisks?: CriticalUnmappedRisk[] }>(verificationRef);
-            if (!Array.isArray(verification.results) || verification.results.some((result) => result.decision === "REJECTED")) throw new Error("MATRIX_CRITICAL_VERIFICATION_REJECTED");
-            const bundle = await artifactStore.getJson<{ rows?: CandidateMatrixRow[] }>(rowsRef);
+            const verification = await artifactStore.getJson<{ results?: CriticalVerificationDecision[]; adjustedRows?: CandidateMatrixRow[] }>(verificationRef);
+            const bundle = await artifactStore.getJson<{ rows?: CandidateMatrixRow[]; recommendation?: string; recommendationReason?: string; abcDirections?: Array<Record<string, unknown>>; evidenceRef?: string; coverageSummary?: unknown; warnings?: string[] }>(rowsRef);
+            const effectiveRows = Array.isArray(verification.adjustedRows)
+              ? verification.adjustedRows
+              : applyCriticalVerificationDecisions(bundle.rows ?? [], verification.results ?? []);
             const criterion = new Map<string, MatrixCriterion>();
             const visit = (criteria: readonly MatrixCriterion[]) => criteria.forEach((item) => { criterion.set(item.criterionId, item); visit(item.children); });
             visit(matrix.criteria);
-            const values = bundle.rows ?? [];
-            const mismatches = values.filter((row) => row.state === "Не подтверждено");
-            const unknown = values.filter((row) => ["Недостаточно данных", "Противоречие источников"].includes(row.state));
-            const recommendation = deriveMatrixRecommendation({
-              confirmedStopFactors: values.filter((row) => criterion.get(row.criterionId)?.hardRequired && row.state === "Подтверждено").map((row) => row.criterionId),
-              requiredUnknown: unknown.filter((row) => criterion.get(row.criterionId)?.required).map((row) => row.criterionId),
-              requiredMismatches: mismatches.filter((row) => criterion.get(row.criterionId)?.required && !criterion.get(row.criterionId)?.hardRequired).map((row) => row.criterionId),
-              verifiedCriticalUnmappedRisks: (verification.criticalRisks ?? []).filter((risk) => risk.verificationDecision === "VERIFIED_CRITICAL").map((risk) => risk.riskId),
-              risks: values.filter((row) => criterion.get(row.criterionId)?.decisionEffect === "risk" && row.state !== "Подтверждено").map((row) => row.criterionId),
-              partialMatches: values.filter((row) => row.state === "Частично подтверждено").map((row) => row.criterionId),
-            });
+            const values = effectiveRows;
             const evidenceRef = await latestArtifact("candidate.matrix-conflict-submit/v1");
-            const matrixEvidence = await artifactStore.getJson<{ conflicts?: unknown[] }>(evidenceRef);
-            const structuredAssessment = { matrixRows: values, matrixCriteria: Object.fromEntries([...criterion].map(([id, item]) => [id, { sourceText: item.sourceText, interpretation: item.interpretation, interpretationNotes: item.interpretationNotes, sourceRefs: item.sourceRefs, required: item.required, requiredExplanation: item.requiredExplanation, hardRequired: item.hardRequired }])), matrixConflicts: matrixEvidence.conflicts ?? [], criticalUnmappedRisks: verification.criticalRisks ?? [],
-              observations: values.map((row) => ({ criterion: row.criterionId, category: criterion.get(row.criterionId)?.category ?? "additional", required: criterion.get(row.criterionId)?.required ?? false, state: row.state, reason: row.reason, factIds: [...row.supportingClaimIds, ...row.contradictingClaimIds] })), abcStates: {}, abcEvidence: {}, competencies: [], accessToKe: [],
-              risks: (verification.criticalRisks ?? []).filter((risk) => risk.assessmentDecision !== "INFORMATIONAL").map((risk) => ({ name: risk.title,
-                state: risk.verificationDecision === "VERIFIED_CRITICAL" ? "Подтверждено" : "Частично подтверждено", reason: `${risk.reason} Влияние на роль: ${risk.roleImpact}. Источники: ${risk.evidenceLocators.join(", ")}. Проверка: ${risk.verificationDecision}.`, factIds: risk.signalIds })),
-              stopFactors: values.filter((row) => criterion.get(row.criterionId)?.hardRequired && row.state === "Подтверждено").map((row) => ({ name: criterion.get(row.criterionId)?.sourceText ?? row.criterionId, state: row.state, reason: row.reason, factIds: [...row.supportingClaimIds, ...row.contradictingClaimIds] })) };
-            const stored = await storeJson("matrix-assessment-snapshot", operationIdentity, { schemaVersion: "matrix-assessment-snapshot/v1", workflowVersion: MATRIX_WORKFLOW_VERSION, inputVersion, profileVersion, matrixId: published.matrixId, matrixChecksum: matrix.checksum,
-              skillVersions: { ...matrix.skillVersions, unmappedRiskAssessment: "assess-unmapped-risk/v1", criticalRiskVerification: "verify-critical-risk/v1" }, modelVersions: matrix.modelVersions,
-              schemaVersions: { matrix: matrix.schemaVersion, rows: "candidate-matrix-rows/v1", verification: "candidate-row-verification/v1", unmappedRisk: "candidate-unmapped-risk-assessment/v1", criticalRisk: "candidate-critical-risk-verification/v1" }, policyVersions: { compiler: matrix.compilerPolicyVersion, recommendation: "ASM-050/matrix-v2" },
-              rowsRef, evidenceRef, verificationRef, structuredAssessment, criticalUnmappedRisks: verification.criticalRisks ?? [], formulaInputs: { rows: values, criticalRisks: verification.criticalRisks ?? [] }, ...recommendation });
+            const matrixEvidence = await artifactStore.getJson<{ conflicts?: unknown[]; claimsRef?: string }>(evidenceRef);
+            const claimBundle = matrixEvidence.claimsRef ? await artifactStore.getJson<{ unmappedSignals?: Array<Record<string, unknown>> }>(matrixEvidence.claimsRef) : {};
+            const signals = claimBundle.unmappedSignals ?? [];
+            const displayState = (state: string) => state === "Соответствует" ? "Подтверждено" : state === "Не соответствует" ? "Не подтверждено" : state;
+            const itemFor = (row: CandidateMatrixRow) => ({ name: criterion.get(row.criterionId)?.sourceText ?? row.criterionId, state: displayState(row.state), reason: row.reason,
+              factIds: [...row.supportingClaimIds, ...row.contradictingClaimIds] });
+            const positiveRows = values.filter((row) => ["Соответствует", "Подтверждено"].includes(row.state));
+            const negativeRows = values.filter((row) => ["Не соответствует", "Не подтверждено"].includes(row.state));
+            const observationReason = (signal: Record<string, unknown>) => {
+              const source = /transcript|interview|стенограмм|интервью/iu.test(String(signal.sourceClass ?? "")) ? "Интервью"
+                : /resume|резюме/iu.test(String(signal.sourceClass ?? "")) ? "Резюме"
+                  : /recommend|рекомендац/iu.test(String(signal.sourceClass ?? "")) ? "Рекомендация" : "Документ кандидата";
+              return `${source}: ${String(signal.text)}`;
+            };
+            const additionalStrengths = signals.filter((signal) => signal.observationType === "STRENGTH").map((signal) => ({ name: String(signal.text), state: "Подтверждено", reason: observationReason(signal), factIds: [String(signal.signalId)] }));
+            const additionalConcerns = signals.filter((signal) => signal.observationType === "CONCERN").map((signal) => ({ name: String(signal.text), state: "Частично подтверждено", reason: observationReason(signal), factIds: [String(signal.signalId)] }));
+            const triggeredStops = positiveRows.filter((row) => criterion.get(row.criterionId)?.hardRequired);
+            const allowedRecommendations = new Set(["Рекомендовать", "Рекомендовать с оговорками", "Не рекомендовать", "Недостаточно данных"]);
+            const holisticRecommendation = allowedRecommendations.has(String(bundle.recommendation)) ? String(bundle.recommendation) : "Недостаточно данных";
+            const recommendation = triggeredStops.length ? "Не рекомендовать" : holisticRecommendation;
+            const selectedBranch = triggeredStops.length ? "STOP_FACTOR" : "HOLISTIC_LLM";
+            const abcDirections = bundle.abcDirections ?? [];
+            const abcStates = Object.fromEntries(abcDirections.filter((direction) => typeof direction.directionId === "string").map((direction) => [String(direction.directionId), direction.level]));
+            const abcEvidence = Object.fromEntries(abcDirections.filter((direction) => typeof direction.directionId === "string").map((direction) => [String(direction.directionId), {
+              reason: direction.reason, factIds: direction.evidenceLocatorIds ?? [], definingConditions: direction.definingConditions ?? [],
+            }]));
+            const structuredAssessment = { matrixRows: values, matrixCriteria: Object.fromEntries([...criterion].map(([id, item]) => [id, { category: item.category, sourceText: item.sourceText, interpretation: item.interpretation, interpretationNotes: item.interpretationNotes, sourceRefs: item.sourceRefs, required: item.required, requiredExplanation: item.requiredExplanation, hardRequired: item.hardRequired }])), matrixConflicts: matrixEvidence.conflicts ?? [], criticalUnmappedRisks: [],
+              observations: values.map((row) => ({ criterion: row.criterionId, category: criterion.get(row.criterionId)?.category ?? "additional", required: criterion.get(row.criterionId)?.required ?? false, state: displayState(row.state), reason: row.conclusion ?? row.reason, factIds: [...row.supportingClaimIds, ...row.contradictingClaimIds] })), abcConfigured: abcDirections.length > 0, abcStates, abcEvidence,
+              competencies: [...positiveRows.filter((row) => criterion.get(row.criterionId)?.category === "competency").map(itemFor), ...additionalStrengths],
+              accessToKe: values.filter((row) => criterion.get(row.criterionId)?.category === "access-to-ke").map((row) => ({ ...itemFor(row), required: criterion.get(row.criterionId)?.required ?? false })),
+              risks: [...negativeRows.filter((row) => !criterion.get(row.criterionId)?.hardRequired).map(itemFor), ...additionalConcerns], stopFactors: triggeredStops.map(itemFor) };
+            const stored = await storeJson("matrix-assessment-snapshot", operationIdentity, { schemaVersion: "matrix-assessment-snapshot/v2", workflowVersion: MATRIX_WORKFLOW_VERSION, inputVersion, profileVersion, matrixId: published.matrixId, matrixChecksum: matrix.checksum,
+              skillVersions: { ...matrix.skillVersions, extraction: "extract-claims-for-criteria/v1", recommendation: "fill-matrix-rows/v2" }, modelVersions: matrix.modelVersions,
+              schemaVersions: { matrix: matrix.schemaVersion, rows: "candidate-matrix-rows/v2", verification: "candidate-row-verification/v1" }, policyVersions: { compiler: matrix.compilerPolicyVersion, recommendation: "ASM-050/coverage-first-evidence-v2" },
+              rowsRef, evidenceRef, verificationRef, structuredAssessment, criticalUnmappedRisks: [], coverageSummary: bundle.coverageSummary, warnings: bundle.warnings ?? [],
+              recommendation, recommendationReason: triggeredStops.length ? "Подтверждён явный стоп-фактор вакансии." : bundle.recommendationReason, selectedBranch, formulaInputs: { rows: values } });
             return { artifactRef: stored.artifactRef, checksum: stored.checksum };
           }
           throw new Error("MATRIX_TOOL_NOT_REGISTERED");
@@ -1157,10 +1284,10 @@ export async function createProductionCandidateToolExecution(input: { database: 
           if (!artifactStore) throw new Error("PRODUCTION_ARTIFACT_STORE_NOT_PROVISIONED");
           if (isMatrixWorkflowVersion(goal.workflow_version)) {
             const assessmentRef = await latestArtifact("candidate.matrix-recommendation/v1");
-            const assessment = await artifactStore.getJson<{ schemaVersion?: string; inputVersion?: string; profileVersion?: string; matrixId?: string; matrixChecksum?: string; rowsRef?: string; evidenceRef?: string; verificationRef?: string; recommendation?: ReportModel["recommendation"]; selectedBranch?: string; criticalUnmappedRisks?: CriticalUnmappedRisk[] }>(assessmentRef);
-            if (assessment.schemaVersion !== "matrix-assessment-snapshot/v1" || assessment.inputVersion !== inputVersion || assessment.profileVersion !== profileVersion
+            const assessment = await artifactStore.getJson<{ schemaVersion?: string; inputVersion?: string; profileVersion?: string; matrixId?: string; matrixChecksum?: string; rowsRef?: string; evidenceRef?: string; verificationRef?: string; recommendation?: ReportModel["recommendation"]; selectedBranch?: string; criticalUnmappedRisks?: CriticalUnmappedRisk[]; coverageSummary?: unknown; warnings?: string[] }>(assessmentRef);
+            if (!new Set(["matrix-assessment-snapshot/v1", "matrix-assessment-snapshot/v2"]).has(String(assessment.schemaVersion)) || assessment.inputVersion !== inputVersion || assessment.profileVersion !== profileVersion
               || !assessment.matrixId || !assessment.matrixChecksum || !assessment.rowsRef || !assessment.evidenceRef || !assessment.verificationRef || !assessment.recommendation) throw new Error("MATRIX_ASSESSMENT_SNAPSHOT_SCOPE_INVALID");
-            const matrix = await new PostgresVacancyMatrixRepository(input.database).readMatrix(profileVersion);
+            const matrix = await new PostgresVacancyMatrixRepository(input.database, goal.workflow_version).readMatrix(profileVersion);
             if (!matrix || matrix.matrixId !== assessment.matrixId || matrix.checksum !== assessment.matrixChecksum) throw new Error("MATRIX_ASSESSMENT_MATRIX_MISMATCH");
             const rows = await artifactStore.getJson<{ rows?: CandidateMatrixRow[] }>(assessment.rowsRef);
             const ids: string[] = [];
@@ -1171,10 +1298,11 @@ export async function createProductionCandidateToolExecution(input: { database: 
             if (!Array.isArray(verification.results)) throw new Error("MATRIX_VERIFICATION_MISSING");
             if ((assessment.criticalUnmappedRisks ?? []).some((risk) => risk.verificationDecision === "VERIFIED_CRITICAL"
               && (!risk.evidenceLocators.length || !risk.assessmentTraceRef || !risk.verificationTraceRef || risk.assessmentTraceRef === risk.verificationTraceRef))) throw new Error("MATRIX_CRITICAL_RISK_PROVENANCE_INVALID");
-            const stored = await storeJson("validated-assessment", operationIdentity, { schemaVersion: "validated-matrix-assessment/v1", assessmentRef, recommendation: assessment.recommendation, matrixId: assessment.matrixId, matrixChecksum: assessment.matrixChecksum, workflowVersion: MATRIX_WORKFLOW_VERSION, gates: { schema: true, coverage: true, verification: true, formula: true } });
+            const stored = await storeJson("validated-assessment", operationIdentity, { schemaVersion: "validated-matrix-assessment/v2", assessmentRef, recommendation: assessment.recommendation, matrixId: assessment.matrixId, matrixChecksum: assessment.matrixChecksum, workflowVersion: MATRIX_WORKFLOW_VERSION,
+              coverageSummary: assessment.coverageSummary, warnings: assessment.warnings ?? [], gates: { schema: true, coverage: true, auxiliaryVerification: true, holisticRecommendation: true } });
             const assessmentId = `assessment-${sha256([runId, assessmentRef]).slice(0, 24)}`;
             await execute(input.database, `INSERT INTO candidate_assessments (id,artifact_id,attempt,recommendation,formula_version,gate_state,decision_evidence_json)
-              VALUES ($1,$2,1,$3,'ASM-050/matrix-v2','PASSED',$4) ON CONFLICT DO NOTHING`, [assessmentId, stored.domainArtifactId, assessment.recommendation, JSON.stringify({ assessmentRef, matrixId: assessment.matrixId, matrixChecksum: assessment.matrixChecksum, verificationRef: assessment.verificationRef, criticalRiskCount: (assessment.criticalUnmappedRisks ?? []).filter((risk) => risk.verificationDecision === "VERIFIED_CRITICAL").length })]);
+              VALUES ($1,$2,1,$3,'ASM-050/coverage-first-v1','PASSED',$4) ON CONFLICT DO NOTHING`, [assessmentId, stored.domainArtifactId, assessment.recommendation, JSON.stringify({ assessmentRef, matrixId: assessment.matrixId, matrixChecksum: assessment.matrixChecksum, verificationRef: assessment.verificationRef, coverageSummary: assessment.coverageSummary, warnings: assessment.warnings ?? [] })]);
             return { artifactRef: stored.artifactRef, checksum: stored.checksum };
           }
           const assessmentRef = await latestArtifact("candidate.assessment/v1");
@@ -1216,18 +1344,21 @@ export async function createProductionCandidateToolExecution(input: { database: 
       pdf: {
         renderPair: async () => {
           if (!artifactStore) throw new Error("PRODUCTION_REPORT_STAGE_CONTEXT_NOT_PROVISIONED");
-          const existing = (await artifactsFor("candidate.report-pair/v1")).flatMap((artifact) => {
-            const type = artifact.artifactRef.includes("report-abc-test") ? "abc-test"
-              : artifact.artifactRef.includes("report-candidate-results") ? "candidate-results" : undefined;
+          const existing = (await artifactsFor(goal.workflow_version === "matrix-v3" ? "candidate.report/v1" : "candidate.report-pair/v1")).flatMap((artifact) => {
+            const type = artifact.artifactRef.includes("report-candidate-report") ? "candidate-report"
+              : artifact.artifactRef.includes("report-abc-test") ? "abc-test"
+                : artifact.artifactRef.includes("report-candidate-results") ? "candidate-results" : undefined;
             return type ? [{ ...artifact, type }] : [];
           });
-          if (existing.length === 2 && new Set(existing.map((report) => report.type)).size === 2) return existing;
+          if (existing.length === 1 && existing[0]?.type === "candidate-report") return existing;
           const validatedRef = await latestArtifact("candidate.validation/v1");
           const validated = await artifactStore.getJson<{ assessmentRef?: string; recommendation?: ReportModel["recommendation"]; workflowVersion?: string; matrixId?: string; matrixChecksum?: string }>(validatedRef);
           if (!validated.assessmentRef || !validated.recommendation) throw new Error("VALIDATED_ASSESSMENT_REFERENCE_MISSING");
           const assessment = await artifactStore.getJson<{ evidenceRef?: string; structuredAssessment?: Record<string, unknown>; profileVersion?: string; matrixId?: string; matrixChecksum?: string; skillVersions?: Record<string, string>; policyVersions?: { compiler?: string } }>(validated.assessmentRef);
           if (!assessment.evidenceRef || !assessment.structuredAssessment) throw new Error("ASSESSMENT_REPORT_INPUT_INVALID");
-          const evidence = await artifactStore.getJson<{ facts?: EvidenceFact[]; conflicts?: Array<{ factIds?: string[]; resolved?: boolean }> }>(assessment.evidenceRef);
+          const evidence = await artifactStore.getJson<{ facts?: EvidenceFact[]; conflicts?: Array<{ factIds?: string[]; resolved?: boolean }>; claimsRef?: string }>(assessment.evidenceRef);
+          const matrixClaimBundle = evidence.claimsRef ? await artifactStore.getJson<{ claims?: CandidateSourceClaim[] }>(evidence.claimsRef) : {};
+          const matrixClaims = Array.isArray(matrixClaimBundle.claims) ? matrixClaimBundle.claims : [];
           const facts = evidence.facts ?? [];
           const context = await vacancyContext();
           const candidateName = typeof context.candidate.name === "string" ? context.candidate.name : `Кандидат ${candidate.public_id ?? candidatePk}`;
@@ -1239,8 +1370,28 @@ export async function createProductionCandidateToolExecution(input: { database: 
           const matrixRows = Array.isArray(structured.matrixRows) ? structured.matrixRows as CandidateMatrixRow[] : [];
           const matrixCriteria = structured.matrixCriteria && typeof structured.matrixCriteria === "object" && !Array.isArray(structured.matrixCriteria) ? structured.matrixCriteria as Record<string, { sourceText?: string; interpretation?: string; interpretationNotes?: string[]; sourceRefs?: string[] }> : {};
           const matrixConflicts = Array.isArray(structured.matrixConflicts) ? structured.matrixConflicts : [];
-          const matrixTextForRow = (row: CandidateMatrixRow) => { const definition = matrixCriteria[row.criterionId] ?? {}; return `${row.state}. Исходное: ${definition.sourceText ?? "не указано"}. Интерпретация: ${definition.interpretation ?? "не указана"}. Основание: ${row.reason}. Supporting: ${row.supportingClaimIds.join(", ") || "нет"}; contradicting: ${row.contradictingClaimIds.join(", ") || "нет"}${row.missingData ? `; недостаёт: ${row.missingData}` : ""}${row.followUpQuestion ? `; вопрос: ${row.followUpQuestion}` : ""}`; };
-          const matrixText = `Матрица ${validated.matrixId ?? ""}; checksum ${validated.matrixChecksum ?? ""}. Строк: ${matrixRows.length}.` + (matrixConflicts.length ? ` Конфликты: ${JSON.stringify(matrixConflicts)}` : "");
+          const matrixClaimById = new Map(matrixClaims.map((claim) => [claim.claimId, claim]));
+          const matrixClaimSource = (claim: CandidateSourceClaim) => {
+            const locator = claim.locator;
+            const page = locator.match(/(?:page|стр(?:аница)?)[=:](\d+)/iu)?.[1];
+            const utterance = locator.match(/(?:utterance(?:Id)?|реплик[аи])\s*[=:]\s*(?:utterance-)?(\d+)/iu)?.[1];
+            const startMs = Number(locator.match(/(?:startMs|start)\s*[=:]\s*(\d+)/iu)?.[1]);
+            const endMs = Number(locator.match(/(?:endMs|end)\s*[=:]\s*(\d+)/iu)?.[1]);
+            const formatTime = (value: number) => `${String(Math.floor(value / 60_000)).padStart(2, "0")}:${String(Math.floor((value % 60_000) / 1_000)).padStart(2, "0")}`;
+            const interval = Number.isFinite(startMs) ? `${formatTime(startMs)}${Number.isFinite(endMs) && endMs > startMs ? `–${formatTime(endMs)}` : ""}` : undefined;
+            const lowered = `${claim.sourceClass} ${locator}`.toLocaleLowerCase("ru");
+            if (/interview|transcript|интервью|стенограмм/u.test(lowered)) return ["Интервью", interval, !interval && utterance ? `реплика ${utterance}` : undefined].filter(Boolean).join(" · ");
+            if (/resume|резюме/u.test(lowered)) return ["Резюме", page ? `стр. ${page}` : undefined].filter(Boolean).join(" · ");
+            if (/recommend|рекомендац/u.test(lowered)) return ["Рекомендация", page ? `стр. ${page}` : undefined].filter(Boolean).join(" · ");
+            return ["Документ кандидата", page ? `стр. ${page}` : undefined].filter(Boolean).join(" · ");
+          };
+          const matrixTextForRow = (row: CandidateMatrixRow) => {
+            const ids = [...row.supportingClaimIds, ...row.contradictingClaimIds];
+            const cited = ids.map((id) => matrixClaimById.get(id)).filter((claim): claim is CandidateSourceClaim => Boolean(claim));
+            const evidenceText = cited.map((claim) => `${matrixClaimSource(claim)} — «${claim.text}»`).join("; ");
+            return `${row.state}. Вывод: ${row.conclusion ?? row.reason}.${evidenceText ? ` Доказательства: ${evidenceText}.` : ""}${row.missingData ? ` Недостаёт: ${row.missingData}.` : ""}${row.followUpQuestion ? ` Вопрос: ${row.followUpQuestion}` : ""}`;
+          };
+          const matrixText = `Оценены все пункты вакансии: ${matrixRows.length}.`;
           const clean = (value: unknown, maximum = 150) => {
             const normalized = typeof value === "string" ? value.replace(/\s+/g, " ").trim() : "";
             return normalized.length <= maximum ? normalized : `${normalized.slice(0, maximum - 1).trimEnd()}…`;
@@ -1267,6 +1418,7 @@ export async function createProductionCandidateToolExecution(input: { database: 
           const role = normalizedSource.match(/Должность на последнем месте работы\s+(.+?)\s+Опыт на последнем месте работы/u)?.[1] ?? "Не указано";
           const employmentPeriod = normalizedSource.match(/Опыт на последнем месте работы\s+(.+?)\s+Резюме обновлено/u)?.[1] ?? "Не указано";
           const manifest = await materialManifest();
+          const reportSourceMaterials = projectReportSourceMaterials(manifest);
           const interviewMaterial = manifest.entries?.find((entry) => entry.role === "interview");
           const interviewName = interviewMaterial?.name ?? "";
           const interviewDateMatch = interviewName.match(/\b(\d{1,2})[.\-_](\d{1,2})(?:[.\-_](\d{2,4}))?\b/);
@@ -1325,7 +1477,7 @@ export async function createProductionCandidateToolExecution(input: { database: 
           }).join("\n") || "Недостаточно данных для оценки ABC.";
           const scaleText = profileAbcDirections.length ? profileAbcDirections.map((direction) => {
             const name = [direction.name, direction.title, directionNames[String(direction.id)], direction.id].find((value) => typeof value === "string" && value.trim());
-            return `• ${String(name)}: A — ${reportText(direction.gradeA) || "не определено"}; B — ${reportText(direction.gradeB) || "не определено"}; C — ${reportText(direction.gradeC) || "не определено"}.`;
+            return `• ${String(name)}: A — ${reportText(direction.gradeA) || "выраженное поведение выше ожиданий роли"}; B — ${reportText(direction.gradeB) || "устойчивое соответствие ожиданиям роли"}; C — ${reportText(direction.gradeC) || "поведение ниже ожиданий или требующее заметной поддержки"}.`;
           }).join("\n") : "A — выше ожиданий; B — соответствует ожиданиям; C — ниже ожиданий; CONFLICT — источники противоречат друг другу; Недостаточно данных — допустимых доказательств недостаточно.";
           const abcFactIds = new Set(Object.values(abcEvidence).flatMap((value) => value && typeof value === "object" && !Array.isArray(value) && Array.isArray((value as Record<string, unknown>).factIds)
             ? (value as Record<string, unknown>).factIds as unknown[] : []).filter((id): id is string => typeof id === "string"));
@@ -1363,6 +1515,7 @@ export async function createProductionCandidateToolExecution(input: { database: 
             /^conditions\.(?:location_and_mobility|mobility)/i,
             /^references\.availability/i,
           ]).slice(0, 4);
+          const organizationalConditions = projectOrganizationalConditions(facts);
           const interviewSummary: NonNullable<ReportModel["interviewSummary"]> = {
             interviewDate,
             fullName,
@@ -1381,17 +1534,128 @@ export async function createProductionCandidateToolExecution(input: { database: 
             negatives,
             additional,
           };
+          const reportEvidenceIds = new Set(matrixRows.flatMap((row) => [...row.supportingClaimIds, ...row.contradictingClaimIds]));
+          const collectReportEvidenceIds = (value: unknown, key = "") => {
+            if (Array.isArray(value)) {
+              if (/^(?:factIds|evidenceIds|evidenceLocatorIds|supportingClaimIds|contradictingClaimIds)$/i.test(key)) {
+                value.forEach((item) => { if (typeof item === "string") reportEvidenceIds.add(item); });
+              } else value.forEach((item) => collectReportEvidenceIds(item));
+            } else if (value && typeof value === "object") Object.entries(value as Record<string, unknown>).forEach(([childKey, item]) => collectReportEvidenceIds(item, childKey));
+          };
+          collectReportEvidenceIds(structured);
+          const reportEvidenceCatalog = [
+            ...matrixClaims.filter((claim) => reportEvidenceIds.has(claim.claimId)).map((claim) => ({ evidenceId: claim.claimId, quote: reportText(claim.text), source: matrixClaimSource(claim) })),
+            ...facts.filter((fact) => reportEvidenceIds.has(fact.id)).map((fact) => ({ evidenceId: fact.id, quote: reportText(fact.locator.exactText || fact.value), source: fact.locator.kind === "transcript"
+              ? `Интервью · ${Math.floor(Number(fact.locator.startMs ?? 0) / 60_000)}:${String(Math.floor((Number(fact.locator.startMs ?? 0) % 60_000) / 1_000)).padStart(2, "0")}`
+              : `${fact.locator.fileName ?? "Документ"}${fact.locator.page ? ` · стр. ${fact.locator.page}` : ""}` })),
+          ].filter((item, index, items) => item.evidenceId && item.quote && items.findIndex((candidateItem) => candidateItem.evidenceId === item.evidenceId) === index).slice(0, 160);
+          const abcGrades = Object.fromEntries(Object.entries(abcStates).map(([directionId, grade]) => [directionId, String(grade)]));
+          const decisionSnapshot = {
+            recommendation: validated.recommendation,
+            abcGrades,
+            matrixRows: matrixRows.map((row) => ({ criterionId: row.criterionId, state: row.state, conclusion: row.conclusion ?? row.reason,
+              evidenceIds: [...row.supportingClaimIds, ...row.contradictingClaimIds] })),
+          };
+          const recommendationReason = reportText(structured.recommendationReason)
+            || assessmentItems(structured.stopFactors)[0]?.replace(/^• /, "")
+            || assessmentItems(structured.risks)[0]?.replace(/^• /, "")
+            || "Рекомендация сформирована по совокупности проверенных критериев вакансии.";
+          const composedReport = await composeCandidateReportFailSoft({ decisionSnapshot, evidenceCatalog: reportEvidenceCatalog, composer: async () => {
+            if (!llmDependencies) throw new Error("REPORT_COMPOSER_RUNTIME_MISSING");
+            const capability = "candidate_report_composer" as const;
+            const config = llmDependencies.configuration.resolve(capability);
+            const compactContext = {
+              schemaVersion: "candidate-report-composer-input/v2",
+              candidate: { displayName: fullName, vacancyTitle },
+              recommendation: validated.recommendation,
+              recommendationReason,
+              abc: directionIds.map((directionId) => ({ directionId, title: directionNames[directionId] ?? directionId, grade: String(abcStates[directionId] ?? "Недостаточно данных") })),
+              matrix: matrixRows.map((row) => ({ criterionId: row.criterionId, title: matrixCriteria[row.criterionId]?.sourceText ?? "Пункт вакансии", state: row.state,
+                conclusion: row.conclusion ?? row.reason, evidenceIds: [...row.supportingClaimIds, ...row.contradictingClaimIds] })),
+              evidenceCatalog: reportEvidenceCatalog,
+            };
+            const correlation = traceCorrelation(capability, "candidate-report");
+            const attempt = await runLlmCapabilityWithPolicy(llmDependencies, llmBudget, { capability, correlation,
+              request: { messages: [{ role: "system", content: config.prompt.template }, { role: "user", content: compactContext }] as JsonValue[], toolDefinitions: [] },
+              inputSnapshot: { materials: [], context: JSON.parse(JSON.stringify(compactContext)) as JsonValue } });
+            const output = attempt.response.normalizedOutput as Record<string, unknown>;
+            const echo = output.decisionEcho as Record<string, unknown> | undefined;
+            const expectedAbc = directionIds.map((directionId) => ({ directionId, grade: String(abcStates[directionId] ?? "Недостаточно данных") }));
+            const expectedRows = matrixRows.map((row) => ({ criterionId: row.criterionId, state: row.state }));
+            if (!echo || echo.recommendation !== validated.recommendation || JSON.stringify(echo.abc) !== JSON.stringify(expectedAbc)
+              || JSON.stringify(echo.matrixRows) !== JSON.stringify(expectedRows)) throw new Error("REPORT_COMPOSER_DECISION_MUTATION");
+            const narrative = (value: unknown) => value && typeof value === "object" && !Array.isArray(value) ? value as { text: string; evidenceIds: string[] } : undefined;
+            const narrativeArray = (value: unknown) => Array.isArray(value) ? value.flatMap((item) => narrative(item) ? [narrative(item)!] : []) : [];
+            const section = (sectionId: string, statements: Array<{ text: string; evidenceIds: string[] }> | undefined) => statements?.length ? [{ sectionId, statements }] : [];
+            const technicalNarratives = Array.isArray(output.technicalCheck) ? output.technicalCheck.flatMap((item) => {
+              if (!item || typeof item !== "object" || Array.isArray(item)) return [];
+              const value = item as Record<string, unknown>;
+              const heading = typeof value.heading === "string" ? reportText(value.heading) : "";
+              const text = typeof value.text === "string" ? reportText(value.text) : "";
+              const evidenceIds = Array.isArray(value.evidenceIds) ? value.evidenceIds.filter((id): id is string => typeof id === "string") : [];
+              return heading && text ? [{ text: `${heading} — ${text}`, evidenceIds }] : [];
+            }) : [];
+            return { decisionSnapshot, sections: [
+              ...section("review", narrative(output.review) ? [narrative(output.review)!] : undefined),
+              ...section("key-evidence", narrativeArray(output.keyEvidence)),
+              ...section("technical-check", technicalNarratives),
+              ...section("motivation-fit", narrativeArray(output.motivationFit)),
+              ...section("risks", narrativeArray(output.risks)),
+              ...section("decision", narrative(output.decision) ? [narrative(output.decision)!] : undefined),
+              ...section("final-summary", narrative(output.finalSummary) ? [narrative(output.finalSummary)!] : undefined),
+            ] };
+          } });
+          const evidenceSourceById = new Map(reportEvidenceCatalog.map((item) => [item.evidenceId, item.source]));
+          const statementText = (statement: { text: string; evidenceIds: string[] }) => {
+            const sources = [...new Set(statement.evidenceIds.map((id) => evidenceSourceById.get(id)).filter((source): source is string => Boolean(source)))];
+            return `• ${statement.text}${sources.length ? `\n  Источник: ${sources.join("; ")}` : ""}`;
+          };
+          const composedBody = new Map((composedReport.usedFallback ? [] : composedReport.model.sections).map((section) => [section.sectionId,
+            section.statements.map(statementText).join("\n")]));
+          const rowEvidenceSources = (row: CandidateMatrixRow) => [...new Set([...row.supportingClaimIds, ...row.contradictingClaimIds]
+            .map((id) => evidenceSourceById.get(id)).filter((source): source is string => Boolean(source)))];
+          const evidenceBackedRows = matrixRows.filter((row) => row.supportingClaimIds.length || row.contradictingClaimIds.length);
+          const compactRow = (row: CandidateMatrixRow) => {
+            const sources = rowEvidenceSources(row);
+            return `• ${row.conclusion ?? row.reason}${sources.length ? `\n  Источник: ${sources.join("; ")}` : ""}`;
+          };
+          const fallbackKeyEvidence = evidenceBackedRows.slice(0, 5).map(compactRow).join("\n")
+            || "Показательные доказательства в доступных материалах не выделены.";
+          const nextAction = validated.recommendation === "Не рекомендовать"
+            ? "Зафиксировать причины отказа и завершить рассмотрение кандидата."
+            : "Перейти к следующему этапу отбора, проверив отмеченные риски и зоны уточнения.";
+          const positiveRows = evidenceBackedRows.filter((row) => row.state === "Соответствует");
+          const attentionRows = evidenceBackedRows.filter((row) => row.state !== "Соответствует");
+          const fallbackFinalSummary = [
+            positiveRows[0] ? `Сильнейшее подтверждённое соответствие: ${positiveRows[0].conclusion ?? positiveRows[0].reason}` : "",
+            attentionRows[0] ? `Основная зона внимания: ${attentionRows[0].conclusion ?? attentionRows[0].reason}` : "",
+            nextAction,
+          ].filter(Boolean).join(" ");
           const bodyFor = (section: string) => {
             if (section === "identity") return `${candidateName}; вакансия «${vacancyTitle}».`;
+            if (section === "sources") return projectCandidateReportSourceLines(reportSourceMaterials).join("\n") || "Исходные материалы не указаны.";
+            if (section === "organizational-conditions") return organizationalConditions.join("\n");
+            if (section === "review") return composedBody.get(section) ?? (positiveRows.slice(0, 3).map(compactRow).join("\n") || recommendationReason);
+            if (section === "key-evidence") return composedBody.get(section) ?? fallbackKeyEvidence;
+            if (section === "technical-check") return composedBody.get(section) ?? (hardSkills.length ? `Профессиональные инструменты\n${hardSkills.map((item) => `• ${item}`).join("\n")}` : "Отдельный технический опыт в материалах не раскрыт.");
+            if (section === "motivation-fit") return composedBody.get(section) ?? (additional.map((item) => `• ${item}`).join("\n") || "Отдельные сведения о мотивации и соответствии роли не выявлены.");
+            if (section === "decision") return `${validated.recommendation}.\n${composedBody.get(section) ?? `${recommendationReason}\n${nextAction}`}`;
+            if (section === "final-summary") return composedBody.get(section) ?? fallbackFinalSummary;
             if (section === "scale") return scaleText;
             if (section === "evidence") return evidenceText;
-            if (section === "recommendation") return `${validated.recommendation}. Это машинная рекомендация для HR; основание приоритета: ${assessmentItems(structured.stopFactors)[0]?.replace(/^• /, "") ?? assessmentItems(structured.risks)[0]?.replace(/^• /, "") ?? "проверенные критерии вакансии"}.`;
+            if (section === "recommendation") return `${validated.recommendation}. ${recommendationReason}`;
+            if (section === "executive-summary") return composedBody.get(section) ?? recommendationReason;
+            if (section === "key-cases") return composedBody.get(section) ?? ([...negatives, ...positives].map((item) => `• ${item}`).join("\n") || "Отдельные ключевые кейсы не выделены.");
+            if (section === "vacancy-criteria") return matrixRows.map((row) => `• ${matrixCriteria[row.criterionId]?.sourceText ?? "Пункт вакансии"}: ${row.state}. ${row.conclusion ?? row.reason}`).join("\n") || "Критерии вакансии отсутствуют.";
+            if (section === "technical-validation") return composedBody.get(section) ?? (hardSkills.map((item) => `• ${item}`).join("\n") || "Отдельная техническая проверка не проводилась.");
+            if (section === "motivation") return composedBody.get(section) ?? (additional.map((item) => `• ${item}`).join("\n") || "Отдельные сведения о мотивации не выявлены.");
+            if (section === "next-step") return composedBody.get(section) ?? (validated.recommendation === "Не рекомендовать" ? "Зафиксировать причины отказа и завершить рассмотрение кандидата." : "Перейти к следующему этапу отбора, проверив отмеченные вопросы и риски.");
             if (section === "stop-factors" || section === "critical-mismatches") return listOrState(structured.stopFactors, "Подтверждённые стоп-факторы не обнаружены.");
-            if (section === "risks") return listOrState(structured.risks, "Подтверждённые риски не обнаружены.");
+            if (section === "risks") return composedBody.get(section) ?? listOrState(structured.risks, "Существенные профессиональные риски по доступным материалам не выявлены.");
             if (section === "competencies") return listOrState(structured.competencies);
             if (section === "strengths") return assessmentItems(confirmedCompetencies).join("\n") || "Недостаточно подтверждённых данных.";
             if (section === "access-to-ke") return listOrState(structured.accessToKe, "Недостаточно данных для автоматического допуска к КЕ.");
-            if (section === "directions" || section === "abc") return abcText;
+            if (section === "directions" || section === "abc" || section === "abc-directions") return abcText;
             if (section === "confirmed-results") return assessmentItems(structured.observations).join("\n") || "Недостаточно данных о подтверждённых измеримых результатах.";
             if (section === "limitations") return questions;
             if (section === "unverified-questions" || section === "questions" || section === "ke-questions") return questions;
@@ -1414,36 +1678,42 @@ export async function createProductionCandidateToolExecution(input: { database: 
             workflowVersion: validated.workflowVersion,
             matrixProvenance: validated.workflowVersion?.startsWith("matrix-v") && validated.matrixId && validated.matrixChecksum ? { matrixId: validated.matrixId, checksum: validated.matrixChecksum, skillVersions: assessment.skillVersions, policyVersion: assessment.policyVersions?.compiler ?? "matrix-compiler-policy/v1" } : undefined,
             matrixRows: validated.workflowVersion?.startsWith("matrix-v") ? matrixRows : undefined,
-            sections: [...requiredReportSections(type).map((id) => ({ id, title: reportSectionTitle(type, id), body: bodyFor(id) })), ...(validated.workflowVersion?.startsWith("matrix-v") ? [{ id: "matrix", title: "Матрица критериев", body: bodyFor("matrix") }, ...matrixRows.map((row) => ({ id: `matrix:${row.criterionId}`, title: row.criterionId, body: matrixTextForRow(row) }))] : [])],
+            sections: [...requiredReportSections(type).map((id) => ({ id, title: reportSectionTitle(type, id), body: bodyFor(id) })), ...(validated.workflowVersion?.startsWith("matrix-v") && type !== "candidate-report" ? matrixRows.map((row) => ({ id: `matrix:${row.criterionId}`, title: matrixCriteria[row.criterionId]?.sourceText ?? "Пункт вакансии", body: matrixTextForRow(row) })) : [])],
             evidence: facts,
             interviewSummary: type === "candidate-results" && !validated.workflowVersion?.startsWith("matrix-v") ? interviewSummary : undefined,
+            decisionSnapshot,
+            evidenceCatalog: reportEvidenceCatalog,
+            sourceMaterials: type === "candidate-report" ? reportSourceMaterials : undefined,
           });
-          const models = [createModel("abc-test"), createModel("candidate-results")] as const;
-          validateReportPairModels(models[0], models[1]);
+          const model = createModel("candidate-report");
           if (!input.environment.DOCUMENT_PROCESSOR_URL || !input.environment.DOCUMENT_PROCESSOR_TOKEN) throw new Error("PRODUCTION_REPORT_PROCESSOR_NOT_PROVISIONED");
           const processorBase = new URL(input.environment.DOCUMENT_PROCESSOR_URL);
           if (input.environment.E2E_ENVIRONMENT === "local") {
             if (!loopbackOrDockerHostname(processorBase.hostname) || !["http:", "https:"].includes(processorBase.protocol)) throw new Error("LOCAL_DOCUMENT_PROCESSOR_MUST_BE_LOOPBACK");
           } else if (processorBase.protocol !== "https:") throw new Error("REMOTE_DOCUMENT_PROCESSOR_MUST_USE_HTTPS");
-          const renderUrl = new URL("/v1/render-report-pair", processorBase);
+          const renderUrl = new URL("/v1/render-candidate-report", processorBase);
           const renderResponse = await fetch(renderUrl, { method: "POST",
             headers: { authorization: `Bearer ${input.environment.DOCUMENT_PROCESSOR_TOKEN}`, "content-type": "application/json" },
-            body: JSON.stringify({ models }), signal: AbortSignal.timeout(5 * 60_000) });
-          const rendered = await renderResponse.json() as { code?: string; reports?: Array<{ type: string; checksum: string; bytesBase64: string }> };
+            body: JSON.stringify({ model }), signal: AbortSignal.timeout(5 * 60_000) });
+          const rendered = await renderResponse.json() as { code?: string; report?: { type: string; checksum: string; bytesBase64: string;
+            contentOraclePassed?: boolean; warningCount?: number; contentOracleWarningFingerprints?: string[] } };
           if (!renderResponse.ok) throw new Error(rendered.code ?? `REPORT_PROCESSOR_HTTP_${renderResponse.status}`);
-          if (!Array.isArray(rendered.reports) || rendered.reports.length !== 2) throw new Error("REPORT_PROCESSOR_OUTPUT_INVALID");
+          if (!rendered.report || rendered.report.type !== "candidate-report") throw new Error("REPORT_PROCESSOR_OUTPUT_INVALID");
           const reports: Array<{ type: string; checksum: string; artifactRef: string }> = [];
-          const reportRows: Array<{ type: "abc-test" | "candidate-results"; checksum: string; artifactRef: string; byteSize: number; fileName: string }> = [];
-          for (const report of rendered.reports) {
-            if (!models.some((model) => model.type === report.type) || typeof report.bytesBase64 !== "string" || typeof report.checksum !== "string") throw new Error("REPORT_PROCESSOR_OUTPUT_INVALID");
+          const reportRows: Array<{ type: "candidate-report"; checksum: string; artifactRef: string; byteSize: number; fileName: string;
+            contentOraclePassed: boolean; warningCount: number; contentOracleWarningFingerprints: string[] }> = [];
+          for (const report of [rendered.report]) {
+            if (model.type !== report.type || typeof report.bytesBase64 !== "string" || typeof report.checksum !== "string") throw new Error("REPORT_PROCESSOR_OUTPUT_INVALID");
             const bytes = new Uint8Array(Buffer.from(report.bytesBase64, "base64"));
             if (sha256(bytes) !== report.checksum) throw new Error("REPORT_PROCESSOR_CHECKSUM_MISMATCH");
             const stored = await storeBytes(`report-${report.type}`, `${operationIdentity}:${report.type}`, bytes, "application/pdf");
             if (stored.checksum !== report.checksum) throw new Error("REPORT_ARTIFACT_CHECKSUM_MISMATCH");
             reports.push({ type: report.type, checksum: stored.checksum, artifactRef: stored.artifactRef });
-            const model = models.find((candidateModel) => candidateModel.type === report.type)!;
-            reportRows.push({ type: report.type as "abc-test" | "candidate-results", checksum: stored.checksum,
-              artifactRef: stored.artifactRef, byteSize: bytes.byteLength, fileName: reportFileName(model) });
+            reportRows.push({ type: "candidate-report", checksum: stored.checksum,
+              artifactRef: stored.artifactRef, byteSize: bytes.byteLength, fileName: reportFileName(model),
+              contentOraclePassed: report.contentOraclePassed === true,
+              warningCount: Number(report.warningCount ?? 0),
+              contentOracleWarningFingerprints: Array.isArray(report.contentOracleWarningFingerprints) ? report.contentOracleWarningFingerprints : [] });
           }
           const assessmentRow = await queryOne<{ id: string }>(input.database,
             "SELECT id FROM candidate_assessments WHERE artifact_id=(SELECT id FROM candidate_domain_artifacts WHERE payload_ref=$1 LIMIT 1)", [validatedRef]);
@@ -1451,13 +1721,15 @@ export async function createProductionCandidateToolExecution(input: { database: 
           const reportVersionId = `report-version-${sha256([candidatePk, nextVersion]).slice(0, 24)}`;
           await withTransaction(input.database, async (transaction) => {
             await execute(transaction, `INSERT INTO candidate_report_versions
-              (id,candidate_id,run_id,assessment_id,analysis_version,state,directory_identity) VALUES ($1,$2,$3,$4,$5,'VALIDATED_PAIR',$6)
+              (id,candidate_id,run_id,assessment_id,analysis_version,state,directory_identity) VALUES ($1,$2,$3,$4,$5,'VALIDATED_REPORT',$6)
               ON CONFLICT DO NOTHING`, [reportVersionId, candidatePk, runId, assessmentRow.id, nextVersion,
               `candidate:${candidatePk}:results:v${String(nextVersion).padStart(4, "0")}`]);
             for (const report of reportRows) await execute(transaction, `INSERT INTO candidate_report_documents
               (id,report_version_id,type,file_name,checksum,byte_size,validation_json) VALUES ($1,$2,$3,$4,$5,$6,$7)
               ON CONFLICT DO NOTHING`, [`report-document-${sha256([reportVersionId, report.type]).slice(0, 24)}`, reportVersionId, report.type, report.fileName,
-              report.checksum, report.byteSize, JSON.stringify({ signature: true, parse: true, requiredSections: true, contentOracle: true, artifactRef: report.artifactRef })]);
+              report.checksum, report.byteSize, JSON.stringify({ valid: true, signature: true, parse: true, requiredSections: true,
+                contentOraclePassed: report.contentOraclePassed, warningCount: report.warningCount,
+                contentOracleWarningFingerprints: report.contentOracleWarningFingerprints, artifactRef: report.artifactRef })]);
           });
           return reports;
         },
@@ -1470,13 +1742,24 @@ export async function createProductionCandidateToolExecution(input: { database: 
           const recipients = ServerRecipientRegistry.parse(input.environment.TELEGRAM_RECIPIENT_REFS_JSON);
           if (!recipients.resolve(recipientRef)) throw new Error("TELEGRAM_RECIPIENT_NOT_ALLOWED");
           const context = await vacancyContext();
-          const report = await queryOne<{ drive_file_id: string; analysis_version: number }>(input.database, `SELECT document.drive_file_id,version.analysis_version
+          const report = await queryOne<{ drive_file_id: string; analysis_version: number }>(input.database, `WITH RECURSIVE run_lineage(id,depth) AS (
+              SELECT $1::text,0 UNION ALL SELECT source.recovery_source_run_id,lineage.depth+1
+              FROM agent_runs source JOIN run_lineage lineage ON source.id=lineage.id
+              WHERE source.recovery_source_run_id IS NOT NULL AND lineage.depth<32
+            ) SELECT document.drive_file_id,version.analysis_version
             FROM candidate_report_documents document JOIN candidate_report_versions version ON version.id=document.report_version_id
-            WHERE version.candidate_id=$1 AND version.run_id=$2 AND version.state='PUBLISHED' AND document.type='candidate-results'
-            ORDER BY version.analysis_version DESC LIMIT 1`, [candidatePk, runId]);
+            JOIN run_lineage lineage ON lineage.id=version.run_id
+            WHERE version.candidate_id=$2 AND version.state='PUBLISHED' AND document.type IN ('candidate-report','candidate-results')
+            ORDER BY lineage.depth,version.analysis_version DESC,CASE WHEN document.type='candidate-report' THEN 0 ELSE 1 END LIMIT 1`, [runId, candidatePk]);
           if (!report?.drive_file_id) throw new Error("TELEGRAM_RESULT_REPORT_NOT_PUBLISHED");
-          const assessment = await queryOne<{ recommendation: string }>(input.database, `SELECT recommendation FROM candidate_assessments
-            WHERE id=(SELECT assessment_id FROM candidate_report_versions WHERE candidate_id=$1 AND run_id=$2 ORDER BY analysis_version DESC LIMIT 1)`, [candidatePk, runId]);
+          const assessment = await queryOne<{ recommendation: string }>(input.database, `WITH RECURSIVE run_lineage(id,depth) AS (
+              SELECT $1::text,0 UNION ALL SELECT source.recovery_source_run_id,lineage.depth+1
+              FROM agent_runs source JOIN run_lineage lineage ON source.id=lineage.id
+              WHERE source.recovery_source_run_id IS NOT NULL AND lineage.depth<32
+            ) SELECT assessment.recommendation FROM candidate_assessments assessment
+            JOIN candidate_report_versions version ON version.assessment_id=assessment.id
+            JOIN run_lineage lineage ON lineage.id=version.run_id
+            WHERE version.candidate_id=$2 ORDER BY lineage.depth,version.analysis_version DESC LIMIT 1`, [runId, candidatePk]);
           const message = successTelegramTemplate({ candidate: String(context.candidate.name ?? candidate.public_id ?? candidatePk),
             vacancy: String(context.vacancy?.title ?? context.candidate.vacancy ?? "Вакансия"), recommendation: assessment?.recommendation ?? "Недостаточно данных",
             accessToKe: "См. подтверждённые сведения в отчёте", resultPdfUrl: `https://drive.google.com/file/d/${encodeURIComponent(report.drive_file_id)}/view` });

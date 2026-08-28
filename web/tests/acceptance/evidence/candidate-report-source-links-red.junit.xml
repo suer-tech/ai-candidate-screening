@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="REP-024: immutable manifest projects only supported non-result materials with exact HR-safe Google targets" time="0.001216" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\candidate-report-source-links.acceptance.test.ts" failure="public source-material projection boundary is missing&#10;+ actual - expected&#10;&#10;+ 'undefined'&#10;- 'function'&#10;">
+		<failure type="testCodeFailure" message="public source-material projection boundary is missing&#10;+ actual - expected&#10;&#10;+ 'undefined'&#10;- 'function'">
+[Error [ERR_TEST_FAILURE]: public source-material projection boundary is missing
++ actual - expected
+
++ 'undefined'
+- 'function'
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: public source-material projection boundary is missing
+  + actual - expected
+  
+  + 'undefined'
+  - 'function'
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\candidate-report-source-links.acceptance.test.ts:18:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'undefined',
+    expected: 'function',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="REP-024: candidate-report PDF emits one Link annotation per valid source and leaks no invalid/internal target" time="0.465596" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\candidate-report-source-links.acceptance.test.ts" failure="missing exact /Link URI target https://drive.google.com/file/d/drive-pdf-safe/view&#10;&#10;false !== true&#10;">
+		<failure type="testCodeFailure" message="missing exact /Link URI target https://drive.google.com/file/d/drive-pdf-safe/view&#10;&#10;false !== true">
+[Error [ERR_TEST_FAILURE]: missing exact /Link URI target https://drive.google.com/file/d/drive-pdf-safe/view
+
+false !== true
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: missing exact /Link URI target https://drive.google.com/file/d/drive-pdf-safe/view
+  
+  false !== true
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\candidate-report-source-links.acceptance.test.ts:42:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 2 -->
+	<!-- suites 0 -->
+	<!-- pass 0 -->
+	<!-- fail 2 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 643.6552 -->
+</testsuites>

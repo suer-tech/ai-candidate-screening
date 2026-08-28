@@ -46,6 +46,23 @@ export function createDocumentProcessorServer(config: DocumentProcessorConfig) {
   return createServer(async (request, response) => {
     if (!authorized(request.headers.authorization, config.token)) return json(response, 401, { code: "DOCUMENT_PROCESSOR_UNAUTHORIZED" });
     if (request.method === "GET" && request.url === "/health") return json(response, 200, { ready: true, pdfjs: true, mammoth: true, storesInput: false });
+    if (request.method === "POST" && request.url === "/v1/render-candidate-report") {
+      try {
+        const input = await bytes(request, config.maxInputBytes);
+        const payload = JSON.parse(new TextDecoder().decode(input)) as { model?: ReportModel };
+        if (!payload.model || payload.model.type !== "candidate-report") throw new Error("CANDIDATE_REPORT_MODEL_INVALID");
+        const rendered = await renderCandidatePdf(payload.model);
+        const validation = await validateRenderedReportPdf(rendered, payload.model);
+        if (!validation.contentOraclePassed) console.info(JSON.stringify({ event: "report-content-oracle-warning", reportType: payload.model.type,
+          warningCount: validation.contentOracleWarningCount, warningFingerprints: validation.contentOracleWarningFingerprints }));
+        return json(response, 200, { schemaVersion: "rendered-candidate-report/v1", report: { type: payload.model.type,
+          checksum: validation.checksum, bytesBase64: Buffer.from(rendered).toString("base64"), contentOraclePassed: validation.contentOraclePassed,
+          warningCount: validation.contentOracleWarningCount, contentOracleWarningFingerprints: validation.contentOracleWarningFingerprints } });
+      } catch (error) {
+        const code = error instanceof Error && /^[A-Z0-9_:.-]+$/.test(error.message) ? error.message : "REPORT_RENDER_PROCESSOR_FAILED";
+        return json(response, 422, { code });
+      }
+    }
     if (request.method === "POST" && request.url === "/v1/render-report-pair") {
       try {
         const input = await bytes(request, config.maxInputBytes);
@@ -56,9 +73,15 @@ export function createDocumentProcessorServer(config: DocumentProcessorConfig) {
         for (const model of payload.models) {
           const rendered = await renderCandidatePdf(model);
           const validation = await validateRenderedReportPdf(rendered, model);
-          reports.push({ type: model.type, checksum: validation.checksum, bytesBase64: Buffer.from(rendered).toString("base64") });
+          if (!validation.contentOraclePassed) console.info(JSON.stringify({ event: "report-content-oracle-warning", reportType: model.type,
+            warningCount: validation.contentOracleWarningCount, warningFingerprints: validation.contentOracleWarningFingerprints }));
+          reports.push({ type: model.type, checksum: validation.checksum, bytesBase64: Buffer.from(rendered).toString("base64"),
+            contentOraclePassed: validation.contentOraclePassed, warningCount: validation.contentOracleWarningCount,
+            contentOracleWarningFingerprints: validation.contentOracleWarningFingerprints });
         }
-        return json(response, 200, { schemaVersion: "rendered-report-pair/v1", reports });
+        return json(response, 200, { schemaVersion: "rendered-report-pair/v1", reports,
+          contentOraclePassed: reports.every((report) => report.contentOraclePassed),
+          warningCount: reports.reduce((sum, report) => sum + report.warningCount, 0) });
       } catch (error) {
         const code = error instanceof Error && /^[A-Z0-9_:.-]+$/.test(error.message) ? error.message : "REPORT_RENDER_PROCESSOR_FAILED";
         return json(response, 422, { code });

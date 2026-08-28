@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="TST-126: candidate-report registry is exactly the compact eleven sections in normative order" time="0.002161" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\compact-candidate-report-layout.acceptance.test.ts" failure="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;+ [&#10;+   'section order/count mismatch: [&amp;quot;identity&amp;quot;,&amp;quot;sources&amp;quot;,&amp;quot;organizational-conditions&amp;quot;,&amp;quot;recommendation&amp;quot;,&amp;quot;executive-summary&amp;quot;,&amp;quot;abc-directions&amp;quot;,&amp;quot;key-cases&amp;quot;,&amp;quot;vacancy-criteria&amp;quot;,&amp;quot;technical-validation&amp;quot;,&amp;quot;motivation&amp;quot;,&amp;quot;strengths&amp;quot;,&amp;quot;risks&amp;quot;,&amp;quot;stop-factors&amp;quot;,&amp;quot;questions&amp;quot;,&amp;quot;next-step&amp;quot;,&amp;quot;matrix&amp;quot;]',&#10;+   'sources: title=Использованные источники',&#10;+   'organizational-conditions: title=Организационные условия',&#10;+   'review: title=review',&#10;+   'key-evidence: title=key-evidence',&#10;+   'abc-directions: title=ABC-профиль',&#10;+   'technical-check: title=technical-check',&#10;+   'motivation-fit: title=motivation-fit',&#10;+   'risks: title=Риски и ограничения',&#10;+   'decision: title=decision',&#10;+   'final-summary: title=final-summary',&#10;+   'standalone forbidden section remains: vacancy-criteria',&#10;+   'standalone forbidden section remains: matrix',&#10;+   'standalone forbidden section remains: stop-factors',&#10;+   'standalone forbidden section remains: questions',&#10;+   'standalone forbidden section remains: strengths',&#10;+   'standalone forbidden section remains: recommendation',&#10;+   'standalone forbidden section remains: executive-summary'&#10;+ ]&#10;- []&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;+ [&#10;+   'section order/count mismatch: [&amp;quot;identity&amp;quot;,&amp;quot;sources&amp;quot;,&amp;quot;organizational-conditions&amp;quot;,&amp;quot;recommendation&amp;quot;,&amp;quot;executive-summary&amp;quot;,&amp;quot;abc-directions&amp;quot;,&amp;quot;key-cases&amp;quot;,&amp;quot;vacancy-criteria&amp;quot;,&amp;quot;technical-validation&amp;quot;,&amp;quot;motivation&amp;quot;,&amp;quot;strengths&amp;quot;,&amp;quot;risks&amp;quot;,&amp;quot;stop-factors&amp;quot;,&amp;quot;questions&amp;quot;,&amp;quot;next-step&amp;quot;,&amp;quot;matrix&amp;quot;]',&#10;+   'sources: title=Использованные источники',&#10;+   'organizational-conditions: title=Организационные условия',&#10;+   'review: title=review',&#10;+   'key-evidence: title=key-evidence',&#10;+   'abc-directions: title=ABC-профиль',&#10;+   'technical-check: title=technical-check',&#10;+   'motivation-fit: title=motivation-fit',&#10;+   'risks: title=Риски и ограничения',&#10;+   'decision: title=decision',&#10;+   'final-summary: title=final-summary',&#10;+   'standalone forbidden section remains: vacancy-criteria',&#10;+   'standalone forbidden section remains: matrix',&#10;+   'standalone forbidden section remains: stop-factors',&#10;+   'standalone forbidden section remains: questions',&#10;+   'standalone forbidden section remains: strengths',&#10;+   'standalone forbidden section remains: recommendation',&#10;+   'standalone forbidden section remains: executive-summary'&#10;+ ]&#10;- []">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly deep-equal:
++ actual - expected
+
++ [
++   'section order/count mismatch: ["identity","sources","organizational-conditions","recommendation","executive-summary","abc-directions","key-cases","vacancy-criteria","technical-validation","motivation","strengths","risks","stop-factors","questions","next-step","matrix"]',
++   'sources: title=Использованные источники',
++   'organizational-conditions: title=Организационные условия',
++   'review: title=review',
++   'key-evidence: title=key-evidence',
++   'abc-directions: title=ABC-профиль',
++   'technical-check: title=technical-check',
++   'motivation-fit: title=motivation-fit',
++   'risks: title=Риски и ограничения',
++   'decision: title=decision',
++   'final-summary: title=final-summary',
++   'standalone forbidden section remains: vacancy-criteria',
++   'standalone forbidden section remains: matrix',
++   'standalone forbidden section remains: stop-factors',
++   'standalone forbidden section remains: questions',
++   'standalone forbidden section remains: strengths',
++   'standalone forbidden section remains: recommendation',
++   'standalone forbidden section remains: executive-summary'
++ ]
+- []
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + [
+  +   'section order/count mismatch: ["identity","sources","organizational-conditions","recommendation","executive-summary","abc-directions","key-cases","vacancy-criteria","technical-validation","motivation","strengths","risks","stop-factors","questions","next-step","matrix"]',
+  +   'sources: title=Использованные источники',
+  +   'organizational-conditions: title=Организационные условия',
+  +   'review: title=review',
+  +   'key-evidence: title=key-evidence',
+  +   'abc-directions: title=ABC-профиль',
+  +   'technical-check: title=technical-check',
+  +   'motivation-fit: title=motivation-fit',
+  +   'risks: title=Риски и ограничения',
+  +   'decision: title=decision',
+  +   'final-summary: title=final-summary',
+  +   'standalone forbidden section remains: vacancy-criteria',
+  +   'standalone forbidden section remains: matrix',
+  +   'standalone forbidden section remains: stop-factors',
+  +   'standalone forbidden section remains: questions',
+  +   'standalone forbidden section remains: strengths',
+  +   'standalone forbidden section remains: recommendation',
+  +   'standalone forbidden section remains: executive-summary'
+  + ]
+  - []
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\compact-candidate-report-layout.acceptance.test.ts:33:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'section order/count mismatch: ["identity","sources","organizational-conditions","recommendation","executive-summary","abc-directions","key-cases","vacancy-criteria","technical-validation","motivation","strengths","risks","stop-factors","questions","next-step","matrix"]', 'sources: title=Использованные источники', 'organizational-conditions: title=Организационные условия', 'review: title=review', 'key-evidence: title=key-evidence', 'abc-directions: title=ABC-профиль', 'technical-check: title=technical-check', 'motivation-fit: title=motivation-fit', 'risks: title=Риски и ограничения', 'decision: title=decision', 'final-summary: title=final-summary', 'standalone forbidden section remains: vacancy-criteria', 'standalone forbidden section remains: matrix', 'standalone forbidden section remains: stop-factors', 'standalone forbidden section remains: questions', 'standalone forbidden section remains: strengths', 'standalone forbidden section remains: recommendation', 'standalone forbidden section remains: executive-summary' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="REP-023: full matrixRows remain in model/audit but compact model does not require visible matrix sections" time="0.000433" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\compact-candidate-report-layout.acceptance.test.ts" failure="REPORT_REQUIRED_SECTIONS_MISSING:recommendation,executive-summary,key-cases,vacancy-criteria,technical-validation,motivation,strengths,stop-factors,questions,next-step,matrix">
+		<failure type="testCodeFailure" message="REPORT_REQUIRED_SECTIONS_MISSING:recommendation,executive-summary,key-cases,vacancy-criteria,technical-validation,motivation,strengths,stop-factors,questions,next-step,matrix">
+[Error [ERR_TEST_FAILURE]: REPORT_REQUIRED_SECTIONS_MISSING:recommendation,executive-summary,key-cases,vacancy-criteria,technical-validation,motivation,strengths,stop-factors,questions,next-step,matrix] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: Error: REPORT_REQUIRED_SECTIONS_MISSING:recommendation,executive-summary,key-cases,vacancy-criteria,technical-validation,motivation,strengths,stop-factors,questions,next-step,matrix
+      at validateReportModel (C:\Users\user2\Documents\Cursor\hh\web\server\candidate-pipeline\reports.ts:117:29)
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\compact-candidate-report-layout.acceptance.test.ts:41:16)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
+}
+		</failure>
+	</testcase>
+	<testcase name="REP-023: composer preserves evidence-backed technical subheadings and removes review/decision/final duplication" time="0.001332" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\compact-candidate-report-layout.acceptance.test.ts" failure="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;  [&#10;    'identity',&#10;    'sources',&#10;    'organizational-conditions',&#10;-   'review',&#10;-   'key-evidence',&#10;    'abc-directions',&#10;-   'technical-check',&#10;-   'motivation-fit',&#10;    'risks',&#10;-   'decision',&#10;-   'final-summary'&#10;  ]&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;  [&#10;    'identity',&#10;    'sources',&#10;    'organizational-conditions',&#10;-   'review',&#10;-   'key-evidence',&#10;    'abc-directions',&#10;-   'technical-check',&#10;-   'motivation-fit',&#10;    'risks',&#10;-   'decision',&#10;-   'final-summary'&#10;  ]">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly deep-equal:
++ actual - expected
+
+  [
+    'identity',
+    'sources',
+    'organizational-conditions',
+-   'review',
+-   'key-evidence',
+    'abc-directions',
+-   'technical-check',
+-   'motivation-fit',
+    'risks',
+-   'decision',
+-   'final-summary'
+  ]
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    [
+      'identity',
+      'sources',
+      'organizational-conditions',
+  -   'review',
+  -   'key-evidence',
+      'abc-directions',
+  -   'technical-check',
+  -   'motivation-fit',
+      'risks',
+  -   'decision',
+  -   'final-summary'
+    ]
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\compact-candidate-report-layout.acceptance.test.ts:52:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'identity', 'sources', 'organizational-conditions', 'abc-directions', 'risks' ],
+    expected: [ 'identity', 'sources', 'organizational-conditions', 'review', 'key-evidence', 'abc-directions', 'technical-check', 'motivation-fit', 'risks', 'decision', 'final-summary' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="REP-023: rendered PDF has eleven ordered HR sections, recommendation only in Decision, no matrix appendix/callout" time="0.000727" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\compact-candidate-report-layout.acceptance.test.ts" failure="compact candidate-report rejected by renderer: Error: REPORT_REQUIRED_SECTIONS_MISSING:recommendation,executive-summary,key-cases,vacancy-criteria,technical-validation,motivation,strengths,stop-factors,questions,next-step,matrix">
+		<failure type="testCodeFailure" message="compact candidate-report rejected by renderer: Error: REPORT_REQUIRED_SECTIONS_MISSING:recommendation,executive-summary,key-cases,vacancy-criteria,technical-validation,motivation,strengths,stop-factors,questions,next-step,matrix">
+[Error [ERR_TEST_FAILURE]: compact candidate-report rejected by renderer: Error: REPORT_REQUIRED_SECTIONS_MISSING:recommendation,executive-summary,key-cases,vacancy-criteria,technical-validation,motivation,strengths,stop-factors,questions,next-step,matrix] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: compact candidate-report rejected by renderer: Error: REPORT_REQUIRED_SECTIONS_MISSING:recommendation,executive-summary,key-cases,vacancy-criteria,technical-validation,motivation,strengths,stop-factors,questions,next-step,matrix
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\compact-candidate-report-layout.acceptance.test.ts:66:26)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: undefined,
+    operator: 'fail',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 4 -->
+	<!-- suites 0 -->
+	<!-- pass 0 -->
+	<!-- fail 4 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 176.8752 -->
+</testsuites>

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="REP-023: existing fact_extraction explicitly requests four separate grounded organizational facts" time="0.002463" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\organizational-conditions-grounded-projection.acceptance.test.ts" failure="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;+ [&#10;+   'fact_extraction prompt omits work format and city',&#10;+   'fact_extraction prompt omits expected net income',&#10;+   'fact_extraction prompt omits trial-day readiness',&#10;+   'fact_extraction prompt omits start readiness and timing',&#10;+   'prompt does not require the four subjects as separate facts'&#10;+ ]&#10;- []&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;+ [&#10;+   'fact_extraction prompt omits work format and city',&#10;+   'fact_extraction prompt omits expected net income',&#10;+   'fact_extraction prompt omits trial-day readiness',&#10;+   'fact_extraction prompt omits start readiness and timing',&#10;+   'prompt does not require the four subjects as separate facts'&#10;+ ]&#10;- []">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly deep-equal:
++ actual - expected
+
++ [
++   'fact_extraction prompt omits work format and city',
++   'fact_extraction prompt omits expected net income',
++   'fact_extraction prompt omits trial-day readiness',
++   'fact_extraction prompt omits start readiness and timing',
++   'prompt does not require the four subjects as separate facts'
++ ]
+- []
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + [
+  +   'fact_extraction prompt omits work format and city',
+  +   'fact_extraction prompt omits expected net income',
+  +   'fact_extraction prompt omits trial-day readiness',
+  +   'fact_extraction prompt omits start readiness and timing',
+  +   'prompt does not require the four subjects as separate facts'
+  + ]
+  - []
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\organizational-conditions-grounded-projection.acceptance.test.ts:28:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'fact_extraction prompt omits work format and city', 'fact_extraction prompt omits expected net income', 'fact_extraction prompt omits trial-day readiness', 'fact_extraction prompt omits start readiness and timing', 'prompt does not require the four subjects as separate facts' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="REP-023: report projection renders exactly four grounded organizational lines and explicit missing defaults without an LLM call" time="0.000368" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\organizational-conditions-grounded-projection.acceptance.test.ts" failure="public projectOrganizationalConditions(facts) boundary is missing&#10;+ actual - expected&#10;&#10;+ 'undefined'&#10;- 'function'&#10;">
+		<failure type="testCodeFailure" message="public projectOrganizationalConditions(facts) boundary is missing&#10;+ actual - expected&#10;&#10;+ 'undefined'&#10;- 'function'">
+[Error [ERR_TEST_FAILURE]: public projectOrganizationalConditions(facts) boundary is missing
++ actual - expected
+
++ 'undefined'
+- 'function'
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: public projectOrganizationalConditions(facts) boundary is missing
+  + actual - expected
+  
+  + 'undefined'
+  - 'function'
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\organizational-conditions-grounded-projection.acceptance.test.ts:33:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'undefined',
+    expected: 'function',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 2 -->
+	<!-- suites 0 -->
+	<!-- pass 0 -->
+	<!-- fail 2 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 752.2072 -->
+</testsuites>

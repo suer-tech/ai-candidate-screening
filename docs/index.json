@@ -28,7 +28,7 @@
     "PostgresProductRepository": {
       "file": "web/server/product/postgres-repository.ts",
       "kind": "class",
-      "summary": "PostgreSQL repository вакансий, кандидатов, lifecycle, results и dashboard."
+      "summary": "PostgreSQL repository вакансий, кандидатов, lifecycle, results и dashboard; разрешает matrix claimsRef и публикует evidence-backed HR-safe проекцию без внутренних IDs, включая сбалансированное детерминированное decision summary без LLM-вызова и изменения рекомендации."
     },
     "generateVacancyProfile": {
       "file": "web/server/product/vacancy-generation.ts",
@@ -63,7 +63,7 @@
     "PostgresAgentRuntimeRepository": {
       "file": "web/server/agent-runtime/postgres-runtime-repository.ts",
       "kind": "class",
-      "summary": "Durable PostgreSQL queue, leases/fencing, checkpoints, grants, budgets, escalation и outbox."
+      "summary": "Durable PostgreSQL queue, leases/fencing, checkpoints и matrix-v3 selective recovery по exact workflow/policy и непрерывному artifact-valid prefix."
     },
     "AgentRuntimeConsumer": {
       "file": "web/server/agent-runtime/consumer.ts",
@@ -100,10 +100,50 @@
       "kind": "function",
       "summary": "Проверяет source/tree invariants и hardRequired ↔ stop-factor sourceRef, назначает stable criterion IDs и checksum."
     },
+    "validateCandidateMatrixRows": {
+      "file": "web/server/candidate-pipeline/matrix-driven.ts",
+      "kind": "function",
+      "summary": "Проверяет exact criterion coverage и grounding каждой verdict-row по существующим claimId, sourceRef и дословной цитате; insufficient требует missingData и follow-up."
+    },
+    "hrSafeReportText": {
+      "file": "web/server/candidate-pipeline/reports.ts",
+      "kind": "function",
+      "summary": "Удаляет из пользовательского PDF внутренние claim/criterion/artifact URI, schema/policy tokens и замечания verifier, сохраняя HR-текст."
+    },
+    "composeCandidateReportFailSoft": {
+      "file": "web/server/candidate-pipeline/reports.ts",
+      "kind": "function",
+      "summary": "Проверяет неизменность recommendation/ABC/matrix decisions, evidence references и повторы компактного 11-секционного HR-composer v2; при любой ошибке возвращает deterministic grounded fallback."
+    },
+    "projectReportSourceMaterials": {
+      "file": "web/server/candidate-pipeline/reports.ts",
+      "kind": "function",
+      "summary": "Проектирует supported non-results entries immutable candidate manifest в HR-safe имена и точные allowlisted Google Drive/Docs HTTPS ссылки для единого PDF."
+    },
+    "createDocumentProcessorServer": {
+      "file": "web/server/document-processor/server.ts",
+      "kind": "function",
+      "summary": "Loopback document/PDF processor; новые runs используют singular /v1/render-candidate-report для компактного HR-документа без видимого matrix appendix, legacy pair endpoint сохранён для старых artifacts."
+    },
     "buildCriterionClaimExtractionBatches": {
       "file": "web/server/candidate-pipeline/transcript-claim-batching.ts",
       "kind": "function",
       "summary": "Детерминированно разбивает decision-safe документы и нормализованную стенограмму на перекрывающиеся LLM-пакеты по полному токенному бюджету запроса без суммаризации и потери реплик."
+    },
+    "runCriterionCoverageWorkflow": {
+      "file": "web/server/candidate-pipeline/transcript-claim-batching.ts",
+      "kind": "function",
+      "summary": "Проверяет exact criterion coverage каждого batch, делает missing-only retry, overlap dedupe и один bounded gap-search без кадрового verdict."
+    },
+    "validateCriterionCoverageLedger": {
+      "file": "web/server/candidate-pipeline/transcript-claim-batching.ts",
+      "kind": "function",
+      "summary": "Сравнивает requested/returned criterion IDs и обнаруживает missing, duplicate и unknown entries."
+    },
+    "technicalFallbackRow": {
+      "file": "web/server/candidate-pipeline/matrix-coverage.ts",
+      "kind": "function",
+      "summary": "Создаёт явно техническую строку «Недостаточно данных», если bounded row retry не вернул criterion."
     },
     "sourceRefIsStopFactor": {
       "file": "web/server/candidate-pipeline/matrix-driven.ts",
@@ -113,17 +153,17 @@
     "PostgresVacancyMatrixRepository": {
       "file": "web/server/candidate-pipeline/matrix-postgres-repository.ts",
       "kind": "class",
-      "summary": "Fenced compilation claim, immutable matrix publish и scoped claims/conflicts/rows."
+      "summary": "Fenced compilation claim и immutable matrix publish по (profileVersion, workflowIdentity), включая совместимое чтение matrix-v2, независимую matrix-v3 и cleanup-aware защиту candidate-scoped matrix history."
     },
     "deriveMatrixRecommendation": {
       "file": "web/server/candidate-pipeline/matrix-driven.ts",
       "kind": "function",
-      "summary": "Детерминированный приоритет stop trigger, required mismatch, verified critical unmapped risk, uncertainty и caveats."
+      "summary": "Legacy compatibility formula для чтения старых artifacts; новые matrix-v3 runs используют holistic LLM synthesis и deterministic stop-factor override."
     },
     "CriticalUnmappedRisk": {
       "file": "web/server/candidate-pipeline/matrix-driven.ts",
       "kind": "type",
-      "summary": "Candidate-scoped риск с distinct assessment/verification traces, locators и verified criticality."
+      "summary": "Legacy candidate-scoped risk artifact; новые coverage-first runs используют balanced STRENGTH/CONCERN/QUESTION без обязательного risk cascade."
     },
     "createPrivateTemp": {
       "file": "web/server/storage/private-temp.ts",

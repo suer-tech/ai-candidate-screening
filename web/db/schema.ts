@@ -236,6 +236,7 @@ export const agentRuns = pgTable("agent_runs", {
   goalId: text("goal_id").notNull().references(() => agentGoals.id, { onDelete: "cascade" }),
   triggerIdentity: text("trigger_identity").notNull(),
   originEscalationId: text("origin_escalation_id"),
+  recoverySourceRunId: text("recovery_source_run_id"),
   state: text("state").notNull(),
   revision: integer("revision").notNull().default(1),
   currentPlanVersion: integer("current_plan_version").notNull().default(1),
@@ -275,6 +276,7 @@ export const agentTasks = pgTable("agent_tasks", {
   idempotencyIdentity: text("idempotency_identity").notNull(),
   preconditionsJson: text("preconditions_json").notNull(),
   expectedOutputsJson: text("expected_outputs_json").notNull(),
+  reusedFromTaskId: text("reused_from_task_id"),
 }, (table) => [
   uniqueIndex("agent_tasks_plan_key_unique").on(table.planVersionId, table.taskKey),
   uniqueIndex("agent_tasks_operation_identity_unique").on(table.idempotencyIdentity),
@@ -568,7 +570,7 @@ export const candidateReportVersions = pgTable("candidate_report_versions", {
 export const candidateReportDocuments = pgTable("candidate_report_documents", {
   id: text("id").primaryKey(),
   reportVersionId: text("report_version_id").notNull().references(() => candidateReportVersions.id, { onDelete: "cascade" }),
-  type: text("type", { enum: ["candidate-results", "abc-test"] }).notNull(),
+  type: text("type", { enum: ["candidate-report", "candidate-results", "abc-test"] }).notNull(),
   fileName: text("file_name").notNull(),
   checksum: text("checksum").notNull(),
   byteSize: integer("byte_size").notNull(),

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="WF-023/OPS-003: failed matrix-v2 manual reprocess resumes at reports and reuses immutable upstream lineage" time="0.007654" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\manual-reprocess-selective-recovery.acceptance.test.ts" failure="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;+ [&#10;+   'successor run has no durable sourceRun lineage link',&#10;+   'drive-snapshot: expected reused SUCCEEDED, actual=RUNNABLE',&#10;+   'matrix: expected reused SUCCEEDED, actual=RUNNABLE',&#10;+   'documents: expected reused SUCCEEDED, actual=PENDING',&#10;+   'transcription: expected reused SUCCEEDED, actual=PENDING',&#10;+   'context-search: expected reused SUCCEEDED, actual=PENDING',&#10;+   'context-read: expected reused SUCCEEDED, actual=PENDING',&#10;+   'claims: expected reused SUCCEEDED, actual=PENDING',&#10;+   'global-evidence: expected reused SUCCEEDED, actual=PENDING',&#10;+   'rows: expected reused SUCCEEDED, actual=PENDING',&#10;+   'critical-verification: expected reused SUCCEEDED, actual=PENDING',&#10;+   'recommendation: expected reused SUCCEEDED, actual=PENDING',&#10;+   'validation: expected reused SUCCEEDED, actual=PENDING',&#10;+   'reports: expected first RUNNABLE, actual=PENDING',&#10;+   'reused upstream tools would be invoked again; runnable=[&amp;quot;drive-snapshot&amp;quot;,&amp;quot;matrix&amp;quot;]',&#10;+   'first runnable task must be reports only; actual=[&amp;quot;drive-snapshot&amp;quot;,&amp;quot;matrix&amp;quot;]',&#10;+   'lineage artifact lookup failed; actual=undefined'&#10;+ ]&#10;- []&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;+ [&#10;+   'successor run has no durable sourceRun lineage link',&#10;+   'drive-snapshot: expected reused SUCCEEDED, actual=RUNNABLE',&#10;+   'matrix: expected reused SUCCEEDED, actual=RUNNABLE',&#10;+   'documents: expected reused SUCCEEDED, actual=PENDING',&#10;+   'transcription: expected reused SUCCEEDED, actual=PENDING',&#10;+   'context-search: expected reused SUCCEEDED, actual=PENDING',&#10;+   'context-read: expected reused SUCCEEDED, actual=PENDING',&#10;+   'claims: expected reused SUCCEEDED, actual=PENDING',&#10;+   'global-evidence: expected reused SUCCEEDED, actual=PENDING',&#10;+   'rows: expected reused SUCCEEDED, actual=PENDING',&#10;+   'critical-verification: expected reused SUCCEEDED, actual=PENDING',&#10;+   'recommendation: expected reused SUCCEEDED, actual=PENDING',&#10;+   'validation: expected reused SUCCEEDED, actual=PENDING',&#10;+   'reports: expected first RUNNABLE, actual=PENDING',&#10;+   'reused upstream tools would be invoked again; runnable=[&amp;quot;drive-snapshot&amp;quot;,&amp;quot;matrix&amp;quot;]',&#10;+   'first runnable task must be reports only; actual=[&amp;quot;drive-snapshot&amp;quot;,&amp;quot;matrix&amp;quot;]',&#10;+   'lineage artifact lookup failed; actual=undefined'&#10;+ ]&#10;- []">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly deep-equal:
++ actual - expected
+
++ [
++   'successor run has no durable sourceRun lineage link',
++   'drive-snapshot: expected reused SUCCEEDED, actual=RUNNABLE',
++   'matrix: expected reused SUCCEEDED, actual=RUNNABLE',
++   'documents: expected reused SUCCEEDED, actual=PENDING',
++   'transcription: expected reused SUCCEEDED, actual=PENDING',
++   'context-search: expected reused SUCCEEDED, actual=PENDING',
++   'context-read: expected reused SUCCEEDED, actual=PENDING',
++   'claims: expected reused SUCCEEDED, actual=PENDING',
++   'global-evidence: expected reused SUCCEEDED, actual=PENDING',
++   'rows: expected reused SUCCEEDED, actual=PENDING',
++   'critical-verification: expected reused SUCCEEDED, actual=PENDING',
++   'recommendation: expected reused SUCCEEDED, actual=PENDING',
++   'validation: expected reused SUCCEEDED, actual=PENDING',
++   'reports: expected first RUNNABLE, actual=PENDING',
++   'reused upstream tools would be invoked again; runnable=["drive-snapshot","matrix"]',
++   'first runnable task must be reports only; actual=["drive-snapshot","matrix"]',
++   'lineage artifact lookup failed; actual=undefined'
++ ]
+- []
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + [
+  +   'successor run has no durable sourceRun lineage link',
+  +   'drive-snapshot: expected reused SUCCEEDED, actual=RUNNABLE',
+  +   'matrix: expected reused SUCCEEDED, actual=RUNNABLE',
+  +   'documents: expected reused SUCCEEDED, actual=PENDING',
+  +   'transcription: expected reused SUCCEEDED, actual=PENDING',
+  +   'context-search: expected reused SUCCEEDED, actual=PENDING',
+  +   'context-read: expected reused SUCCEEDED, actual=PENDING',
+  +   'claims: expected reused SUCCEEDED, actual=PENDING',
+  +   'global-evidence: expected reused SUCCEEDED, actual=PENDING',
+  +   'rows: expected reused SUCCEEDED, actual=PENDING',
+  +   'critical-verification: expected reused SUCCEEDED, actual=PENDING',
+  +   'recommendation: expected reused SUCCEEDED, actual=PENDING',
+  +   'validation: expected reused SUCCEEDED, actual=PENDING',
+  +   'reports: expected first RUNNABLE, actual=PENDING',
+  +   'reused upstream tools would be invoked again; runnable=["drive-snapshot","matrix"]',
+  +   'first runnable task must be reports only; actual=["drive-snapshot","matrix"]',
+  +   'lineage artifact lookup failed; actual=undefined'
+  + ]
+  - []
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\Documents\Cursor\hh\web\tests\manual-reprocess-selective-recovery.acceptance.test.ts:181:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'successor run has no durable sourceRun lineage link', 'drive-snapshot: expected reused SUCCEEDED, actual=RUNNABLE', 'matrix: expected reused SUCCEEDED, actual=RUNNABLE', 'documents: expected reused SUCCEEDED, actual=PENDING', 'transcription: expected reused SUCCEEDED, actual=PENDING', 'context-search: expected reused SUCCEEDED, actual=PENDING', 'context-read: expected reused SUCCEEDED, actual=PENDING', 'claims: expected reused SUCCEEDED, actual=PENDING', 'global-evidence: expected reused SUCCEEDED, actual=PENDING', 'rows: expected reused SUCCEEDED, actual=PENDING', 'critical-verification: expected reused SUCCEEDED, actual=PENDING', 'recommendation: expected reused SUCCEEDED, actual=PENDING', 'validation: expected reused SUCCEEDED, actual=PENDING', 'reports: expected first RUNNABLE, actual=PENDING', 'reused upstream tools would be invoked again; runnable=["drive-snapshot","matrix"]', 'first runnable task must be reports only; actual=["drive-snapshot","matrix"]', 'lineage artifact lookup failed; actual=undefined' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="WF-023 negative: changed input/profile starts a complete new matrix-v2 pipeline" time="0.002958" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\manual-reprocess-selective-recovery.acceptance.test.ts"/>
+	<testcase name="WF-023 negative: a prior SUCCEEDED run is not a recovery source" time="0.001140" classname="test" file="C:\Users\user2\Documents\Cursor\hh\web\tests\manual-reprocess-selective-recovery.acceptance.test.ts"/>
+	<!-- tests 3 -->
+	<!-- suites 0 -->
+	<!-- pass 2 -->
+	<!-- fail 1 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 741.5943 -->
+</testsuites>

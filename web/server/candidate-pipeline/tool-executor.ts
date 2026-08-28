@@ -21,6 +21,7 @@ const TOOL_STAGES: Record<string, CandidateToolStageId[]> = {
   "candidate.assessment/v1": ["profile-assessment", "deterministic-recommendation"],
   "candidate.validation/v1": ["validation-gates"],
   "candidate.report-pair/v1": ["pdf-pair-render-and-validate"],
+  "candidate.report/v1": ["pdf-pair-render-and-validate"],
   "candidate.drive-publication/v1": ["personal-drive-publication"],
   "candidate.telegram/v1": ["telegram-outbox"],
   "candidate.cleanup-block-triggers/v1": ["archive-delete-and-cleanup"],
@@ -193,19 +194,21 @@ async function executeProductionTool(input: { toolKey: string; task: Record<stri
       return { outcome: "SUCCEEDED" as const, evidence: { artifactRef: ref } };
     }
 
-    if (input.toolKey === "candidate.report-pair/v1") {
+    if (input.toolKey === "candidate.report-pair/v1" || input.toolKey === "candidate.report/v1") {
       const reports = await runtime.adapters.pdf.renderPair();
-      if (reports.length !== 2 || new Set(reports.map((item) => item.type)).size !== 2) throw new Error("REPORT_PAIR_INVALID");
+      const expectedCount = input.toolKey === "candidate.report/v1" ? 1 : 2;
+      if (reports.length !== expectedCount || new Set(reports.map((item) => item.type)).size !== expectedCount
+        || (expectedCount === 1 && reports[0]?.type !== "candidate-report")) throw new Error(expectedCount === 1 ? "CANDIDATE_REPORT_INVALID" : "REPORT_PAIR_INVALID");
       session(runtime).reports = reports.map((item) => ({ ...item }));
       for (const report of reports) await artifact(repository, report.artifactRef, report.checksum);
-      await checkpoint("report-pair", `artifact:report-pair:${identity}`);
+      await checkpoint(expectedCount === 1 ? "candidate-report" : "report-pair", `artifact:${expectedCount === 1 ? "candidate-report" : "report-pair"}:${identity}`);
       return { outcome: "SUCCEEDED" as const, evidence: { documents: reports.map(({ type, checksum, artifactRef }) => ({ type, checksum, artifactRef })) } };
     }
 
     if (input.toolKey === "candidate.drive-publication/v1") {
       releaseEvidence(input.environment, runtime);
       let reports = session(runtime).reports;
-      if (reports.length !== 2) reports = await runtime.adapters.pdf.renderPair();
+      if (reports.length === 0) reports = await runtime.adapters.pdf.renderPair();
       for (const report of reports) {
         const operationIdentity = `${identity}:${report.type}`;
         await repository.outboxIntent({ operationIdentity, kind: "drive-publication", artifactRef: report.artifactRef, checksum: report.checksum });
@@ -216,8 +219,9 @@ async function executeProductionTool(input: { toolKey: string; task: Record<stri
         }
       }
       if (runtime.state) runtime.state.candidateState = "READY";
-      await checkpoint("published-report-pair", `artifact:published-report-pair:${identity}`);
-      return { outcome: "SUCCEEDED" as const, evidence: { state: "READY", documentCount: 2 } };
+      const singular = reports.length === 1 && reports[0]?.type === "candidate-report";
+      await checkpoint(singular ? "published-candidate-report" : "published-report-pair", `artifact:${singular ? "published-candidate-report" : "published-report-pair"}:${identity}`);
+      return { outcome: "SUCCEEDED" as const, evidence: { state: "READY", documentCount: reports.length } };
     }
 
     if (input.toolKey === "candidate.telegram/v1") {
