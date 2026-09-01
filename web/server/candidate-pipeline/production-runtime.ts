@@ -337,6 +337,21 @@ function loopbackOrDockerHostname(hostname: string): boolean {
   return process.env.HH_DOCKER_NETWORK === "1";
 }
 
+function dockerInternalProcessorEndpoint(url: URL, service: "document-processor" | "media-processor") {
+  const expected = service === "document-processor"
+    ? { port: "4312", path: "/v1/extract-document" }
+    : { port: "4311", path: "/v1/extract-audio" };
+  return process.env.HH_DOCKER_NETWORK === "1"
+    && url.protocol === "http:"
+    && url.hostname === service
+    && url.port === expected.port
+    && url.pathname === expected.path
+    && !url.username
+    && !url.password
+    && !url.search
+    && !url.hash;
+}
+
 export async function createProductionCandidateToolExecution(input: { database: PostgresClient; environment: ExecutionEnvironment; task: Record<string, unknown> }) {
   const candidatePk = integer(input.task.candidatePk, "PRODUCTION_TASK_CANDIDATE_PK_MISSING");
   const candidate = await queryOne<{ public_id: string | null; drive_folder_id: string }>(input.database,
@@ -703,7 +718,7 @@ export async function createProductionCandidateToolExecution(input: { database: 
               const processorUrl = new URL(input.environment.DOCUMENT_PROCESSOR_URL);
               if (input.environment.E2E_ENVIRONMENT === "local") {
                 if (!loopbackOrDockerHostname(processorUrl.hostname) || !["http:", "https:"].includes(processorUrl.protocol)) throw new Error("LOCAL_DOCUMENT_PROCESSOR_MUST_BE_LOOPBACK");
-              } else if (processorUrl.protocol !== "https:") throw new Error("REMOTE_DOCUMENT_PROCESSOR_MUST_USE_HTTPS");
+              } else if (processorUrl.protocol !== "https:" && !dockerInternalProcessorEndpoint(processorUrl, "document-processor")) throw new Error("REMOTE_DOCUMENT_PROCESSOR_MUST_USE_HTTPS");
               await auditBoundary("provider", downloaded.bytes);
               const extractionResponse = await fetch(processorUrl, { method: "POST",
                 headers: { authorization: `Bearer ${input.environment.DOCUMENT_PROCESSOR_TOKEN}`, "content-type": document.mimeType },
@@ -1080,7 +1095,7 @@ export async function createProductionCandidateToolExecution(input: { database: 
               const processorUrl = new URL(input.environment.DOCUMENT_PROCESSOR_URL);
               if (input.environment.E2E_ENVIRONMENT === "local") {
                 if (!loopbackOrDockerHostname(processorUrl.hostname) || !["http:", "https:"].includes(processorUrl.protocol)) throw new Error("LOCAL_DOCUMENT_PROCESSOR_MUST_BE_LOOPBACK");
-              } else if (processorUrl.protocol !== "https:") throw new Error("REMOTE_DOCUMENT_PROCESSOR_MUST_USE_HTTPS");
+              } else if (processorUrl.protocol !== "https:" && !dockerInternalProcessorEndpoint(processorUrl, "document-processor")) throw new Error("REMOTE_DOCUMENT_PROCESSOR_MUST_USE_HTTPS");
               await auditBoundary("provider", source.bytes);
               const extractionResponse = await fetch(processorUrl, { method: "POST",
                 headers: { authorization: `Bearer ${input.environment.DOCUMENT_PROCESSOR_TOKEN}`, "content-type": interview.mimeType },
@@ -1108,7 +1123,7 @@ export async function createProductionCandidateToolExecution(input: { database: 
           const mediaUrl = new URL(input.environment.MEDIA_PROCESSOR_URL);
           if (input.environment.E2E_ENVIRONMENT === "local") {
             if (!loopbackOrDockerHostname(mediaUrl.hostname) || !["http:", "https:"].includes(mediaUrl.protocol)) throw new Error("LOCAL_MEDIA_PROCESSOR_MUST_BE_LOOPBACK");
-          } else if (mediaUrl.protocol !== "https:") throw new Error("REMOTE_MEDIA_PROCESSOR_MUST_USE_HTTPS");
+          } else if (mediaUrl.protocol !== "https:" && !dockerInternalProcessorEndpoint(mediaUrl, "media-processor")) throw new Error("REMOTE_MEDIA_PROCESSOR_MUST_USE_HTTPS");
           await auditBoundary("provider", source.bytes);
           const mediaResponse = await fetch(mediaUrl, { method: "POST", headers: { authorization: `Bearer ${input.environment.MEDIA_PROCESSOR_TOKEN}`, "content-type": interview.mimeType },
             body: source.bytes.slice().buffer as ArrayBuffer, signal: AbortSignal.timeout(15 * 60_000) });
@@ -1511,7 +1526,7 @@ export async function createProductionCandidateToolExecution(input: { database: 
           const processorBase = new URL(input.environment.DOCUMENT_PROCESSOR_URL);
           if (input.environment.E2E_ENVIRONMENT === "local") {
             if (!loopbackOrDockerHostname(processorBase.hostname) || !["http:", "https:"].includes(processorBase.protocol)) throw new Error("LOCAL_DOCUMENT_PROCESSOR_MUST_BE_LOOPBACK");
-          } else if (processorBase.protocol !== "https:") throw new Error("REMOTE_DOCUMENT_PROCESSOR_MUST_USE_HTTPS");
+          } else if (processorBase.protocol !== "https:" && !dockerInternalProcessorEndpoint(processorBase, "document-processor")) throw new Error("REMOTE_DOCUMENT_PROCESSOR_MUST_USE_HTTPS");
           const renderUrl = new URL("/v1/render-candidate-report", processorBase);
           const renderResponse = await fetch(renderUrl, { method: "POST",
             headers: { authorization: `Bearer ${input.environment.DOCUMENT_PROCESSOR_TOKEN}`, "content-type": "application/json" },
