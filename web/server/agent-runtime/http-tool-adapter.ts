@@ -77,10 +77,19 @@ export function toolAdapterFailureCode(error: unknown, signal?: AbortSignal) {
 function validateEndpoint(value: string, environment: ToolExecutorConfig["environment"]) {
   const url = new URL(value);
   const dockerNetwork = process.env.HH_DOCKER_NETWORK === "1";
+  const dockerInternalToolEndpoint = dockerNetwork
+    && url.protocol === "http:"
+    && url.hostname === "web"
+    && url.port === "3000"
+    && url.pathname === "/api/internal/candidate-pipeline/tool"
+    && !url.username
+    && !url.password
+    && !url.search
+    && !url.hash;
   if (environment === "local") {
     if (!["http:", "https:"].includes(url.protocol)) throw new Error("LOCAL_TOOL_ENDPOINT_MUST_BE_LOOPBACK");
     if (!dockerNetwork && !/^(localhost|127\.0\.0\.1)$/i.test(url.hostname)) throw new Error("LOCAL_TOOL_ENDPOINT_MUST_BE_LOOPBACK");
-  } else if (url.protocol !== "https:" || /^(localhost|127\.0\.0\.1)$/i.test(url.hostname)) throw new Error("REMOTE_TOOL_ENDPOINT_MUST_USE_HTTPS");
+  } else if (!dockerInternalToolEndpoint && (url.protocol !== "https:" || /^(localhost|127\.0\.0\.1)$/i.test(url.hostname))) throw new Error("REMOTE_TOOL_ENDPOINT_MUST_USE_HTTPS");
   return url.toString();
 }
 
