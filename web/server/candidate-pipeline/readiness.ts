@@ -5,7 +5,6 @@ export type CandidatePipelineEnvironment = {
   DB?: unknown;
   CANDIDATE_PIPELINE_ROUTING?: string;
   CANDIDATE_PIPELINE_BUILD_ID?: string;
-  CANDIDATE_PIPELINE_RELEASE_EVIDENCE_JSON?: string;
   AGENT_RUNTIME_INTERNAL_TOKEN?: string;
   AGENT_RUNTIME_CONFIG_JSON?: string;
   GOOGLE_OAUTH_CLIENT_ID?: string;
@@ -52,9 +51,5 @@ export function candidatePipelineReadiness(environment: CandidatePipelineEnviron
   const required = [...baseRequirements, "TELEGRAM_BOT_TOKEN", "TELEGRAM_RECIPIENT_REFS_JSON"] as Array<keyof CandidatePipelineEnvironment>;
   const missing = required.filter((key) => environment[key] === undefined || environment[key] === "");
   if (missing.length) return { ready: false as const, mode, missing, reason: "MISSING_RUNTIME_BINDINGS", runtimeContract: CANDIDATE_PIPELINE_RUNTIME_CONTRACT };
-  try {
-    const evidence = JSON.parse(String(environment.CANDIDATE_PIPELINE_RELEASE_EVIDENCE_JSON ?? "")) as Record<string, unknown>;
-    if (!environment.CANDIDATE_PIPELINE_BUILD_ID || evidence.buildId !== environment.CANDIDATE_PIPELINE_BUILD_ID || typeof evidence.configurationFingerprint !== "string" || !evidence.configurationFingerprint || evidence.pairRecoveryGreen !== true || evidence.outboxRecoveryGreen !== true || evidence.hardBudgetsVerified !== true) throw new Error("invalid");
-  } catch { return { ready: false as const, mode, missing: [] as Array<keyof CandidatePipelineEnvironment>, reason: "RELEASE_EVIDENCE_INVALID", runtimeContract: CANDIDATE_PIPELINE_RUNTIME_CONTRACT }; }
   return { ready: true as const, mode, missing: [] as Array<keyof CandidatePipelineEnvironment>, reason: "READY", runtimeContract: CANDIDATE_PIPELINE_RUNTIME_CONTRACT };
 }

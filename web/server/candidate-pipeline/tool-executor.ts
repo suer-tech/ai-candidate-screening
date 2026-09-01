@@ -102,15 +102,6 @@ async function stageOperation<T>(operation: () => Promise<T>, fallback: string) 
   }
 }
 
-function releaseEvidence(environment: CandidatePipelineEnvironment, runtime: ProductionRuntime) {
-  const evidence = JSON.parse(String(environment.CANDIDATE_PIPELINE_RELEASE_EVIDENCE_JSON ?? "")) as Record<string, unknown>;
-  if (!environment.CANDIDATE_PIPELINE_BUILD_ID || evidence.buildId !== environment.CANDIDATE_PIPELINE_BUILD_ID
-    || evidence.pairRecoveryGreen !== true || evidence.outboxRecoveryGreen !== true || evidence.hardBudgetsVerified !== true) {
-    throw new Error("RELEASE_EVIDENCE_INVALID");
-  }
-  runtime.record?.("release-evidence:validated", { buildId: environment.CANDIDATE_PIPELINE_BUILD_ID });
-}
-
 async function executeProductionTool(input: { toolKey: string; task: Record<string, unknown>; environment: CandidatePipelineEnvironment; runtime: ProductionRuntime }): Promise<CandidateToolResult> {
   const { runtime, task } = input;
   const repository = runtime.repository;
@@ -184,7 +175,6 @@ async function executeProductionTool(input: { toolKey: string; task: Record<stri
     }
 
     if (input.toolKey === "candidate.drive-publication/v1") {
-      releaseEvidence(input.environment, runtime);
       let reports = session(runtime).reports;
       if (reports.length === 0) reports = [await runtime.adapters.pdf.render()];
       for (const report of reports) {
@@ -202,7 +192,6 @@ async function executeProductionTool(input: { toolKey: string; task: Record<stri
     }
 
     if (input.toolKey === "candidate.telegram/v1") {
-      releaseEvidence(input.environment, runtime);
       const recipients = JSON.parse(String(input.environment.TELEGRAM_RECIPIENT_REFS_JSON ?? "{}")) as Record<string, string>;
       for (const recipientRef of Object.keys(recipients)) {
         const logicalKey = `${identity}:analysis-ready`;

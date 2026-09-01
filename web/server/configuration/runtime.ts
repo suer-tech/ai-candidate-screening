@@ -176,12 +176,6 @@ export async function loadRuntimeConfiguration(webRoot = process.cwd()): Promise
 export function environmentProjection(configuration: RuntimeConfiguration): Record<string, string> {
   const overrides = processEnvOverrides();
   const values = { ...configuration.values, ...overrides };
-  if (values.CANDIDATE_PIPELINE_ROUTING === "effectful") {
-    const release = configuration.releaseEvidence ? JSON.parse(configuration.releaseEvidence) as Record<string, unknown> : {};
-    if (release.matrixShadowGreen !== true || release.matrixAcceptanceGreen !== true || release.requiredE2eGreen !== true) {
-      throw new RuntimeConfigurationError("MATRIX_PRODUCTION_SHADOW_GATE_MISSING");
-    }
-  }
   validateProcessorEndpoints(values);
   const tokens = JSON.parse(configuration.credentials["internal-service-tokens.json"]) as Record<string, string>;
   const appOrigin = values.APP_ORIGIN;

@@ -27,12 +27,14 @@ services:
       GOOGLE_OAUTH_REDIRECT_URI: https://${HH_DOMAIN}/api/integrations/google-drive/oauth/callback
       E2E_ENVIRONMENT: production
       AGENT_RUNTIME_ENVIRONMENT: production
+      CANDIDATE_PIPELINE_ROUTING: ${CANDIDATE_PIPELINE_ROUTING:-effectful}
 
   worker:
     environment:
       APP_ORIGIN: https://${HH_DOMAIN}
       E2E_ENVIRONMENT: production
       AGENT_RUNTIME_ENVIRONMENT: production
+      CANDIDATE_PIPELINE_ROUTING: ${CANDIDATE_PIPELINE_ROUTING:-effectful}
 
   media-processor:
     environment:

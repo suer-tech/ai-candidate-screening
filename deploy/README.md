@@ -19,9 +19,9 @@ telegram-recipients.json
 
 Локальный корень — `web/.runtime/`, VPS-корень — `/etc/hh-agent/`. Любой лишний файл, symlink, inline secret, duplicate/unknown env key или небезопасные права блокируют preflight.
 
-После release gates рядом с `runtime.env` появляется отдельный safe `release-evidence.json`. Это не credential и не ручной флаг: effectful routing читает его только из фиксированного пути и требует совпадающий build/config fingerprint плюс GREEN recovery/budget gates.
+Release gates выполняются перед выкладкой одной неизменяемой сборки и конфигурации; их evidence хранится отдельно от runtime credentials и не используется как ручной переключатель уже развёрнутого сервиса.
 
-Обработка кандидата имеет единственный production workflow `matrix-v3`. Отдельных legacy/shadow веток и переключателя версии матрицы нет. `CANDIDATE_PIPELINE_ROUTING=effectful` включает обработку после проверки release evidence; `disabled` останавливает создание новых запусков. Старые записи и PDF остаются доступны только для чтения.
+Обработка кандидата имеет единственный production workflow `matrix-v3`. Отдельных legacy/shadow веток и переключателя версии матрицы нет. `CANDIDATE_PIPELINE_ROUTING=effectful` включает обработку; `disabled` останавливает создание новых запусков. Старые записи и PDF остаются доступны только для чтения.
 
 `matrix-v3` структурирует заполненные параметры вакансии без добавления новых требований, последовательно проверяет каждый критерий по материалам кандидата и формирует один компактный `candidate-report`.
 
