@@ -32,7 +32,7 @@ test("real PostgreSQL auth lifecycle stores only hashes and revokes sessions ato
     const principal = await service.authenticate(login.token);
     assert.equal(principal?.id, userId);
     if (!principal) throw new Error("AUTH_INTEGRATION_PRINCIPAL_MISSING");
-    const rotated = await service.changePassword(principal, "temporary-password-123", "permanent-password-456", false);
+    const rotated = await service.changePassword(principal, undefined, "permanent-password-456", false);
     assert.equal(await service.authenticate(login.token), null);
     assert.equal((await service.authenticate(rotated.token))?.scope, "FULL");
     await service.setUserState(userId, "DISABLED");

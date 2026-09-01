@@ -654,8 +654,8 @@ function PasswordChangeShell({
   onChanged: () => void;
   onLogout: () => void;
 }) {
-  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [newPasswordConfirmation, setNewPasswordConfirmation] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const logout = async () => {
@@ -667,6 +667,10 @@ function PasswordChangeShell({
   };
   const submit = async (event: FormEvent) => {
     event.preventDefault();
+    if (newPassword !== newPasswordConfirmation) {
+      setError("Новые пароли не совпадают");
+      return;
+    }
     setBusy(true);
     setError("");
     const response = await fetch("/api/auth/password", {
@@ -675,14 +679,14 @@ function PasswordChangeShell({
         "content-type": "application/json",
         "x-csrf-token": csrfToken(),
       },
-      body: JSON.stringify({ currentPassword, newPassword }),
+      body: JSON.stringify({ newPassword }),
     });
     const payload = (await response.json()) as { error?: string };
     setBusy(false);
     if (!response.ok)
       return setError(payload.error || "Не удалось изменить пароль");
-    setCurrentPassword("");
     setNewPassword("");
+    setNewPasswordConfirmation("");
     onChanged();
   };
   return (
@@ -700,16 +704,6 @@ function PasswordChangeShell({
             заменить перед началом работы.
           </p>
           <label className="auth-field">
-            <span>Временный пароль</span>
-            <input
-              type="password"
-              autoComplete="current-password"
-              required
-              value={currentPassword}
-              onChange={(event) => setCurrentPassword(event.target.value)}
-            />
-          </label>
-          <label className="auth-field">
             <span>Новый пароль</span>
             <input
               type="password"
@@ -720,6 +714,17 @@ function PasswordChangeShell({
               onChange={(event) => setNewPassword(event.target.value)}
             />
             <small>Не менее 12 символов</small>
+          </label>
+          <label className="auth-field">
+            <span>Повторите новый пароль</span>
+            <input
+              type="password"
+              autoComplete="new-password"
+              minLength={12}
+              required
+              value={newPasswordConfirmation}
+              onChange={(event) => setNewPasswordConfirmation(event.target.value)}
+            />
           </label>
           {error && (
             <div className="auth-error" role="alert">

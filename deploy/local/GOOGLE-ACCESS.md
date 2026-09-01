@@ -10,7 +10,7 @@
 
 ## 2. Настроить OAuth consent screen
 
-1. Откройте **Google Auth Platform → Branding** и заполните название приложения, support email и developer email.
+1. Откройте **Google Auth Platform → Branding** и заполните название приложения, support email и developer email. Для production-домена также укажите `Application home page: https://agent.devbpm.ru/`, `Application privacy policy link: https://agent.devbpm.ru/privacy`, `Application terms of service link: https://agent.devbpm.ru/terms`, а в **Authorized domains** — `devbpm.ru` без `https://` и пути. Все три страницы должны публично открываться по HTTPS без авторизации.
 2. В **Audience** выберите **External**.
 3. Для первого локального запуска оставьте статус **Testing** и добавьте свой личный Gmail в **Test users**.
 4. В **Data Access** добавьте scopes `openid`, `email` и `https://www.googleapis.com/auth/drive`.

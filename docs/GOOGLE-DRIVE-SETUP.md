@@ -44,9 +44,20 @@ OAuth сам по себе не включает Drive API. См. [официа�
 - **App name**: `HH Candidate Assessment` или другое узнаваемое название;
 - **User support email**: ваш Google email;
 - **Audience**: `External` для обычного Gmail; `Internal` допустим только внутри вашей Google Workspace-организации;
+- в блоке **App domain** для production-развёртывания `agent.devbpm.ru` укажите:
+
+  ```text
+  Application home page: https://agent.devbpm.ru/
+  Application privacy policy link: https://agent.devbpm.ru/privacy
+  Application terms of service link: https://agent.devbpm.ru/terms
+  ```
+
+- в **Authorized domains** укажите только домен без протокола, пути и завершающего слеша: `devbpm.ru`;
 - **Contact information**: актуальный email разработчика или владельца;
 - подтвердите Google API Services User Data Policy;
-- нажмите **Create / Создать**.
+- нажмите **Save / Сохранить** или **Create / Создать**.
+
+Все три URL из блока **App domain** должны открываться по HTTPS и быть публично доступны без входа в приложение. Если обязательные поля Branding не заполнены или Google не принимает домен, кнопка **Publish app** в разделе **Audience** будет недоступна, а Google покажет сообщение о незавершённой OAuth-конфигурации.
 
 Актуальные разделы Google Auth Platform называются `Branding`, `Audience`, `Clients` и `Data Access`. См. [описание Google Auth Platform](https://support.google.com/cloud/answer/15544987).
 
@@ -81,6 +92,8 @@ GOOGLE_OAUTH_DEPLOYMENT_MODE=testing
 Авторизация с Drive scope в режиме Testing истекает через семь дней, включая refresh token. После этого потребуется повторное подключение. См. [правила Google для Testing](https://support.google.com/cloud/answer/15549945).
 
 ### Постоянная работа
+
+Сначала завершите и сохраните раздел **Branding**, включая публичную главную страницу, политику конфиденциальности, условия использования и authorized domain, перечисленные в разделе 3 этой инструкции.
 
 В **Google Auth Platform → Audience**:
 
@@ -331,4 +344,3 @@ systemctl restart hh-web hh-agent-worker
 ```
 
 Затем войдите в веб-интерфейс VPS и нажмите **Подключить**. Локальный refresh token на VPS переносить нельзя — OAuth consent нужно выполнить заново.
-

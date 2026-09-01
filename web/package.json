@@ -79,6 +79,7 @@
     "db:migrate:local": "tsx scripts/postgres-migrate.ts",
     "check:google-drive": "tsx scripts/check-google-drive.ts",
     "smoke:google-drive": "tsx scripts/smoke-google-drive.ts",
+    "smoke:google-drive:service-account": "tsx scripts/smoke-google-drive-service-account.ts",
     "smoke:assemblyai": "tsx scripts/smoke-assemblyai.ts",
     "smoke:telegram": "tsx scripts/smoke-telegram.ts",
     "generate:google-oauth-keyring": "tsx scripts/generate-google-oauth-keyring.ts",

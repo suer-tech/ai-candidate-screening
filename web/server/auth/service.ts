@@ -87,9 +87,11 @@ export class AuthService {
   }
 
   async logout(principal: AuthPrincipal) { await withTransaction(this.sql, async (tx) => { await tx`UPDATE auth_sessions SET revoked_at=${iso(this.now())},revoke_reason=${"LOGOUT"} WHERE id=${principal.sessionId} AND revoked_at IS NULL`; await this.audit(tx, "LOGOUT", "AUTH_LOGOUT", principal.id, principal.id); }); }
-  async changePassword(principal: AuthPrincipal, currentPassword: string, newPassword: string, remember: boolean) {
+  async changePassword(principal: AuthPrincipal, currentPassword: string | undefined, newPassword: string, remember: boolean) {
     validatePassword(newPassword); const users = await this.sql<AuthUserRow[]>`SELECT id,canonical_email,display_name,password_hash,state,must_change_password FROM auth_users WHERE id=${principal.id} LIMIT 1`; const user = users[0];
-    if (!user || user.state !== "ACTIVE" || !await verifyPassword(currentPassword, user.password_hash)) throw new Error("AUTH_PASSWORD_CHANGE_REJECTED");
+    const forcedChangeSession = principal.scope === "PASSWORD_CHANGE_ONLY" && user?.must_change_password === true;
+    const currentPasswordAccepted = forcedChangeSession || (typeof currentPassword === "string" && await verifyPassword(currentPassword, user?.password_hash ?? ""));
+    if (!user || user.state !== "ACTIVE" || !currentPasswordAccepted) throw new Error("AUTH_PASSWORD_CHANGE_REJECTED");
     const passwordHash = await hashPassword(newPassword);
     await withTransaction(this.sql, async (tx) => { await tx`UPDATE auth_users SET password_hash=${passwordHash},must_change_password=false,updated_at=${iso(this.now())} WHERE id=${principal.id}`; await tx`UPDATE auth_sessions SET revoked_at=${iso(this.now())},revoke_reason=${"PASSWORD_CHANGED"} WHERE user_id=${principal.id} AND revoked_at IS NULL`; await this.audit(tx, "PASSWORD_CHANGED", "AUTH_PASSWORD_CHANGED", principal.id, principal.id); });
     return this.issueSession(principal.id, "FULL", remember);
