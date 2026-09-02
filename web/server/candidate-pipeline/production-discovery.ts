@@ -9,7 +9,7 @@ import { PostgresCandidateFolderRegistry } from "./postgres-discovery.ts";
 import { sha256 } from "./core.ts";
 import type { DriveSnapshot, MaterialManifest } from "./types.ts";
 
-type StabilityResult = { folderId: string; outcome: { state: string; inputVersion?: RegisteredInputVersion; duplicate?: boolean; observedSnapshot?: DriveSnapshot; observedManifest?: MaterialManifest } };
+type StabilityResult = { folderId: string; outcome: { state: string; inputVersion?: RegisteredInputVersion; duplicate?: boolean; stableComparisons?: number; manifest?: MaterialManifest; observedSnapshot?: DriveSnapshot; observedManifest?: MaterialManifest } };
 
 const budgets = {
   wallTimeMs: 14_400_000,
@@ -70,6 +70,18 @@ export function findReusableReadyInput(existingInputs: readonly ExistingInput[],
   });
 }
 
+export function materialsIncompleteMessage(manifest: MaterialManifest) {
+  if (manifest.ambiguities.includes("MULTIPLE_INTERVIEWS") || manifest.interviewIds.length > 1) {
+    return `Найдено несколько источников интервью (${manifest.interviewIds.length}). Оставьте одну запись или одну готовую транскрибацию.`;
+  }
+  if (manifest.resumeIds.length === 0 && manifest.interviewIds.length === 0) {
+    return "Добавьте резюме и одну запись интервью или готовую транскрибацию.";
+  }
+  if (manifest.resumeIds.length === 0) return "Не найдено резюме. Добавьте файл PDF, DOC или DOCX.";
+  if (manifest.interviewIds.length === 0) return "Не найдено интервью. Добавьте одну запись или готовую транскрибацию.";
+  return "Материалы кандидата не соответствуют обязательному комплекту.";
+}
+
 export async function startProductionDriveDiscoveryWorker() {
   const container = await serverContainer();
   const oauth = createGoogleDriveOAuthRuntime({ database: container.sql, environment: container.environment });
@@ -123,8 +135,9 @@ export async function startProductionDriveDiscoveryWorker() {
       });
     }
     const candidate = JSON.parse(row.candidate_json) as { status?: string; stageStartedAt?: string };
-    const manualReprocess = candidate.status === "WAITING_FOR_STABILITY";
-    const automaticFirstRun = candidate.status === "NEW";
+    const resumedAfterIncomplete = candidate.status === "MATERIALS_INCOMPLETE";
+    const manualReprocess = candidate.status === "WAITING_FOR_STABILITY" || (resumedAfterIncomplete && existingInputs.length > 0);
+    const automaticFirstRun = candidate.status === "NEW" || (resumedAfterIncomplete && existingInputs.length === 0);
     if (!manualReprocess && !automaticFirstRun) return;
     if (manualReprocess) {
       const requestedAt = Date.parse(candidate.stageStartedAt ?? "");
@@ -156,6 +169,18 @@ export async function startProductionDriveDiscoveryWorker() {
     });
   };
 
+  const markMaterialsIncomplete = async (result: StabilityResult) => {
+    const manifest = result.outcome.manifest;
+    if (result.outcome.state !== "MATERIALS_INCOMPLETE" || !manifest) return;
+    const message = materialsIncompleteMessage(manifest);
+    await container.sql`UPDATE candidates AS candidate SET record_json=(candidate.record_json::jsonb || jsonb_build_object(
+      'status','MATERIALS_INCOMPLETE','progressPercent',0,'progressMilestone',${message}::text,'failureReason',${message}::text
+    ))::text
+    FROM candidate_drive_folders AS folder
+    WHERE folder.candidate_id=candidate.id AND folder.drive_folder_id=${result.folderId}
+      AND candidate.record_json::jsonb->>'status' IN ('NEW','WAITING_FOR_STABILITY','MATERIALS_INCOMPLETE')`;
+  };
+
   const worker = new DriveDiscoveryWorker(adapter, new CandidateDiscoveryCoordinator(repository), () => new Date(), registry, {
     discovery(result) {
       const events = Array.isArray(result) ? result : [];
@@ -163,7 +188,24 @@ export async function startProductionDriveDiscoveryWorker() {
     },
     async stability(result) {
       const observations = Array.isArray(result) ? result as StabilityResult[] : [];
-      for (const observation of observations) await enqueue(observation);
+      for (const observation of observations) {
+        try {
+          if (observation.outcome.state === "MATERIALS_INCOMPLETE") await markMaterialsIncomplete(observation);
+          await enqueue(observation);
+          if (observation.outcome.state !== "MATERIALS_READY") {
+            log("drive-discovery.candidate-state", {
+              folderId: observation.folderId,
+              state: observation.outcome.state,
+              stableComparisons: observation.outcome.stableComparisons,
+              resumeCount: observation.outcome.manifest?.resumeIds.length,
+              interviewCount: observation.outcome.manifest?.interviewIds.length,
+              ambiguities: observation.outcome.manifest?.ambiguities,
+            });
+          }
+        } catch (error) {
+          log("drive-discovery.candidate-error", { folderId: observation.folderId, safeCode: safeCode(error) });
+        }
+      }
       log("drive-discovery.stability", { observed: observations.length, ready: observations.filter((item) => item.outcome.state === "MATERIALS_READY").length });
     },
     error(stage, error) { log("drive-discovery.error", { stage, safeCode: safeCode(error) }); },

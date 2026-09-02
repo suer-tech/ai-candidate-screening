@@ -43,6 +43,13 @@ function runtimeElapsedMinutes(candidate: CandidateRecord, run: RuntimeProjectio
 }
 
 export function projectCandidate(candidate: CandidateRecord, runtime: readonly RuntimeProjectionRow[], report?: ReadyReportProjection, now = new Date()): CandidateRecord {
+  if (candidate.status === "WAITING_FOR_STABILITY") {
+    return structuredClone({ ...candidate, result: null, transcript: undefined, elapsedMinutes: 0, progressPercent: 0,
+      progressMilestone: candidate.progressMilestone?.trim() || "Ожидание стабильности материалов" });
+  }
+  if (candidate.status === "MATERIALS_INCOMPLETE") {
+    return structuredClone({ ...candidate, result: null, transcript: undefined, elapsedMinutes: 0, progressPercent: 0 });
+  }
   const latestRun = runtime[0];
   const currentReport = report
     && (latestRun ? report.runId === latestRun.runId : candidate.status !== "WAITING_FOR_STABILITY")

@@ -71,6 +71,21 @@ test("manual reprocess hides an older published report until the new run publish
   assert.equal(current.result?.version, 2, "only the current run's published pair restores READY");
 });
 
+test("incomplete current materials are not overwritten by a previous report", () => {
+  const incomplete = projectCandidate(candidate({
+    status: "MATERIALS_INCOMPLETE",
+    progressMilestone: "Найдено несколько источников интервью (2). Оставьте одну запись или одну готовую транскрибацию.",
+    result: null,
+  }), [{ runId: "old-run", runState: "SUCCEEDED", lastProgressAt: "2026-08-20T00:00:00.000Z" }], {
+    runId: "old-run", analysisVersion: 1, completedAt: "2026-08-20T00:00:00.000Z", elapsedMinutes: 10,
+    recommendation: { status: "Рекомендовать", reason: "Старый результат" },
+    documents: [{ id: "old-report", type: "candidate-report", fileName: "old.pdf", driveFileId: "drive-old" }],
+  });
+  assert.equal(incomplete.status, "MATERIALS_INCOMPLETE");
+  assert.equal(incomplete.result, null);
+  assert.match(incomplete.progressMilestone ?? "", /несколько источников интервью/);
+});
+
 test("terminal runtime failure and archive are projected without browser inference", () => {
   const failed = projectCandidate(candidate(), [{ runId: "run", runState: "FAILED", lastProgressAt: "2026-08-20T00:00:00Z", taskKey: "documents", taskState: "FAILED", attemptCount: 1, errorCode: "CORRUPT_FILE" }]);
   assert.equal(failed.status, "FAILED");
