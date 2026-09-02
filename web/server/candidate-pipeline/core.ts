@@ -92,10 +92,10 @@ export function classifyMaterials(objects: readonly DriveObject[]): MaterialMani
   });
   const resumeIds = entries.filter((item) => item.role === "resume").map((item) => item.fileId);
   const interviewIds = entries.filter((item) => item.role === "interview").map((item) => item.fileId);
-  // A candidate folder may contain a resume plus supporting PDF/DOCX documents. All are
-  // processed as document evidence; multiple interview sources are intentionally ambiguous.
-  const ambiguities = [interviewIds.length > 1 ? "MULTIPLE_INTERVIEWS" : ""].filter(Boolean);
-  return Object.freeze({ entries, complete: resumeIds.length >= 1 && interviewIds.length === 1 && ambiguities.length === 0, resumeIds, interviewIds, ambiguities });
+  // Every interview source is part of the immutable input. Multiple recordings and ready
+  // transcripts are complementary evidence and are merged by the transcription stage.
+  const ambiguities: string[] = [];
+  return Object.freeze({ entries, complete: resumeIds.length >= 1 && interviewIds.length >= 1, resumeIds, interviewIds, ambiguities });
 }
 
 export function immutableInputVersion(folderId: string, snapshot: DriveSnapshot, sequence: number) {

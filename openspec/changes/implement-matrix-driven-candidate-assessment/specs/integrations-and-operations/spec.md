@@ -14,6 +14,14 @@
 - **THEN** реплики сохраняют порядок и номера исходных строк
 - **AND** пользовательские evidence locators ссылаются на строки, а не на выдуманное время
 
+### Requirement: INT-033 Несколько источников интервью
+Все поддерживаемые записи и готовые стенограммы из immutable input manifest MUST быть обработаны в рамках одной transcription stage и объединены в один совместимый `transcript-bundle`. Каждая реплика MUST сохранять source file ID/version/name и локальный таймкод либо line locator своего файла. Speaker labels и одинаковые локальные таймкоды разных файлов MUST NOT смешивать provenance. Сбой одного обязательного interview-source MUST завершать transcription stage типизированной ошибкой без частичного молчаливого анализа остальных источников.
+
+#### Scenario: Две записи и одна готовая стенограмма
+- **WHEN** manifest содержит несколько поддерживаемых interview-source
+- **THEN** runtime обрабатывает каждый из них и создаёт один transcript artifact
+- **AND** downstream batching получает реплики всех источников с различимой provenance
+
 ### Requirement: INT-030 Versioned assessment skills
 Компиляция, однократный fail-soft critic-editor, batch coverage extraction, gap-search, консолидация, поиск реальных конфликтов, сбалансированные дополнительные наблюдения, попунктное заполнение строк, мягкая проверка стоп-факторов/существенно отказных выводов и итоговый синтез MUST использовать отдельно версионируемые instruction и response schema artifacts через защищённый server-side LLM gateway. Каждая стадия MUST сохранять фактическую конфигурацию и protected trace. Batch extraction и gap-search MUST NOT принимать итоговые кадровые решения.
 

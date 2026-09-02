@@ -143,6 +143,8 @@ Material manifest различает `recording` и `ready-transcript`, сохр
 
 Явные таймкоды и speaker labels сохраняются как входные сведения. Для строк без таймкода сохраняется line locator; техническая монотонная координата может использоваться только внутри совместимого normalized transport и должна быть явно помечена как derived, чтобы HR presentation не показывала её как время интервью.
 
+Несколько записей и готовых стенограмм не образуют неоднозначность. Transcription stage создаёт или восстанавливает отдельную provider job/parsed source для каждого элемента immutable manifest, затем публикует один составной `transcript-bundle`. Реплики сохраняют исходную speaker label и локальные координаты, а также `sourceFileId`, `sourceFileVersion` и `sourceFileName`; поэтому совпадающие speaker labels и таймкоды разных файлов остаются разными доказательствами. Downstream batching проходит по объединённому набору и не отбрасывает ни один источник.
+
 ### 16. Drive snapshot задачи воспроизводят pinned input, а не перечитывают live-папку
 
 Discovery фиксирует stable snapshot и manifest до создания goal. Поэтому `candidate.drive-snapshot/v1` читает их из `candidate_input_versions`; повторный `listChildren` после начала run создавал бы race и нарушал immutable input boundary. Live Drive продолжает сканироваться discovery worker отдельно: изменения становятся новой input version и не влияют на уже начатые extraction/transcription/matrix/report стадии.

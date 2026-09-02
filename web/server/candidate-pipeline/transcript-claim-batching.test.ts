@@ -25,3 +25,18 @@ test("an oversized single utterance is losslessly windowed instead of rejecting 
     assert.match(value, /"confidence":0\.98/);
   }
 });
+
+test("claim batches preserve the source of every interview utterance", () => {
+  const batches = buildCriterionClaimExtractionBatches({
+    matrix: { criteria: [{ criterionId: "criterion-1", sourceText: "Коммуникация" }] },
+    materials: { transcript: { normalized: { utterances: [
+      { utteranceId: "file-1:utterance-0", sourceFileId: "file-1", sourceFileVersion: "2", sourceFileName: "Интервью 1.webm", speaker: "A", start: 1_000, end: 2_000, confidence: 0.9, text: "Ответ 1" },
+      { utteranceId: "file-2:utterance-0", sourceFileId: "file-2", sourceFileVersion: "3", sourceFileName: "Интервью 2.docx", sourceLine: 7, timingOrigin: "derived-line-order", speaker: "Кандидат", start: 0, end: 1_000, confidence: 1, text: "Ответ 2" },
+    ] } } },
+    scope: {}, maxContextTokens: 20_000, countContextTokens: (request) => JSON.stringify(request).length, overlapUtterances: 0,
+  });
+  const serialized = JSON.stringify(batches);
+  assert.match(serialized, /"sourceFileId":"file-1"/u);
+  assert.match(serialized, /"sourceFileName":"Интервью 2\.docx"/u);
+  assert.match(serialized, /"sourceLine":7/u);
+});

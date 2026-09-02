@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { DurableAssemblyAiAdapter } from "./providers.ts";
-import { DurableTranscriptionJob, InMemoryTranscriptionJobRepository, audioArtifactIdentity, parseReadyTranscript, speakerRoleArtifact, transcriptRepresentations } from "./transcription.ts";
+import { DurableTranscriptionJob, InMemoryTranscriptionJobRepository, audioArtifactIdentity, mergeTranscriptRepresentations, parseReadyTranscript, speakerRoleArtifact, transcriptRepresentations } from "./transcription.ts";
 
 test("compatible audio config produces reusable identity", () => {
   assert.equal(audioArtifactIdentity({ sourceChecksum: "source", extractionConfigVersion: "ffmpeg-v1" }), audioArtifactIdentity({ sourceChecksum: "source", extractionConfigVersion: "ffmpeg-v1" }));
@@ -49,4 +49,18 @@ test("ready transcript preserves explicit timestamps and uses honest line locato
 test("empty or invalid ready transcript fails with a typed error", () => {
   assert.throws(() => parseReadyTranscript({ fileId: "empty", fileVersion: "1", fileName: "Стенограмма.txt", mimeType: "text/plain", bytes: new Uint8Array() }), /READY_TRANSCRIPT_EMPTY/);
   assert.throws(() => parseReadyTranscript({ fileId: "invalid", fileVersion: "1", fileName: "Стенограмма.txt", mimeType: "text/plain", bytes: new Uint8Array([0xff]) }), /READY_TRANSCRIPT_INVALID_UTF8/);
+});
+
+test("multiple interview transcripts are merged without losing source identity", () => {
+  const first = transcriptRepresentations({ providerJobId: "job-1", raw: { id: "job-1" }, source: { sourceFileId: "file-1", sourceFileVersion: "1", sourceFileName: "Интервью 1.webm" },
+    words: [], utterances: [{ text: "Первый ответ", start: 1_000, end: 2_000, speaker: "A", confidence: 0.9 }] });
+  const second = transcriptRepresentations({ providerJobId: "ready-2", raw: { id: "ready-2" }, source: { sourceFileId: "file-2", sourceFileVersion: "4", sourceFileName: "Интервью 2.docx" },
+    words: [], utterances: [{ text: "Второй ответ", start: 3_000, end: 4_000, speaker: "Кандидат", confidence: 1 }] });
+  const merged = mergeTranscriptRepresentations({ providerJobId: "multi-interview:1", sources: [first, second] });
+  assert.deepEqual(merged.normalized.utterances.map((item) => [item.utteranceId, item.sourceFileName]), [
+    ["file-1:utterance-0", "Интервью 1.webm"],
+    ["file-2:utterance-0", "Интервью 2.docx"],
+  ]);
+  assert.match(merged.txt, /Интервью 1\.webm/u);
+  assert.match(merged.txt, /Интервью 2\.docx/u);
 });

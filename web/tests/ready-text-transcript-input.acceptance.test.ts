@@ -28,9 +28,10 @@ test("WF-010: resume plus one transcript-like text is complete and identifies re
   assert.equal(media.complete, true, "existing audio/video route must remain complete");
   assert.equal(media.entries.find((entry) => entry.fileId === "recording")?.interviewSource, "recording");
 
-  const ambiguous = classifyMaterials([resume, recording, readyText]);
-  assert.equal(ambiguous.complete, false);
-  assert.deepEqual(ambiguous.ambiguities, ["MULTIPLE_INTERVIEWS"]);
+  const multiple = classifyMaterials([resume, recording, readyText]);
+  assert.equal(multiple.complete, true);
+  assert.deepEqual(multiple.interviewIds, ["recording", "ready-text"]);
+  assert.deepEqual(multiple.ambiguities, []);
 
   const ordinaryText = classifyMaterials([resume, object("notes", "Дополнительные заметки.txt", "text/plain")]);
   assert.equal(ordinaryText.entries.find((entry) => entry.fileId === "notes")?.role, "additional", "arbitrary text must not become an interview");

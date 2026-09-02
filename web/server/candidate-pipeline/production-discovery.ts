@@ -71,9 +71,6 @@ export function findReusableReadyInput(existingInputs: readonly ExistingInput[],
 }
 
 export function materialsIncompleteMessage(manifest: MaterialManifest) {
-  if (manifest.ambiguities.includes("MULTIPLE_INTERVIEWS") || manifest.interviewIds.length > 1) {
-    return `Найдено несколько источников интервью (${manifest.interviewIds.length}). Оставьте одну запись или одну готовую транскрибацию.`;
-  }
   if (manifest.resumeIds.length === 0 && manifest.interviewIds.length === 0) {
     return "Добавьте резюме и одну запись интервью или готовую транскрибацию.";
   }

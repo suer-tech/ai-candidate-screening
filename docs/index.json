@@ -123,7 +123,7 @@
     "parseReadyTranscript": {
       "file": "web/server/candidate-pipeline/transcription.ts",
       "kind": "function",
-      "summary": "Детерминированно преобразует UTF-8 текст или извлечённый из DOCX текст в transcript-bundle-compatible utterances, сохраняя явные speaker labels, таймкоды либо номера исходных строк."
+      "summary": "Детерминированно преобразует UTF-8 текст или извлечённый из DOCX текст в transcript-bundle-compatible utterances; несколько записей и готовых стенограмм объединяются без потери имени, версии и локатора каждого источника."
     },
     "resolvePinnedRunInputSnapshot": {
       "file": "web/server/candidate-pipeline/production-runtime.ts",
@@ -138,7 +138,7 @@
     "buildCriterionClaimExtractionBatches": {
       "file": "web/server/candidate-pipeline/transcript-claim-batching.ts",
       "kind": "function",
-      "summary": "Детерминированно разбивает decision-safe документы и нормализованную стенограмму на перекрывающиеся LLM-пакеты по полному токенному бюджету запроса без суммаризации и потери реплик."
+      "summary": "Детерминированно разбивает decision-safe документы и объединённые стенограммы на перекрывающиеся LLM-пакеты по полному токенному бюджету запроса без суммаризации, потери реплик или их source identity."
     },
     "runCriterionCoverageWorkflow": {
       "file": "web/server/candidate-pipeline/transcript-claim-batching.ts",

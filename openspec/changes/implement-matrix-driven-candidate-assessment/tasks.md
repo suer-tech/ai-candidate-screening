@@ -194,3 +194,10 @@
 - [x] 24.2 Усилить fingerprint и matching immutable входов provider version и полным material identity; исключить совпадение только по `fileId + size`.
 - [x] 24.3 Исправить manual discovery orchestration: каждый revision reprocess подтверждается свежим post-command live observation, новая готовая версия создаёт ровно один goal/run, неизменная версия остаётся совместимой с selective recovery.
 - [x] 24.4 Выполнить focused acceptance/regression/build/OpenSpec strict/diff-check, обновить architecture/index и пересобрать сервис.
+
+## 25. Несколько интервью и стенограмм
+
+- [x] 25.1 Изменить material completeness: резюме и один или несколько поддерживаемых interview-source являются полным комплектом; `MULTIPLE_INTERVIEWS` больше не блокирует запуск.
+- [x] 25.2 Реализовать обработку всех recording/ready-transcript entries в одной transcription stage с отдельными provider checkpoints и единым совместимым transcript-bundle.
+- [x] 25.3 Сохранить source file identity в каждой реплике и передавать её через token batching, чтобы claims/evidence разных интервью не смешивались.
+- [x] 25.4 Выполнить focused regression/build/OpenSpec strict/diff-check и обновить архитектурную документацию.

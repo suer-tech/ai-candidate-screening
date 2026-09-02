@@ -1,8 +1,9 @@
 import { sha256 } from "./core.ts";
 import type { DurableAssemblyAiAdapter } from "./providers.ts";
 
-export type TranscriptWord = { text: string; start: number; end: number; speaker: string; confidence: number };
-export type TranscriptUtterance = { text: string; start: number; end: number; speaker: string; confidence: number; sourceLine?: number; timingOrigin?: "provider" | "explicit-text" | "derived-line-order" };
+export type TranscriptSourceIdentity = { sourceFileId: string; sourceFileVersion: string; sourceFileName: string };
+export type TranscriptWord = { text: string; start: number; end: number; speaker: string; confidence: number } & Partial<TranscriptSourceIdentity>;
+export type TranscriptUtterance = { utteranceId?: string; text: string; start: number; end: number; speaker: string; confidence: number; sourceLine?: number; timingOrigin?: "provider" | "explicit-text" | "derived-line-order" } & Partial<TranscriptSourceIdentity>;
 
 export type ReadyTranscript = {
   schemaVersion: "ready-transcript/v1";
@@ -67,22 +68,40 @@ export function audioArtifactIdentity(input: { sourceChecksum: string; extractio
   return `audio:${sha256(input).slice(0, 24)}`;
 }
 
-export function transcriptRepresentations(input: { providerJobId: string; raw: Record<string, unknown>; words: readonly TranscriptWord[]; utterances: readonly TranscriptUtterance[]; threshold?: number }) {
+export function transcriptRepresentations(input: { providerJobId: string; raw: Record<string, unknown>; words: readonly TranscriptWord[]; utterances: readonly TranscriptUtterance[]; source?: TranscriptSourceIdentity; threshold?: number }) {
   const threshold = input.threshold ?? 0.7;
-  const lowWords = input.words.filter((word) => word.confidence < threshold).length;
-  const lowUtterances = input.utterances.filter((utterance) => utterance.confidence < threshold).length;
+  const words = input.words.map((word) => input.source ? { ...word, ...input.source } : { ...word });
+  const utterances = input.utterances.map((utterance, index) => ({ ...utterance, ...(input.source ?? {}),
+    ...(utterance.utteranceId ? {} : { utteranceId: input.source ? `${input.source.sourceFileId}:utterance-${index}` : `utterance-${index}` }) }));
+  const lowWords = words.filter((word) => word.confidence < threshold).length;
+  const lowUtterances = utterances.filter((utterance) => utterance.confidence < threshold).length;
   const normalized = Object.freeze({
     schemaVersion: "transcript/v1",
     providerJobId: input.providerJobId,
-    words: structuredClone(input.words),
-    utterances: structuredClone(input.utterances),
-    lowConfidenceWordShare: input.words.length ? lowWords / input.words.length : 0,
-    lowConfidenceUtteranceShare: input.utterances.length ? lowUtterances / input.utterances.length : 0,
+    words: structuredClone(words),
+    utterances: structuredClone(utterances),
+    lowConfidenceWordShare: words.length ? lowWords / words.length : 0,
+    lowConfidenceUtteranceShare: utterances.length ? lowUtterances / utterances.length : 0,
   });
-  const txt = input.utterances.map((item) => item.timingOrigin === "derived-line-order" && item.sourceLine
+  const txt = utterances.map((item) => `${item.sourceFileName ? `[${item.sourceFileName}] ` : ""}${item.timingOrigin === "derived-line-order" && item.sourceLine
     ? `[строка ${item.sourceLine}] Спикер ${item.speaker}: ${item.text}`
-    : `[${time(item.start)}–${time(item.end)}] Спикер ${item.speaker}: ${item.text}`).join("\n");
+    : `[${time(item.start)}–${time(item.end)}] Спикер ${item.speaker}: ${item.text}`}`).join("\n");
   return Object.freeze({ raw: structuredClone(input.raw), normalized, txt });
+}
+
+export function mergeTranscriptRepresentations(input: { providerJobId: string; sources: readonly ReturnType<typeof transcriptRepresentations>[] }) {
+  if (!input.sources.length) throw new Error("TRANSCRIPT_SOURCES_EMPTY");
+  const words = input.sources.flatMap((source) => source.normalized.words);
+  const utterances = input.sources.flatMap((source) => source.normalized.utterances);
+  const lowWords = words.filter((word) => word.confidence < 0.7).length;
+  const lowUtterances = utterances.filter((utterance) => utterance.confidence < 0.7).length;
+  return Object.freeze({
+    raw: { schemaVersion: "multi-interview-raw/v1", providerJobId: input.providerJobId, sources: input.sources.map((source) => source.raw) },
+    normalized: Object.freeze({ schemaVersion: "transcript/v1", providerJobId: input.providerJobId, words: structuredClone(words), utterances: structuredClone(utterances),
+      lowConfidenceWordShare: words.length ? lowWords / words.length : 0,
+      lowConfidenceUtteranceShare: utterances.length ? lowUtterances / utterances.length : 0 }),
+    txt: input.sources.map((source) => source.txt).filter(Boolean).join("\n\n"),
+  });
 }
 
 function time(milliseconds: number) {

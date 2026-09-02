@@ -19,7 +19,7 @@ test("Drive stability requires three unchanged complete comparisons and ignores 
   assert.equal(tracker.observe(changed).stableComparisons, 0);
 });
 
-test("material manifest excludes Results and requires unambiguous resume plus interview", () => {
+test("material manifest excludes Results and requires a resume plus at least one interview", () => {
   const manifest = classifyMaterials([
     object("resume", "application/pdf"),
     object("interview", "video/mp4"),
@@ -30,14 +30,15 @@ test("material manifest excludes Results and requires unambiguous resume plus in
   assert.deepEqual(manifest.interviewIds, ["interview"]);
 });
 
-test("ready text transcript completes materials while a second interview source stays ambiguous", () => {
+test("ready text transcripts and recordings are all accepted as interview sources", () => {
   const ready = { ...object("transcript", "text/plain"), name: "Стенограмма интервью.txt" };
   const manifest = classifyMaterials([object("resume", "application/pdf"), ready]);
   assert.equal(manifest.complete, true);
   assert.equal(manifest.entries.find((entry) => entry.fileId === "transcript")?.interviewSource, "ready-transcript");
-  const ambiguous = classifyMaterials([object("resume", "application/pdf"), ready, object("recording", "audio/mpeg")]);
-  assert.equal(ambiguous.complete, false);
-  assert.deepEqual(ambiguous.ambiguities, ["MULTIPLE_INTERVIEWS"]);
+  const multiple = classifyMaterials([object("resume", "application/pdf"), ready, object("recording", "audio/mpeg")]);
+  assert.equal(multiple.complete, true);
+  assert.deepEqual(multiple.interviewIds, ["transcript", "recording"]);
+  assert.deepEqual(multiple.ambiguities, []);
 });
 
 test("ETA stays unavailable below ten comparable successful runs", () => {

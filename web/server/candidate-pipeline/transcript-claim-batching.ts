@@ -182,6 +182,11 @@ function packUtterances(input: {
       ["end", source.end],
       ["confidence", source.confidence],
       ["text", source.text],
+      ["sourceFileId", source.sourceFileId],
+      ["sourceFileVersion", source.sourceFileVersion],
+      ["sourceFileName", source.sourceFileName],
+      ["sourceLine", source.sourceLine],
+      ["timingOrigin", source.timingOrigin],
     ].filter(([, value]) => value !== undefined));
   });
   const utterances = normalizedUtterances.flatMap((utterance, utteranceIndex) => {

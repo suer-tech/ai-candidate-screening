@@ -10,7 +10,7 @@ import type { ProductionRuntime } from "./tool-executor.ts";
 import type { DriveObject } from "./types.ts";
 import { PostgresCandidateArtifactStore } from "./artifact-store.ts";
 import { DurableAssemblyAiAdapter } from "./providers.ts";
-import { parseReadyTranscript, transcriptRepresentations, type TranscriptUtterance, type TranscriptWord } from "./transcription.ts";
+import { mergeTranscriptRepresentations, parseReadyTranscript, transcriptRepresentations, type TranscriptSourceIdentity, type TranscriptUtterance, type TranscriptWord } from "./transcription.ts";
 import { processDocument, type ExtractedPage, type ExtractedSection, type ProcessedDocument } from "./documents.ts";
 import { RouterAiPageOcrAdapter } from "./router-tools.ts";
 import { runLlmCapabilityWithPolicy, type CapabilityBudget } from "./capability-runner.ts";
@@ -1076,74 +1076,111 @@ export async function createProductionCandidateToolExecution(input: { database: 
         create: async () => {
           if (!artifactStore) throw new Error("PRODUCTION_TRANSCRIPTION_ARTIFACT_STORE_NOT_PROVISIONED");
           const restored = await queryOne<{ remote_job_id: string }>(input.database, `SELECT cp.remote_job_id FROM agent_checkpoints cp JOIN agent_attempts a ON a.id=cp.attempt_id
-            WHERE a.task_id=$1 AND (cp.kind='provider-job-created' OR (cp.kind='transcript-persisted' AND cp.remote_job_id LIKE 'ready-transcript:%')) AND cp.remote_job_id IS NOT NULL
+            WHERE a.task_id=$1 AND (cp.kind='transcript-persisted' OR cp.kind='transcript-source-plan') AND cp.remote_job_id IS NOT NULL
             ORDER BY CASE WHEN cp.kind='transcript-persisted' THEN 0 ELSE 1 END, cp.created_at DESC LIMIT 1`, [taskId]);
           if (restored?.remote_job_id) return { remoteJobId: restored.remote_job_id };
           const manifest = await materialManifest();
           const interviews = (manifest.entries ?? []).filter((entry) => entry.role === "interview" && entry.supported !== false);
-          if (interviews.length !== 1) throw new Error("INTERVIEW_MATERIAL_NOT_UNAMBIGUOUS");
-          const interview = interviews[0];
-          await authorizeFile("download", interview.fileId);
-          const expectedChecksum = await immutableFileChecksum(interview.fileId);
-          const source = await drive.downloadVersion({ fileId: interview.fileId, expectedVersion: interview.version,
-            expectedSize: interview.size, expectedModifiedTime: interview.modifiedTime, expectedChecksum,
-            checkpoint: (value) => checkpoint({ kind: "drive-download", identity: `${operationIdentity}:source`, artifactIdentity: `${value.fileId}:${value.version}`, checksum: value.checksum }) });
-          if (interview.interviewSource === "ready-transcript") {
-            let extractedText: string | undefined;
-            if (interview.mimeType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
-              if (!input.environment.DOCUMENT_PROCESSOR_URL || !input.environment.DOCUMENT_PROCESSOR_TOKEN) throw new Error("PRODUCTION_DOCUMENT_PROCESSOR_NOT_PROVISIONED");
-              const processorUrl = new URL(input.environment.DOCUMENT_PROCESSOR_URL);
-              if (input.environment.E2E_ENVIRONMENT === "local") {
-                if (!loopbackOrDockerHostname(processorUrl.hostname) || !["http:", "https:"].includes(processorUrl.protocol)) throw new Error("LOCAL_DOCUMENT_PROCESSOR_MUST_BE_LOOPBACK");
-              } else if (processorUrl.protocol !== "https:" && !dockerInternalProcessorEndpoint(processorUrl, "document-processor")) throw new Error("REMOTE_DOCUMENT_PROCESSOR_MUST_USE_HTTPS");
-              await auditBoundary("provider", source.bytes);
-              const extractionResponse = await fetch(processorUrl, { method: "POST",
-                headers: { authorization: `Bearer ${input.environment.DOCUMENT_PROCESSOR_TOKEN}`, "content-type": interview.mimeType },
-                body: source.bytes.slice().buffer as ArrayBuffer, signal: AbortSignal.timeout(5 * 60_000) });
-              const extracted = await extractionResponse.json() as { code?: string; kind?: string; sections?: ExtractedSection[] };
-              if (!extractionResponse.ok) throw new Error(extracted.code ?? `DOCUMENT_PROCESSOR_HTTP_${extractionResponse.status}`);
-              if (extracted.kind !== "docx" || !Array.isArray(extracted.sections)) throw new Error("DOCUMENT_PROCESSOR_DOCX_OUTPUT_INVALID");
-              extractedText = extracted.sections.map((section) => section.text.trim()).filter(Boolean).join("\n");
+          if (!interviews.length) throw new Error("INTERVIEW_MATERIAL_MISSING");
+          const compositeRemoteJobId = `multi-interview:${sha256([operationIdentity, ...interviews.map((item) => [item.fileId, item.version])]).slice(0, 24)}`;
+          const sourcePlans: Array<{ source: TranscriptSourceIdentity; kind: "ready" | "provider"; representation?: ReturnType<typeof transcriptRepresentations>; providerJobId?: string }> = [];
+          for (const interview of interviews) {
+            const sourceIdentity = { sourceFileId: interview.fileId, sourceFileVersion: interview.version, sourceFileName: interview.name };
+            await authorizeFile("download", interview.fileId);
+            const expectedChecksum = await immutableFileChecksum(interview.fileId);
+            const source = await drive.downloadVersion({ fileId: interview.fileId, expectedVersion: interview.version,
+              expectedSize: interview.size, expectedModifiedTime: interview.modifiedTime, expectedChecksum,
+              checkpoint: (value) => checkpoint({ kind: "drive-download", identity: `${operationIdentity}:source:${interview.fileId}`, artifactIdentity: `${value.fileId}:${value.version}`, checksum: value.checksum }) });
+            if (interview.interviewSource === "ready-transcript") {
+              let extractedText: string | undefined;
+              if (interview.mimeType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+                if (!input.environment.DOCUMENT_PROCESSOR_URL || !input.environment.DOCUMENT_PROCESSOR_TOKEN) throw new Error("PRODUCTION_DOCUMENT_PROCESSOR_NOT_PROVISIONED");
+                const processorUrl = new URL(input.environment.DOCUMENT_PROCESSOR_URL);
+                if (input.environment.E2E_ENVIRONMENT === "local") {
+                  if (!loopbackOrDockerHostname(processorUrl.hostname) || !["http:", "https:"].includes(processorUrl.protocol)) throw new Error("LOCAL_DOCUMENT_PROCESSOR_MUST_BE_LOOPBACK");
+                } else if (processorUrl.protocol !== "https:" && !dockerInternalProcessorEndpoint(processorUrl, "document-processor")) throw new Error("REMOTE_DOCUMENT_PROCESSOR_MUST_USE_HTTPS");
+                await auditBoundary("provider", source.bytes);
+                const extractionResponse = await fetch(processorUrl, { method: "POST", headers: { authorization: `Bearer ${input.environment.DOCUMENT_PROCESSOR_TOKEN}`, "content-type": interview.mimeType },
+                  body: source.bytes.slice().buffer as ArrayBuffer, signal: AbortSignal.timeout(5 * 60_000) });
+                const extracted = await extractionResponse.json() as { code?: string; kind?: string; sections?: ExtractedSection[] };
+                if (!extractionResponse.ok) throw new Error(extracted.code ?? `DOCUMENT_PROCESSOR_HTTP_${extractionResponse.status}`);
+                if (extracted.kind !== "docx" || !Array.isArray(extracted.sections)) throw new Error("DOCUMENT_PROCESSOR_DOCX_OUTPUT_INVALID");
+                extractedText = extracted.sections.map((section) => section.text.trim()).filter(Boolean).join("\n");
+              }
+              const parsed = parseReadyTranscript({ fileId: interview.fileId, fileVersion: interview.version, fileName: interview.name,
+                mimeType: interview.mimeType, ...(extractedText === undefined ? { bytes: source.bytes } : { extractedText }) });
+              const sourceJobId = `ready-transcript:${sha256([operationIdentity, interview.fileId, source.checksum]).slice(0, 24)}`;
+              sourcePlans.push({ source: sourceIdentity, kind: "ready", representation: transcriptRepresentations({ providerJobId: sourceJobId,
+                raw: { schemaVersion: parsed.schemaVersion, source: parsed.source, text: parsed.text, timingSource: "provided-text" },
+                words: parsed.words, utterances: parsed.utterances, source: sourceIdentity }) });
+              continue;
             }
-            const parsed = parseReadyTranscript({ fileId: interview.fileId, fileVersion: interview.version, fileName: interview.name,
-              mimeType: interview.mimeType, ...(extractedText === undefined ? { bytes: source.bytes } : { extractedText }) });
-            const remoteJobId = `ready-transcript:${sha256([operationIdentity, source.checksum]).slice(0, 24)}`;
-            const representations = transcriptRepresentations({ providerJobId: remoteJobId,
-              raw: { schemaVersion: parsed.schemaVersion, source: parsed.source, text: parsed.text, timingSource: "provided-text" },
-              words: parsed.words, utterances: parsed.utterances });
-            await auditBoundary("blob", new TextEncoder().encode(JSON.stringify(representations)));
-            const stored = await artifactStore.putJson({ candidatePk, runId: text(task.runId, "PRODUCTION_TASK_RUN_ID_MISSING"), kind: "transcript-bundle",
-              identity: operationIdentity, value: representations });
-            await checkpoint({ kind: "transcript-persisted", identity: operationIdentity, remoteJobId, artifactIdentity: stored.artifactRef, checksum: stored.checksum });
-            return { remoteJobId };
+            if (!input.environment.ASSEMBLYAI_API_KEY || !input.environment.MEDIA_PROCESSOR_URL || !input.environment.MEDIA_PROCESSOR_TOKEN) throw new Error("PRODUCTION_ASSEMBLYAI_STAGE_CONTEXT_NOT_PROVISIONED");
+            const sourceOperationIdentity = `${operationIdentity}:${interview.fileId}`;
+            const existingJob = await queryOne<{ remote_job_id: string }>(input.database, `SELECT cp.remote_job_id FROM agent_checkpoints cp JOIN agent_attempts a ON a.id=cp.attempt_id
+              WHERE a.task_id=$1 AND cp.kind='provider-job-created' AND cp.identity=$2 AND cp.remote_job_id IS NOT NULL ORDER BY cp.created_at DESC LIMIT 1`, [taskId, sourceOperationIdentity]);
+            let providerJobId = existingJob?.remote_job_id;
+            if (!providerJobId) {
+              const mediaUrl = new URL(input.environment.MEDIA_PROCESSOR_URL);
+              if (input.environment.E2E_ENVIRONMENT === "local") {
+                if (!loopbackOrDockerHostname(mediaUrl.hostname) || !["http:", "https:"].includes(mediaUrl.protocol)) throw new Error("LOCAL_MEDIA_PROCESSOR_MUST_BE_LOOPBACK");
+              } else if (mediaUrl.protocol !== "https:" && !dockerInternalProcessorEndpoint(mediaUrl, "media-processor")) throw new Error("REMOTE_MEDIA_PROCESSOR_MUST_USE_HTTPS");
+              await auditBoundary("provider", source.bytes);
+              const mediaResponse = await fetch(mediaUrl, { method: "POST", headers: { authorization: `Bearer ${input.environment.MEDIA_PROCESSOR_TOKEN}`, "content-type": interview.mimeType },
+                body: source.bytes.slice().buffer as ArrayBuffer, signal: AbortSignal.timeout(15 * 60_000) });
+              if (!mediaResponse.ok) throw new Error(`MEDIA_PROCESSOR_HTTP_${mediaResponse.status}`);
+              const audioBytes = new Uint8Array(await mediaResponse.arrayBuffer());
+              const audioChecksum = mediaResponse.headers.get("x-audio-sha256") ?? sha256(audioBytes);
+              await checkpoint({ kind: "audio-extracted", identity: `${sourceOperationIdentity}:audio`, artifactIdentity: `audio:${audioChecksum}`, checksum: audioChecksum });
+              await auditBoundary("provider", audioBytes);
+              const provider = new DurableAssemblyAiAdapter({ apiKey: input.environment.ASSEMBLYAI_API_KEY });
+              const created = await provider.create({ audioBytes, operationIdentity: sourceOperationIdentity, checkpoint: async ({ remoteJobId }) => {
+                await checkpoint({ kind: "provider-job-created", identity: sourceOperationIdentity, remoteJobId });
+              } });
+              providerJobId = created.remoteJobId;
+            }
+            sourcePlans.push({ source: sourceIdentity, kind: "provider", providerJobId });
           }
-          if (!input.environment.ASSEMBLYAI_API_KEY || !input.environment.MEDIA_PROCESSOR_URL || !input.environment.MEDIA_PROCESSOR_TOKEN) {
-            throw new Error("PRODUCTION_ASSEMBLYAI_STAGE_CONTEXT_NOT_PROVISIONED");
-          }
-          const mediaUrl = new URL(input.environment.MEDIA_PROCESSOR_URL);
-          if (input.environment.E2E_ENVIRONMENT === "local") {
-            if (!loopbackOrDockerHostname(mediaUrl.hostname) || !["http:", "https:"].includes(mediaUrl.protocol)) throw new Error("LOCAL_MEDIA_PROCESSOR_MUST_BE_LOOPBACK");
-          } else if (mediaUrl.protocol !== "https:" && !dockerInternalProcessorEndpoint(mediaUrl, "media-processor")) throw new Error("REMOTE_MEDIA_PROCESSOR_MUST_USE_HTTPS");
-          await auditBoundary("provider", source.bytes);
-          const mediaResponse = await fetch(mediaUrl, { method: "POST", headers: { authorization: `Bearer ${input.environment.MEDIA_PROCESSOR_TOKEN}`, "content-type": interview.mimeType },
-            body: source.bytes.slice().buffer as ArrayBuffer, signal: AbortSignal.timeout(15 * 60_000) });
-          if (!mediaResponse.ok) throw new Error(`MEDIA_PROCESSOR_HTTP_${mediaResponse.status}`);
-          const audioBytes = new Uint8Array(await mediaResponse.arrayBuffer());
-          const audioChecksum = mediaResponse.headers.get("x-audio-sha256") ?? sha256(audioBytes);
-          await checkpoint({ kind: "audio-extracted", identity: `${operationIdentity}:audio`, artifactIdentity: `audio:${audioChecksum}`, checksum: audioChecksum });
-          await auditBoundary("provider", audioBytes);
-          const provider = new DurableAssemblyAiAdapter({ apiKey: input.environment.ASSEMBLYAI_API_KEY });
-          return provider.create({ audioBytes, operationIdentity, checkpoint: async ({ remoteJobId }) => {
-            await checkpoint({ kind: "provider-job-created", identity: operationIdentity, remoteJobId });
-          } });
+          const plan = await artifactStore.putJson({ candidatePk, runId: text(task.runId, "PRODUCTION_TASK_RUN_ID_MISSING"), kind: "transcript-source-plan",
+            identity: `${operationIdentity}:sources`, value: { schemaVersion: "transcript-source-plan/v1", remoteJobId: compositeRemoteJobId, sources: sourcePlans } });
+          await checkpoint({ kind: "transcript-source-plan", identity: operationIdentity, remoteJobId: compositeRemoteJobId, artifactIdentity: plan.artifactRef, checksum: plan.checksum });
+          return { remoteJobId: compositeRemoteJobId };
         },
         poll: async (remoteJobId) => {
           if (!artifactStore) throw new Error("PRODUCTION_TRANSCRIPTION_ARTIFACT_STORE_NOT_PROVISIONED");
-          if (remoteJobId.startsWith("ready-transcript:")) {
-            const persisted = await queryOne<{ artifact_identity: string }>(input.database, `SELECT cp.artifact_identity FROM agent_checkpoints cp JOIN agent_attempts a ON a.id=cp.attempt_id
-              WHERE a.task_id=$1 AND cp.kind='transcript-persisted' AND cp.remote_job_id=$2 AND cp.artifact_identity IS NOT NULL ORDER BY cp.created_at DESC LIMIT 1`, [taskId, remoteJobId]);
-            if (!persisted?.artifact_identity) throw new Error("READY_TRANSCRIPT_ARTIFACT_CHECKPOINT_MISSING");
-            return { status: "completed", artifactRef: persisted.artifact_identity };
+          const persisted = await queryOne<{ artifact_identity: string }>(input.database, `SELECT cp.artifact_identity FROM agent_checkpoints cp JOIN agent_attempts a ON a.id=cp.attempt_id
+            WHERE a.task_id=$1 AND cp.kind='transcript-persisted' AND cp.remote_job_id=$2 AND cp.artifact_identity IS NOT NULL ORDER BY cp.created_at DESC LIMIT 1`, [taskId, remoteJobId]);
+          if (persisted?.artifact_identity) return { status: "completed", artifactRef: persisted.artifact_identity };
+          if (remoteJobId.startsWith("ready-transcript:")) throw new Error("READY_TRANSCRIPT_ARTIFACT_CHECKPOINT_MISSING");
+          if (remoteJobId.startsWith("multi-interview:")) {
+            const sourcePlanCheckpoint = await queryOne<{ artifact_identity: string }>(input.database, `SELECT cp.artifact_identity FROM agent_checkpoints cp JOIN agent_attempts a ON a.id=cp.attempt_id
+              WHERE a.task_id=$1 AND cp.kind='transcript-source-plan' AND cp.remote_job_id=$2 AND cp.artifact_identity IS NOT NULL ORDER BY cp.created_at DESC LIMIT 1`, [taskId, remoteJobId]);
+            if (!sourcePlanCheckpoint?.artifact_identity) throw new Error("TRANSCRIPT_SOURCE_PLAN_CHECKPOINT_MISSING");
+            const sourcePlan = await artifactStore.getJson<{ schemaVersion?: string; sources?: Array<{ source: TranscriptSourceIdentity; kind: "ready" | "provider"; representation?: ReturnType<typeof transcriptRepresentations>; providerJobId?: string }> }>(sourcePlanCheckpoint.artifact_identity);
+            if (sourcePlan.schemaVersion !== "transcript-source-plan/v1" || !Array.isArray(sourcePlan.sources) || !sourcePlan.sources.length) throw new Error("TRANSCRIPT_SOURCE_PLAN_INVALID");
+            const provider = input.environment.ASSEMBLYAI_API_KEY ? new DurableAssemblyAiAdapter({ apiKey: input.environment.ASSEMBLYAI_API_KEY }) : undefined;
+            const representations: ReturnType<typeof transcriptRepresentations>[] = [];
+            const completedProviderJobIds: string[] = [];
+            for (const source of sourcePlan.sources) {
+              if (source.kind === "ready" && source.representation) { representations.push(source.representation); continue; }
+              if (!provider || !source.providerJobId) throw new Error("PRODUCTION_ASSEMBLYAI_STAGE_CONTEXT_NOT_PROVISIONED");
+              let raw: Record<string, unknown> | undefined;
+              for (let attempt = 0; attempt < 300; attempt += 1) {
+                raw = await provider.poll(source.providerJobId);
+                if (raw.status === "completed" || raw.status === "error") break;
+                await new Promise((resolveDelay) => setTimeout(resolveDelay, 3_000));
+              }
+              if (raw?.status !== "completed") throw new Error(raw?.status === "error" ? "ASSEMBLYAI_TRANSCRIPTION_FAILED" : "ASSEMBLYAI_TRANSCRIPTION_TIMEOUT");
+              representations.push(transcriptRepresentations({ providerJobId: source.providerJobId, raw,
+                words: (Array.isArray(raw.words) ? raw.words : []) as TranscriptWord[], utterances: (Array.isArray(raw.utterances) ? raw.utterances : []) as TranscriptUtterance[], source: source.source }));
+              completedProviderJobIds.push(source.providerJobId);
+            }
+            const merged = mergeTranscriptRepresentations({ providerJobId: remoteJobId, sources: representations });
+            await auditBoundary("blob", new TextEncoder().encode(JSON.stringify(merged)));
+            const stored = await artifactStore.putJson({ candidatePk, runId: text(task.runId, "PRODUCTION_TASK_RUN_ID_MISSING"), kind: "transcript-bundle", identity: operationIdentity, value: merged });
+            await checkpoint({ kind: "transcript-persisted", identity: operationIdentity, remoteJobId, artifactIdentity: stored.artifactRef, checksum: stored.checksum });
+            if (provider) await Promise.allSettled(completedProviderJobIds.map((providerJobId) => provider.remove(providerJobId)));
+            return { status: "completed", artifactRef: stored.artifactRef };
           }
           if (!input.environment.ASSEMBLYAI_API_KEY) throw new Error("PRODUCTION_ASSEMBLYAI_STAGE_CONTEXT_NOT_PROVISIONED");
           const provider = new DurableAssemblyAiAdapter({ apiKey: input.environment.ASSEMBLYAI_API_KEY });
@@ -1224,10 +1261,12 @@ export async function createProductionCandidateToolExecution(input: { database: 
             const startMs = Number(locator.match(/(?:startMs|start)\s*[=:]\s*(\d+)/iu)?.[1]);
             const endMs = Number(locator.match(/(?:endMs|end)\s*[=:]\s*(\d+)/iu)?.[1]);
             const sourceLine = locator.match(/(?:sourceLine|строк[аи])\s*[=:]\s*(\d+)/iu)?.[1];
+            const sourceFileName = locator.match(/sourceFileName["']?\s*[=:]\s*["']([^"']+)["']/iu)?.[1]
+              ?? locator.match(/sourceFileName\s*[=:]\s*([^;,}\n]+)/iu)?.[1]?.trim();
             const formatTime = (value: number) => `${String(Math.floor(value / 60_000)).padStart(2, "0")}:${String(Math.floor((value % 60_000) / 1_000)).padStart(2, "0")}`;
             const interval = Number.isFinite(startMs) ? `${formatTime(startMs)}${Number.isFinite(endMs) && endMs > startMs ? `–${formatTime(endMs)}` : ""}` : undefined;
             const lowered = `${claim.sourceClass} ${locator}`.toLocaleLowerCase("ru");
-            if (/interview|transcript|интервью|стенограмм/u.test(lowered)) return ["Интервью", sourceLine ? `строка ${sourceLine}` : interval, !sourceLine && !interval && utterance ? `реплика ${utterance}` : undefined].filter(Boolean).join(" · ");
+            if (/interview|transcript|интервью|стенограмм/u.test(lowered)) return [sourceFileName ?? "Интервью", sourceLine ? `строка ${sourceLine}` : interval, !sourceLine && !interval && utterance ? `реплика ${utterance}` : undefined].filter(Boolean).join(" · ");
             if (/resume|резюме/u.test(lowered)) return ["Резюме", page ? `стр. ${page}` : undefined].filter(Boolean).join(" · ");
             if (/recommend|рекомендац/u.test(lowered)) return ["Рекомендация", page ? `стр. ${page}` : undefined].filter(Boolean).join(" · ");
             return ["Документ кандидата", page ? `стр. ${page}` : undefined].filter(Boolean).join(" · ");
@@ -1266,15 +1305,17 @@ export async function createProductionCandidateToolExecution(input: { database: 
           const employmentPeriod = normalizedSource.match(/Опыт на последнем месте работы\s+(.+?)\s+Резюме обновлено/u)?.[1] ?? "Не указано";
           const manifest = await materialManifest();
           const reportSourceMaterials = projectReportSourceMaterials(manifest);
-          const interviewMaterial = manifest.entries?.find((entry) => entry.role === "interview");
-          const interviewName = interviewMaterial?.name ?? "";
-          const interviewDateMatch = interviewName.match(/\b(\d{1,2})[.\-_](\d{1,2})(?:[.\-_](\d{2,4}))?\b/);
-          const interviewYear = interviewDateMatch?.[3]
-            ? Number(interviewDateMatch[3]) + (Number(interviewDateMatch[3]) < 100 ? 2000 : 0)
-            : new Date(interviewMaterial?.modifiedTime ?? new Date().toISOString()).getUTCFullYear();
-          const interviewDate = interviewDateMatch
-            ? `${interviewDateMatch[1].padStart(2, "0")}.${interviewDateMatch[2].padStart(2, "0")}.${interviewYear}`
-            : new Date(interviewMaterial?.modifiedTime ?? new Date().toISOString()).toLocaleDateString("ru-RU", { timeZone: "UTC" });
+          const interviewMaterials = manifest.entries?.filter((entry) => entry.role === "interview") ?? [];
+          const interviewDates = interviewMaterials.map((interviewMaterial) => {
+            const dateMatch = interviewMaterial.name.match(/\b(\d{1,2})[.\-_](\d{1,2})(?:[.\-_](\d{2,4}))?\b/);
+            const year = dateMatch?.[3]
+              ? Number(dateMatch[3]) + (Number(dateMatch[3]) < 100 ? 2000 : 0)
+              : new Date(interviewMaterial.modifiedTime).getUTCFullYear();
+            return dateMatch
+              ? `${dateMatch[1].padStart(2, "0")}.${dateMatch[2].padStart(2, "0")}.${year}`
+              : new Date(interviewMaterial.modifiedTime).toLocaleDateString("ru-RU", { timeZone: "UTC" });
+          });
+          const interviewDate = [...new Set(interviewDates)].join(", ") || "Не указана";
           const source = (fact: EvidenceFact) => {
             const locator = fact.locator;
             if (locator.kind === "transcript") {

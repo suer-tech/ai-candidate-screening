@@ -18,9 +18,6 @@ test("ready input reuse remains scoped to the same material shape", () => {
 
 test("incomplete materials expose an actionable HR message", () => {
   assert.equal(materialsIncompleteMessage({
-    entries: [], complete: false, resumeIds: ["resume"], interviewIds: ["first", "second"], ambiguities: ["MULTIPLE_INTERVIEWS"],
-  }), "Найдено несколько источников интервью (2). Оставьте одну запись или одну готовую транскрибацию.");
-  assert.equal(materialsIncompleteMessage({
     entries: [], complete: false, resumeIds: ["resume"], interviewIds: [], ambiguities: [],
   }), "Не найдено интервью. Добавьте одну запись или готовую транскрибацию.");
 });
