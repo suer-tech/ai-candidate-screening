@@ -51,7 +51,11 @@ export type MatrixCompilationResult =
 
 function safeCode(error: unknown) {
   const message = error instanceof Error ? error.message : "MATRIX_COMPILATION_FAILED";
-  return /^[A-Z][A-Z0-9_.:-]*$/.test(message) ? message : "MATRIX_COMPILATION_FAILED";
+  // Capability failures deliberately keep a lowercase machine class after the
+  // colon (for example `LLM_CAPABILITY_FAILED:timeout`).  Preserve that class:
+  // the runtime uses it to distinguish retryable provider failures from an
+  // invalid vacancy matrix.
+  return /^[A-Z][A-Z0-9_.-]*(?::[A-Za-z0-9_.-]+)*$/.test(message) ? message : "MATRIX_COMPILATION_FAILED";
 }
 
 export async function compileVacancyMatrix(input: {

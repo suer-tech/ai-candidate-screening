@@ -1075,8 +1075,11 @@ export async function createProductionCandidateToolExecution(input: { database: 
               },
             };
             const result = await compileVacancyMatrix({ profileVersion, ownerId: runId, canonicalProfile: vacancy, sourceFragments, compilerPolicyVersion: "matrix-compiler-policy/coverage-first-v1", skills, store: matrixRepository,
-              allowRetry: goal.trigger_identity.startsWith("manual-reprocess:") });
-            if (result.state === "WAITING") throw new Error("MATRIX_COMPILATION_WAITING");
+              // A transient compiler/provider failure is retried by the durable
+              // task policy.  The compilation claim must therefore be reclaimable
+              // on that next attempt, not only after a manual reprocess.
+              allowRetry: true });
+            if (result.state === "WAITING") return { deferred: true, retryAfterMs: 15_000, state: result.state };
             if (result.state === "FAILED") throw new Error(result.errorCode);
             const stored = await storeJson("vacancy-matrix-run-ref", operationIdentity, { schemaVersion: "vacancy-matrix-run-ref/v1", matrixId: result.matrixId, checksum: result.checksum, workflowVersion: goal.workflow_version,
               sameModelCritic: result.sameModelCritic, criticFallback: result.criticFallback ?? false,

@@ -1,5 +1,6 @@
 const TRANSIENT_CODES = [
   /(?:^|_)(?:NETWORK|TIMEOUT)(?:_|$)/,
+  /^LLM_CAPABILITY_FAILED:(?:timeout|network|rate_limit|provider_unavailable|invalid_provider_response|invalid_structured_output|missing_structured_output|incomplete_structured_output)$/,
   /_FAILED_(?:429|5\d\d)$/,
   /_HTTP_(?:429|5\d\d)$/,
   /^HTTP_(?:429|5\d\d)$/,
@@ -10,6 +11,7 @@ const MAX_ATTEMPTS_BY_TOOL: Readonly<Record<string, number>> = Object.freeze({
   "candidate.drive-snapshot/v1": 3,
   "candidate.document-extraction/v1": 3,
   "candidate.transcription/v1": 3,
+  "candidate.matrix-compile/v1": 3,
   "candidate.validation/v1": 3,
   "candidate.report/v1": 3,
   "candidate.drive-publication/v1": 3,
@@ -44,6 +46,9 @@ const RUSSIAN_FAILURES: Readonly<Record<string, string>> = Object.freeze({
   GOOGLE_DRIVE_REAUTH_REQUIRED: "Требуется повторно подключить Google Drive",
   "LLM_CAPABILITY_FAILED:timeout": "Модель не успела завершить ответ за отведённое время после разрешённых повторов. Запустите обработку повторно",
   "LLM_CAPABILITY_FAILED:invalid_provider_response": "Модель не вернула корректный ответ после разрешённых повторов. Запустите обработку повторно; если ошибка повторится, обратитесь к администратору",
+  "LLM_CAPABILITY_FAILED:provider_unavailable": "Сервис модели временно недоступен. Система выполнила разрешённые повторы; запустите обработку повторно, если сервис ещё не восстановился",
+  "LLM_CAPABILITY_FAILED:network": "Не удалось получить ответ модели из-за временной сетевой ошибки. Система выполнила разрешённые повторы",
+  "LLM_CAPABILITY_FAILED:rate_limit": "Сервис модели временно ограничил частоту запросов. Система выполнила разрешённые повторы",
 });
 
 export function candidateFailureMessage(errorCode: string) {

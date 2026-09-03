@@ -70,7 +70,7 @@ export type ProductionRuntime = {
     validation?: { validate(): Promise<{ artifactRef: string; checksum?: string }> };
     pdf: { render(): Promise<{ type: "candidate-report"; checksum: string; artifactRef: string }> };
     telegram: { send(value: Record<string, unknown>): Promise<unknown> };
-    matrix?: { execute(toolKey: string, task: Record<string, unknown>): Promise<{ artifactRef: string; checksum?: string; state?: string; [key: string]: unknown }> };
+    matrix?: { execute(toolKey: string, task: Record<string, unknown>): Promise<{ artifactRef?: string; checksum?: string; state?: string; deferred?: boolean; retryAfterMs?: number; [key: string]: unknown }> };
     parallel?: { execute(toolKey: string, task: Record<string, unknown>): Promise<{ artifactRef: string; checksum?: string; state?: string; deferred?: boolean; retryAfterMs?: number; [key: string]: unknown }> };
   };
   record?(kind: string, value?: Record<string, unknown>): void;
@@ -187,6 +187,8 @@ async function executeProductionTool(input: { toolKey: string; task: Record<stri
     if (input.toolKey.startsWith("candidate.matrix-") || ["candidate.evidence-shard/v1", "candidate.row-shard/v1", "candidate.abc-shard/v1", "candidate.assessment-join/v1", "candidate.critical-shard/v1"].includes(input.toolKey)) {
       if (!runtime.adapters.matrix) throw new Error("MATRIX_RUNTIME_NOT_PROVISIONED");
       const result = await runtime.adapters.matrix.execute(input.toolKey, task);
+      if (result.deferred) return { outcome: "RETRY_LATER" as const, errorCode: "MATRIX_COMPILATION_WAITING", retryAfterMs: result.retryAfterMs ?? 15_000 };
+      if (!result.artifactRef) throw new Error("MATRIX_ARTIFACT_REFERENCE_MISSING");
       await stageOperation(() => artifact(repository, result.artifactRef, result.checksum), "MATRIX_ARTIFACT_REFERENCE_FAILED");
       await stageOperation(() => checkpoint(input.toolKey.replace(/^candidate\.|\/v1$/g, ""), result.artifactRef, { state: result.state }), "MATRIX_CHECKPOINT_FAILED");
       return { outcome: "SUCCEEDED" as const, evidence: { ...result } };

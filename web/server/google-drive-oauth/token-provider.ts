@@ -36,7 +36,17 @@ export class DurableGoogleAccessTokenProvider {
       const rotatedEnvelope = result.refreshToken
         ? await encryptSecret(result.refreshToken, connectionTokenAad({ id: connection.id, ownerSubject: connection.ownerSubject, scopes, keyVersion: this.options.keyring.activeVersion }), this.options.keyring)
         : connection.refreshTokenEnvelope;
-      await this.options.repository.updateConnection({ ...connection, scopes, refreshTokenEnvelope: rotatedEnvelope, lastRefreshAt: now, revision: connection.revision + 1 }, connection.revision);
+      try {
+        await this.options.repository.updateConnection({ ...connection, scopes, refreshTokenEnvelope: rotatedEnvelope, lastRefreshAt: now, revision: connection.revision + 1 }, connection.revision);
+      } catch (error) {
+        if (!isConnectionConflict(error)) throw error;
+        // Parallel document/media workers can refresh the same OAuth grant at
+        // the same time.  The access token returned to this worker remains
+        // valid; accept the winning durable update only if it still represents
+        // the same connected Google account.
+        const current = await this.options.repository.getConnection();
+        if (!current || current.id !== connection.id || current.ownerSubject !== connection.ownerSubject || current.state !== "CONNECTED" || !current.refreshTokenEnvelope) throw error;
+      }
       this.cached = { token: result.accessToken, expiresAt: this.now() + result.expiresIn * 1000 };
       return result.accessToken;
     } catch (error) {
@@ -50,4 +60,8 @@ export class DurableGoogleAccessTokenProvider {
       throw error;
     }
   }
+}
+
+function isConnectionConflict(error: unknown) {
+  return error instanceof Error && error.message === "GOOGLE_OAUTH_CONNECTION_CONFLICT";
 }

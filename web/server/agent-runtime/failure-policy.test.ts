@@ -17,3 +17,9 @@ test("LLM terminal failures have a clear Russian message", () => {
   assert.match(candidateFailureMessage("LLM_CAPABILITY_FAILED:timeout"), /Модель не успела завершить ответ/);
   assert.match(candidateFailureMessage("LLM_CAPABILITY_FAILED:invalid_provider_response"), /Модель не вернула корректный ответ/);
 });
+
+test("matrix compiler retries typed transient LLM failures without retrying invalid matrices", () => {
+  assert.deepEqual(taskFailurePolicy("candidate.matrix-compile/v1", "LLM_CAPABILITY_FAILED:provider_unavailable", 1), { retry: true, delayMs: 5_000, maxAttempts: 3 });
+  assert.deepEqual(taskFailurePolicy("candidate.matrix-compile/v1", "LLM_CAPABILITY_FAILED:timeout", 3), { retry: false, delayMs: 0, maxAttempts: 3 });
+  assert.deepEqual(taskFailurePolicy("candidate.matrix-compile/v1", "MATRIX_SOURCE_REF_INVALID", 1), { retry: false, delayMs: 0, maxAttempts: 3 });
+});

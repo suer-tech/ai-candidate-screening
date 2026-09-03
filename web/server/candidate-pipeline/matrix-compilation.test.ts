@@ -63,3 +63,13 @@ test("controlled compilation covers repair-to-pass, provider failure, invalid so
   const waiting = await compileVacancyMatrix({ profileVersion: "profile-v4", ownerId: "run-4", canonicalProfile: {}, sourceFragments: { "profile.one": "Опыт" }, compilerPolicyVersion: "policy-v1", store: waiterStore, skills: { async compile() { throw new Error("unexpected"); }, async critique() { throw new Error("unexpected"); } } });
   assert.deepEqual(waiting, { state: "WAITING", profileVersion: "profile-v4" });
 });
+
+test("compilation preserves typed lowercase LLM failure classes for durable retry", async () => {
+  const store = memoryStore();
+  const result = await compileVacancyMatrix({ profileVersion: "profile-timeout", ownerId: "run-timeout", canonicalProfile: {}, sourceFragments: { "profile.one": "Опыт" }, compilerPolicyVersion: "policy-v1", store, skills: {
+    async compile() { throw new Error("LLM_CAPABILITY_FAILED:timeout"); },
+    async critique() { throw new Error("unexpected"); },
+  } });
+  assert.deepEqual(result, { state: "FAILED", errorCode: "LLM_CAPABILITY_FAILED:timeout" });
+  assert.equal(store.failed, "LLM_CAPABILITY_FAILED:timeout");
+});
