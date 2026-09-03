@@ -70,3 +70,33 @@ test("idle worker periodically recovers expired leases instead of only recoverin
   await worker.start();
   assert.equal(recoveries, 2);
 });
+
+test("graceful stop aborts every concurrently executing Rabbit task", async () => {
+  let started = 0;
+  let releaseStarted!: () => void;
+  const bothStarted = new Promise<void>((resolve) => { releaseStarted = resolve; });
+  const adapter = {
+    operation: "execute",
+    sideEffectClass: "read-only" as const,
+    async execute(_task: unknown, signal: AbortSignal) {
+      started += 1;
+      if (started === 2) releaseStarted();
+      return await new Promise<never>((_resolve, reject) => signal.addEventListener("abort", () => reject(signal.reason), { once: true }));
+    },
+  };
+  const worker = new AgentRuntimeConsumer(
+    { endpoint: "http://runtime.invalid", token: "synthetic-token", workerId: "worker-parallel", pollingMs: 1, heartbeatMs: 1_000, leaseMs: 10_000 },
+    new Map([["candidate.document-shard/v1", adapter]]),
+    async (_input, init) => {
+      const body = JSON.parse(String(init?.body ?? "{}")) as { command?: string };
+      if (body.command === "authorize") return Response.json({ allowed: true, grantId: "grant-parallel" });
+      return Response.json({ accepted: true });
+    },
+  );
+  const task = (id: string) => ({ id, run_id: "run-parallel", lease_token: 1, attemptId: `attempt-${id}`, tool_key: "candidate.document-shard/v1" });
+  const executions = [worker.executeClaimedTask(task("a")), worker.executeClaimedTask(task("b"))];
+  await bothStarted;
+  await worker.stop();
+  const results = await Promise.allSettled(executions);
+  assert.equal(results.filter((result) => result.status === "rejected").length, 2);
+});

@@ -26,6 +26,29 @@ const TOOL_STAGES: Record<string, CandidateToolStageId[]> = {
   "candidate.cleanup-reports/v1": ["archive-delete-and-cleanup"],
   "candidate.cleanup-domain/v1": ["archive-delete-and-cleanup"],
   "candidate.cleanup-tombstone/v1": ["archive-delete-and-cleanup"],
+  "candidate.fanout-documents/v1": ["document-extraction"],
+  "candidate.document-shard/v1": ["document-extraction", "routerai-ocr"],
+  "candidate.document-join/v1": ["document-extraction"],
+  "candidate.fanout-transcripts/v1": ["media-probe-and-audio"],
+  "candidate.transcript-shard/v1": ["media-probe-and-audio", "assemblyai-transcription", "speaker-role-mapping"],
+  "candidate.transcript-normalize-shard/v1": ["speaker-role-mapping"],
+  "candidate.transcript-media-shard/v1": ["media-probe-and-audio"],
+  "candidate.transcript-submit-shard/v1": ["assemblyai-transcription"],
+  "candidate.transcript-collect-shard/v1": ["assemblyai-transcription", "speaker-role-mapping"],
+  "candidate.transcript-join/v1": ["speaker-role-mapping"],
+  "candidate.fanout-evidence/v1": ["criterion-claim-extraction"],
+  "candidate.evidence-shard/v1": ["criterion-claim-extraction"],
+  "candidate.evidence-join/v1": ["global-evidence-graph"],
+  "candidate.fanout-rows/v1": ["matrix-row-evaluation"],
+  "candidate.row-shard/v1": ["matrix-row-evaluation"],
+  "candidate.rows-join/v1": ["matrix-row-evaluation"],
+  "candidate.fanout-abc/v1": ["matrix-row-evaluation"],
+  "candidate.abc-shard/v1": ["matrix-row-evaluation"],
+  "candidate.abc-join/v1": ["matrix-row-evaluation"],
+  "candidate.assessment-join/v1": ["matrix-row-evaluation"],
+  "candidate.fanout-critical/v1": ["critical-row-verification"],
+  "candidate.critical-shard/v1": ["critical-row-verification"],
+  "candidate.critical-join/v1": ["critical-row-verification"],
 };
 
 type ProductionRepository = {
@@ -48,6 +71,7 @@ export type ProductionRuntime = {
     pdf: { render(): Promise<{ type: "candidate-report"; checksum: string; artifactRef: string }> };
     telegram: { send(value: Record<string, unknown>): Promise<unknown> };
     matrix?: { execute(toolKey: string, task: Record<string, unknown>): Promise<{ artifactRef: string; checksum?: string; state?: string; [key: string]: unknown }> };
+    parallel?: { execute(toolKey: string, task: Record<string, unknown>): Promise<{ artifactRef: string; checksum?: string; state?: string; deferred?: boolean; retryAfterMs?: number; [key: string]: unknown }> };
   };
   record?(kind: string, value?: Record<string, unknown>): void;
 };
@@ -55,10 +79,11 @@ export type ProductionRuntime = {
 type ProductionSession = { reports: Array<{ type: string; checksum: string; artifactRef: string }> };
 const productionSessions = new WeakMap<object, ProductionSession>();
 type CandidateToolResult = {
-  outcome: "SUCCEEDED" | "FAILED" | "UNKNOWN_OUTCOME" | "WAITING_FOR_HUMAN";
+  outcome: "SUCCEEDED" | "FAILED" | "UNKNOWN_OUTCOME" | "WAITING_FOR_HUMAN" | "RETRY_LATER";
   errorCode?: string;
   obstacle?: string;
   action?: string;
+  retryAfterMs?: number;
   evidence?: { productionLikeAcceptanceClaimed?: boolean; stages?: CandidateToolStageId[]; [key: string]: unknown };
 };
 
@@ -130,25 +155,36 @@ async function executeProductionTool(input: { toolKey: string; task: Record<stri
       return { outcome: "SUCCEEDED" as const, evidence: { artifactRef: ref, folderId: snapshot.folderId, objectIds: snapshot.objects.map((item) => item.fileId) } };
     }
 
-    if (input.toolKey === "candidate.document-extraction/v1") {
-      const result = await runtime.adapters.routerAI.invoke({ capability: "ocr", taskId, inputVersion: task.inputVersion });
+    if (input.toolKey === "candidate.document-extraction/v1" || input.toolKey === "candidate.document-shard/v1") {
+      const result = await runtime.adapters.routerAI.invoke({ capability: "ocr", taskId, inputVersion: task.inputVersion, shardIdentity: task.shardIdentity, shardPayload: task.shardPayload });
       await artifact(repository, result.artifactRef);
       await checkpoint("document-extraction", result.artifactRef);
       return { outcome: "SUCCEEDED" as const, evidence: { artifactRef: result.artifactRef } };
     }
 
-    if (input.toolKey === "candidate.transcription/v1") {
+    if (input.toolKey === "candidate.transcription/v1" || input.toolKey === "candidate.transcript-shard/v1") {
       const created = await runtime.adapters.assemblyAI.create({ operationIdentity: identity, taskId });
       await checkpoint("provider-job", `provider:assemblyai:${created.remoteJobId}`, { remoteJobId: created.remoteJobId });
       if (task.syntheticFault === "restart-after-provider-create") runtime.record?.("checkpoint:restored", { remoteJobId: created.remoteJobId });
       const polled = await runtime.adapters.assemblyAI.poll(created.remoteJobId);
+      if (polled.status !== "completed") return { outcome: "RETRY_LATER" as const, errorCode: "ASSEMBLYAI_RESULT_PENDING", retryAfterMs: 15_000 };
       const ref = polled.artifactRef ?? `artifact:transcript:${created.remoteJobId}`;
       await artifact(repository, ref);
       await checkpoint("transcript", ref, { remoteJobId: created.remoteJobId });
       return { outcome: "SUCCEEDED" as const, evidence: { artifactRef: ref, remoteJobId: created.remoteJobId } };
     }
 
-    if (input.toolKey.startsWith("candidate.matrix-")) {
+    if (input.toolKey.startsWith("candidate.fanout-") || input.toolKey.endsWith("-join/v1") && input.toolKey !== "candidate.assessment-join/v1"
+      || ["candidate.transcript-normalize-shard/v1", "candidate.transcript-media-shard/v1", "candidate.transcript-submit-shard/v1", "candidate.transcript-collect-shard/v1"].includes(input.toolKey)) {
+      if (!runtime.adapters.parallel) throw new Error("PARALLEL_RUNTIME_NOT_PROVISIONED");
+      const result = await runtime.adapters.parallel.execute(input.toolKey, task);
+      if (result.deferred) return { outcome: "RETRY_LATER" as const, errorCode: "ASSEMBLYAI_RESULT_PENDING", retryAfterMs: result.retryAfterMs ?? 15_000 };
+      await stageOperation(() => artifact(repository, result.artifactRef, result.checksum), "PARALLEL_ARTIFACT_REFERENCE_FAILED");
+      await stageOperation(() => checkpoint(input.toolKey.replace(/^candidate\.|\/v1$/g, ""), result.artifactRef, { state: result.state }), "PARALLEL_CHECKPOINT_FAILED");
+      return { outcome: "SUCCEEDED" as const, evidence: { ...result } };
+    }
+
+    if (input.toolKey.startsWith("candidate.matrix-") || ["candidate.evidence-shard/v1", "candidate.row-shard/v1", "candidate.abc-shard/v1", "candidate.assessment-join/v1", "candidate.critical-shard/v1"].includes(input.toolKey)) {
       if (!runtime.adapters.matrix) throw new Error("MATRIX_RUNTIME_NOT_PROVISIONED");
       const result = await runtime.adapters.matrix.execute(input.toolKey, task);
       await stageOperation(() => artifact(repository, result.artifactRef, result.checksum), "MATRIX_ARTIFACT_REFERENCE_FAILED");

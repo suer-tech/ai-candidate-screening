@@ -63,12 +63,27 @@
     "PostgresAgentRuntimeRepository": {
       "file": "web/server/agent-runtime/postgres-runtime-repository.ts",
       "kind": "class",
-      "summary": "Durable PostgreSQL queue, leases/fencing, checkpoints и matrix-v3 selective recovery по exact workflow/policy и непрерывному artifact-valid prefix."
+      "summary": "Источник истины для task state, transactional Rabbit dispatch outbox, claim-by-ID/version, leases/fencing, fan-out exact join, checkpoints и selective shard recovery."
+    },
+    "RabbitDispatchPublisher": {
+      "file": "web/server/agent-runtime/rabbitmq.ts",
+      "kind": "class",
+      "summary": "Публикует technical-only task envelopes из PostgreSQL dispatch outbox с persistent delivery, publisher confirms и reconnect."
+    },
+    "RabbitTaskWorker": {
+      "file": "web/server/agent-runtime/rabbitmq-worker.ts",
+      "kind": "class",
+      "summary": "Consumer routing-class очередей с manual ack, bounded prefetch, PostgreSQL claim/fencing, fair per-run limit и graceful drain."
+    },
+    "createFanoutDescriptor": {
+      "file": "web/server/agent-runtime/fanout.ts",
+      "kind": "function",
+      "summary": "Создаёт immutable fingerprinted fan-out descriptor, deterministic group/shard identities и canonical exact join."
     },
     "AgentRuntimeConsumer": {
       "file": "web/server/agent-runtime/consumer.ts",
       "kind": "class",
-      "summary": "Постоянный worker с startup recovery, fenced heartbeat и tool dispatch."
+      "summary": "Общий executor PostgreSQL и Rabbit transports с fenced heartbeat, terminal commit и durable RETRY_LATER/defer."
     },
     "DurableAgentRuntime": {
       "file": "web/server/agent-runtime/runtime.ts",

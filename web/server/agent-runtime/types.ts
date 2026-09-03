@@ -19,6 +19,7 @@ export type GoalInput = {
   completionCriteriaVersion: string;
   completionCriteria: string[];
   budgets: BudgetLimits;
+  workflowVersion?: string;
 };
 
 export type PlanTaskTemplate = {

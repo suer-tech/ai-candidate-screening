@@ -5,7 +5,7 @@ import { GoalRegistry, ToolRegistry } from "./registry.ts";
 import { registerCanonicalCandidatePipeline } from "../candidate-pipeline/goal.ts";
 
 export type ToolExecutorConfig = { endpoint: string; token: string; environment: "local" | "staging" | "preproduction" | "production" };
-type ToolExecutorBody = { outcome?: "SUCCEEDED" | "FAILED" | "UNKNOWN_OUTCOME" | "WAITING_FOR_HUMAN"; errorCode?: string; obstacle?: string; action?: string };
+type ToolExecutorBody = { outcome?: "SUCCEEDED" | "FAILED" | "UNKNOWN_OUTCOME" | "WAITING_FOR_HUMAN" | "RETRY_LATER"; errorCode?: string; obstacle?: string; action?: string; retryAfterMs?: number };
 
 export function createHttpToolAdapters(config: ToolExecutorConfig, fetcher?: typeof fetch) {
   const endpoint = validateEndpoint(config.endpoint, config.environment);
@@ -24,7 +24,7 @@ export function createHttpToolAdapters(config: ToolExecutorConfig, fetcher?: typ
             .then((response) => response.json().catch(() => ({})) as Promise<ToolExecutorBody>)
           : await postJsonWithLongResponseTimeout(endpoint, config.token, payload, combinedSignal);
         if (!body.outcome) return { outcome: "FAILED" as const, errorCode: body.errorCode ?? "TOOL_EXECUTOR_RESPONSE_INVALID" };
-        return { outcome: body.outcome, errorCode: body.errorCode, obstacle: body.obstacle, action: body.action };
+        return { outcome: body.outcome, errorCode: body.errorCode, obstacle: body.obstacle, action: body.action, ...(body.retryAfterMs === undefined ? {} : { retryAfterMs: body.retryAfterMs }) };
       } catch (error) {
         return { outcome: "FAILED" as const, errorCode: toolAdapterFailureCode(error, signal) };
       }
@@ -107,5 +107,8 @@ function safeTask(task: ClaimedTask) {
     leaseToken: task.lease_token,
     worker: task.lease_owner,
     attemptId: task.attemptId,
+    ...(task.fanout_group_id ? { fanoutGroupId: task.fanout_group_id } : {}),
+    ...(task.shard_identity ? { shardIdentity: task.shard_identity } : {}),
+    ...(task.shard_payload_json ? { shardPayload: JSON.parse(task.shard_payload_json) as Record<string, unknown> } : {}),
   };
 }

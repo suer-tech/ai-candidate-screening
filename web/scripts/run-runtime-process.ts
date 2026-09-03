@@ -8,6 +8,9 @@ const webRoot = path.resolve(import.meta.dirname, "..");
 const entries: Record<string, string[]> = {
   web: [path.join(webRoot, ".output", "server", "index.mjs")],
   worker: ["--import", "tsx", path.join(webRoot, "server", "agent-runtime", "worker-cli.ts")],
+  "rabbit-worker": ["--import", "tsx", path.join(webRoot, "server", "agent-runtime", "rabbitmq-worker-cli.ts")],
+  "rabbit-publisher": ["--import", "tsx", path.join(webRoot, "server", "agent-runtime", "rabbitmq-publisher-cli.ts")],
+  discovery: ["--import", "tsx", path.join(webRoot, "server", "candidate-pipeline", "discovery-cli.ts")],
   media: ["--import", "tsx", path.join(webRoot, "server", "media-processor", "server.ts")],
   document: ["--import", "tsx", path.join(webRoot, "server", "document-processor", "server.ts")],
   controller: ["--import", "tsx", path.join(webRoot, "server", "e2e-controller", "cli.ts")],
@@ -19,7 +22,7 @@ if (service === "web" && !await import("node:fs/promises").then(({ access }) => 
 }
 
 const configuration = await loadRuntimeConfiguration(webRoot);
-if (["worker", "media", "document"].includes(service ?? "")) await recoverStalePrivateTemp();
+if (["worker", "rabbit-worker", "media", "document"].includes(service ?? "")) await recoverStalePrivateTemp();
 const environment = environmentProjection(configuration);
 const childEnvironment = { ...process.env, ...environment, ...(service === "web" ? { NODE_ENV: "production" } : {}) } as NodeJS.ProcessEnv;
 const child: ChildProcess = spawn(process.execPath, argumentsForService, {

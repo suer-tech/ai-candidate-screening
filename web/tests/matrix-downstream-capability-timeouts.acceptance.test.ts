@@ -19,6 +19,7 @@ test("matrix-v2 heavy pre-row and downstream capabilities use the bounded ten-mi
     credentials: {
       "database-url": "postgresql://synthetic:synthetic@127.0.0.1:5432/synthetic",
       "internal-service-tokens.json": "{}",
+      "rabbitmq-password": "synthetic-rabbit-password",
     },
     root: "/synthetic-config",
   } as never);

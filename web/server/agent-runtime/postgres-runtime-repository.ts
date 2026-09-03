@@ -8,9 +8,41 @@ import type { BudgetKind, BudgetLimits, SideEffectClass } from "./types.ts";
 import { CANDIDATE_ASSESSMENT_PROMPT_ARTIFACT, standardEditablePrompt, type EditablePromptSnapshot } from "../product/prompt-contracts.ts";
 import { candidateFailureMessage, taskFailurePolicy } from "./failure-policy.ts";
 import { COVERAGE_FIRST_WORKFLOW_VERSION, recoveryArtifactPurpose, recoveryArtifactSchema } from "../candidate-pipeline/recovery-contracts.ts";
+import { createRabbitTaskEnvelope, routingClassForTool, type RabbitRoutingClass } from "./rabbitmq-contracts.ts";
+import { fanoutFingerprint, fanoutGroupId, fanoutRecoveryFingerprint, fanoutShardTaskId, type FanoutDescriptor } from "./fanout.ts";
 
 type Row = Record<string, unknown>;
 type TaskRow = { id: string; run_id: string; task_key: string; tool_key: string; state: string; revision: number; attempt_count: number; lease_owner: string | null; lease_token: number; lease_expires_at: number | null; idempotency_identity: string };
+type DispatchableTask = { id: string; run_id: string; revision: number; attempt_count: number; tool_key: string; routing_class?: string };
+
+function operationsForTool(toolKey: string) {
+  if (toolKey === "candidate.drive-snapshot/v1") return ["execute", "list", "download"];
+  if (["candidate.document-extraction/v1", "candidate.document-shard/v1", "candidate.transcription/v1", "candidate.transcript-shard/v1",
+    "candidate.transcript-normalize-shard/v1", "candidate.transcript-media-shard/v1"].includes(toolKey)) return ["execute", "download"];
+  if (toolKey === "candidate.drive-publication/v1") return ["execute", "ensure-folder", "publish", "cleanup"];
+  if (toolKey === "candidate.cleanup-reports/v1") return ["execute", "cleanup"];
+  return ["execute"];
+}
+
+async function enqueueDispatch(transaction: PostgresClient, task: DispatchableTask, availableAt = 0) {
+  const routingClass = routingClassForTool(task.tool_key);
+  await transaction`UPDATE agent_tasks SET routing_class=${routingClass},available_at=${availableAt} WHERE id=${task.id}`;
+  await transaction`INSERT INTO agent_task_dispatch_outbox
+    (id,task_id,run_id,task_version,dispatch_generation,routing_class,state,available_at,created_at)
+    VALUES (${`${task.id}:dispatch:${task.revision}`},${task.id},${task.run_id},${task.revision},${task.revision},${routingClass},'PENDING',${availableAt},${new Date().toISOString()})
+    ON CONFLICT (task_id,task_version,dispatch_generation) DO NOTHING`;
+}
+
+async function promoteEligible(transaction: PostgresClient, runId: string) {
+  const rows = await transaction<DispatchableTask[]>`UPDATE agent_tasks task SET state='RUNNABLE',revision=revision+1,available_at=0 WHERE task.run_id=${runId} AND task.state='PENDING'
+    AND NOT EXISTS (SELECT 1 FROM agent_task_dependencies dep JOIN agent_tasks required ON required.id=dep.depends_on_task_id WHERE dep.task_id=task.id AND
+      CASE WHEN EXISTS (SELECT 1 FROM agent_fanout_groups fanout WHERE fanout.join_task_id=task.id)
+        THEN required.state NOT IN ('SUCCEEDED','FAILED','CANCELLED','UNKNOWN_OUTCOME')
+        ELSE required.state<>dep.required_outcome END)
+    RETURNING task.id,task.run_id,task.revision,task.attempt_count,task.tool_key,task.routing_class`;
+  for (const row of rows) await enqueueDispatch(transaction, row);
+  return rows;
+}
 
 export class PostgresAgentRuntimeRepository {
   private readonly sql: PostgresClient;
@@ -85,10 +117,12 @@ export class PostgresAgentRuntimeRepository {
           const initialState = reusedFrom ? "SUCCEEDED" : sourceRun
             ? task.key === recoveryBoundaryKey ? "RUNNABLE" : "PENDING"
             : task.dependencies.length === 0 || dependenciesReused ? "RUNNABLE" : "PENDING";
-          const operations = task.tool === "candidate.drive-snapshot/v1" ? ["execute","list","download"] : ["candidate.document-extraction/v1","candidate.transcription/v1"].includes(task.tool) ? ["execute","download"] : task.tool === "candidate.drive-publication/v1" ? ["execute","ensure-folder","publish","cleanup"] : task.tool === "candidate.cleanup-reports/v1" ? ["execute","cleanup"] : ["execute"];
-          await transaction`INSERT INTO agent_tasks (id,run_id,plan_version_id,task_key,tool_key,state,revision,attempt_count,lease_token,idempotency_identity,preconditions_json,expected_outputs_json,reused_from_task_id) VALUES (${id},${input.runId},${planId},${task.key},${task.tool},${initialState},1,0,0,${`${input.runId}:plan:1:${task.key}`},${JSON.stringify(task.dependencies)},${JSON.stringify(task.expectedOutputs)},${reusedFrom?.id ?? null})`;
+          const operations = operationsForTool(task.tool);
+          const routingClass = routingClassForTool(task.tool);
+          await transaction`INSERT INTO agent_tasks (id,run_id,plan_version_id,task_key,tool_key,state,revision,attempt_count,lease_token,idempotency_identity,preconditions_json,expected_outputs_json,routing_class,available_at,reused_from_task_id) VALUES (${id},${input.runId},${planId},${task.key},${task.tool},${initialState},1,0,0,${`${input.runId}:plan:1:${task.key}`},${JSON.stringify(task.dependencies)},${JSON.stringify(task.expectedOutputs)},${routingClass},0,${reusedFrom?.id ?? null})`;
           for (const dependency of task.dependencies) await transaction`INSERT INTO agent_task_dependencies (task_id,depends_on_task_id,required_outcome) VALUES (${id},${taskId(dependency)},'SUCCEEDED')`;
           await transaction`INSERT INTO agent_tool_grants (id,task_id,candidate_id,run_id,input_version,policy_version,tool_key,operations_json,side_effect_class,budget_link,expires_at) VALUES (${`${id}:grant:execute`},${id},${input.candidateId},${input.runId},${input.inputVersion},${input.policyVersion},${task.tool},${JSON.stringify(operations)},${definition.sideEffectClass},${`${input.runId}:budget:externalRequests`},${grantExpiresAt})`;
+          if (initialState === "RUNNABLE") await enqueueDispatch(transaction, { id, run_id: input.runId, revision: 1, attempt_count: 0, tool_key: task.tool, routing_class: routingClass });
         }
         for (const [kind, limit] of Object.entries(input.budgets) as [BudgetKind, number][]) await transaction`INSERT INTO agent_budget_ledger (id,run_id,kind,limit_value,used_value,revision) VALUES (${`${input.runId}:budget:${kind}`},${input.runId},${kind},${limit},0,1)`;
         await transaction`INSERT INTO agent_events (id,run_id,sequence,event_identity,type,actor,plan_version,safe_payload_json,created_at) VALUES (${randomUUID()},${input.runId},1,${sourceRun ? `run-recovery-created:${input.runId}` : goalCreated ? `goal-created:${goalId}` : `run-created:${input.triggerIdentity}`},${sourceRun ? 'RUN_RECOVERY_CREATED' : goalCreated ? 'GOAL_CREATED' : 'RUN_CREATED'},'runtime',1,${JSON.stringify({ goalType: input.goalType, workflowVersion, inputVersion: input.inputVersion, profileVersion: input.profileVersion, policyVersion: input.policyVersion, goalReused: !goalCreated, recoverySourceRunId: sourceRun?.id, reusedTaskKeys: [...reusableTasks.keys()] })},${createdAt})`;
@@ -116,14 +150,128 @@ export class PostgresAgentRuntimeRepository {
     });
   }
   async promote(runId: string) {
-    const rows = await this.sql<{ id: string }[]>`UPDATE agent_tasks task SET state='RUNNABLE',revision=revision+1 WHERE task.run_id=${runId} AND task.state='PENDING'
-      AND NOT EXISTS (SELECT 1 FROM agent_task_dependencies dep JOIN agent_tasks required ON required.id=dep.depends_on_task_id WHERE dep.task_id=task.id AND required.state<>dep.required_outcome) RETURNING task.id`;
+    const rows = await withTransaction(this.sql, (transaction) => promoteEligible(transaction, runId));
     return rows.map((row) => row.id);
+  }
+  async materializeFanout(input: { coordinatorTaskId: string; joinTaskId: string; descriptor: FanoutDescriptor; shardToolKey: string; expectedOutputs: string[] }) {
+    const descriptorFingerprint = fanoutFingerprint(input.descriptor);
+    const groupId = fanoutGroupId(input.descriptor);
+    return withTransaction(this.sql, async (transaction) => {
+      const coordinators = await transaction<(Row & { run_id: string; plan_version_id: string; candidate_id: number; input_version: string; policy_version: string; wall_time_ms: number; goal_id: string; recovery_source_run_id: string | null })[]>`SELECT task.run_id,task.plan_version_id,task.state,task.lease_owner,task.lease_token,
+          run.current_plan_version,run.goal_id,run.recovery_source_run_id,goal.candidate_id,goal.input_version,goal.policy_version,
+          budget.limit_value AS wall_time_ms
+        FROM agent_tasks task JOIN agent_runs run ON run.id=task.run_id AND run.state='ACTIVE'
+        JOIN agent_goals goal ON goal.id=run.goal_id
+        JOIN agent_budget_ledger budget ON budget.run_id=run.id AND budget.kind='wallTimeMs'
+        WHERE task.id=${input.coordinatorTaskId} FOR UPDATE`;
+      const coordinator = coordinators[0];
+      if (!coordinator || coordinator.state !== "RUNNING" || coordinator.run_id !== input.descriptor.runId) throw new RuntimeConflictError("FANOUT_COORDINATOR_NOT_RUNNING");
+      if (Number(coordinator.current_plan_version) !== input.descriptor.planVersion) throw new RuntimeConflictError("FANOUT_PLAN_VERSION_STALE");
+      const joins = await transaction<{ id: string; run_id: string; plan_version_id: string; state: string }[]>`SELECT id,run_id,plan_version_id,state FROM agent_tasks WHERE id=${input.joinTaskId} FOR UPDATE`;
+      const join = joins[0];
+      if (!join || join.run_id !== coordinator.run_id || join.plan_version_id !== coordinator.plan_version_id || !["PENDING", "RUNNABLE"].includes(join.state)) throw new RuntimeConflictError("FANOUT_JOIN_SCOPE_INVALID");
+      const existing = await transaction<{ id: string; descriptor_fingerprint: string; expected_count: number }[]>`SELECT id,descriptor_fingerprint,expected_count FROM agent_fanout_groups WHERE run_id=${coordinator.run_id} AND plan_version_id=${coordinator.plan_version_id} AND group_key=${input.descriptor.groupKey} FOR UPDATE`;
+      if (existing[0]) {
+        if (existing[0].id !== groupId || existing[0].descriptor_fingerprint !== descriptorFingerprint || existing[0].expected_count !== input.descriptor.shards.length) throw new RuntimeConflictError("FANOUT_DESCRIPTOR_STALE");
+        return { groupId, created: false, shardTaskIds: input.descriptor.shards.map((shard) => fanoutShardTaskId(groupId, shard.identity)) };
+      }
+      const registries = createSyntheticRegistries(); registerCanonicalCandidatePipeline(registries.tools, registries.goals);
+      const createdAt = new Date().toISOString();
+      await transaction`INSERT INTO agent_fanout_groups (id,run_id,plan_version_id,group_key,kind,descriptor_json,descriptor_fingerprint,expected_count,join_task_id,state,created_at)
+        VALUES (${groupId},${coordinator.run_id},${coordinator.plan_version_id},${input.descriptor.groupKey},${input.descriptor.kind},${JSON.stringify(input.descriptor)},${descriptorFingerprint},${input.descriptor.shards.length},${input.joinTaskId},'PLANNED',${createdAt})`;
+      const shardTaskIds: string[] = [];
+      const taskIdsByIdentity = new Map(input.descriptor.shards.map((shard) => [shard.identity, fanoutShardTaskId(groupId, shard.identity)]));
+      for (const shard of input.descriptor.shards) {
+        const shardTaskId = fanoutShardTaskId(groupId, shard.identity); shardTaskIds.push(shardTaskId);
+        const shardToolKey = shard.toolKey ?? input.shardToolKey;
+        const definition = registries.tools.get(shardToolKey);
+        const taskKey = `${input.descriptor.groupKey}:shard:${String(shard.ordinal).padStart(4, "0")}`;
+        const route = routingClassForTool(shardToolKey);
+        if (route === "control") throw new RuntimeConflictError("FANOUT_SHARD_ROUTE_INVALID");
+        const [reuseCandidate] = coordinator.recovery_source_run_id ? await transaction<{ id: string; output_artifact_id: string; descriptor_json: string; schema_version: string; checksum: string }[]>`SELECT task.id,task.output_artifact_id,fanout.descriptor_json,ref.schema_version,ref.checksum
+          FROM agent_tasks task
+          JOIN agent_fanout_groups fanout ON fanout.id=task.fanout_group_id
+          JOIN agent_memory_entries memory ON memory.run_id=task.run_id AND memory.provenance=task.tool_key
+            AND memory.input_version=${input.descriptor.inputFingerprint} AND memory.profile_version=${input.descriptor.profileFingerprint}
+          JOIN agent_artifact_refs ref ON ref.memory_entry_id=memory.id AND ref.storage_identity=task.output_artifact_id
+          WHERE task.run_id=${coordinator.recovery_source_run_id} AND task.tool_key=${shardToolKey} AND task.shard_identity=${shard.identity}
+            AND task.state='SUCCEEDED' AND task.output_artifact_id IS NOT NULL AND ref.checksum<>''
+          ORDER BY memory.id LIMIT 1` : [];
+        const expectedRecoverySchema = recoveryArtifactSchema(input.descriptor.workflowVersion, shardToolKey);
+        const reusable = reuseCandidate
+          && expectedRecoverySchema === reuseCandidate.schema_version
+          && fanoutRecoveryFingerprint(JSON.parse(reuseCandidate.descriptor_json) as FanoutDescriptor) === fanoutRecoveryFingerprint(input.descriptor)
+          ? reuseCandidate : undefined;
+        const shardState = reusable ? "SUCCEEDED" : "PENDING";
+        await transaction`INSERT INTO agent_tasks (id,run_id,plan_version_id,task_key,tool_key,state,revision,attempt_count,lease_token,idempotency_identity,preconditions_json,expected_outputs_json,routing_class,available_at,fanout_group_id,shard_identity,shard_payload_json)
+          VALUES (${shardTaskId},${coordinator.run_id},${coordinator.plan_version_id},${taskKey},${shardToolKey},${shardState},1,0,0,${`${coordinator.run_id}:${groupId}:${shard.identity}`},${JSON.stringify([input.coordinatorTaskId, ...(shard.dependsOn ?? []).map((identity) => taskIdsByIdentity.get(identity))])},${JSON.stringify(input.expectedOutputs)},${route},0,${groupId},${shard.identity},${JSON.stringify(shard.payload ?? {})})
+          ON CONFLICT (id) DO NOTHING`;
+        if (reusable) {
+          await transaction`UPDATE agent_tasks SET reused_from_task_id=${reusable.id},output_artifact_id=${reusable.output_artifact_id} WHERE id=${shardTaskId}`;
+          const memoryId = `${shardTaskId}:reused-artifact`; const refId = `${memoryId}:ref`;
+          await transaction`INSERT INTO agent_memory_entries (id,goal_id,run_id,candidate_id,input_version,profile_version,kind,provenance,sensitivity,purpose,payload_json,immutable)
+            SELECT ${memoryId},${String(coordinator.goal_id)},${coordinator.run_id},candidate_id,input_version,profile_version,kind,provenance,sensitivity,${recoveryArtifactPurpose(input.descriptor.workflowVersion)},payload_json,true
+            FROM agent_memory_entries memory JOIN agent_artifact_refs ref ON ref.memory_entry_id=memory.id
+            WHERE memory.run_id=${coordinator.recovery_source_run_id} AND memory.provenance=${shardToolKey} AND ref.storage_identity=${reusable.output_artifact_id} LIMIT 1 ON CONFLICT DO NOTHING`;
+          await transaction`INSERT INTO agent_artifact_refs (id,memory_entry_id,storage_class,storage_identity,checksum,schema_version)
+            SELECT ${refId},${memoryId},ref.storage_class,ref.storage_identity,ref.checksum,ref.schema_version FROM agent_artifact_refs ref
+            WHERE ref.storage_identity=${reusable.output_artifact_id}
+              AND EXISTS (SELECT 1 FROM agent_memory_entries memory WHERE memory.id=${memoryId})
+            LIMIT 1 ON CONFLICT DO NOTHING`;
+        }
+        await transaction`INSERT INTO agent_task_dependencies (task_id,depends_on_task_id,required_outcome) VALUES (${shardTaskId},${input.coordinatorTaskId},'SUCCEEDED') ON CONFLICT DO NOTHING`;
+        await transaction`INSERT INTO agent_task_dependencies (task_id,depends_on_task_id,required_outcome) VALUES (${input.joinTaskId},${shardTaskId},'SUCCEEDED') ON CONFLICT DO NOTHING`;
+        await transaction`INSERT INTO agent_fanout_members (group_id,shard_task_id,shard_identity,ordinal,required) VALUES (${groupId},${shardTaskId},${shard.identity},${shard.ordinal},${shard.required !== false}) ON CONFLICT DO NOTHING`;
+        await transaction`INSERT INTO agent_tool_grants (id,task_id,candidate_id,run_id,input_version,policy_version,tool_key,operations_json,side_effect_class,budget_link,expires_at)
+          VALUES (${`${shardTaskId}:grant:execute`},${shardTaskId},${Number(coordinator.candidate_id)},${coordinator.run_id},${String(coordinator.input_version)},${String(coordinator.policy_version)},${shardToolKey},${JSON.stringify(operationsForTool(shardToolKey))},${definition.sideEffectClass},${`${coordinator.run_id}:budget:externalRequests`},${Date.now() + Number(coordinator.wall_time_ms)}) ON CONFLICT DO NOTHING`;
+      }
+      for (const shard of input.descriptor.shards) for (const dependencyIdentity of shard.dependsOn ?? []) {
+        const shardTaskId = taskIdsByIdentity.get(shard.identity);
+        const dependencyTaskId = taskIdsByIdentity.get(dependencyIdentity);
+        if (!shardTaskId || !dependencyTaskId) throw new RuntimeConflictError("FANOUT_SHARD_DEPENDENCY_UNKNOWN");
+        await transaction`INSERT INTO agent_task_dependencies (task_id,depends_on_task_id,required_outcome) VALUES (${shardTaskId},${dependencyTaskId},'SUCCEEDED') ON CONFLICT DO NOTHING`;
+      }
+      return { groupId, created: true, shardTaskIds };
+    });
+  }
+  async readFanout(input: { joinTaskId: string; groupKey: string }) {
+    const groups = await this.sql<{ id: string; descriptor_json: string; expected_count: number }[]>`SELECT group_record.id,group_record.descriptor_json,group_record.expected_count
+      FROM agent_fanout_groups group_record JOIN agent_tasks join_task ON join_task.id=group_record.join_task_id
+      WHERE group_record.join_task_id=${input.joinTaskId} AND group_record.group_key=${input.groupKey} AND join_task.run_id=group_record.run_id`;
+    const group = groups[0]; if (!group) throw new RuntimeConflictError("FANOUT_GROUP_NOT_FOUND");
+    const members = await this.sql<{ shard_identity: string; ordinal: number; required: boolean; task_id: string; state: string; tool_key: string; output_artifact_id: string | null; shard_payload_json: string; schema_version: string | null; checksum: string | null }[]>`SELECT member.shard_identity,member.ordinal,member.required,task.id AS task_id,task.state,task.tool_key,task.output_artifact_id,task.shard_payload_json,
+        (SELECT ref.schema_version FROM agent_memory_entries memory JOIN agent_artifact_refs ref ON ref.memory_entry_id=memory.id
+          WHERE memory.run_id=task.run_id AND memory.provenance=task.tool_key AND ref.storage_identity=task.output_artifact_id LIMIT 1) AS schema_version,
+        (SELECT ref.checksum FROM agent_memory_entries memory JOIN agent_artifact_refs ref ON ref.memory_entry_id=memory.id
+          WHERE memory.run_id=task.run_id AND memory.provenance=task.tool_key AND ref.storage_identity=task.output_artifact_id LIMIT 1) AS checksum
+      FROM agent_fanout_members member JOIN agent_tasks task ON task.id=member.shard_task_id WHERE member.group_id=${group.id} ORDER BY member.ordinal`;
+    if (members.length !== group.expected_count) throw new RuntimeConflictError("FANOUT_MEMBERSHIP_INCOMPLETE");
+    const failed = members.find((member) => member.required && ["FAILED", "CANCELLED", "UNKNOWN_OUTCOME"].includes(member.state));
+    if (failed) throw new RuntimeConflictError(`FANOUT_REQUIRED_SHARD_FAILED:${failed.shard_identity}`);
+    const pending = members.find((member) => member.required && member.state !== "SUCCEEDED");
+    if (pending) throw new RuntimeConflictError(`FANOUT_REQUIRED_SHARD_NOT_TERMINAL:${pending.shard_identity}`);
+    const descriptor = JSON.parse(group.descriptor_json) as FanoutDescriptor;
+    for (const member of members.filter((item) => item.state === "SUCCEEDED")) {
+      const expectedSchema = recoveryArtifactSchema(descriptor.workflowVersion, member.tool_key);
+      if (!member.output_artifact_id || !member.checksum || !expectedSchema || member.schema_version !== expectedSchema) {
+        throw new RuntimeConflictError(`FANOUT_SHARD_ARTIFACT_INVALID:${member.shard_identity}`);
+      }
+    }
+    return { groupId: group.id, descriptor, members: members.map((member) => ({ ...member, payload: JSON.parse(member.shard_payload_json) as Record<string, unknown> })) };
+  }
+  async completeFanout(groupId: string) {
+    const rows = await this.sql`UPDATE agent_fanout_groups SET state='SUCCEEDED',completed_at=${new Date().toISOString()} WHERE id=${groupId}
+      AND NOT EXISTS (SELECT 1 FROM agent_fanout_members member JOIN agent_tasks task ON task.id=member.shard_task_id WHERE member.group_id=${groupId} AND member.required AND task.state<>'SUCCEEDED') RETURNING id`;
+    if (!rows.length) throw new RuntimeConflictError("FANOUT_NOT_COMPLETE");
   }
   async claim(input: { worker: string; now: number; leaseMs: number }) {
     return withTransaction(this.sql, async (transaction) => {
       const rows = await transaction<(TaskRow & Row)[]>`SELECT t.*,g.candidate_id,g.input_version,g.profile_version,g.policy_version FROM agent_tasks t JOIN agent_runs r ON r.id=t.run_id JOIN agent_goals g ON g.id=r.goal_id
-        WHERE t.state='RUNNABLE' AND r.state='ACTIVE' AND COALESCE(t.lease_expires_at,0)<=${input.now}
+        WHERE t.state='RUNNABLE' AND r.state='ACTIVE' AND t.available_at<=${input.now} AND COALESCE(t.lease_expires_at,0)<=${input.now}
+          AND NOT EXISTS (SELECT 1 FROM agent_task_dependencies dep JOIN agent_tasks required ON required.id=dep.depends_on_task_id WHERE dep.task_id=t.id AND
+            CASE WHEN EXISTS (SELECT 1 FROM agent_fanout_groups fanout WHERE fanout.join_task_id=t.id)
+              THEN required.state NOT IN ('SUCCEEDED','FAILED','CANCELLED','UNKNOWN_OUTCOME')
+              ELSE required.state<>dep.required_outcome END)
           AND EXISTS (SELECT 1 FROM agent_budget_ledger b WHERE b.run_id=t.run_id AND b.kind='taskAttempts' AND b.used_value<b.limit_value) ORDER BY t.id FOR UPDATE SKIP LOCKED LIMIT 1`;
       const candidate = rows[0]; if (!candidate) return null;
       const nextToken = candidate.lease_token + 1; const nextAttempt = candidate.attempt_count + 1; const attemptId = randomUUID();
@@ -133,10 +281,58 @@ export class PostgresAgentRuntimeRepository {
       return { ...candidate, state: "RUNNING", revision: candidate.revision + 1, attempt_count: nextAttempt, lease_owner: input.worker, lease_token: nextToken, lease_expires_at: input.now + input.leaseMs, attemptId };
     });
   }
+  async claimById(input: { taskId: string; taskVersion: number; routingClass: RabbitRoutingClass; worker: string; now: number; leaseMs: number; maxPerRun?: number; maxActivePool?: number }) {
+    return withTransaction(this.sql, async (transaction) => {
+      await transaction`SELECT pg_advisory_xact_lock(hashtext(${`rabbit-claim-pool:${input.routingClass}`}))`;
+      const rows = await transaction<(TaskRow & Row & { routing_class: string })[]>`SELECT t.*,g.candidate_id,g.input_version,g.profile_version,g.policy_version FROM agent_tasks t JOIN agent_runs r ON r.id=t.run_id JOIN agent_goals g ON g.id=r.goal_id
+        WHERE t.id=${input.taskId} AND t.revision=${input.taskVersion} AND t.routing_class=${input.routingClass}
+          AND t.state='RUNNABLE' AND r.state='ACTIVE' AND t.available_at<=${input.now} AND COALESCE(t.lease_expires_at,0)<=${input.now}
+          AND NOT EXISTS (SELECT 1 FROM agent_task_dependencies dep JOIN agent_tasks required ON required.id=dep.depends_on_task_id WHERE dep.task_id=t.id AND
+            CASE WHEN EXISTS (SELECT 1 FROM agent_fanout_groups fanout WHERE fanout.join_task_id=t.id)
+              THEN required.state NOT IN ('SUCCEEDED','FAILED','CANCELLED','UNKNOWN_OUTCOME')
+              ELSE required.state<>dep.required_outcome END)
+          AND (SELECT count(*) FROM agent_tasks active WHERE active.run_id=t.run_id AND active.routing_class=t.routing_class AND active.state='RUNNING')<${input.maxPerRun ?? 2}
+          AND (SELECT count(*) FROM agent_tasks active WHERE active.routing_class=t.routing_class AND active.state='RUNNING')<${input.maxActivePool ?? 1000}
+          AND EXISTS (SELECT 1 FROM agent_budget_ledger b WHERE b.run_id=t.run_id AND b.kind='taskAttempts' AND b.used_value<b.limit_value)
+        FOR UPDATE SKIP LOCKED`;
+      const candidate = rows[0];
+      if (!candidate) {
+        const [deferred] = await transaction<{ state: string; revision: number; routing_class: string; available_at: number; active_count: number; pool_active_count: number; dependency_blocked: boolean }[]>`SELECT task.state,task.revision,task.routing_class,task.available_at,
+          (SELECT count(*)::integer FROM agent_tasks active WHERE active.run_id=task.run_id AND active.routing_class=task.routing_class AND active.state='RUNNING') AS active_count
+          ,(SELECT count(*)::integer FROM agent_tasks active WHERE active.routing_class=task.routing_class AND active.state='RUNNING') AS pool_active_count
+          ,EXISTS (SELECT 1 FROM agent_task_dependencies dep JOIN agent_tasks required ON required.id=dep.depends_on_task_id WHERE dep.task_id=task.id AND
+            CASE WHEN EXISTS (SELECT 1 FROM agent_fanout_groups fanout WHERE fanout.join_task_id=task.id)
+              THEN required.state NOT IN ('SUCCEEDED','FAILED','CANCELLED','UNKNOWN_OUTCOME') ELSE required.state<>dep.required_outcome END) AS dependency_blocked
+          FROM agent_tasks task JOIN agent_runs run ON run.id=task.run_id WHERE task.id=${input.taskId} AND run.state='ACTIVE'`;
+        if (deferred?.state === "RUNNABLE" && deferred.revision === input.taskVersion && deferred.routing_class === input.routingClass && deferred.active_count >= (input.maxPerRun ?? 2)) throw new RuntimeConflictError("RABBIT_RUN_CONCURRENCY_LIMIT");
+        if (deferred?.state === "RUNNABLE" && deferred.revision === input.taskVersion && deferred.routing_class === input.routingClass && deferred.pool_active_count >= (input.maxActivePool ?? 1000)) throw new RuntimeConflictError("RABBIT_POOL_CONCURRENCY_LIMIT");
+        if (deferred?.state === "RUNNABLE" && deferred.revision === input.taskVersion && deferred.routing_class === input.routingClass && deferred.dependency_blocked) throw new RuntimeConflictError("RABBIT_DEPENDENCY_NOT_READY");
+        if (deferred?.state === "RUNNABLE" && deferred.revision === input.taskVersion && deferred.routing_class === input.routingClass && deferred.available_at > input.now) throw new RuntimeConflictError("RABBIT_TASK_NOT_YET_AVAILABLE");
+        return null;
+      }
+      if (routingClassForTool(candidate.tool_key) !== input.routingClass) throw new RuntimeConflictError("RABBIT_TASK_ROUTE_MISMATCH");
+      const nextToken = candidate.lease_token + 1;
+      const nextAttempt = candidate.attempt_count + 1;
+      const attemptId = randomUUID();
+      const updated = await transaction`UPDATE agent_tasks SET state='RUNNING',revision=revision+1,attempt_count=${nextAttempt},lease_owner=${input.worker},lease_token=${nextToken},lease_expires_at=${input.now + input.leaseMs} WHERE id=${candidate.id} AND state='RUNNABLE' AND revision=${input.taskVersion} RETURNING id`;
+      if (!updated.length) return null;
+      const budget = await transaction`UPDATE agent_budget_ledger SET used_value=used_value+1,revision=revision+1 WHERE run_id=${candidate.run_id} AND kind='taskAttempts' AND used_value<limit_value RETURNING id`;
+      if (!budget.length) throw new RuntimeConflictError("BUDGET_EXHAUSTED:taskAttempts");
+      await transaction`INSERT INTO agent_attempts (id,task_id,attempt_number,lease_owner,lease_token,state,started_at) VALUES (${attemptId},${candidate.id},${nextAttempt},${input.worker},${nextToken},'RUNNING',${new Date(input.now).toISOString()})`;
+      if (candidate.fanout_group_id) await transaction`UPDATE agent_fanout_groups SET state='RUNNING' WHERE id=${String(candidate.fanout_group_id)} AND state='PLANNED'`;
+      const sequence = await this.nextSequence(String(candidate.run_id), transaction);
+      await transaction`INSERT INTO agent_events (id,run_id,sequence,event_identity,type,actor,plan_version,task_id,safe_payload_json,created_at)
+        VALUES (${randomUUID()},${String(candidate.run_id)},${sequence},${`rabbit-task-started:${attemptId}`},'RABBIT_TASK_STARTED','runtime',
+          (SELECT current_plan_version FROM agent_runs WHERE id=${String(candidate.run_id)}),${candidate.id},
+          ${JSON.stringify({ workerId: input.worker, routingClass: input.routingClass, fanoutGroupId: candidate.fanout_group_id ?? null, shardIdentity: candidate.shard_identity ?? null })},${new Date(input.now).toISOString()})`;
+      return { ...candidate, state: "RUNNING", revision: input.taskVersion + 1, attempt_count: nextAttempt, lease_owner: input.worker, lease_token: nextToken, lease_expires_at: input.now + input.leaseMs, attemptId };
+    });
+  }
   async heartbeat(input: { taskId: string; worker: string; leaseToken: number; now: number; leaseMs: number }) { const rows = await this.sql`UPDATE agent_tasks SET lease_expires_at=${input.now + input.leaseMs},revision=revision+1 WHERE id=${input.taskId} AND state='RUNNING' AND lease_owner=${input.worker} AND lease_token=${input.leaseToken} RETURNING id`; if (!rows.length) throw new RuntimeConflictError("STALE_LEASE_TOKEN"); }
   async checkpoint(input: { attemptId: string; taskId: string; worker: string; leaseToken: number; kind: string; identity: string; remoteJobId?: string; artifactIdentity?: string; checksum?: string }) {
     const task = await this.sql`SELECT id FROM agent_tasks WHERE id=${input.taskId} AND state='RUNNING' AND lease_owner=${input.worker} AND lease_token=${input.leaseToken}`; if (!task.length) throw new RuntimeConflictError("STALE_LEASE_TOKEN");
     await this.sql`INSERT INTO agent_checkpoints (id,attempt_id,lease_token,kind,identity,remote_job_id,artifact_identity,checksum,created_at) VALUES (${randomUUID()},${input.attemptId},${input.leaseToken},${input.kind},${input.identity},${input.remoteJobId ?? null},${input.artifactIdentity ?? null},${input.checksum ?? null},${new Date().toISOString()}) ON CONFLICT (attempt_id,kind,identity) DO NOTHING`;
+    if (input.artifactIdentity) await this.sql`UPDATE agent_tasks SET output_artifact_id=${input.artifactIdentity} WHERE id=${input.taskId} AND state='RUNNING' AND lease_owner=${input.worker} AND lease_token=${input.leaseToken}`;
   }
   async prepareExternalEffect(input: { taskId: string; attemptId: string; worker: string; leaseToken: number; grantId: string; operation: string; operationIdentity: string; sideEffectClass: SideEffectClass; now: number }) {
     return withTransaction(this.sql, async (transaction) => {
@@ -185,34 +381,64 @@ export class PostgresAgentRuntimeRepository {
       const updated = await transaction`UPDATE agent_escalations SET state='RESOLVED',version=version+1 WHERE id=${String(row.escalation_id)} AND state='OPEN' AND version=${Number(row.version)} RETURNING id`; if (!updated.length) return;
       await transaction`UPDATE agent_runs SET state='ACTIVE',revision=revision+1,last_progress_at=${now} WHERE id=${String(row.run_id)} AND state='WAITING_FOR_HUMAN' AND revision=${Number(row.run_revision)}`;
       await transaction`UPDATE agent_goals SET state='ACTIVE',revision=revision+1 WHERE id=${String(row.goal_id)} AND state='WAITING_FOR_HUMAN'`;
-      await transaction`UPDATE agent_tasks SET state=CASE WHEN EXISTS (SELECT 1 FROM agent_outbox outbox WHERE outbox.run_id=agent_tasks.run_id AND outbox.operation_identity=agent_tasks.idempotency_identity AND outbox.state='UNKNOWN_OUTCOME') THEN 'UNKNOWN_OUTCOME' ELSE 'RUNNABLE' END,revision=revision+1 WHERE run_id=${String(row.run_id)} AND state='WAITING'`;
+      const resumedTasks = await transaction<(DispatchableTask & { state: string })[]>`UPDATE agent_tasks SET state=CASE WHEN EXISTS (SELECT 1 FROM agent_outbox outbox WHERE outbox.run_id=agent_tasks.run_id AND outbox.operation_identity=agent_tasks.idempotency_identity AND outbox.state='UNKNOWN_OUTCOME') THEN 'UNKNOWN_OUTCOME' ELSE 'RUNNABLE' END,revision=revision+1 WHERE run_id=${String(row.run_id)} AND state='WAITING' RETURNING id,run_id,revision,attempt_count,tool_key,routing_class,state`;
+      for (const resumedTask of resumedTasks) if (resumedTask.state === "RUNNABLE") await enqueueDispatch(transaction, resumedTask);
       await transaction`INSERT INTO agent_events (id,run_id,sequence,event_identity,type,actor,plan_version,safe_payload_json,created_at) VALUES (${randomUUID()},${String(row.run_id)},${sequence},${`google-drive-reconnected:${String(row.escalation_id)}:${Number(row.version)}`},'GOOGLE_DRIVE_OAUTH_RECONNECTED','oauth',${Number(row.current_plan_version)},${JSON.stringify({ connectionId: input.connectionId, ownerSubjectVerified: Boolean(input.ownerSubject) })},${now})`;
       await transaction`INSERT INTO agent_events (id,run_id,sequence,event_identity,type,actor,plan_version,safe_payload_json,created_at) VALUES (${randomUUID()},${String(row.run_id)},${sequence + 1},${`drive-resume:${String(row.escalation_id)}:${Number(row.version)}`},'DRIVE_RESUME_PUBLISHED','runtime',${Number(row.current_plan_version)},${JSON.stringify({ escalationId: row.escalation_id })},${now})`;
       await transaction`UPDATE candidates SET revision=revision+1,record_json=((record_json::jsonb || jsonb_build_object('status','ANALYZING','escalation',NULL))::text) WHERE id=${Number(row.candidate_id)}`; resumedRunIds.push(String(row.run_id));
     });
     return { resumedRunIds };
   }
+  async defer(input: { taskId: string; attemptId: string; worker: string; leaseToken: number; now: number; retryAfterMs: number; reason: string }) {
+    if (!Number.isInteger(input.retryAfterMs) || input.retryAfterMs < 1_000 || input.retryAfterMs > 300_000) throw new RuntimeConflictError("TASK_DEFER_DELAY_INVALID");
+    const reason = /^[A-Z0-9_:.-]{1,160}$/.test(input.reason) ? input.reason : "PROVIDER_RESULT_PENDING";
+    await withTransaction(this.sql, async (transaction) => {
+      const rows = await transaction<{ run_id: string; revision: number; attempt_count: number; tool_key: string; current_plan_version: number }[]>`UPDATE agent_tasks task SET state='RUNNABLE',revision=task.revision+1,lease_owner=NULL,lease_expires_at=NULL,available_at=${input.now + input.retryAfterMs}
+        FROM agent_runs run WHERE task.id=${input.taskId} AND task.run_id=run.id AND task.state='RUNNING' AND task.lease_owner=${input.worker} AND task.lease_token=${input.leaseToken}
+        RETURNING task.run_id,task.revision,task.attempt_count,task.tool_key,run.current_plan_version`;
+      const task = rows[0]; if (!task) throw new RuntimeConflictError("STALE_LEASE_TOKEN");
+      const attempts = await transaction`UPDATE agent_attempts SET state='DEFERRED',finished_at=${new Date(input.now).toISOString()},error_code=${reason} WHERE id=${input.attemptId} AND task_id=${input.taskId} AND state='RUNNING' AND lease_owner=${input.worker} AND lease_token=${input.leaseToken} RETURNING id`;
+      if (!attempts.length) throw new RuntimeConflictError("STALE_LEASE_TOKEN");
+      await transaction`UPDATE agent_budget_ledger SET used_value=GREATEST(0,used_value-1),revision=revision+1 WHERE run_id=${task.run_id} AND kind='taskAttempts'`;
+      await enqueueDispatch(transaction, { id: input.taskId, run_id: task.run_id, revision: task.revision, attempt_count: task.attempt_count, tool_key: task.tool_key }, input.now + input.retryAfterMs);
+      const sequence = await this.nextSequence(task.run_id, transaction);
+      await transaction`INSERT INTO agent_events (id,run_id,sequence,event_identity,type,actor,plan_version,task_id,safe_payload_json,created_at)
+        VALUES (${randomUUID()},${task.run_id},${sequence},${`task-deferred:${input.attemptId}`},'TASK_DEFERRED','runtime',${task.current_plan_version},${input.taskId},${JSON.stringify({ reason, retryAfterMs: input.retryAfterMs })},${new Date(input.now).toISOString()})`;
+    });
+  }
   async outcome(input: { taskId: string; attemptId: string; worker: string; leaseToken: number; outcome: "SUCCEEDED" | "FAILED" | "UNKNOWN_OUTCOME"; errorCode?: string }) {
     await withTransaction(this.sql, async (transaction) => {
-      const task = await transaction<{ idempotency_identity: string; run_id: string; task_key: string; tool_key: string; attempt_count: number; current_plan_version: number; goal_id: string; candidate_id: number }[]>`SELECT task.idempotency_identity,task.run_id,task.task_key,task.tool_key,task.attempt_count,run.current_plan_version,run.goal_id,goal.candidate_id
+      const task = await transaction<{ idempotency_identity: string; run_id: string; task_key: string; tool_key: string; attempt_count: number; failure_count: number; current_plan_version: number; goal_id: string; candidate_id: number; fanout_group_id: string | null; shard_identity: string | null; routing_class: string }[]>`SELECT task.idempotency_identity,task.run_id,task.task_key,task.tool_key,task.attempt_count,task.fanout_group_id,task.shard_identity,task.routing_class,run.current_plan_version,run.goal_id,goal.candidate_id,
+          ((SELECT count(*) FROM agent_attempts prior WHERE prior.task_id=task.id AND prior.state='FAILED')+1)::integer AS failure_count
         FROM agent_tasks task JOIN agent_runs run ON run.id=task.run_id JOIN agent_goals goal ON goal.id=run.goal_id
         WHERE task.id=${input.taskId} FOR UPDATE`; if (!task[0]) throw new RuntimeConflictError("TASK_NOT_FOUND");
       const current = task[0];
       const finishedAt = new Date().toISOString();
-      const policy = input.outcome === "FAILED" ? taskFailurePolicy(current.tool_key, input.errorCode ?? "TASK_FAILED", current.attempt_count) : undefined;
+      const policy = input.outcome === "FAILED" ? taskFailurePolicy(current.tool_key, input.errorCode ?? "TASK_FAILED", current.failure_count) : undefined;
       const nextTaskState = policy?.retry ? "RUNNABLE" : input.outcome;
       const retryAt = policy?.retry ? Date.now() + policy.delayMs : null;
-      const tasks = await transaction`UPDATE agent_tasks SET state=${nextTaskState},revision=revision+1,lease_owner=NULL,lease_expires_at=${retryAt} WHERE id=${input.taskId} AND state='RUNNING' AND lease_owner=${input.worker} AND lease_token=${input.leaseToken} RETURNING id`;
+      const tasks = await transaction<{ id: string; revision: number }[]>`UPDATE agent_tasks SET state=${nextTaskState},revision=revision+1,lease_owner=NULL,lease_expires_at=NULL,available_at=${retryAt ?? 0} WHERE id=${input.taskId} AND state='RUNNING' AND lease_owner=${input.worker} AND lease_token=${input.leaseToken} RETURNING id,revision`;
       const attempts = await transaction`UPDATE agent_attempts SET state=${input.outcome},unknown_outcome=${input.outcome === "UNKNOWN_OUTCOME"},finished_at=${finishedAt},error_code=${input.errorCode ?? null} WHERE id=${input.attemptId} AND lease_owner=${input.worker} AND lease_token=${input.leaseToken} AND state='RUNNING' RETURNING id`;
       if (!tasks.length || !attempts.length) throw new RuntimeConflictError("STALE_LEASE_TOKEN");
+      const finishSequence = await this.nextSequence(current.run_id, transaction);
+      await transaction`INSERT INTO agent_events (id,run_id,sequence,event_identity,type,actor,plan_version,task_id,safe_payload_json,created_at)
+        VALUES (${randomUUID()},${current.run_id},${finishSequence},${`rabbit-task-finished:${input.attemptId}`},'RABBIT_TASK_FINISHED','runtime',${current.current_plan_version},${input.taskId},
+          ${JSON.stringify({ workerId: input.worker, routingClass: current.routing_class, fanoutGroupId: current.fanout_group_id, shardIdentity: current.shard_identity, outcome: input.outcome, errorCode: input.errorCode ?? null })},${finishedAt})`;
       const outboxState = input.outcome === "SUCCEEDED" ? "SENT" : input.outcome === "UNKNOWN_OUTCOME" ? "UNKNOWN_OUTCOME" : "FAILED";
       await transaction`UPDATE agent_outbox SET state=${outboxState},unknown_outcome=${input.outcome === "UNKNOWN_OUTCOME"},attempts=attempts+1 WHERE operation_identity=${current.idempotency_identity}`;
       if (input.outcome === "FAILED") {
         const sequence = await this.nextSequence(current.run_id, transaction);
         if (policy?.retry) {
+          await enqueueDispatch(transaction, { id: input.taskId, run_id: current.run_id, revision: tasks[0].revision, attempt_count: current.attempt_count, tool_key: current.tool_key }, retryAt ?? 0);
           await transaction`UPDATE agent_runs SET revision=revision+1,last_progress_at=${finishedAt} WHERE id=${current.run_id} AND state='ACTIVE'`;
           await transaction`INSERT INTO agent_events (id,run_id,sequence,event_identity,type,actor,plan_version,task_id,safe_payload_json,created_at)
-            VALUES (${randomUUID()},${current.run_id},${sequence},${`task-retry:${input.attemptId}`},'TASK_RETRY_SCHEDULED','runtime',${current.current_plan_version},${input.taskId},${JSON.stringify({ taskKey: current.task_key, errorCode: input.errorCode, attempt: current.attempt_count, maxAttempts: policy.maxAttempts, delayMs: policy.delayMs })},${finishedAt})`;
+            VALUES (${randomUUID()},${current.run_id},${sequence},${`task-retry:${input.attemptId}`},'TASK_RETRY_SCHEDULED','runtime',${current.current_plan_version},${input.taskId},${JSON.stringify({ taskKey: current.task_key, errorCode: input.errorCode, attempt: current.failure_count, deliveryAttempt: current.attempt_count, maxAttempts: policy.maxAttempts, delayMs: policy.delayMs })},${finishedAt})`;
+          return;
+        }
+        if (current.fanout_group_id) {
+          await transaction`UPDATE agent_fanout_groups SET state='FAILED' WHERE id=${current.fanout_group_id} AND state IN ('PLANNED','RUNNING')`;
+          await transaction`UPDATE agent_runs SET revision=revision+1,last_progress_at=${finishedAt} WHERE id=${current.run_id} AND state='ACTIVE'`;
+          await promoteEligible(transaction, current.run_id);
           return;
         }
         const safeCode = input.errorCode ?? "TASK_FAILED";
@@ -222,14 +448,21 @@ export class PostgresAgentRuntimeRepository {
           AND NOT EXISTS (SELECT 1 FROM agent_runs other WHERE other.goal_id=${current.goal_id} AND other.id<>${current.run_id} AND other.state='ACTIVE')`;
         await transaction`UPDATE candidates SET revision=revision+1,record_json=(record_json::jsonb || ${JSON.stringify({
           status: "FAILED", failedStage: current.task_key, failureReason: safeMessage,
-          attempts: current.attempt_count, automaticRetriesExhausted: true,
+          attempts: current.failure_count, automaticRetriesExhausted: true,
         })}::jsonb)::text WHERE id=${current.candidate_id}`;
         await transaction`INSERT INTO agent_events (id,run_id,sequence,event_identity,type,actor,plan_version,task_id,safe_payload_json,created_at)
-          VALUES (${randomUUID()},${current.run_id},${sequence},${`run-failed:${current.run_id}`},'RUN_FAILED','runtime',${current.current_plan_version},${input.taskId},${JSON.stringify({ taskKey: current.task_key, errorCode: safeCode, attempts: current.attempt_count })},${finishedAt}) ON CONFLICT (event_identity) DO NOTHING`;
+          VALUES (${randomUUID()},${current.run_id},${sequence},${`run-failed:${current.run_id}`},'RUN_FAILED','runtime',${current.current_plan_version},${input.taskId},${JSON.stringify({ taskKey: current.task_key, errorCode: safeCode, attempts: current.failure_count, deliveryAttempts: current.attempt_count })},${finishedAt}) ON CONFLICT (event_identity) DO NOTHING`;
+        return;
+      }
+      if (input.outcome === "UNKNOWN_OUTCOME" && current.fanout_group_id) {
+        await transaction`UPDATE agent_fanout_groups SET state='FAILED' WHERE id=${current.fanout_group_id} AND state IN ('PLANNED','RUNNING')`;
+        await transaction`UPDATE agent_runs SET revision=revision+1,last_progress_at=${finishedAt} WHERE id=${current.run_id} AND state='ACTIVE'`;
+        await promoteEligible(transaction, current.run_id);
         return;
       }
       if (input.outcome === "SUCCEEDED") {
         await transaction`UPDATE agent_runs SET revision=revision+1,last_progress_at=${finishedAt} WHERE id=${current.run_id} AND state='ACTIVE'`;
+        await promoteEligible(transaction, current.run_id);
         const completed = await transaction`UPDATE agent_runs SET state='SUCCEEDED',revision=revision+1,last_progress_at=${finishedAt} WHERE id=${current.run_id} AND state='ACTIVE' AND NOT EXISTS (SELECT 1 FROM agent_tasks WHERE run_id=${current.run_id} AND state<>'SUCCEEDED') RETURNING current_plan_version`;
         if (completed[0]) {
           await transaction`UPDATE agent_goals SET state='SUCCEEDED',revision=revision+1 WHERE id=(SELECT goal_id FROM agent_runs WHERE id=${current.run_id}) AND state='ACTIVE'`;
@@ -249,11 +482,90 @@ export class PostgresAgentRuntimeRepository {
       for (const task of stale) {
         const nextState = task.unknown_outcome ? "UNKNOWN_OUTCOME" : "RUNNABLE";
         await transaction`UPDATE agent_attempts SET state=${nextState === "RUNNABLE" ? "FAILED" : "UNKNOWN_OUTCOME"},unknown_outcome=${task.unknown_outcome},finished_at=${recoveredAt},error_code='LEASE_EXPIRED_RECOVERED' WHERE task_id=${task.id} AND state='RUNNING'`;
-        await transaction`UPDATE agent_tasks SET state=${nextState},revision=revision+1,lease_owner=NULL,lease_expires_at=NULL WHERE id=${task.id}`;
+        const updated = await transaction<{ revision: number; attempt_count: number; tool_key: string }[]>`UPDATE agent_tasks SET state=${nextState},revision=revision+1,lease_owner=NULL,lease_expires_at=NULL,available_at=0 WHERE id=${task.id} RETURNING revision,attempt_count,tool_key`;
+        if (nextState === "RUNNABLE" && updated[0]) await enqueueDispatch(transaction, { id: task.id, run_id: task.run_id, revision: updated[0].revision, attempt_count: updated[0].attempt_count, tool_key: updated[0].tool_key });
         await transaction`UPDATE agent_runs SET last_progress_at=${recoveredAt},revision=revision+1 WHERE id=${task.run_id} AND state='ACTIVE'`;
       }
       return stale.map((task) => task.id);
     });
+  }
+  async claimDispatchBatch(input: { publisherId: string; now: number; leaseMs: number; limit: number }) {
+    if (!input.publisherId.trim() || !Number.isInteger(input.limit) || input.limit < 1 || input.limit > 500) throw new RuntimeConflictError("DISPATCH_CLAIM_INVALID");
+    return withTransaction(this.sql, async (transaction) => {
+      await transaction`UPDATE agent_task_dispatch_outbox SET state='PENDING',publish_owner=NULL,publish_lease_until=NULL,last_error_code='PUBLISH_LEASE_EXPIRED'
+        WHERE state='PUBLISHING' AND publish_lease_until<=${input.now}`;
+      const rows = await transaction<{ id: string; task_id: string; run_id: string; task_version: number; routing_class: RabbitRoutingClass; publish_attempts: number; created_at: string }[]>`
+        WITH candidates AS (
+          SELECT dispatch.id FROM agent_task_dispatch_outbox dispatch
+          JOIN agent_tasks task ON task.id=dispatch.task_id
+          JOIN agent_runs run ON run.id=dispatch.run_id
+          WHERE dispatch.state='PENDING' AND dispatch.available_at<=${input.now}
+            AND task.state='RUNNABLE' AND task.revision=dispatch.task_version AND run.state='ACTIVE'
+          ORDER BY dispatch.available_at,dispatch.created_at,dispatch.id
+          FOR UPDATE OF dispatch SKIP LOCKED LIMIT ${input.limit}
+        )
+        UPDATE agent_task_dispatch_outbox dispatch SET state='PUBLISHING',publish_owner=${input.publisherId},publish_lease_until=${input.now + input.leaseMs},publish_attempts=publish_attempts+1
+        FROM candidates WHERE dispatch.id=candidates.id
+        RETURNING dispatch.id,dispatch.task_id,dispatch.run_id,dispatch.task_version,dispatch.routing_class,dispatch.publish_attempts,dispatch.created_at`;
+      return rows.map((row) => ({
+        dispatchId: row.id,
+        envelope: createRabbitTaskEnvelope({ taskId: row.task_id, runId: row.run_id, taskVersion: row.task_version, routingClass: row.routing_class, attemptHint: row.publish_attempts - 1, createdAt: row.created_at }),
+      }));
+    });
+  }
+  async confirmDispatch(input: { dispatchId: string; publisherId: string; brokerMessageId: string; now: number }) {
+    const timestamp = new Date(input.now).toISOString();
+    const rows = await this.sql`UPDATE agent_task_dispatch_outbox SET state='PUBLISHED',broker_message_id=${input.brokerMessageId},published_at=${timestamp},confirmed_at=${timestamp},publish_owner=NULL,publish_lease_until=NULL,last_error_code=NULL
+      WHERE id=${input.dispatchId} AND state='PUBLISHING' AND publish_owner=${input.publisherId} RETURNING id`;
+    if (!rows.length) throw new RuntimeConflictError("DISPATCH_PUBLISH_LEASE_LOST");
+  }
+  async failDispatch(input: { dispatchId: string; publisherId: string; now: number; retryAt: number; errorCode: string }) {
+    const safeCode = /^[A-Z0-9_:.-]{1,160}$/.test(input.errorCode) ? input.errorCode : "RABBIT_PUBLISH_FAILED";
+    const rows = await this.sql`UPDATE agent_task_dispatch_outbox SET state='PENDING',available_at=${input.retryAt},publish_owner=NULL,publish_lease_until=NULL,last_error_code=${safeCode}
+      WHERE id=${input.dispatchId} AND state='PUBLISHING' AND publish_owner=${input.publisherId} RETURNING id`;
+    if (!rows.length) throw new RuntimeConflictError("DISPATCH_PUBLISH_LEASE_LOST");
+  }
+  async deferPublishedDispatch(input: { taskId: string; taskVersion: number; retryAt: number; reason: string }) {
+    const reason = /^[A-Z0-9_:.-]{1,160}$/.test(input.reason) ? input.reason : "DELIVERY_DEFERRED";
+    const rows = await this.sql`UPDATE agent_task_dispatch_outbox dispatch SET state='PENDING',available_at=${input.retryAt},publish_owner=NULL,publish_lease_until=NULL,last_error_code=${reason}
+      WHERE dispatch.task_id=${input.taskId} AND dispatch.task_version=${input.taskVersion} AND dispatch.state='PUBLISHED'
+        AND EXISTS (SELECT 1 FROM agent_tasks task WHERE task.id=dispatch.task_id AND task.state='RUNNABLE' AND task.revision=dispatch.task_version)
+      RETURNING id`;
+    return rows.length > 0;
+  }
+  async reconcileDispatch(now = Date.now(), republishAfterMs?: number) {
+    return withTransaction(this.sql, async (transaction) => {
+      await transaction`UPDATE agent_task_dispatch_outbox SET state='PENDING',publish_owner=NULL,publish_lease_until=NULL,last_error_code='PUBLISH_LEASE_EXPIRED'
+        WHERE state='PUBLISHING' AND publish_lease_until<=${now}`;
+      const republished = republishAfterMs && republishAfterMs > 0
+        ? await transaction<{ task_id: string }[]>`UPDATE agent_task_dispatch_outbox dispatch
+            SET state='PENDING',available_at=${now},publish_owner=NULL,publish_lease_until=NULL,last_error_code='DELIVERY_REPUBLISH_TIMEOUT'
+            WHERE dispatch.state='PUBLISHED' AND dispatch.confirmed_at IS NOT NULL
+              AND dispatch.confirmed_at<=${new Date(now - republishAfterMs).toISOString()}
+              AND EXISTS (SELECT 1 FROM agent_tasks task JOIN agent_runs run ON run.id=task.run_id
+                WHERE task.id=dispatch.task_id AND task.revision=dispatch.task_version AND task.state='RUNNABLE' AND run.state='ACTIVE')
+            RETURNING dispatch.task_id`
+        : [];
+      const tasks = await transaction<DispatchableTask[]>`SELECT task.id,task.run_id,task.revision,task.attempt_count,task.tool_key,task.routing_class
+        FROM agent_tasks task JOIN agent_runs run ON run.id=task.run_id
+        WHERE task.state='RUNNABLE' AND task.available_at<=${now} AND run.state='ACTIVE'
+          AND NOT EXISTS (SELECT 1 FROM agent_task_dispatch_outbox dispatch WHERE dispatch.task_id=task.id AND dispatch.task_version=task.revision)
+        ORDER BY task.run_id,task.id FOR UPDATE OF task SKIP LOCKED`;
+      for (const task of tasks) await enqueueDispatch(transaction, task, 0);
+      return [...new Set([...republished.map((row) => row.task_id), ...tasks.map((task) => task.id)])];
+    });
+  }
+  async dispatchStats(now = Date.now()) {
+    const [row] = await this.sql<{ pending: number; publishing: number; published: number; failed: number; oldest_pending_ms: number; runnable_without_delivery: number }[]>`SELECT
+      count(*) FILTER (WHERE state='PENDING')::integer AS pending,
+      count(*) FILTER (WHERE state='PUBLISHING')::integer AS publishing,
+      count(*) FILTER (WHERE state='PUBLISHED')::integer AS published,
+      count(*) FILTER (WHERE state='FAILED')::integer AS failed,
+      COALESCE(max(${now}-available_at) FILTER (WHERE state='PENDING' AND available_at<=${now}),0)::bigint AS oldest_pending_ms,
+      (SELECT count(*)::integer FROM agent_tasks task JOIN agent_runs run ON run.id=task.run_id WHERE task.state='RUNNABLE' AND run.state='ACTIVE'
+        AND NOT EXISTS (SELECT 1 FROM agent_task_dispatch_outbox dispatch WHERE dispatch.task_id=task.id AND dispatch.task_version=task.revision)) AS runnable_without_delivery
+      FROM agent_task_dispatch_outbox`;
+    return row ?? { pending: 0, publishing: 0, published: 0, failed: 0, oldest_pending_ms: 0, runnable_without_delivery: 0 };
   }
   async authorizeTool(input: { taskId: string; operation: string; sideEffectClass: "read-only" | "idempotent-write" | "reversible-write" | "irreversible-write"; now: number }) {
     const tasks = await this.sql<Row[]>`SELECT t.run_id,t.tool_key,r.current_plan_version,g.candidate_id,g.input_version,g.policy_version FROM agent_tasks t JOIN agent_runs r ON r.id=t.run_id JOIN agent_goals g ON g.id=r.goal_id WHERE t.id=${input.taskId} AND t.state='RUNNING'`;
@@ -276,12 +588,18 @@ export class PostgresAgentRuntimeRepository {
   }
   async timeline(runId: string) { return this.sql`SELECT id,sequence,event_identity,type,actor,plan_version,task_id,safe_payload_json,created_at FROM agent_events WHERE run_id=${runId} ORDER BY sequence`; }
   async projection(runId: string) {
-    const [runs,tasks,budgets,escalations] = await Promise.all([
+    const [runs,tasks,budgets,escalations,fanouts] = await Promise.all([
       this.sql`SELECT id,goal_id,state,revision,current_plan_version,last_progress_at FROM agent_runs WHERE id=${runId}`,
       this.sql`SELECT id,task_key,state,revision,attempt_count,lease_owner,lease_token,lease_expires_at FROM agent_tasks WHERE run_id=${runId} ORDER BY id`,
       this.sql`SELECT kind,limit_value,used_value,revision FROM agent_budget_ledger WHERE run_id=${runId} ORDER BY kind`,
       this.sql`SELECT id,version,state,safe_summary,impact FROM agent_escalations WHERE run_id=${runId} AND state='OPEN' ORDER BY version DESC LIMIT 1`,
-    ]); return { run: runs[0] ?? null, tasks, budgets, escalation: escalations[0] ?? null };
+      this.sql`SELECT group_record.id,group_record.group_key,group_record.kind,group_record.state,group_record.expected_count,
+        count(*) FILTER (WHERE task.state='SUCCEEDED')::integer AS succeeded_count,
+        count(*) FILTER (WHERE task.state='FAILED')::integer AS failed_count
+        FROM agent_fanout_groups group_record LEFT JOIN agent_fanout_members member ON member.group_id=group_record.id
+        LEFT JOIN agent_tasks task ON task.id=member.shard_task_id WHERE group_record.run_id=${runId}
+        GROUP BY group_record.id ORDER BY group_record.created_at`,
+    ]); return { run: runs[0] ?? null, tasks, budgets, fanouts, escalation: escalations[0] ?? null };
   }
   async resolveEscalation(input: { escalationId: string; expectedVersion: number; action: string; actor: string; newInputVersion?: string; newProfileVersion?: string }) {
     return withTransaction(this.sql, async (transaction) => {
@@ -305,5 +623,9 @@ export class PostgresAgentRuntimeRepository {
       return { sameRun: false, previousRunState: "SUPERSEDED", runId: newRunId, linkedEscalationId: input.escalationId, inputVersion: nextInput, profileVersion: nextProfile };
     });
   }
-  private async nextSequence(runId: string, client = this.sql) { const [row] = await client<{ value: number }[]>`SELECT COALESCE(max(sequence),0)::integer+1 AS value FROM agent_events WHERE run_id=${runId}`; return row?.value ?? 1; }
+  private async nextSequence(runId: string, client = this.sql) {
+    await client`SELECT pg_advisory_xact_lock(hashtext(${runId}))`;
+    const [row] = await client<{ value: number }[]>`SELECT COALESCE(max(sequence),0)::integer+1 AS value FROM agent_events WHERE run_id=${runId}`;
+    return row?.value ?? 1;
+  }
 }

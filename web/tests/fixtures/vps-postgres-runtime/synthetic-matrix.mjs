@@ -28,6 +28,7 @@ export const credentialAllowlist = Object.freeze([
   "telegram-bot-token",
   "telegram-recipients.json",
   "internal-service-tokens.json",
+  "rabbitmq-password",
 ]);
 
 export const benchmarkFixture = Object.freeze({

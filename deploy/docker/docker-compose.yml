@@ -17,6 +17,7 @@ x-app-common: &app-common
     dockerfile: Dockerfile
   image: hh-agent:local
   restart: unless-stopped
+  stop_grace_period: 40s
   env_file:
     - .env
   environment: &app-env
@@ -35,6 +36,19 @@ x-app-common: &app-common
     CANDIDATE_TOOL_EXECUTION_MODE: production
     CANDIDATE_PIPELINE_ROUTING: ${CANDIDATE_PIPELINE_ROUTING:-disabled}
     CANDIDATE_PIPELINE_BUILD_ID: ${CANDIDATE_PIPELINE_BUILD_ID:-local-docker}
+    CANDIDATE_DISPATCH_TRANSPORT: ${CANDIDATE_DISPATCH_TRANSPORT:-rabbit}
+    RABBITMQ_HOST: rabbitmq
+    RABBITMQ_PORT: "5672"
+    RABBITMQ_USERNAME: hh_agent
+    RABBITMQ_PUBLISH_BATCH_SIZE: "50"
+    RABBITMQ_PUBLISH_LEASE_MS: "30000"
+    RABBITMQ_PUBLISH_POLLING_MS: "500"
+    RABBITMQ_MESSAGE_TTL_MS: "604800000"
+    RABBITMQ_DEAD_LETTER_TTL_MS: "1209600000"
+    RABBITMQ_REPUBLISH_AFTER_MS: "300000"
+    RABBITMQ_GRACEFUL_TIMEOUT_MS: "30000"
+    RABBITMQ_MAX_PER_RUN: "2"
+    MATRIX_ROW_SHARD_SIZE: "8"
     HH_DOCKER_NETWORK: "1"
   volumes:
     - config-root:/config:ro
@@ -69,6 +83,25 @@ services:
     tmpfs:
       - /tmp
       - /run/postgresql
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    restart: unless-stopped
+    entrypoint: ["/bin/sh", "-ec"]
+    command: ["export RABBITMQ_DEFAULT_PASS=$$(tr -d '\\r\\n' < /config/credentials/rabbitmq-password); exec docker-entrypoint.sh rabbitmq-server"]
+    environment:
+      RABBITMQ_DEFAULT_USER: hh_agent
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+      - config-root:/config:ro
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 30s
+      retries: 20
+      start_period: 60s
+    security_opt:
+      - no-new-privileges:true
 
   web:
     <<: *app-common
@@ -106,10 +139,79 @@ services:
 
   worker:
     <<: *app-common
-    command: ["npm", "run", "service:agent-worker"]
+    command: ["npm", "run", "service:drive-discovery"]
     environment:
       <<: *app-env
-      AGENT_RUNTIME_WORKER_ID: docker-worker-1
+      AGENT_RUNTIME_WORKER_ID: docker-discovery
+
+  worker-postgres:
+    <<: *app-common
+    command: ["npm", "run", "service:agent-worker"]
+    profiles: ["postgres-transport"]
+    environment:
+      <<: *app-env
+      CANDIDATE_DISPATCH_TRANSPORT: postgres
+      AGENT_RUNTIME_WORKER_ID: docker-postgres-worker
+
+  dispatch-publisher:
+    <<: *app-common
+    command: ["npm", "run", "service:rabbit-publisher"]
+    environment:
+      <<: *app-env
+      AGENT_RUNTIME_WORKER_ID: docker-publisher
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+      migrate: { condition: service_completed_successfully }
+      web: { condition: service_started }
+
+  worker-control:
+    <<: *app-common
+    command: ["npm", "run", "service:rabbit-worker"]
+    environment: { <<: *app-env, AGENT_RUNTIME_WORKER_ID: docker-control, RABBITMQ_WORKER_CLASSES: control, RABBITMQ_PREFETCH: "2", RABBITMQ_POOL_CONCURRENCY: "4" }
+    depends_on: { postgres: { condition: service_healthy }, rabbitmq: { condition: service_healthy }, migrate: { condition: service_completed_successfully }, web: { condition: service_started } }
+
+  worker-documents:
+    <<: *app-common
+    command: ["npm", "run", "service:rabbit-worker"]
+    environment: { <<: *app-env, AGENT_RUNTIME_WORKER_ID: docker-documents, RABBITMQ_WORKER_CLASSES: documents, RABBITMQ_PREFETCH: "3", RABBITMQ_POOL_CONCURRENCY: "6" }
+    depends_on: { postgres: { condition: service_healthy }, rabbitmq: { condition: service_healthy }, migrate: { condition: service_completed_successfully }, web: { condition: service_started } }
+
+  worker-media:
+    <<: *app-common
+    command: ["npm", "run", "service:rabbit-worker"]
+    environment: { <<: *app-env, AGENT_RUNTIME_WORKER_ID: docker-media, RABBITMQ_WORKER_CLASSES: media, RABBITMQ_PREFETCH: "2", RABBITMQ_POOL_CONCURRENCY: "4" }
+    depends_on: { postgres: { condition: service_healthy }, rabbitmq: { condition: service_healthy }, migrate: { condition: service_completed_successfully }, web: { condition: service_started } }
+
+  worker-transcription:
+    <<: *app-common
+    command: ["npm", "run", "service:rabbit-worker"]
+    environment: { <<: *app-env, AGENT_RUNTIME_WORKER_ID: docker-transcription, RABBITMQ_WORKER_CLASSES: transcription, RABBITMQ_PREFETCH: "3", RABBITMQ_POOL_CONCURRENCY: "6" }
+    depends_on: { postgres: { condition: service_healthy }, rabbitmq: { condition: service_healthy }, migrate: { condition: service_completed_successfully }, web: { condition: service_started } }
+
+  worker-llm:
+    <<: *app-common
+    command: ["npm", "run", "service:rabbit-worker"]
+    environment: { <<: *app-env, AGENT_RUNTIME_WORKER_ID: docker-llm, RABBITMQ_WORKER_CLASSES: llm, RABBITMQ_PREFETCH: "4", RABBITMQ_POOL_CONCURRENCY: "8" }
+    depends_on: { postgres: { condition: service_healthy }, rabbitmq: { condition: service_healthy }, migrate: { condition: service_completed_successfully }, web: { condition: service_started } }
+
+  worker-reports:
+    <<: *app-common
+    command: ["npm", "run", "service:rabbit-worker"]
+    environment: { <<: *app-env, AGENT_RUNTIME_WORKER_ID: docker-reports, RABBITMQ_WORKER_CLASSES: reports, RABBITMQ_PREFETCH: "2", RABBITMQ_POOL_CONCURRENCY: "3" }
+    depends_on: { postgres: { condition: service_healthy }, rabbitmq: { condition: service_healthy }, migrate: { condition: service_completed_successfully }, web: { condition: service_started } }
+
+  worker-drive:
+    <<: *app-common
+    command: ["npm", "run", "service:rabbit-worker"]
+    environment: { <<: *app-env, AGENT_RUNTIME_WORKER_ID: docker-drive, RABBITMQ_WORKER_CLASSES: drive, RABBITMQ_PREFETCH: "2", RABBITMQ_POOL_CONCURRENCY: "3" }
+    depends_on: { postgres: { condition: service_healthy }, rabbitmq: { condition: service_healthy }, migrate: { condition: service_completed_successfully }, web: { condition: service_started } }
+
+  worker-notifications:
+    <<: *app-common
+    command: ["npm", "run", "service:rabbit-worker"]
+    environment: { <<: *app-env, AGENT_RUNTIME_WORKER_ID: docker-notifications, RABBITMQ_WORKER_CLASSES: notifications, RABBITMQ_PREFETCH: "2", RABBITMQ_POOL_CONCURRENCY: "3" }
+    depends_on: { postgres: { condition: service_healthy }, rabbitmq: { condition: service_healthy }, migrate: { condition: service_completed_successfully }, web: { condition: service_started } }
 
   media-processor:
     <<: *app-common
@@ -151,4 +253,5 @@ services:
 
 volumes:
   postgres-data:
+  rabbitmq-data:
   config-root:

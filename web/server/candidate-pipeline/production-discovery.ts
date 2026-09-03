@@ -13,7 +13,7 @@ type StabilityResult = { folderId: string; outcome: { state: string; inputVersio
 
 const budgets = {
   wallTimeMs: 14_400_000,
-  taskAttempts: 50,
+  taskAttempts: 250,
   repairAttempts: 2,
   replans: 2,
   llmCalls: 30,
@@ -150,7 +150,7 @@ export async function startProductionDriveDiscoveryWorker() {
     const created = await runtime.createGoal({
       goalId: randomUUID(), runId: randomUUID(), candidateId: row.candidate_id,
       goalType: "candidate-analysis-matrix/v1",
-      workflowVersion: "matrix-v3",
+      workflowVersion: "matrix-v4-rabbit-parallel",
       inputVersion: inputVersionId, profileVersion,
       policyVersion: "candidate-policy-v1", completionCriteriaVersion: "candidate-completion-v1",
       completionCriteria: ["validated-candidate-report", "ready-after-report-publication"], budgets, triggerIdentity,

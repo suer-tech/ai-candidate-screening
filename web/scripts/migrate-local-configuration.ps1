@@ -55,6 +55,14 @@ if (-not (Test-Path -LiteralPath $databaseCredential)) {
   Write-NewFile $databaseCredential "postgresql://hh_agent:$password@127.0.0.1:54329/hh_agent"
 }
 
+$rabbitCredential = Join-Path $credentialRoot "rabbitmq-password"
+if (-not (Test-Path -LiteralPath $rabbitCredential)) {
+  $bytes = [byte[]]::new(32)
+  [System.Security.Cryptography.RandomNumberGenerator]::Fill($bytes)
+  $password = [Convert]::ToBase64String($bytes).TrimEnd('=').Replace('+','-').Replace('/','_')
+  Write-NewFile $rabbitCredential $password
+}
+
 if (-not (Test-Path -LiteralPath $runtimeEnvPath)) {
   $value = {
     param([string]$Name, [string]$Fallback)
@@ -69,6 +77,7 @@ if (-not (Test-Path -LiteralPath $runtimeEnvPath)) {
     "GOOGLE_OAUTH_CLIENT_ID=$(& $value 'GOOGLE_OAUTH_CLIENT_ID' '')", "GOOGLE_OAUTH_REDIRECT_URI=$(& $value 'GOOGLE_OAUTH_REDIRECT_URI' 'http://127.0.0.1:3000/api/integrations/google-drive/oauth/callback')", "GOOGLE_OAUTH_DEPLOYMENT_MODE=$(& $value 'GOOGLE_OAUTH_DEPLOYMENT_MODE' 'production-personal')",
     "AGENT_RUNTIME_ENVIRONMENT=$(& $value 'AGENT_RUNTIME_ENVIRONMENT' 'local')", "AGENT_RUNTIME_WORKER_ID=$(& $value 'AGENT_RUNTIME_WORKER_ID' 'local-worker-1')", "AGENT_RUNTIME_POLLING_MS=$(& $value 'AGENT_RUNTIME_POLLING_MS' '500')", "AGENT_RUNTIME_HEARTBEAT_MS=$(& $value 'AGENT_RUNTIME_HEARTBEAT_MS' '5000')", "AGENT_RUNTIME_LEASE_MS=$(& $value 'AGENT_RUNTIME_LEASE_MS' '30000')",
     "CANDIDATE_TOOL_EXECUTION_MODE=$(& $value 'CANDIDATE_TOOL_EXECUTION_MODE' 'production')", "CANDIDATE_PIPELINE_ROUTING=$(& $value 'CANDIDATE_PIPELINE_ROUTING' 'effectful')", "CANDIDATE_PIPELINE_BUILD_ID=$(& $value 'CANDIDATE_PIPELINE_BUILD_ID' 'local-unprovisioned')",
+    "CANDIDATE_DISPATCH_TRANSPORT=$(& $value 'CANDIDATE_DISPATCH_TRANSPORT' 'rabbit')", "RABBITMQ_HOST=$(& $value 'RABBITMQ_HOST' '127.0.0.1')", "RABBITMQ_PORT=$(& $value 'RABBITMQ_PORT' '5672')", "RABBITMQ_USERNAME=$(& $value 'RABBITMQ_USERNAME' 'hh_agent')", "RABBITMQ_PREFETCH=$(& $value 'RABBITMQ_PREFETCH' '1')", "RABBITMQ_MAX_PER_RUN=$(& $value 'RABBITMQ_MAX_PER_RUN' '2')", "MATRIX_ROW_SHARD_SIZE=$(& $value 'MATRIX_ROW_SHARD_SIZE' '8')", "RABBITMQ_PUBLISH_BATCH_SIZE=50", "RABBITMQ_PUBLISH_LEASE_MS=30000", "RABBITMQ_PUBLISH_POLLING_MS=500", "RABBITMQ_MESSAGE_TTL_MS=604800000", "RABBITMQ_DEAD_LETTER_TTL_MS=1209600000", "RABBITMQ_GRACEFUL_TIMEOUT_MS=30000",
     "MEDIA_PROCESSOR_URL=$(& $value 'MEDIA_PROCESSOR_URL' 'http://127.0.0.1:4311/v1/extract-audio')", "MEDIA_PROCESSOR_HOST=127.0.0.1", "MEDIA_PROCESSOR_PORT=4311", "MEDIA_PROCESSOR_MAX_INPUT_BYTES=$(& $value 'MEDIA_PROCESSOR_MAX_INPUT_BYTES' '1073741824')",
     "DOCUMENT_PROCESSOR_URL=$(& $value 'DOCUMENT_PROCESSOR_URL' 'http://127.0.0.1:4312/v1/extract-document')", "DOCUMENT_PROCESSOR_HOST=127.0.0.1", "DOCUMENT_PROCESSOR_PORT=4312", "DOCUMENT_PROCESSOR_MAX_INPUT_BYTES=$(& $value 'DOCUMENT_PROCESSOR_MAX_INPUT_BYTES' '67108864')",
     "E2E_ENVIRONMENT=local", "E2E_FIXTURE_SET_ID=$(& $value 'E2E_FIXTURE_SET_ID' 'local-canonical-v1')", "E2E_ALLOW_DESTRUCTIVE_CLEANUP=false", "FIXTURE_CONTROLLER_PORT=$(& $value 'FIXTURE_CONTROLLER_PORT' '4310')", "FIXTURE_CONTROLLER_STATE_PATH=.runtime/fixture-controller.sqlite"

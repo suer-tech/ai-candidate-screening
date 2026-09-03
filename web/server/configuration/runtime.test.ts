@@ -37,7 +37,7 @@ test("docker environment overrides reroute processor endpoints and database url 
     process.env.INTERNAL_APP_ORIGIN = "http://web:3000";
     const configuration = {
       values: { ...valid, APP_ORIGIN: "http://localhost:3000", INTERNAL_APP_ORIGIN: "http://127.0.0.1:3000", HOST: "127.0.0.1", ROUTERAI_MODEL: "model/v1", ROUTERAI_STRUCTURED_OUTPUTS: "true", CANDIDATE_PIPELINE_BUILD_ID: "build-1" },
-      credentials: { "database-url": "postgresql://hh_agent:local@127.0.0.1:54329/hh_agent", "internal-service-tokens.json": "{}" },
+      credentials: { "database-url": "postgresql://hh_agent:local@127.0.0.1:54329/hh_agent", "internal-service-tokens.json": "{}", "rabbitmq-password": "synthetic-rabbit-password" },
       root: "/config",
     } as never;
     const projected = environmentProjection(configuration);
@@ -56,7 +56,7 @@ test("docker environment overrides reroute processor endpoints and database url 
 test("runtime fails closed until RouterAI Structured Outputs support is explicitly confirmed", () => {
   const configuration = {
     values: { ...valid, APP_ORIGIN: "http://localhost:3000", ROUTERAI_MODEL: "model/v1", CANDIDATE_PIPELINE_BUILD_ID: "build-1" },
-    credentials: { "database-url": "postgresql://hh_agent:local@127.0.0.1:54329/hh_agent", "internal-service-tokens.json": "{}" },
+    credentials: { "database-url": "postgresql://hh_agent:local@127.0.0.1:54329/hh_agent", "internal-service-tokens.json": "{}", "rabbitmq-password": "synthetic-rabbit-password" },
     root: "/config",
   } as never;
   assert.throws(() => environmentProjection(configuration), /ROUTERAI_STRUCTURED_OUTPUTS_SUPPORT_REQUIRED/);

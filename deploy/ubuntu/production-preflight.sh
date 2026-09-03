@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 if [[ "${EUID}" -ne 0 ]]; then echo '{"ready":false,"code":"PREFLIGHT_REQUIRES_ROOT"}'; exit 1; fi
-expected=$'assemblyai-api-key\ndatabase-url\ngoogle-oauth-client-secret\ngoogle-oauth-keyring.json\ninternal-service-tokens.json\nrouterai-api-key\ntelegram-bot-token\ntelegram-recipients.json'
+expected=$'assemblyai-api-key\ndatabase-url\ngoogle-oauth-client-secret\ngoogle-oauth-keyring.json\ninternal-service-tokens.json\nrabbitmq-password\nrouterai-api-key\ntelegram-bot-token\ntelegram-recipients.json'
 actual="$(find /etc/hh-agent/credentials -mindepth 1 -maxdepth 1 -type f -printf '%f\n' | sort)"
 [[ "${actual}" == "${expected}" ]] || { echo '{"ready":false,"code":"CREDENTIAL_ALLOWLIST_MISMATCH"}'; exit 1; }
 if find /etc/hh-agent/credentials \( -type l -o -type f -perm /023 \) | grep -q .; then echo '{"ready":false,"code":"CREDENTIAL_PERMISSION_UNSAFE"}'; exit 1; fi

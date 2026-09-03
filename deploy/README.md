@@ -13,6 +13,7 @@ google-oauth-client-secret
 google-oauth-keyring.json
 internal-service-tokens.json
 routerai-api-key
+rabbitmq-password
 telegram-bot-token
 telegram-recipients.json
 ```
@@ -21,9 +22,9 @@ telegram-recipients.json
 
 Release gates выполняются перед выкладкой одной неизменяемой сборки и конфигурации; их evidence хранится отдельно от runtime credentials и не используется как ручной переключатель уже развёрнутого сервиса.
 
-Обработка кандидата имеет единственный production workflow `matrix-v3`. Отдельных legacy/shadow веток и переключателя версии матрицы нет. `CANDIDATE_PIPELINE_ROUTING=effectful` включает обработку; `disabled` останавливает создание новых запусков. Старые записи и PDF остаются доступны только для чтения.
+Новые обработки кандидата используют production workflow `matrix-v4-rabbit-parallel`; закреплённые незавершённые `matrix-v3` runs продолжают старый граф без миграции на лету. `CANDIDATE_PIPELINE_ROUTING=effectful` включает создание запусков; `disabled` останавливает новые запуски. `CANDIDATE_DISPATCH_TRANSPORT=rabbit` включает dispatch publisher и отдельные worker pools, а `postgres` остаётся временным rollback path. Старые записи и PDF доступны только для чтения.
 
-`matrix-v3` структурирует заполненные параметры вакансии без добавления новых требований, последовательно проверяет каждый критерий по материалам кандидата и формирует один компактный `candidate-report`.
+`matrix-v4-rabbit-parallel` сохраняет прежнюю HR-логику: структурирует заполненные параметры вакансии без добавления новых требований, проверяет каждый критерий и формирует один компактный `candidate-report`. Параллельно выполняются документы, источники интервью, evidence batches, ABC/группы строк и проверки критических строк; exact joins не позволяют перейти к рекомендации с неполным набором результатов.
 
 ## Windows
 
@@ -36,7 +37,7 @@ npm run local:start
 npm run local:status
 ```
 
-`bootstrap` мигрирует старую локальную раскладку, запускает PostgreSQL 16 в Docker, применяет migrations и выполняет preflight. `start` собирает и запускает Node web, worker, media и document processors скрытыми процессами. Состояние и логи находятся в ignored `web/.runtime/`.
+`bootstrap` мигрирует старую локальную раскладку, создаёт отдельный `rabbitmq-password`, запускает PostgreSQL 16 в Docker, применяет migrations и выполняет preflight. Актуальный параллельный контур запускается через Docker Compose по инструкции [docker/README.md](docker/README.md). Состояние и credentials находятся в ignored `web/.runtime/`.
 
 Перед финальным локальным release-прогоном выполните `npm run build:pin-local`: команда сама вычислит fingerprint delivery-файлов и атомарно запишет только `CANDIDATE_PIPELINE_BUILD_ID` в ignored `runtime.env`; ключи она не читает и не печатает.
 
@@ -83,7 +84,7 @@ sudo /usr/local/sbin/hh-production-preflight
 ```bash
 ln -sfn /etc/nginx/sites-available/hh-web /etc/nginx/sites-enabled/hh-web
 nginx -t && systemctl enable --now nginx
-systemctl enable --now hh-media-processor hh-document-processor hh-web hh-agent-worker
+docker compose -f deploy/docker/docker-compose.yml -f deploy/docker/docker-compose.vps.yml up -d --build
 ```
 
 Публичны только SSH и nginx HTTPS. Веб-контур закрыт серверными email/password sessions приложения; nginx очищает входящие identity headers. PostgreSQL, media/document processors и internal runtime routes остаются loopback/server-token only. Для восстановления используйте `auth:reset`, для экстренного закрытия доступа — `auth:disable` и `auth:revoke`; `auth:enable` возвращает доступ.

@@ -25,6 +25,7 @@ test("validation recognizes pinned matrix workflow versions without accepting le
   assert.equal(isMatrixWorkflowVersion("matrix-v2"), false);
   assert.equal(isMatrixWorkflowVersion("matrix-v2-shadow"), false);
   assert.equal(isMatrixWorkflowVersion("matrix-v3"), true);
+  assert.equal(isMatrixWorkflowVersion("matrix-v4-rabbit-parallel"), true);
   assert.equal(isMatrixWorkflowVersion("legacy-v1"), false);
   assert.equal(isMatrixWorkflowVersion("matrix-v2-unknown"), false);
   assert.equal(isMatrixWorkflowVersion("matrix-v"), false);

@@ -30,11 +30,41 @@ services:
       CANDIDATE_PIPELINE_ROUTING: ${CANDIDATE_PIPELINE_ROUTING:-effectful}
 
   worker:
-    environment:
+    environment: &production-worker-environment
       APP_ORIGIN: https://${HH_DOMAIN}
       E2E_ENVIRONMENT: production
       AGENT_RUNTIME_ENVIRONMENT: production
       CANDIDATE_PIPELINE_ROUTING: ${CANDIDATE_PIPELINE_ROUTING:-effectful}
+
+  worker-postgres:
+    environment: *production-worker-environment
+
+  dispatch-publisher:
+    environment: *production-worker-environment
+
+  worker-control:
+    environment: *production-worker-environment
+
+  worker-documents:
+    environment: *production-worker-environment
+
+  worker-media:
+    environment: *production-worker-environment
+
+  worker-transcription:
+    environment: *production-worker-environment
+
+  worker-llm:
+    environment: *production-worker-environment
+
+  worker-reports:
+    environment: *production-worker-environment
+
+  worker-drive:
+    environment: *production-worker-environment
+
+  worker-notifications:
+    environment: *production-worker-environment
 
   media-processor:
     environment:

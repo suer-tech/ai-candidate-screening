@@ -4,11 +4,11 @@
 
 Сервис автоматизирует найм: HR вручную задаёт название вакансии, RouterAI генерирует редактируемый профиль, а автономный durable runtime обнаруживает материалы кандидата в личном Google My Drive, транскрибирует интервью, строит доказательную оценку, публикует один цельный PDF и отправляет Telegram-уведомление. Старые пары PDF сохраняются только для чтения ранее завершённых запусков.
 
-Production-контур не использует Cloudflare, D1, R2, Shared Drive или service account. Его состав: Node.js/Nitro web, постоянный agent worker, локальные media/document processors и PostgreSQL 16. На Windows PostgreSQL работает в Docker Compose; на Ubuntu — как loopback-only системная служба.
+Production-контур не использует Cloudflare, D1, R2, Shared Drive или service account. Его состав: Node.js/Nitro web, RabbitMQ 3.13, PostgreSQL 16, dispatch publisher, discovery worker, изолированные worker pools и локальные media/document processors. На Windows и в актуальном VPS-контуре эти компоненты работают в Docker Compose.
 
 ## Точки запуска
 
-- `web/scripts/run-runtime-process.ts` — единая точка процессов `web`, `worker`, `media`, `document` и `controller`.
+- `web/scripts/run-runtime-process.ts` — единая точка процессов `web`, `discovery`, `rabbit-publisher`, `rabbit-worker`, `media`, `document` и `controller`; имя пула задаётся только allowlisted routing class.
 - `web/app/api/` — публичные product/OAuth/health routes и закрытые internal runtime/tool routes Nitro.
 - `deploy/local/local.ps1` — Windows-команды `bootstrap`, `check`, `start`, `stop`.
 - `deploy/ubuntu/install.sh` — immutable release, PostgreSQL 16, systemd, nginx Basic Auth/TLS, firewall и backup timers на Ubuntu.
@@ -26,18 +26,23 @@ My Drive: папка кандидата
   -> discovery каждые 15 секунд
   -> три последовательных минутных снимка без изменений
   -> immutable input version и durable goal/plan/tasks в PostgreSQL
-  -> PDF/DOCX extraction + один источник интервью
+  -> transactional dispatch outbox -> RabbitMQ technical envelope -> claim-by-ID/version в PostgreSQL
+  -> fan-out документов по immutable source ID и независимых источников интервью
      -> запись: FFmpeg + AssemblyAI EU
      -> одна или несколько записей: каждая проходит media extraction -> AssemblyAI
      -> одна или несколько готовых TXT/Markdown/SRT/VTT стенограмм: локальный deterministic parser без media/STT
      -> одна или несколько готовых DOCX стенограмм: Mammoth document extraction -> тот же deterministic parser без media/STT
      -> все interview sources объединяются в один transcript bundle с отдельными file identity и локаторами каждого источника
+  -> exact joins документов и стенограмм
   -> protected LLM traces и evidence graph
   -> при matrix routing: shared claim одной матрицы на profileVersion
   -> LLM compile компактного coverage manifest -> один fail-soft critic-editor проверяет fidelity/coverage/over-splitting/stop-factor origin -> immutable checksum publish; при сбое критика публикуется технически валидный compiler draft с warning
   -> decision-safe нормализованная стенограмма разбивается на перекрывающиеся окна по полному токенному бюджету provider-запроса без суммаризации
   -> каждый batch возвращает extraction coverage по всем criterion IDs; deterministic harness делает missing-only retry, merge/dedup и один gap-search
-  -> claims объединяются -> fail-soft global conflicts -> каждая matrix row получает одно из трёх состояний -> узкая fail-soft проверка stop/material-rejection строк
+  -> evidence batches выполняются независимо и объединяются exact join
+  -> claims объединяются -> fail-soft global conflicts
+  -> ABC-направления и группы строк матрицы выполняются параллельно, затем объединяются assessment join
+  -> выбранные критические строки проверяются независимыми shards и объединяются exact join
   -> balanced STRENGTH/CONCERN/QUESTION observations -> holistic LLM recommendation; подтверждённый явный stop factor остаётся единственным deterministic override
   -> eval gate; retry, repair, replan либо WAITING_FOR_HUMAN
   -> versioned assessment -> `compose-candidate-report/v2` без raw resume/transcript; decision/evidence validation и deterministic fallback
@@ -69,11 +74,13 @@ Dashboard projection также проходит по recovery lineage: опуб
 
 ## Персистентность и эффекты
 
-PostgreSQL хранит product state, OAuth state, goal/run/task/event projections, checkpoints, recovery lineage, grants/budgets, evidence/assessment/report metadata, outbox и bounded binary artifacts. Queue claim использует `FOR UPDATE SKIP LOCKED`; lease token является fencing token. Новые матрицы компилируются только с identity `matrix-v3`; исторические `matrix-v2` не переиспользуются и доступны только как неизменяемые записи. `agent_runs.recovery_source_run_id` и `agent_tasks.reused_from_task_id` сохраняют provenance выборочного восстановления без изменения предшествующего запуска. Внешняя запись проходит через intent/outbox, а неизвестный исход сверяется перед повтором.
+PostgreSQL остаётся источником истины для product state, OAuth state, goal/run/task/event projections, checkpoints, recovery lineage, grants/budgets, evidence/assessment/report metadata, dispatch/outbox и bounded binary artifacts. RabbitMQ не хранит данные кандидата: сообщение содержит только schema version, task/run IDs, task version, routing class, attempt hint, correlation/trace IDs и timestamp. Consumer обязан повторно сделать атомарный claim-by-ID/version в PostgreSQL; lease token остаётся fencing token, а ack отправляется только после terminal/defer commit. Publisher учитывает и confirm, и mandatory `basic.return`; reconcile восстанавливает отсутствующий dispatch и после safety interval повторно публикует подтверждённую, но всё ещё `RUNNABLE` задачу на случай потери очереди. Повторные доставки не меняют exactly-once логический результат благодаря PostgreSQL claim и idempotency identity.
+
+Новые запуски используют `matrix-v4-rabbit-parallel`; уже созданные `matrix-v3` продолжают исполняться по закреплённому старому графу. `agent_fanout_groups` и `agent_fanout_members` фиксируют immutable descriptor, полный состав и порядок shards. Join принимает только точный terminal-набор своей версии и канонически сортирует результаты. Успешные совместимые shard checkpoints переиспользуются при selective retry; изменение manifest/profile/workflow/config fingerprint создаёт новый descriptor. Для готовой текстовой стенограммы создаётся normalization shard, а каждая запись проходит отдельную цепочку `media → submit → collect`; provider job сохраняется до ack, незавершённый collect переносится через `available_at`. Внешняя запись проходит через прежние idempotency identity и outbox, поэтому redelivery не создаёт второй PDF, Drive-файл или Telegram-эффект.
 
 Candidate-scoped matrix claims, conflicts и rows защищены от обычного `UPDATE/DELETE`, но используют cleanup-aware immutable guard: repository устанавливает transaction-local `hh.cleanup_run_ids` перед подтверждённым lifecycle delete, и только строки с входящим в scope `run_id` допускаются к каскадному удалению. Shared vacancy matrices остаются безусловно неизменяемыми и не удаляются вместе с кандидатом.
 
-Единственный workflow `matrix-v3` использует coverage-first policy `ASM-050/coverage-first-v1`. Каждый критерий оценивается ровно один раз как `Соответствует`, `Не соответствует` или `Недостаточно данных`; положительные строки и дополнительные `STRENGTH` питают сильные стороны и компетенции, отрицательные строки и `CONCERN` — ограничения, неизвестные строки и `QUESTION` — вопросы. Итоговую категорию синтезирует LLM по всем строкам и наблюдениям. Только подтверждённый явный стоп-фактор безусловно задаёт `Не рекомендовать`.
+Текущий workflow `matrix-v4-rabbit-parallel` сохраняет coverage-first policy `ASM-050/coverage-first-v1` и HR-семантику `matrix-v3`, меняя только исполнение графа. Каждый критерий оценивается ровно один раз как `Соответствует`, `Не соответствует` или `Недостаточно данных`; положительные строки и дополнительные `STRENGTH` питают сильные стороны и компетенции, отрицательные строки и `CONCERN` — ограничения, неизвестные строки и `QUESTION` — вопросы. Итоговую категорию синтезирует LLM по всем строкам и наблюдениям. Только подтверждённый явный стоп-фактор безусловно задаёт `Не рекомендовать`.
 
 ABC не выводится из criterion IDs основной матрицы. `abc_matrix_assessment` вызывается для заданных vacancy directions и сохраняет значения по `directionId`; если описания A/B/C пусты, LLM строит рабочую шкалу по названию направления и контексту роли. «ABC-профиль не настроен» показывается только при отсутствии самих направлений.
 

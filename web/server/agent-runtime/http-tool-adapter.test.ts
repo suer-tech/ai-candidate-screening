@@ -14,7 +14,7 @@ test("worker registers every canonical tool and forwards only safe task context"
   const result = await adapter.execute({ id: "task", run_id: "run", tool_key: "candidate.drive-snapshot/v1", lease_token: 1, lease_owner: "worker-1", attemptId: "attempt", candidate_id: 7, idempotency_identity: "idem" }, new AbortController().signal, { grantId: "grant" });
   assert.equal(result.outcome, "SUCCEEDED");
   assert.deepEqual(observed, { toolKey: "candidate.drive-snapshot/v1", task: { id: "task", runId: "run", toolKey: "candidate.drive-snapshot/v1", candidatePk: 7, idempotencyIdentity: "idem", leaseToken: 1, worker: "worker-1", attemptId: "attempt", authorizationGrantId: "grant" } });
-  assert.equal(adapters.size, 32);
+  assert.equal(adapters.size, 55);
 });
 
 test("remote worker rejects a plaintext or loopback tool endpoint", () => {

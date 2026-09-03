@@ -14,6 +14,16 @@ const MAX_ATTEMPTS_BY_TOOL: Readonly<Record<string, number>> = Object.freeze({
   "candidate.report/v1": 3,
   "candidate.drive-publication/v1": 3,
   "candidate.telegram/v1": 3,
+  "candidate.document-shard/v1": 3,
+  "candidate.transcript-shard/v1": 3,
+  "candidate.transcript-normalize-shard/v1": 3,
+  "candidate.transcript-media-shard/v1": 3,
+  "candidate.transcript-submit-shard/v1": 3,
+  "candidate.transcript-collect-shard/v1": 3,
+  "candidate.evidence-shard/v1": 3,
+  "candidate.row-shard/v1": 3,
+  "candidate.abc-shard/v1": 3,
+  "candidate.critical-shard/v1": 3,
 });
 
 const BACKOFF_MS = [5_000, 15_000, 45_000] as const;
@@ -37,5 +47,7 @@ const RUSSIAN_FAILURES: Readonly<Record<string, string>> = Object.freeze({
 });
 
 export function candidateFailureMessage(errorCode: string) {
+  if (errorCode.startsWith("FANOUT_REQUIRED_SHARD_FAILED:")) return "Не удалось обработать один обязательный фрагмент материалов кандидата. Остальные кандидаты продолжают обрабатываться; повторный запуск переиспользует уже готовые фрагменты";
+  if (errorCode.includes("JOIN_COVERAGE_INVALID") || errorCode === "FANOUT_MEMBERSHIP_INCOMPLETE") return "Не удалось собрать полный результат из параллельно обработанных частей. Повторный запуск переиспользует успешно завершённые части";
   return RUSSIAN_FAILURES[errorCode] ?? "Обработка завершилась с ошибкой. Повторите запуск или обратитесь к администратору";
 }

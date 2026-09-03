@@ -33,6 +33,7 @@ import { buildCriterionClaimExtractionBatches } from "./transcript-claim-batchin
 import { recoveryArtifactPurpose, recoveryArtifactSchema } from "./recovery-contracts.ts";
 import { deduplicateCoverageEvidence, matrixCriterionIds, technicalFallbackRow, validateExactCriterionCoverage, type BatchCoverageEntry } from "./matrix-coverage.ts";
 import { countOpenAiCompatibleContextTokens } from "../llm/token-counting.ts";
+import { canonicalJoin, createFanoutDescriptor } from "../agent-runtime/fanout.ts";
 
 type ExecutionEnvironment = CandidatePipelineEnvironment & GoogleDriveOAuthEnvironment;
 
@@ -367,7 +368,7 @@ export async function createProductionCandidateToolExecution(input: { database: 
   const agentRuntime = new PostgresAgentRuntimeRepository(input.database);
   const goal = await queryOne<{ goal_id: string; workflow_version: string; trigger_identity: string }>(input.database, "SELECT goal_id,workflow_version,trigger_identity FROM agent_runs WHERE id=$1", [task.runId]);
   if (!goal) throw new Error("PRODUCTION_RUN_NOT_FOUND");
-  if (goal.workflow_version !== MATRIX_WORKFLOW_VERSION) throw new Error("UNSUPPORTED_CANDIDATE_WORKFLOW_VERSION");
+  if (![MATRIX_WORKFLOW_VERSION, "matrix-v4-rabbit-parallel"].includes(goal.workflow_version)) throw new Error("UNSUPPORTED_CANDIDATE_WORKFLOW_VERSION");
   const taskId = text(task.id, "PRODUCTION_TASK_ID_MISSING");
   const attemptId = text(task.attemptId, "PRODUCTION_TASK_ATTEMPT_ID_MISSING");
   const worker = text(task.worker, "PRODUCTION_TASK_WORKER_MISSING");
@@ -687,9 +688,12 @@ export async function createProductionCandidateToolExecution(input: { database: 
           const capability = text(value.capability, "PRODUCTION_ROUTERAI_CAPABILITY_MISSING");
           if (capability === "ocr") {
             const manifest = await materialManifest();
+            const selectedSourceFileId = value.shardPayload && typeof value.shardPayload === "object" && !Array.isArray(value.shardPayload)
+              ? String((value.shardPayload as Record<string, unknown>).sourceFileId ?? "") : "";
             const documents = (manifest.entries ?? []).filter((entry) => entry.supported !== false
               && entry.role !== "interview"
-              && ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/msword"].includes(entry.mimeType));
+              && ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/msword"].includes(entry.mimeType)
+              && (!selectedSourceFileId || entry.fileId === selectedSourceFileId));
             if (!documents.length) throw new Error("DOCUMENT_MATERIAL_NOT_FOUND");
             const budgetedOcrDependencies: ExecuteLlmAttemptDependencies = {
               ...llmDependencies,
@@ -736,12 +740,299 @@ export async function createProductionCandidateToolExecution(input: { database: 
             const stored = await storeJson("document-bundle", operationIdentity, {
               schemaVersion: "document-bundle/v1",
               inputVersion,
+              shardIdentity: value.shardIdentity,
               documents: processedDocuments,
             });
             return { artifactRef: stored.artifactRef, schemaVersion: "document-bundle/v1" };
           }
 
           throw new Error(`PRODUCTION_ROUTERAI_CAPABILITY_UNSUPPORTED:${capability}`);
+        },
+      },
+      parallel: {
+        execute: async (toolKey) => {
+          if (!artifactStore) throw new Error("PRODUCTION_PARALLEL_ARTIFACT_STORE_NOT_PROVISIONED");
+          const configFingerprint = sha256([input.environment.CANDIDATE_PIPELINE_BUILD_ID, input.environment.LLM_RUNTIME_CONFIG_JSON]);
+          const planVersion = Number((await queryOne<{ current_plan_version: number }>(input.database, "SELECT current_plan_version FROM agent_runs WHERE id=$1", [runId]))?.current_plan_version ?? 1);
+          const createGroup = async (groupKey: string, kind: string, shardToolKey: string, shards: Array<{ identity: string; payload: Record<string, unknown>; toolKey?: string; dependsOn?: readonly string[] }>) => {
+            const join = await queryOne<{ id: string }>(input.database, "SELECT id FROM agent_tasks WHERE run_id=$1 AND task_key=$2", [runId, `${groupKey}-join`]);
+            if (!join) throw new Error("FANOUT_JOIN_NOT_FOUND");
+            const descriptor = createFanoutDescriptor({ workflowVersion: goal.workflow_version, runId, planVersion, groupKey, kind,
+              inputFingerprint: inputVersion, profileFingerprint: profileVersion, configFingerprint, shards });
+            const materialized = await agentRuntime.materializeFanout({ coordinatorTaskId: taskId, joinTaskId: join.id, descriptor, shardToolKey, expectedOutputs: [`${kind}-shard-result`] });
+            const stored = await storeJson("fanout-descriptor", operationIdentity, { descriptor, groupId: materialized.groupId, created: materialized.created });
+            return { artifactRef: stored.artifactRef, checksum: stored.checksum, groupId: materialized.groupId, shardCount: shards.length };
+          };
+          const readGroup = async (groupKey: string) => agentRuntime.readFanout({ joinTaskId: taskId, groupKey });
+          if (toolKey === "candidate.fanout-documents/v1") {
+            const manifest = await materialManifest();
+            const documents = (manifest.entries ?? []).filter((entry) => entry.supported !== false && entry.role !== "interview"
+              && ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/msword"].includes(entry.mimeType));
+            return createGroup("documents", "documents", "candidate.document-shard/v1", documents.map((entry) => ({ identity: `${entry.fileId}:${entry.version}`, payload: { sourceFileId: entry.fileId, sourceVersion: entry.version } })));
+          }
+          if (toolKey === "candidate.document-join/v1") {
+            const group = await readGroup("documents");
+            const bundles = await Promise.all(group.members.map((member) => artifactStore.getJson<{ shardIdentity?: string; documents?: Array<{ file?: { fileId?: string; version?: string } }> }>(member.output_artifact_id!)));
+            const ordered = canonicalJoin(group.descriptor.shards, bundles.filter((item): item is typeof item & { shardIdentity: string } => typeof item.shardIdentity === "string"));
+            for (const [index, bundle] of ordered.entries()) {
+              const expected = group.descriptor.shards[index];
+              if (bundle.documents?.length !== 1 || `${bundle.documents[0]?.file?.fileId}:${bundle.documents[0]?.file?.version}` !== expected.identity) throw new Error("DOCUMENT_JOIN_SOURCE_COVERAGE_INVALID");
+            }
+            const documents = ordered.flatMap((item) => item.documents ?? []);
+            if (documents.length !== group.descriptor.shards.length) throw new Error("DOCUMENT_JOIN_COVERAGE_INVALID");
+            const stored = await storeJson("document-bundle", operationIdentity, { schemaVersion: "document-bundle/v1", inputVersion, documents, fanoutGroupId: group.groupId });
+            await agentRuntime.completeFanout(group.groupId);
+            return { artifactRef: stored.artifactRef, checksum: stored.checksum };
+          }
+          if (toolKey === "candidate.fanout-transcripts/v1") {
+            const manifest = await materialManifest();
+            const sources = (manifest.entries ?? []).filter((entry) => entry.role === "interview" && entry.supported !== false);
+            const shards = sources.flatMap((entry) => {
+              const source = `${entry.fileId}:${entry.version}`;
+              const payload = { sourceFileId: entry.fileId, sourceVersion: entry.version, interviewSource: entry.interviewSource };
+              if (entry.interviewSource === "ready-transcript") return [{ identity: `${source}:normalize`, payload, toolKey: "candidate.transcript-normalize-shard/v1" }];
+              return [
+                { identity: `${source}:media`, payload, toolKey: "candidate.transcript-media-shard/v1" },
+                { identity: `${source}:submit`, payload, toolKey: "candidate.transcript-submit-shard/v1", dependsOn: [`${source}:media`] },
+                { identity: `${source}:collect`, payload, toolKey: "candidate.transcript-collect-shard/v1", dependsOn: [`${source}:submit`] },
+              ];
+            });
+            return createGroup("transcripts", "transcripts", "candidate.transcript-shard/v1", shards);
+          }
+          if (toolKey === "candidate.transcript-join/v1") {
+            const group = await readGroup("transcripts");
+            const terminalMembers = group.members.filter((member) => ["candidate.transcript-normalize-shard/v1", "candidate.transcript-collect-shard/v1"].includes(member.tool_key));
+            const terminalDescriptors = group.descriptor.shards.filter((shard) => ["candidate.transcript-normalize-shard/v1", "candidate.transcript-collect-shard/v1"].includes(shard.toolKey ?? ""));
+            const bundles = await Promise.all(terminalMembers.map((member) => artifactStore.getJson<(ReturnType<typeof transcriptRepresentations> & { shardIdentity?: string })>(member.output_artifact_id!)));
+            const ordered = canonicalJoin(terminalDescriptors, bundles.filter((item): item is ReturnType<typeof transcriptRepresentations> & { shardIdentity: string } => typeof item.shardIdentity === "string"));
+            const merged = mergeTranscriptRepresentations({ providerJobId: `joined:${group.groupId}`, sources: ordered });
+            const stored = await storeJson("transcript-bundle", operationIdentity, merged);
+            await agentRuntime.completeFanout(group.groupId);
+            return { artifactRef: stored.artifactRef, checksum: stored.checksum };
+          }
+          if (["candidate.transcript-normalize-shard/v1", "candidate.transcript-media-shard/v1", "candidate.transcript-submit-shard/v1", "candidate.transcript-collect-shard/v1"].includes(toolKey)) {
+            const payload = task.shardPayload && typeof task.shardPayload === "object" && !Array.isArray(task.shardPayload) ? task.shardPayload as Record<string, unknown> : {};
+            const sourceFileId = text(payload.sourceFileId, "TRANSCRIPT_SOURCE_FILE_ID_MISSING");
+            const sourceVersion = text(payload.sourceVersion, "TRANSCRIPT_SOURCE_VERSION_MISSING");
+            const manifest = await materialManifest();
+            const sourceEntry = (manifest.entries ?? []).find((entry) => entry.fileId === sourceFileId && entry.version === sourceVersion && entry.role === "interview");
+            if (!sourceEntry) throw new Error("TRANSCRIPT_SOURCE_NOT_IN_FROZEN_MANIFEST");
+            const sourceIdentity = { sourceFileId, sourceFileVersion: sourceVersion, sourceFileName: sourceEntry.name };
+            const download = async () => {
+              await authorizeFile("download", sourceFileId);
+              const expectedChecksum = await immutableFileChecksum(sourceFileId);
+              return drive.downloadVersion({ fileId: sourceFileId, expectedVersion: sourceVersion, expectedSize: sourceEntry.size,
+                expectedModifiedTime: sourceEntry.modifiedTime, expectedChecksum,
+                checkpoint: (value) => checkpoint({ kind: "drive-download", identity: `${operationIdentity}:source`, artifactIdentity: `${value.fileId}:${value.version}`, checksum: value.checksum }) });
+            };
+            if (toolKey === "candidate.transcript-normalize-shard/v1") {
+              const downloaded = await download();
+              let extractedText: string | undefined;
+              if (sourceEntry.mimeType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+                if (!input.environment.DOCUMENT_PROCESSOR_URL || !input.environment.DOCUMENT_PROCESSOR_TOKEN) throw new Error("PRODUCTION_DOCUMENT_PROCESSOR_NOT_PROVISIONED");
+                const processorUrl = new URL(input.environment.DOCUMENT_PROCESSOR_URL);
+                if (input.environment.E2E_ENVIRONMENT === "local") {
+                  if (!loopbackOrDockerHostname(processorUrl.hostname) || !["http:", "https:"].includes(processorUrl.protocol)) throw new Error("LOCAL_DOCUMENT_PROCESSOR_MUST_BE_LOOPBACK");
+                } else if (processorUrl.protocol !== "https:" && !dockerInternalProcessorEndpoint(processorUrl, "document-processor")) throw new Error("REMOTE_DOCUMENT_PROCESSOR_MUST_USE_HTTPS");
+                await auditBoundary("provider", downloaded.bytes);
+                const response = await fetch(processorUrl, { method: "POST", headers: { authorization: `Bearer ${input.environment.DOCUMENT_PROCESSOR_TOKEN}`, "content-type": sourceEntry.mimeType },
+                  body: downloaded.bytes.slice().buffer as ArrayBuffer, signal: AbortSignal.timeout(5 * 60_000) });
+                const extracted = await response.json() as { code?: string; kind?: string; sections?: ExtractedSection[] };
+                if (!response.ok) throw new Error(extracted.code ?? `DOCUMENT_PROCESSOR_HTTP_${response.status}`);
+                if (extracted.kind !== "docx" || !Array.isArray(extracted.sections)) throw new Error("DOCUMENT_PROCESSOR_DOCX_OUTPUT_INVALID");
+                extractedText = extracted.sections.map((section) => section.text.trim()).filter(Boolean).join("\n");
+              }
+              const parsed = parseReadyTranscript({ fileId: sourceFileId, fileVersion: sourceVersion, fileName: sourceEntry.name, mimeType: sourceEntry.mimeType,
+                ...(extractedText === undefined ? { bytes: downloaded.bytes } : { extractedText }) });
+              const representation = { ...transcriptRepresentations({ providerJobId: `ready-transcript:${sha256([operationIdentity, downloaded.checksum]).slice(0, 24)}`,
+                raw: { schemaVersion: parsed.schemaVersion, source: parsed.source, text: parsed.text, timingSource: "provided-text" }, words: parsed.words, utterances: parsed.utterances, source: sourceIdentity }), shardIdentity: task.shardIdentity };
+              const stored = await storeJson("transcript-bundle", operationIdentity, representation);
+              return { artifactRef: stored.artifactRef, checksum: stored.checksum };
+            }
+            const dependencyArtifact = async (dependencyTool: string) => {
+              const row = await queryOne<{ output_artifact_id: string }>(input.database, `SELECT dependency.output_artifact_id FROM agent_task_dependencies edge
+                JOIN agent_tasks dependency ON dependency.id=edge.depends_on_task_id
+                WHERE edge.task_id=$1 AND dependency.tool_key=$2 AND dependency.state='SUCCEEDED' AND dependency.output_artifact_id IS NOT NULL LIMIT 1`, [taskId, dependencyTool]);
+              if (!row?.output_artifact_id) throw new Error("TRANSCRIPT_DEPENDENCY_ARTIFACT_MISSING");
+              return row.output_artifact_id;
+            };
+            if (toolKey === "candidate.transcript-media-shard/v1") {
+              if (!input.environment.MEDIA_PROCESSOR_URL || !input.environment.MEDIA_PROCESSOR_TOKEN) throw new Error("PRODUCTION_MEDIA_PROCESSOR_NOT_PROVISIONED");
+              const downloaded = await download();
+              const mediaUrl = new URL(input.environment.MEDIA_PROCESSOR_URL);
+              if (input.environment.E2E_ENVIRONMENT === "local") {
+                if (!loopbackOrDockerHostname(mediaUrl.hostname) || !["http:", "https:"].includes(mediaUrl.protocol)) throw new Error("LOCAL_MEDIA_PROCESSOR_MUST_BE_LOOPBACK");
+              } else if (mediaUrl.protocol !== "https:" && !dockerInternalProcessorEndpoint(mediaUrl, "media-processor")) throw new Error("REMOTE_MEDIA_PROCESSOR_MUST_USE_HTTPS");
+              await auditBoundary("provider", downloaded.bytes);
+              const response = await fetch(mediaUrl, { method: "POST", headers: { authorization: `Bearer ${input.environment.MEDIA_PROCESSOR_TOKEN}`, "content-type": sourceEntry.mimeType },
+                body: downloaded.bytes.slice().buffer as ArrayBuffer, signal: AbortSignal.timeout(15 * 60_000) });
+              if (!response.ok) throw new Error(`MEDIA_PROCESSOR_HTTP_${response.status}`);
+              const audioBytes = new Uint8Array(await response.arrayBuffer());
+              const stored = await storeBytes("transcript-audio", operationIdentity, audioBytes, response.headers.get("content-type") ?? "audio/mpeg");
+              return { artifactRef: stored.artifactRef, checksum: stored.checksum };
+            }
+            if (toolKey === "candidate.transcript-submit-shard/v1") {
+              if (!input.environment.ASSEMBLYAI_API_KEY) throw new Error("PRODUCTION_ASSEMBLYAI_STAGE_CONTEXT_NOT_PROVISIONED");
+              const restored = await queryOne<{ remote_job_id: string }>(input.database, `SELECT cp.remote_job_id FROM agent_checkpoints cp JOIN agent_attempts attempt ON attempt.id=cp.attempt_id
+                WHERE attempt.task_id=$1 AND cp.kind='provider-job-created' AND cp.identity=$2 AND cp.remote_job_id IS NOT NULL ORDER BY cp.created_at DESC LIMIT 1`, [taskId, operationIdentity]);
+              let providerJobId = restored?.remote_job_id;
+              if (!providerJobId) {
+                const audioRef = await dependencyArtifact("candidate.transcript-media-shard/v1");
+                const audioBytes = await artifactStore.getBytes(audioRef);
+                await auditBoundary("provider", audioBytes);
+                const provider = new DurableAssemblyAiAdapter({ apiKey: input.environment.ASSEMBLYAI_API_KEY });
+                const created = await provider.create({ audioBytes, operationIdentity, checkpoint: async ({ remoteJobId }) => checkpoint({ kind: "provider-job-created", identity: operationIdentity, remoteJobId }) });
+                providerJobId = created.remoteJobId;
+              }
+              const stored = await storeJson("transcript-provider-job", operationIdentity, { schemaVersion: "transcript-provider-job/v1", providerJobId, source: sourceIdentity });
+              return { artifactRef: stored.artifactRef, checksum: stored.checksum };
+            }
+            if (!input.environment.ASSEMBLYAI_API_KEY) throw new Error("PRODUCTION_ASSEMBLYAI_STAGE_CONTEXT_NOT_PROVISIONED");
+            const submitRef = await dependencyArtifact("candidate.transcript-submit-shard/v1");
+            const submission = await artifactStore.getJson<{ schemaVersion?: string; providerJobId?: string; source?: TranscriptSourceIdentity }>(submitRef);
+            if (submission.schemaVersion !== "transcript-provider-job/v1" || !submission.providerJobId || !submission.source) throw new Error("TRANSCRIPT_PROVIDER_JOB_INVALID");
+            const provider = new DurableAssemblyAiAdapter({ apiKey: input.environment.ASSEMBLYAI_API_KEY });
+            const raw = await provider.poll(submission.providerJobId);
+            if (raw.status !== "completed" && raw.status !== "error") return { artifactRef: "", deferred: true, retryAfterMs: 15_000 };
+            if (raw.status !== "completed") throw new Error("ASSEMBLYAI_TRANSCRIPTION_FAILED");
+            const representation = { ...transcriptRepresentations({ providerJobId: submission.providerJobId, raw,
+              words: (Array.isArray(raw.words) ? raw.words : []) as TranscriptWord[], utterances: (Array.isArray(raw.utterances) ? raw.utterances : []) as TranscriptUtterance[], source: submission.source }), shardIdentity: task.shardIdentity };
+            const stored = await storeJson("transcript-bundle", operationIdentity, representation);
+            return { artifactRef: stored.artifactRef, checksum: stored.checksum };
+          }
+          const published = await new PostgresVacancyMatrixRepository(input.database, goal.workflow_version).readMatrix(profileVersion);
+          if (!published) throw new Error("MATRIX_NOT_PUBLISHED");
+          const matrix = published.matrix;
+          const evidenceBatchPayload = (batch: { batchId: string; order: number; request: Readonly<Record<string, unknown>> }) => {
+            const requestedCriterionIds = Array.isArray(batch.request.requestedCriterionIds) ? batch.request.requestedCriterionIds.filter((item): item is string => typeof item === "string") : [];
+            const materials = batch.request.materials && typeof batch.request.materials === "object" && !Array.isArray(batch.request.materials) ? batch.request.materials as Record<string, unknown> : {};
+            const documents = Array.isArray(materials.documents) ? materials.documents : [];
+            const transcript = materials.transcript && typeof materials.transcript === "object" && !Array.isArray(materials.transcript) ? materials.transcript as Record<string, unknown> : {};
+            const normalized = transcript.normalized && typeof transcript.normalized === "object" && !Array.isArray(transcript.normalized) ? transcript.normalized as Record<string, unknown> : {};
+            const utterances = Array.isArray(normalized.utterances) ? normalized.utterances : [];
+            const sourceRanges = [
+              ...documents.flatMap((value) => {
+                if (!value || typeof value !== "object" || Array.isArray(value)) return [];
+                const document = value as Record<string, unknown>; const file = document.file && typeof document.file === "object" && !Array.isArray(document.file) ? document.file as Record<string, unknown> : {};
+                const span = document.textSpan && typeof document.textSpan === "object" && !Array.isArray(document.textSpan) ? document.textSpan as Record<string, unknown> : {};
+                return [{ kind: "document", sourceFileId: String(file.fileId ?? document.artifactId ?? ""), start: Number(span.start ?? 0), end: Number(span.end ?? 0) }];
+              }),
+              ...utterances.flatMap((value) => {
+                if (!value || typeof value !== "object" || Array.isArray(value)) return [];
+                const utterance = value as Record<string, unknown>; const source = utterance.source && typeof utterance.source === "object" && !Array.isArray(utterance.source) ? utterance.source as Record<string, unknown> : {};
+                return [{ kind: "transcript", sourceFileId: String(source.sourceFileId ?? utterance.sourceFileId ?? ""), start: Number(utterance.startMs ?? utterance.start ?? 0), end: Number(utterance.endMs ?? utterance.end ?? 0) }];
+              }),
+            ];
+            return { batchId: batch.batchId, order: batch.order, criterionIds: requestedCriterionIds, sourceRanges };
+          };
+          const evidenceInputs = async () => {
+            if (!llmDependencies) throw new Error("MATRIX_RUNTIME_NOT_PROVISIONED");
+            const contextRef = await latestArtifact("candidate.matrix-context-read/v1");
+            const context = await artifactStore.getJson<{ materials?: Record<string, unknown> }>(contextRef);
+            if (!context.materials) throw new Error("MATRIX_DECISION_SAFE_CONTEXT_INVALID");
+            const claimConfig = llmDependencies.configuration.resolve("criterion_claim_extraction");
+            const signalConfig = llmDependencies.configuration.resolve("unmapped_signal_discovery");
+            const maxContextTokens = Number(input.environment.ROUTERAI_CONTEXT_WINDOW_TOKENS ?? 128_000);
+            const safetyTokens = Number(input.environment.MATRIX_BATCH_SAFETY_TOKENS ?? 4_096);
+            const batches = buildCriterionClaimExtractionBatches({ matrix, materials: context.materials,
+              scope: { candidateId: candidatePk, runId, inputVersion, profileVersion }, maxContextTokens,
+              countContextTokens: (request) => Math.max(
+                countOpenAiCompatibleContextTokens({ config: claimConfig, userContent: request as JsonValue, safetyTokens }),
+                countOpenAiCompatibleContextTokens({ config: signalConfig, userContent: request as JsonValue, safetyTokens })), overlapUtterances: 2 });
+            return { batches, materials: context.materials };
+          };
+          if (toolKey === "candidate.fanout-evidence/v1") {
+            const { batches } = await evidenceInputs();
+            return createGroup("evidence", "evidence", "candidate.evidence-shard/v1", batches.map((batch) => ({ identity: batch.batchId, payload: evidenceBatchPayload(batch) })));
+          }
+          if (toolKey === "candidate.evidence-join/v1") {
+            const group = await readGroup("evidence");
+            const shards = await Promise.all(group.members.map((member) => artifactStore.getJson<{ shardIdentity?: string; claims?: CandidateSourceClaim[]; unmappedSignals?: Array<Record<string, unknown>>; coverage?: BatchCoverageEntry[]; traceRefs?: string[] }>(member.output_artifact_id!)));
+            const ordered = canonicalJoin(group.descriptor.shards, shards.filter((item): item is typeof item & { shardIdentity: string } => typeof item.shardIdentity === "string"));
+            const claims = [...new Map(ordered.flatMap((item) => item.claims ?? []).map((claim) => [claim.claimId, claim])).values()];
+            const signals = [...new Map(ordered.flatMap((item) => item.unmappedSignals ?? []).map((signal) => [String(signal.signalId ?? matrixChecksum([signal.locator, signal.text, signal])), signal])).values()];
+            const coverage = deduplicateCoverageEvidence(ordered.flatMap((item) => item.coverage ?? []));
+            const matrixRepository = new PostgresVacancyMatrixRepository(input.database, goal.workflow_version);
+            for (const claim of claims) await matrixRepository.appendClaim({ candidateId: candidatePk, claim });
+            const ids = matrixCriterionIds(matrix.criteria);
+            const stored = await storeJson("matrix-claims", operationIdentity, { schemaVersion: "matrix-claims-bundle/v2", claims, unmappedSignals: signals, coverage,
+              coverageLedger: ordered.map((item, order) => ({ batchId: item.shardIdentity, order, coverage: item.coverage ?? [] })),
+              coverageSummary: { criterionCount: ids.length, coveredCount: coverage.filter((entry) => entry.scanResult === "FOUND").length, technicalFallbackCount: 0, gapSearchExecuted: false },
+              warnings: [], batches: group.descriptor.shards.map((item) => ({ batchId: item.identity, order: item.ordinal })), traceRefs: ordered.flatMap((item) => item.traceRefs ?? []) });
+            await agentRuntime.completeFanout(group.groupId);
+            return { artifactRef: stored.artifactRef, checksum: stored.checksum };
+          }
+          const criterionIds = matrixCriterionIds(matrix.criteria);
+          if (toolKey === "candidate.fanout-rows/v1") {
+            const size = Math.max(1, Math.min(25, Number((input.environment as Record<string, unknown>).MATRIX_ROW_SHARD_SIZE ?? 8)));
+            const groups: string[][] = [];
+            for (let index = 0; index < criterionIds.length; index += size) groups.push(criterionIds.slice(index, index + size));
+            return createGroup("rows", "rows", "candidate.row-shard/v1", groups.map((ids, index) => ({ identity: `rows-${String(index).padStart(4, "0")}-${matrixChecksum(ids).slice(0, 12)}`, payload: { criterionIds: ids } })));
+          }
+          if (toolKey === "candidate.rows-join/v1") {
+            const group = await readGroup("rows");
+            const shards = await Promise.all(group.members.map((member) => artifactStore.getJson<{ shardIdentity?: string; rows?: CandidateMatrixRow[]; warnings?: string[]; traceRefs?: string[] }>(member.output_artifact_id!)));
+            const ordered = canonicalJoin(group.descriptor.shards, shards.filter((item): item is typeof item & { shardIdentity: string } => typeof item.shardIdentity === "string"));
+            const joinedRows = ordered.flatMap((item) => item.rows ?? []);
+            const joinedIds = joinedRows.map((row) => row.criterionId);
+            if (new Set(joinedIds).size !== joinedIds.length || joinedIds.some((id) => !criterionIds.includes(id))) throw new Error("ROW_JOIN_DUPLICATE_OR_UNKNOWN_RESULT");
+            const byId = new Map(joinedRows.map((row) => [row.criterionId, row]));
+            if (byId.size !== criterionIds.length || criterionIds.some((id) => !byId.has(id))) throw new Error("ROW_JOIN_COVERAGE_INVALID");
+            const rows = criterionIds.map((id) => byId.get(id)!);
+            const negative = rows.filter((row) => row.state === "Не соответствует").length;
+            const recommendation = negative ? "Рекомендовать с оговорками" : rows.every((row) => row.state === "Недостаточно данных") ? "Недостаточно данных" : "Рекомендовать";
+            const evidenceRef = await latestArtifact("candidate.matrix-conflict-submit/v1");
+            const stored = await storeJson("matrix-rows", operationIdentity, { schemaVersion: "candidate-matrix-rows-bundle/v3", matrixId: published.matrixId, evidenceRef, rows, abcDirections: [], recommendation,
+              recommendationReason: "Рекомендация сформирована после полного попунктного сопоставления критериев.", coverageSummary: { evaluation: { criterionCount: criterionIds.length, evaluatedCount: criterionIds.length, technicalFallbackCount: 0 } },
+              warnings: ordered.flatMap((item) => item.warnings ?? []), traceRefs: ordered.flatMap((item) => item.traceRefs ?? []) });
+            await agentRuntime.completeFanout(group.groupId);
+            return { artifactRef: stored.artifactRef, checksum: stored.checksum };
+          }
+          if (toolKey === "candidate.fanout-abc/v1") {
+            const vacancy = await vacancyContext();
+            const directions = Array.isArray(vacancy.vacancy?.abcDirections) ? vacancy.vacancy.abcDirections.filter((direction) => direction && typeof direction === "object" && !Array.isArray(direction) && typeof direction.id === "string") as Array<Record<string, unknown>> : [];
+            return createGroup("abc", "abc", "candidate.abc-shard/v1", directions.map((direction) => ({ identity: String(direction.id), payload: { directionId: direction.id } })));
+          }
+          if (toolKey === "candidate.abc-join/v1") {
+            const group = await readGroup("abc");
+            const shards = await Promise.all(group.members.map((member) => artifactStore.getJson<{ shardIdentity?: string; directions?: Array<Record<string, unknown>>; warnings?: string[]; traceRefs?: string[] }>(member.output_artifact_id!)));
+            const ordered = canonicalJoin(group.descriptor.shards, shards.filter((item): item is typeof item & { shardIdentity: string } => typeof item.shardIdentity === "string"));
+            for (const shard of ordered) if (shard.directions?.length !== 1 || String(shard.directions[0]?.id) !== shard.shardIdentity) throw new Error("ABC_JOIN_DIRECTION_COVERAGE_INVALID");
+            const stored = await storeJson("matrix-abc", operationIdentity, { schemaVersion: "candidate-abc-directions/v1", directions: ordered.flatMap((item) => item.directions ?? []), warnings: ordered.flatMap((item) => item.warnings ?? []), traceRefs: ordered.flatMap((item) => item.traceRefs ?? []) });
+            await agentRuntime.completeFanout(group.groupId);
+            return { artifactRef: stored.artifactRef, checksum: stored.checksum };
+          }
+          if (toolKey === "candidate.fanout-critical/v1") {
+            const rowsRef = await latestArtifact("candidate.assessment-join/v1");
+            const rows = await artifactStore.getJson<{ rows?: CandidateMatrixRow[]; recommendation?: string }>(rowsRef);
+            const criteria = new Map<string, MatrixCriterion>();
+            const visit = (items: readonly MatrixCriterion[]) => items.forEach((item) => { criteria.set(item.criterionId, item); visit(item.children); }); visit(matrix.criteria);
+            const targets = (rows.rows ?? []).filter((row) => {
+              const criterion = criteria.get(row.criterionId);
+              return Boolean(criterion?.hardRequired && row.state === "Соответствует") || Boolean(!criterion?.hardRequired && rows.recommendation === "Не рекомендовать" && row.state === "Не соответствует");
+            });
+            return createGroup("critical", "critical", "candidate.critical-shard/v1", targets.map((row) => {
+              const criterion = criteria.get(row.criterionId);
+              return { identity: row.criterionId, payload: { criterionId: row.criterionId,
+                selectionReason: criterion?.hardRequired ? "TRIGGERED_STOP_FACTOR" : "MATERIAL_REJECTION_GAP" } };
+            }));
+          }
+          if (toolKey === "candidate.critical-join/v1") {
+            const group = await readGroup("critical");
+            const rowsRef = await latestArtifact("candidate.assessment-join/v1");
+            const rows = await artifactStore.getJson<{ rows?: CandidateMatrixRow[] }>(rowsRef);
+            const shards = await Promise.all(group.members.map((member) => artifactStore.getJson<{ shardIdentity?: string; results?: CriticalVerificationDecision[]; traceRefs?: string[]; warnings?: string[] }>(member.output_artifact_id!)));
+            const ordered = canonicalJoin(group.descriptor.shards, shards.filter((item): item is typeof item & { shardIdentity: string } => typeof item.shardIdentity === "string"));
+            const results = ordered.flatMap((item) => item.results ?? []);
+            if (new Set(results.map((item) => item.criterionId)).size !== results.length) throw new Error("CRITICAL_JOIN_DUPLICATE_RESULT");
+            const adjustedRows = applyCriticalVerificationDecisions(rows.rows ?? [], results);
+            const matrixRepository = new PostgresVacancyMatrixRepository(input.database, goal.workflow_version);
+            for (const row of adjustedRows) await matrixRepository.appendRow({ candidateId: candidatePk, runId, inputVersion, profileVersion, matrixId: published.matrixId, row, verificationTraceRef: "parallel-critical-join" });
+            const stored = await storeJson("matrix-verification", operationIdentity, { schemaVersion: "matrix-verification/v2", rowsRef, results, adjustedRows, criticalRisks: [], warnings: ordered.flatMap((item) => item.warnings ?? []), traceRefs: ordered.flatMap((item) => item.traceRefs ?? []), traceRef: "parallel-critical-join" });
+            await agentRuntime.completeFanout(group.groupId);
+            return { artifactRef: stored.artifactRef, checksum: stored.checksum };
+          }
+          throw new Error("PARALLEL_TOOL_NOT_REGISTERED");
         },
       },
       matrix: {
@@ -787,7 +1078,7 @@ export async function createProductionCandidateToolExecution(input: { database: 
               allowRetry: goal.trigger_identity.startsWith("manual-reprocess:") });
             if (result.state === "WAITING") throw new Error("MATRIX_COMPILATION_WAITING");
             if (result.state === "FAILED") throw new Error(result.errorCode);
-            const stored = await storeJson("vacancy-matrix-run-ref", operationIdentity, { schemaVersion: "vacancy-matrix-run-ref/v1", matrixId: result.matrixId, checksum: result.checksum, workflowVersion: MATRIX_WORKFLOW_VERSION,
+            const stored = await storeJson("vacancy-matrix-run-ref", operationIdentity, { schemaVersion: "vacancy-matrix-run-ref/v1", matrixId: result.matrixId, checksum: result.checksum, workflowVersion: goal.workflow_version,
               sameModelCritic: result.sameModelCritic, criticFallback: result.criticFallback ?? false,
               warnings: result.criticFallback ? ["MATRIX_CRITIC_UNAVAILABLE_COMPILER_DRAFT_PUBLISHED"] : [] });
             return { artifactRef: stored.artifactRef, checksum: result.checksum, state: result.state };
@@ -796,8 +1087,46 @@ export async function createProductionCandidateToolExecution(input: { database: 
           if (!published) throw new Error("MATRIX_NOT_PUBLISHED");
           const matrix = published.matrix;
           if (toolKey === "candidate.matrix-context-search/v1") {
-            const [documentRef, transcriptRef] = await Promise.all([latestArtifact("candidate.document-extraction/v1"), latestArtifact("candidate.transcription/v1")]);
+            const [documentRef, transcriptRef] = await Promise.all([latestArtifact(goal.workflow_version === "matrix-v4-rabbit-parallel" ? "candidate.document-join/v1" : "candidate.document-extraction/v1"), latestArtifact(goal.workflow_version === "matrix-v4-rabbit-parallel" ? "candidate.transcript-join/v1" : "candidate.transcription/v1")]);
             const stored = await storeJson("matrix-context-index", operationIdentity, { schemaVersion: "matrix-context-index/v1", documentRef, transcriptRef, scope: { candidateId: candidatePk, runId, inputVersion, profileVersion } });
+            return { artifactRef: stored.artifactRef, checksum: stored.checksum };
+          }
+          if (toolKey === "candidate.evidence-shard/v1") {
+            const payload = task.shardPayload && typeof task.shardPayload === "object" && !Array.isArray(task.shardPayload) ? task.shardPayload as Record<string, unknown> : {};
+            const batchId = text(payload.batchId, "EVIDENCE_SHARD_BATCH_ID_MISSING");
+            const contextRef = await latestArtifact("candidate.matrix-context-read/v1");
+            const context = await artifactStore.getJson<{ materials?: Record<string, unknown> }>(contextRef);
+            if (!context.materials) throw new Error("MATRIX_DECISION_SAFE_CONTEXT_INVALID");
+            const claimConfig = llmDependencies.configuration.resolve("criterion_claim_extraction");
+            const signalConfig = llmDependencies.configuration.resolve("unmapped_signal_discovery");
+            const safetyTokens = Number(input.environment.MATRIX_BATCH_SAFETY_TOKENS ?? 4_096);
+            const batches = buildCriterionClaimExtractionBatches({ matrix, materials: context.materials,
+              scope: { candidateId: candidatePk, runId, inputVersion, profileVersion }, maxContextTokens: Number(input.environment.ROUTERAI_CONTEXT_WINDOW_TOKENS ?? 128_000),
+              countContextTokens: (request) => Math.max(countOpenAiCompatibleContextTokens({ config: claimConfig, userContent: request as JsonValue, safetyTokens }), countOpenAiCompatibleContextTokens({ config: signalConfig, userContent: request as JsonValue, safetyTokens })), overlapUtterances: 2 });
+            const batch = batches.find((item) => item.batchId === batchId); if (!batch) throw new Error("EVIDENCE_SHARD_DESCRIPTOR_STALE");
+            const expectedCriterionIds = Array.isArray(batch.request.requestedCriterionIds) ? batch.request.requestedCriterionIds.filter((item): item is string => typeof item === "string") : [];
+            const payloadCriterionIds = Array.isArray(payload.criterionIds) ? payload.criterionIds.filter((item): item is string => typeof item === "string") : [];
+            if (Number(payload.order) !== batch.order || JSON.stringify(payloadCriterionIds) !== JSON.stringify(expectedCriterionIds) || !Array.isArray(payload.sourceRanges)) throw new Error("EVIDENCE_SHARD_DESCRIPTOR_STALE");
+            const directed = await call("criterion_claim_extraction", batch.request as Record<string, unknown>, `directed-${batchId}`);
+            let open: Awaited<ReturnType<typeof call>> | undefined;
+            try { open = await call("unmapped_signal_discovery", { ...batch.request, policy: { informationalOnly: true, balancedTypes: ["STRENGTH", "CONCERN", "QUESTION"], mayCreateCriteria: false } }, `open-${batchId}`); } catch { /* fail-soft supplemental pass */ }
+            const rawClaims = directed.output.claims as Array<Record<string, unknown>>;
+            const claims = rawClaims.map((source): CandidateSourceClaim & { decisionAdmissible: boolean } => {
+              const role = String(source.role ?? "unknown") as CandidateSourceClaim["role"];
+              if (!["candidate", "interviewer", "recruiter", "unknown"].includes(role)) throw new Error("MATRIX_CLAIM_ROLE_INVALID");
+              const criterionIds = Array.isArray(source.criterionIds) ? source.criterionIds.filter((item): item is string => typeof item === "string") : [];
+              const claim: CandidateSourceClaim = { claimId: `claim-${matrixChecksum([runId, source.locator, source.text, [...criterionIds].sort(), source.sourceClass, source.relation]).slice(0, 24)}`, candidateId: String(candidatePk), runId, inputVersion, profileVersion,
+                author: text(source.author, "MATRIX_CLAIM_AUTHOR_INVALID"), role, roleConfidence: typeof source.roleConfidence === "number" ? source.roleConfidence : undefined,
+                text: text(source.text, "MATRIX_CLAIM_TEXT_INVALID"), locator: text(source.locator, "MATRIX_CLAIM_LOCATOR_INVALID"), provenanceRef: directed.traceRef,
+                criterionIds, sourceClass: text(source.sourceClass, "MATRIX_CLAIM_SOURCE_CLASS_INVALID"), directness: source.directness === "indirect" ? "indirect" : "direct",
+                relation: ["SUPPORTS", "CONTRADICTS", "CONTEXT"].includes(String(source.relation)) ? source.relation as CandidateSourceClaim["relation"] : "CONTEXT" };
+              return { ...claim, decisionAdmissible: candidateClaimIsDecisionAdmissible(claim) };
+            });
+            const ids = matrixCriterionIds(matrix.criteria);
+            const rawCoverage = Array.isArray(directed.output.coverage) ? directed.output.coverage as unknown as BatchCoverageEntry[] : [];
+            const coverage = [...rawCoverage.filter((entry) => ids.includes(entry.criterionId)), ...ids.filter((id) => !rawCoverage.some((entry) => entry.criterionId === id)).map((criterionId) => ({ criterionId, scanResult: "NOT_FOUND_IN_BATCH" as const, evidence: [] }))];
+            const signals = open?.output.signals as Array<Record<string, unknown>> | undefined ?? [];
+            const stored = await storeJson("matrix-evidence-shard", operationIdentity, { schemaVersion: "matrix-evidence-shard/v1", shardIdentity: task.shardIdentity, batchId, claims, unmappedSignals: signals, coverage, traceRefs: [directed.traceRef, open?.traceRef].filter(Boolean) });
             return { artifactRef: stored.artifactRef, checksum: stored.checksum };
           }
           if (toolKey === "candidate.matrix-context-read/v1") {
@@ -907,7 +1236,7 @@ export async function createProductionCandidateToolExecution(input: { database: 
             return { artifactRef: stored.artifactRef, checksum: stored.checksum };
           }
           if (toolKey === "candidate.matrix-evidence/v1" || toolKey === "candidate.matrix-conflict-submit/v1") {
-            const claimsRef = await latestArtifact("candidate.matrix-claim-submit/v1");
+            const claimsRef = await latestArtifact(goal.workflow_version === "matrix-v4-rabbit-parallel" ? "candidate.evidence-join/v1" : "candidate.matrix-claim-submit/v1");
             const claims = await artifactStore.getJson<Record<string, unknown>>(claimsRef);
             const warnings: string[] = [];
             let consolidated: Awaited<ReturnType<typeof call>> | undefined;
@@ -926,6 +1255,67 @@ export async function createProductionCandidateToolExecution(input: { database: 
             const stored = await storeJson("matrix-evidence", operationIdentity, { schemaVersion: "matrix-evidence/v2", claimsRef,
               claimGroups: consolidated?.output.claimGroups ?? [], conflicts: conflicts?.output.conflicts ?? [], warnings,
               traceRefs: [consolidated?.traceRef, conflicts?.traceRef].filter((value): value is string => Boolean(value)) });
+            return { artifactRef: stored.artifactRef, checksum: stored.checksum };
+          }
+          if (toolKey === "candidate.row-shard/v1") {
+            const payload = task.shardPayload && typeof task.shardPayload === "object" && !Array.isArray(task.shardPayload) ? task.shardPayload as Record<string, unknown> : {};
+            const ids = Array.isArray(payload.criterionIds) ? payload.criterionIds.filter((item): item is string => typeof item === "string") : [];
+            if (!ids.length || ids.some((id) => !matrixCriterionIds(matrix.criteria).includes(id))) throw new Error("ROW_SHARD_DESCRIPTOR_STALE");
+            const evidenceRef = await latestArtifact("candidate.matrix-conflict-submit/v1");
+            const evidence = await artifactStore.getJson<Record<string, unknown>>(evidenceRef);
+            const claimBundle = typeof evidence.claimsRef === "string" ? await artifactStore.getJson<{ claims?: CandidateSourceClaim[] }>(evidence.claimsRef) : {};
+            const claims = claimBundle.claims ?? [];
+            const evaluated = await call("matrix_row_evaluation", { matrix, evidence: { ...evidence, claims }, requestedCriterionIds: ids,
+              policy: { allowedStates: ["Соответствует", "Не соответствует", "Недостаточно данных"], selfReportAdmissible: true, holisticRecommendation: false } }, `row-shard-${task.shardIdentity}`);
+            const accepted = new Map<string, CandidateMatrixRow>();
+            for (const row of evaluated.output.rows as unknown as CandidateMatrixRow[]) if (ids.includes(row.criterionId) && !accepted.has(row.criterionId) && validateCandidateMatrixRows([row.criterionId], [row], claims).decision === "PASS") accepted.set(row.criterionId, row);
+            const missing = ids.filter((id) => !accepted.has(id)); for (const id of missing) accepted.set(id, technicalFallbackRow(id));
+            const stored = await storeJson("matrix-row-shard", operationIdentity, { schemaVersion: "matrix-row-shard/v1", shardIdentity: task.shardIdentity, rows: ids.map((id) => accepted.get(id)!), warnings: missing.length ? [`TECHNICAL_ROW_FALLBACK:${missing.length}`] : [], traceRefs: [evaluated.traceRef] });
+            return { artifactRef: stored.artifactRef, checksum: stored.checksum };
+          }
+          if (toolKey === "candidate.abc-shard/v1") {
+            const payload = task.shardPayload && typeof task.shardPayload === "object" && !Array.isArray(task.shardPayload) ? task.shardPayload as Record<string, unknown> : {};
+            const directionId = text(payload.directionId, "ABC_SHARD_DIRECTION_ID_MISSING");
+            const vacancy = await vacancyContext();
+            const directions = Array.isArray(vacancy.vacancy?.abcDirections) ? vacancy.vacancy.abcDirections.filter((direction) => direction && typeof direction === "object" && !Array.isArray(direction) && direction.id === directionId) : [];
+            if (directions.length !== 1) throw new Error("ABC_SHARD_DESCRIPTOR_STALE");
+            const evidenceRef = await latestArtifact("candidate.matrix-conflict-submit/v1");
+            const evidence = await artifactStore.getJson<Record<string, unknown>>(evidenceRef);
+            const claimBundle = typeof evidence.claimsRef === "string" ? await artifactStore.getJson<{ claims?: CandidateSourceClaim[] }>(evidence.claimsRef) : {};
+            const assessed = await call("abc_matrix_assessment", { directions, evidence: { ...evidence, claims: claimBundle.claims ?? [] }, policy: { bestFit: true, fullCoverageRequired: true, selfReportAdmissible: true, inferMissingLevelDefinitions: true,
+              fallbackScale: { A: "выше ожиданий роли", B: "соответствует ожиданиям роли", C: "ниже ожиданий или требует заметной поддержки" }, insufficientOnlyWhenNoRelevantCandidateEvidence: true } }, `abc-shard-${directionId}`);
+            const stored = await storeJson("matrix-abc-shard", operationIdentity, { schemaVersion: "matrix-abc-shard/v1", shardIdentity: task.shardIdentity, directions: assessed.output.directions as unknown[], warnings: [], traceRefs: [assessed.traceRef] });
+            return { artifactRef: stored.artifactRef, checksum: stored.checksum };
+          }
+          if (toolKey === "candidate.assessment-join/v1") {
+            const [rowsRef, abcRef] = await Promise.all([latestArtifact("candidate.rows-join/v1"), latestArtifact("candidate.abc-join/v1")]);
+            const [rows, abc] = await Promise.all([artifactStore.getJson<{ rows?: CandidateMatrixRow[]; evidenceRef?: string; coverageSummary?: unknown; warnings?: string[]; traceRefs?: string[] }>(rowsRef), artifactStore.getJson<{ directions?: unknown[]; warnings?: string[]; traceRefs?: string[] }>(abcRef)]);
+            const evidenceRef = text(rows.evidenceRef, "ASSESSMENT_JOIN_EVIDENCE_MISSING");
+            const evidence = await artifactStore.getJson<Record<string, unknown>>(evidenceRef);
+            const claimBundle = typeof evidence.claimsRef === "string" ? await artifactStore.getJson<{ claims?: CandidateSourceClaim[] }>(evidence.claimsRef) : {};
+            const holistic = await call("matrix_row_evaluation", { matrix, evidence: { ...evidence, claims: claimBundle.claims ?? [] }, preEvaluatedRows: rows.rows ?? [], abcDirections: abc.directions ?? [], requestedCriterionIds: matrixCriterionIds(matrix.criteria),
+              policy: { aggregateOnly: true, preservePreEvaluatedRows: true, chooseHolisticRecommendation: true, allowedRecommendations: ["Рекомендовать", "Рекомендовать с оговорками", "Не рекомендовать", "Недостаточно данных"], stopFactorsAlwaysReject: true, materialNonStopGapsMayReject: true } }, "assessment-join");
+            const allowed = new Set(["Рекомендовать", "Рекомендовать с оговорками", "Не рекомендовать", "Недостаточно данных"]);
+            const recommendation = allowed.has(String(holistic.output.recommendation)) ? String(holistic.output.recommendation) : "Недостаточно данных";
+            const stored = await storeJson("matrix-rows", operationIdentity, { schemaVersion: "candidate-matrix-rows-bundle/v3", matrixId: published.matrixId, evidenceRef, rows: rows.rows ?? [], abcDirections: abc.directions ?? [], recommendation,
+              recommendationReason: String(holistic.output.recommendationReason ?? "Итог сформирован по полной оценке строк матрицы и ABC-направлений."), coverageSummary: rows.coverageSummary,
+              warnings: [...(rows.warnings ?? []), ...(abc.warnings ?? [])], traceRefs: [...(rows.traceRefs ?? []), ...(abc.traceRefs ?? []), holistic.traceRef] });
+            return { artifactRef: stored.artifactRef, checksum: stored.checksum };
+          }
+          if (toolKey === "candidate.critical-shard/v1") {
+            const payload = task.shardPayload && typeof task.shardPayload === "object" && !Array.isArray(task.shardPayload) ? task.shardPayload as Record<string, unknown> : {};
+            const criterionId = text(payload.criterionId, "CRITICAL_SHARD_CRITERION_ID_MISSING");
+            const selectionReason = text(payload.selectionReason, "CRITICAL_SHARD_SELECTION_REASON_MISSING");
+            if (!new Set(["TRIGGERED_STOP_FACTOR", "MATERIAL_REJECTION_GAP"]).has(selectionReason)) throw new Error("CRITICAL_SHARD_SELECTION_REASON_INVALID");
+            const rowsRef = await latestArtifact("candidate.assessment-join/v1");
+            const rows = await artifactStore.getJson<{ rows?: CandidateMatrixRow[]; evidenceRef?: string }>(rowsRef);
+            const row = (rows.rows ?? []).find((item) => item.criterionId === criterionId); if (!row) throw new Error("CRITICAL_SHARD_DESCRIPTOR_STALE");
+            let claims: unknown[] = [];
+            if (rows.evidenceRef) { const evidence = await artifactStore.getJson<{ claimsRef?: string }>(rows.evidenceRef); if (evidence.claimsRef) claims = (await artifactStore.getJson<{ claims?: unknown[] }>(evidence.claimsRef)).claims ?? []; }
+            const verified = await call("critical_row_verification", { matrix, rows: [row], claims, policy: { verifyOnly: ["triggered-stop-factor", "material-rejection"], exactQuotesProvided: true, selfReportAdmissible: true, failSoft: true } }, `critical-shard-${criterionId}`);
+            const results = verified.output.results as CriticalVerificationDecision[];
+            if (results.length !== 1 || results[0]?.criterionId !== criterionId) throw new Error("CRITICAL_SHARD_RESULT_INVALID");
+            const stored = await storeJson("matrix-critical-shard", operationIdentity, { schemaVersion: "matrix-critical-shard/v1", shardIdentity: task.shardIdentity, criterionId, selectionReason, originalRow: row, results, warnings: [], traceRefs: [verified.traceRef] });
             return { artifactRef: stored.artifactRef, checksum: stored.checksum };
           }
           if (toolKey === "candidate.matrix-rows/v1") {
@@ -1019,8 +1409,9 @@ export async function createProductionCandidateToolExecution(input: { database: 
             return { artifactRef: stored.artifactRef, checksum: stored.checksum };
           }
           if (toolKey === "candidate.matrix-recommendation/v1") {
-            const rowsRef = await latestArtifact("candidate.matrix-rows/v1");
-            const verificationRef = await latestArtifact("candidate.matrix-verify/v1");
+            const parallelWorkflow = goal.workflow_version === "matrix-v4-rabbit-parallel";
+            const rowsRef = await latestArtifact(parallelWorkflow ? "candidate.assessment-join/v1" : "candidate.matrix-rows/v1");
+            const verificationRef = await latestArtifact(parallelWorkflow ? "candidate.critical-join/v1" : "candidate.matrix-verify/v1");
             const verification = await artifactStore.getJson<{ results?: CriticalVerificationDecision[]; adjustedRows?: CandidateMatrixRow[] }>(verificationRef);
             const bundle = await artifactStore.getJson<{ rows?: CandidateMatrixRow[]; recommendation?: string; recommendationReason?: string; abcDirections?: Array<Record<string, unknown>>; evidenceRef?: string; coverageSummary?: unknown; warnings?: string[] }>(rowsRef);
             const effectiveRows = Array.isArray(verification.adjustedRows)
@@ -1062,7 +1453,7 @@ export async function createProductionCandidateToolExecution(input: { database: 
               competencies: [...positiveRows.filter((row) => criterion.get(row.criterionId)?.category === "competency").map(itemFor), ...additionalStrengths],
               accessToKe: values.filter((row) => criterion.get(row.criterionId)?.category === "access-to-ke").map((row) => ({ ...itemFor(row), required: criterion.get(row.criterionId)?.required ?? false })),
               risks: [...negativeRows.filter((row) => !criterion.get(row.criterionId)?.hardRequired).map(itemFor), ...additionalConcerns], stopFactors: triggeredStops.map(itemFor) };
-            const stored = await storeJson("matrix-assessment-snapshot", operationIdentity, { schemaVersion: "matrix-assessment-snapshot/v2", workflowVersion: MATRIX_WORKFLOW_VERSION, inputVersion, profileVersion, matrixId: published.matrixId, matrixChecksum: matrix.checksum,
+            const stored = await storeJson("matrix-assessment-snapshot", operationIdentity, { schemaVersion: "matrix-assessment-snapshot/v2", workflowVersion: goal.workflow_version, inputVersion, profileVersion, matrixId: published.matrixId, matrixChecksum: matrix.checksum,
               skillVersions: { ...matrix.skillVersions, extraction: "extract-claims-for-criteria/v1", recommendation: "fill-matrix-rows/v2" }, modelVersions: matrix.modelVersions,
               schemaVersions: { matrix: matrix.schemaVersion, rows: "candidate-matrix-rows/v2", verification: "candidate-row-verification/v1" }, policyVersions: { compiler: matrix.compilerPolicyVersion, recommendation: "ASM-050/coverage-first-evidence-v2" },
               rowsRef, evidenceRef, verificationRef, structuredAssessment, criticalUnmappedRisks: [], coverageSummary: bundle.coverageSummary, warnings: bundle.warnings ?? [],
@@ -1080,7 +1471,9 @@ export async function createProductionCandidateToolExecution(input: { database: 
             ORDER BY CASE WHEN cp.kind='transcript-persisted' THEN 0 ELSE 1 END, cp.created_at DESC LIMIT 1`, [taskId]);
           if (restored?.remote_job_id) return { remoteJobId: restored.remote_job_id };
           const manifest = await materialManifest();
-          const interviews = (manifest.entries ?? []).filter((entry) => entry.role === "interview" && entry.supported !== false);
+          const shardPayload = task.shardPayload && typeof task.shardPayload === "object" && !Array.isArray(task.shardPayload) ? task.shardPayload as Record<string, unknown> : {};
+          const selectedSourceFileId = typeof shardPayload.sourceFileId === "string" ? shardPayload.sourceFileId : "";
+          const interviews = (manifest.entries ?? []).filter((entry) => entry.role === "interview" && entry.supported !== false && (!selectedSourceFileId || entry.fileId === selectedSourceFileId));
           if (!interviews.length) throw new Error("INTERVIEW_MATERIAL_MISSING");
           const compositeRemoteJobId = `multi-interview:${sha256([operationIdentity, ...interviews.map((item) => [item.fileId, item.version])]).slice(0, 24)}`;
           const sourcePlans: Array<{ source: TranscriptSourceIdentity; kind: "ready" | "provider"; representation?: ReturnType<typeof transcriptRepresentations>; providerJobId?: string }> = [];
@@ -1164,18 +1557,14 @@ export async function createProductionCandidateToolExecution(input: { database: 
             for (const source of sourcePlan.sources) {
               if (source.kind === "ready" && source.representation) { representations.push(source.representation); continue; }
               if (!provider || !source.providerJobId) throw new Error("PRODUCTION_ASSEMBLYAI_STAGE_CONTEXT_NOT_PROVISIONED");
-              let raw: Record<string, unknown> | undefined;
-              for (let attempt = 0; attempt < 300; attempt += 1) {
-                raw = await provider.poll(source.providerJobId);
-                if (raw.status === "completed" || raw.status === "error") break;
-                await new Promise((resolveDelay) => setTimeout(resolveDelay, 3_000));
-              }
+              const raw = await provider.poll(source.providerJobId);
+              if (raw.status !== "completed" && raw.status !== "error") return { status: "processing" };
               if (raw?.status !== "completed") throw new Error(raw?.status === "error" ? "ASSEMBLYAI_TRANSCRIPTION_FAILED" : "ASSEMBLYAI_TRANSCRIPTION_TIMEOUT");
               representations.push(transcriptRepresentations({ providerJobId: source.providerJobId, raw,
                 words: (Array.isArray(raw.words) ? raw.words : []) as TranscriptWord[], utterances: (Array.isArray(raw.utterances) ? raw.utterances : []) as TranscriptUtterance[], source: source.source }));
               completedProviderJobIds.push(source.providerJobId);
             }
-            const merged = mergeTranscriptRepresentations({ providerJobId: remoteJobId, sources: representations });
+            const merged = { ...mergeTranscriptRepresentations({ providerJobId: remoteJobId, sources: representations }), shardIdentity: task.shardIdentity };
             await auditBoundary("blob", new TextEncoder().encode(JSON.stringify(merged)));
             const stored = await artifactStore.putJson({ candidatePk, runId: text(task.runId, "PRODUCTION_TASK_RUN_ID_MISSING"), kind: "transcript-bundle", identity: operationIdentity, value: merged });
             await checkpoint({ kind: "transcript-persisted", identity: operationIdentity, remoteJobId, artifactIdentity: stored.artifactRef, checksum: stored.checksum });
@@ -1184,12 +1573,8 @@ export async function createProductionCandidateToolExecution(input: { database: 
           }
           if (!input.environment.ASSEMBLYAI_API_KEY) throw new Error("PRODUCTION_ASSEMBLYAI_STAGE_CONTEXT_NOT_PROVISIONED");
           const provider = new DurableAssemblyAiAdapter({ apiKey: input.environment.ASSEMBLYAI_API_KEY });
-          let raw: Record<string, unknown> | undefined;
-          for (let attempt = 0; attempt < 300; attempt += 1) {
-            raw = await provider.poll(remoteJobId);
-            if (raw.status === "completed" || raw.status === "error") break;
-            await new Promise((resolveDelay) => setTimeout(resolveDelay, 3_000));
-          }
+          const raw = await provider.poll(remoteJobId);
+          if (raw.status !== "completed" && raw.status !== "error") return { status: "processing" };
           if (raw?.status !== "completed") throw new Error(raw?.status === "error" ? "ASSEMBLYAI_TRANSCRIPTION_FAILED" : "ASSEMBLYAI_TRANSCRIPTION_TIMEOUT");
           const words = (Array.isArray(raw.words) ? raw.words : []) as TranscriptWord[];
           const utterances = (Array.isArray(raw.utterances) ? raw.utterances : []) as TranscriptUtterance[];
@@ -1220,7 +1605,7 @@ export async function createProductionCandidateToolExecution(input: { database: 
             if (!Array.isArray(verification.results)) throw new Error("MATRIX_VERIFICATION_MISSING");
             if ((assessment.criticalUnmappedRisks ?? []).some((risk) => risk.verificationDecision === "VERIFIED_CRITICAL"
               && (!risk.evidenceLocators.length || !risk.assessmentTraceRef || !risk.verificationTraceRef || risk.assessmentTraceRef === risk.verificationTraceRef))) throw new Error("MATRIX_CRITICAL_RISK_PROVENANCE_INVALID");
-            const stored = await storeJson("validated-assessment", operationIdentity, { schemaVersion: "validated-matrix-assessment/v2", assessmentRef, recommendation: assessment.recommendation, matrixId: assessment.matrixId, matrixChecksum: assessment.matrixChecksum, workflowVersion: MATRIX_WORKFLOW_VERSION,
+            const stored = await storeJson("validated-assessment", operationIdentity, { schemaVersion: "validated-matrix-assessment/v2", assessmentRef, recommendation: assessment.recommendation, matrixId: assessment.matrixId, matrixChecksum: assessment.matrixChecksum, workflowVersion: goal.workflow_version,
               coverageSummary: assessment.coverageSummary, warnings: assessment.warnings ?? [], gates: { schema: true, coverage: true, auxiliaryVerification: true, holisticRecommendation: true } });
             const assessmentId = `assessment-${sha256([runId, assessmentRef]).slice(0, 24)}`;
             await execute(input.database, `INSERT INTO candidate_assessments (id,artifact_id,attempt,recommendation,formula_version,gate_state,decision_evidence_json)

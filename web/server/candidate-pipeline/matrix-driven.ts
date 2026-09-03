@@ -1,12 +1,12 @@
 import { createHash } from "node:crypto";
 import type { Recommendation } from "./types.ts";
-import { COVERAGE_FIRST_WORKFLOW_VERSION } from "./recovery-contracts.ts";
+import { COVERAGE_FIRST_WORKFLOW_VERSION, RABBIT_PARALLEL_WORKFLOW_VERSION } from "./recovery-contracts.ts";
 
 export const MATRIX_SCHEMA_VERSION = "vacancy-matrix/v1" as const;
 export const MATRIX_WORKFLOW_VERSION = COVERAGE_FIRST_WORKFLOW_VERSION;
 
 export function isMatrixWorkflowVersion(value: string): boolean {
-  return value === MATRIX_WORKFLOW_VERSION;
+  return value === MATRIX_WORKFLOW_VERSION || value === RABBIT_PARALLEL_WORKFLOW_VERSION;
 }
 
 export type MatrixOperator = "ALL_OF" | "ANY_OF" | "AT_LEAST_N" | "INFORMATIONAL";

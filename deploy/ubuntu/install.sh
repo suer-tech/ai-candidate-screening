@@ -62,6 +62,7 @@ install -o hh-backup -g hh-backup -m 0600 /etc/hh-agent/postgres.pgpass /var/bac
 
 if [[ ! -s /etc/hh-agent/credentials/google-oauth-keyring.json ]]; then (cd "${release_root}/web" && HH_RUNTIME_CONFIG_ROOT=/etc/hh-agent npm run generate:google-oauth-keyring); fi
 if [[ ! -s /etc/hh-agent/credentials/internal-service-tokens.json ]]; then (cd "${release_root}/web" && HH_RUNTIME_CONFIG_ROOT=/etc/hh-agent npm run generate:internal-service-tokens); fi
+if [[ ! -s /etc/hh-agent/credentials/rabbitmq-password ]]; then openssl rand -hex 32 | tr -d '\r\n' > /etc/hh-agent/credentials/rabbitmq-password; fi
 for credential in google-oauth-client-secret routerai-api-key assemblyai-api-key telegram-bot-token telegram-recipients.json; do
   if [[ ! -e "/etc/hh-agent/credentials/${credential}" ]]; then install -o root -g hh-agent -m 0640 /dev/null "/etc/hh-agent/credentials/${credential}"; fi
 done

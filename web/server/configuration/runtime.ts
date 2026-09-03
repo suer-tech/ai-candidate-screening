@@ -14,6 +14,7 @@ export const CREDENTIAL_ALLOWLIST = Object.freeze([
   "telegram-bot-token",
   "telegram-recipients.json",
   "internal-service-tokens.json",
+  "rabbitmq-password",
 ] as const);
 
 export type CredentialName = (typeof CREDENTIAL_ALLOWLIST)[number];
@@ -25,6 +26,7 @@ const RUNTIME_KEYS = new Set([
   "ROUTERAI_ENDPOINT", "ROUTERAI_MODEL", "ROUTERAI_STRUCTURED_OUTPUTS", "ROUTERAI_CONTEXT_WINDOW_TOKENS", "MATRIX_BATCH_SAFETY_TOKENS", "LLM_RELEASE_VERSION",
   "AGENT_RUNTIME_ENVIRONMENT", "AGENT_RUNTIME_WORKER_ID", "AGENT_RUNTIME_POLLING_MS", "AGENT_RUNTIME_HEARTBEAT_MS", "AGENT_RUNTIME_LEASE_MS",
   "CANDIDATE_TOOL_EXECUTION_MODE", "CANDIDATE_PIPELINE_ROUTING", "CANDIDATE_PIPELINE_BUILD_ID",
+  "CANDIDATE_DISPATCH_TRANSPORT", "RABBITMQ_HOST", "RABBITMQ_PORT", "RABBITMQ_USERNAME", "RABBITMQ_PREFETCH", "RABBITMQ_MAX_PER_RUN", "RABBITMQ_POOL_CONCURRENCY", "RABBITMQ_PUBLISH_BATCH_SIZE", "RABBITMQ_PUBLISH_LEASE_MS", "RABBITMQ_PUBLISH_POLLING_MS", "RABBITMQ_MESSAGE_TTL_MS", "RABBITMQ_DEAD_LETTER_TTL_MS", "RABBITMQ_GRACEFUL_TIMEOUT_MS", "RABBITMQ_WORKER_CLASSES", "MATRIX_ROW_SHARD_SIZE",
   "MEDIA_PROCESSOR_URL", "MEDIA_PROCESSOR_HOST", "MEDIA_PROCESSOR_PORT", "MEDIA_PROCESSOR_MAX_INPUT_BYTES",
   "DOCUMENT_PROCESSOR_URL", "DOCUMENT_PROCESSOR_HOST", "DOCUMENT_PROCESSOR_PORT", "DOCUMENT_PROCESSOR_MAX_INPUT_BYTES",
   "E2E_ENVIRONMENT", "E2E_FIXTURE_SET_ID", "E2E_ALLOW_DESTRUCTIVE_CLEANUP", "FIXTURE_CONTROLLER_PORT", "FIXTURE_CONTROLLER_STATE_PATH",
@@ -177,7 +179,16 @@ export function environmentProjection(configuration: RuntimeConfiguration): Reco
   const overrides = processEnvOverrides();
   const values = { ...configuration.values, ...overrides };
   validateProcessorEndpoints(values);
+  const dispatchTransport = values.CANDIDATE_DISPATCH_TRANSPORT || "rabbit";
+  if (!["rabbit", "postgres"].includes(dispatchTransport)) throw new RuntimeConfigurationError("CANDIDATE_DISPATCH_TRANSPORT_INVALID");
   const tokens = JSON.parse(configuration.credentials["internal-service-tokens.json"]) as Record<string, string>;
+  const rabbitHost = values.RABBITMQ_HOST || (process.env.HH_DOCKER_NETWORK === "1" ? "rabbitmq" : "127.0.0.1");
+  const rabbitPort = Number(values.RABBITMQ_PORT || 5672);
+  const rabbitUsername = values.RABBITMQ_USERNAME || "hh_agent";
+  const rabbitPassword = configuration.credentials["rabbitmq-password"]?.trim();
+  if (!rabbitPassword) throw new RuntimeConfigurationError("RABBITMQ_CREDENTIAL_MISSING");
+  if (!/^[A-Za-z0-9._-]{1,64}$/.test(rabbitUsername) || !Number.isInteger(rabbitPort) || rabbitPort < 1 || rabbitPort > 65535) throw new RuntimeConfigurationError("RABBITMQ_ENDPOINT_INVALID");
+  const rabbitUrl = `amqp://${encodeURIComponent(rabbitUsername)}:${encodeURIComponent(rabbitPassword)}@${rabbitHost}:${rabbitPort}`;
   const appOrigin = values.APP_ORIGIN;
   if (!appOrigin) throw new RuntimeConfigurationError("APP_ORIGIN_MISSING");
   const internalAppOrigin = values.INTERNAL_APP_ORIGIN || appOrigin;
@@ -219,7 +230,7 @@ export function environmentProjection(configuration: RuntimeConfiguration): Reco
   };
   const agentConfiguration = {
     version: values.CANDIDATE_PIPELINE_BUILD_ID || "unprovisioned",
-    budgets: { wallTimeMs: 3_600_000, taskAttempts: 27, repairAttempts: 2, replans: 2, llmCalls: 18, tokens: 160_000, costMicrounits: 5_000_000, externalRequests: 200 },
+    budgets: { wallTimeMs: 3_600_000, taskAttempts: 250, repairAttempts: 2, replans: 2, llmCalls: 30, tokens: 300_000, costMicrounits: 8_000_000, externalRequests: 200 },
     leaseMs: Number(values.AGENT_RUNTIME_LEASE_MS || 30_000),
     pollingMs: Number(values.AGENT_RUNTIME_POLLING_MS || 1_000),
     heartbeatMs: Number(values.AGENT_RUNTIME_HEARTBEAT_MS || 10_000),
@@ -228,6 +239,7 @@ export function environmentProjection(configuration: RuntimeConfiguration): Reco
   };
   return {
     ...values,
+    CANDIDATE_DISPATCH_TRANSPORT: dispatchTransport,
     ROUTERAI_CONTEXT_WINDOW_TOKENS: String(contextWindowTokens),
     MATRIX_BATCH_SAFETY_TOKENS: String(matrixBatchSafetyTokens),
     DATABASE_URL: overrides.DATABASE_URL ?? configuration.credentials["database-url"],
@@ -237,6 +249,7 @@ export function environmentProjection(configuration: RuntimeConfiguration): Reco
     ASSEMBLYAI_API_KEY: configuration.credentials["assemblyai-api-key"],
     TELEGRAM_BOT_TOKEN: configuration.credentials["telegram-bot-token"],
     TELEGRAM_RECIPIENT_REFS_JSON: configuration.credentials["telegram-recipients.json"],
+    RABBITMQ_URL: rabbitUrl,
     AGENT_RUNTIME_ENDPOINT: new URL("/api/internal/agent-runtime", internalAppOrigin).toString(),
     CANDIDATE_TOOL_ENDPOINT: new URL("/api/internal/candidate-pipeline/tool", internalAppOrigin).toString(),
     ...(configuration.releaseEvidence ? { CANDIDATE_PIPELINE_RELEASE_EVIDENCE_JSON: configuration.releaseEvidence } : {}),

@@ -7,19 +7,19 @@ export type RuntimeConsumerConfig = {
   leaseMs: number;
 };
 
-export type ClaimedTask = { id: string; run_id: string; lease_token: number; lease_owner?: string; attemptId: string; tool_key: string; task_key?: string; candidate_id?: number; input_version?: string; profile_version?: string; policy_version?: string; idempotency_identity?: string; preconditions_json?: string; expected_outputs_json?: string };
+export type ClaimedTask = { id: string; run_id: string; lease_token: number; lease_owner?: string; attemptId: string; tool_key: string; task_key?: string; candidate_id?: number; input_version?: string; profile_version?: string; policy_version?: string; idempotency_identity?: string; preconditions_json?: string; expected_outputs_json?: string; fanout_group_id?: string; shard_identity?: string; shard_payload_json?: string };
 
 export type RuntimeToolAdapter = {
   sideEffectClass: "read-only" | "idempotent-write" | "reversible-write" | "irreversible-write";
   operation: string;
-  execute(task: ClaimedTask, signal: AbortSignal, authorization: { grantId: string }): Promise<{ outcome: "SUCCEEDED" | "FAILED" | "UNKNOWN_OUTCOME" | "WAITING_FOR_HUMAN"; errorCode?: string; obstacle?: string; action?: string }>;
+  execute(task: ClaimedTask, signal: AbortSignal, authorization: { grantId: string }): Promise<{ outcome: "SUCCEEDED" | "FAILED" | "UNKNOWN_OUTCOME" | "WAITING_FOR_HUMAN" | "RETRY_LATER"; errorCode?: string; obstacle?: string; action?: string; retryAfterMs?: number }>;
 };
 
 export type RuntimeToolAdapterResolver = RuntimeToolAdapter | ReadonlyMap<string, RuntimeToolAdapter>;
 
 export class AgentRuntimeConsumer {
   private stopping = false;
-  private active?: { task: ClaimedTask; controller: AbortController };
+  private readonly active = new Set<{ task: ClaimedTask; controller: AbortController }>();
 
   constructor(private readonly config: RuntimeConsumerConfig, private readonly adapters: RuntimeToolAdapterResolver, private readonly fetcher: typeof fetch = fetch) {}
 
@@ -40,7 +40,7 @@ export class AgentRuntimeConsumer {
         continue;
       }
       try {
-        await this.execute(claimed.task);
+        await this.executeClaimedTask(claimed.task);
       } catch (error) {
         const message = error instanceof Error && /^RUNTIME_API_[0-9]{3}:[a-z-]+:[A-Z0-9_:.-]+$/.test(error.message)
           ? error.message
@@ -53,17 +53,18 @@ export class AgentRuntimeConsumer {
 
   async stop() {
     this.stopping = true;
-    this.active?.controller.abort(new Error("WORKER_GRACEFUL_SHUTDOWN"));
+    for (const execution of this.active) execution.controller.abort(new Error("WORKER_GRACEFUL_SHUTDOWN"));
   }
 
-  private async execute(task: ClaimedTask) {
+  async executeClaimedTask(task: ClaimedTask) {
     const adapter = this.adapters instanceof Map ? this.adapters.get(task.tool_key) : this.adapters;
     if (!adapter) {
       await this.command("fail", { input: { taskId: task.id, attemptId: task.attemptId, worker: this.config.workerId, leaseToken: task.lease_token, errorCode: "TOOL_ADAPTER_NOT_CONFIGURED" } });
       return;
     }
     const controller = new AbortController();
-    this.active = { task, controller };
+    const execution = { task, controller };
+    this.active.add(execution);
     let missedHeartbeats = 0;
     const heartbeat = setInterval(() => {
       void this.command("heartbeat", { input: { taskId: task.id, worker: this.config.workerId, leaseToken: task.lease_token, now: Date.now(), leaseMs: this.config.leaseMs } })
@@ -85,6 +86,10 @@ export class AgentRuntimeConsumer {
       await this.command("prepare-effect", { input: { taskId: task.id, attemptId: task.attemptId, worker: this.config.workerId, leaseToken: task.lease_token,
         grantId: authorization.grantId, operation: adapter.operation, operationIdentity: task.idempotency_identity ?? task.id, sideEffectClass: adapter.sideEffectClass, now: Date.now() } });
       const result = await adapter.execute(task, controller.signal, { grantId: authorization.grantId });
+      if (result.outcome === "RETRY_LATER") {
+        await this.command("defer", { input: { taskId: task.id, attemptId: task.attemptId, worker: this.config.workerId, leaseToken: task.lease_token, now: Date.now(), retryAfterMs: result.retryAfterMs ?? 15_000, reason: result.errorCode ?? "PROVIDER_RESULT_PENDING" } });
+        return;
+      }
       if (result.outcome === "WAITING_FOR_HUMAN") {
         await this.command("wait-for-human", { input: { taskId: task.id, attemptId: task.attemptId, worker: this.config.workerId, leaseToken: task.lease_token,
           obstacle: result.obstacle ?? result.errorCode ?? "GOOGLE_OAUTH_INVALID_GRANT", action: result.action ?? "Переподключить Google Drive", now: Date.now() } });
@@ -95,7 +100,7 @@ export class AgentRuntimeConsumer {
       if (result.outcome === "SUCCEEDED") await this.command("promote", { runId: task.run_id });
     } finally {
       clearInterval(heartbeat);
-      this.active = undefined;
+      this.active.delete(execution);
     }
   }
 

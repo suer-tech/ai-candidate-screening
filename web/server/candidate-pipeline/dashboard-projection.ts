@@ -20,12 +20,36 @@ const PROGRESS_BY_TASK: Readonly<Record<string, { percent: number; milestone: st
   validation: { percent: 80, milestone: "Результат проверен" },
   reports: { percent: 90, milestone: "Отчёт сформирован" },
   publication: { percent: 100, milestone: "Результат опубликован" },
+  "documents-plan": { percent: 18, milestone: "Документы распределяются по обработчикам" },
+  "documents-join": { percent: 30, milestone: "Результаты документов собраны" },
+  "transcripts-plan": { percent: 18, milestone: "Интервью распределяются по обработчикам" },
+  "transcripts-join": { percent: 42, milestone: "Все интервью обработаны" },
+  "evidence-plan": { percent: 48, milestone: "Поиск доказательств распределяется по батчам" },
+  "evidence-join": { percent: 58, milestone: "Доказательства по всем батчам собраны" },
+  "rows-plan": { percent: 64, milestone: "Оценка критериев распределяется по группам" },
+  "rows-join": { percent: 72, milestone: "Все критерии вакансии оценены" },
+  "abc-plan": { percent: 64, milestone: "ABC-направления оцениваются" },
+  "abc-join": { percent: 72, milestone: "ABC-профиль собран" },
+  "assessment-join": { percent: 75, milestone: "Первичная оценка объединяется" },
+  "critical-plan": { percent: 77, milestone: "Критические выводы отобраны для проверки" },
+  "critical-join": { percent: 79, milestone: "Критические выводы проверены" },
 });
+
+function progressForTask(key: string | undefined) {
+  if (!key) return undefined;
+  const direct = PROGRESS_BY_TASK[key]; if (direct) return direct;
+  if (key.startsWith("documents:shard:")) return { percent: 24, milestone: "Документы обрабатываются параллельно" };
+  if (key.startsWith("transcripts:shard:")) return { percent: 35, milestone: "Интервью транскрибируются параллельно" };
+  if (key.startsWith("evidence:shard:")) return { percent: 54, milestone: "Доказательства ищутся по батчам" };
+  if (key.startsWith("rows:shard:") || key.startsWith("abc:shard:")) return { percent: 68, milestone: "Критерии кандидата оцениваются параллельно" };
+  if (key.startsWith("critical:shard:")) return { percent: 78, milestone: "Критические выводы проверяются параллельно" };
+  return undefined;
+}
 
 function provenProgress(runtime: readonly RuntimeProjectionRow[]) {
   let result = { percent: 0, milestone: "Ожидание запуска" };
   for (const row of runtime) {
-    const stage = row.taskKey ? PROGRESS_BY_TASK[row.taskKey] : undefined;
+    const stage = progressForTask(row.taskKey);
     if (!stage) continue;
     if (row.taskState === "SUCCEEDED" || row.taskState === "RUNNING") {
       if (stage.percent >= result.percent) result = stage;
@@ -87,10 +111,10 @@ export function projectCandidate(candidate: CandidateRecord, runtime: readonly R
   const active = runtime.find((row) => ["RUNNING", "RUNNABLE", "WAITING", "UNKNOWN_OUTCOME"].includes(row.taskState ?? "")) ?? runtime.find((row) => row.taskState === "PENDING");
   const key = active?.taskKey ?? "drive-snapshot";
   const status = key === "drive-snapshot" ? "WAITING_FOR_STABILITY"
-    : key === "documents" ? "MATERIALS_READY"
-      : key === "transcription" ? "TRANSCRIBING"
-        : ["matrix", "claims", "global-evidence", "rows", "critical-verification", "recommendation", "evidence", "assessment"].includes(key) ? "ANALYZING"
+    : key === "documents" || key.startsWith("documents") ? "MATERIALS_READY"
+      : key === "transcription" || key.startsWith("transcripts") ? "TRANSCRIBING"
+        : ["matrix", "claims", "global-evidence", "rows", "critical-verification", "recommendation", "evidence", "assessment"].includes(key) || /^(evidence|rows|abc|assessment|critical)/.test(key) ? "ANALYZING"
           : "VALIDATING";
-  const activeProgress = PROGRESS_BY_TASK[key] ?? progress;
+  const activeProgress = progressForTask(key) ?? progress;
   return { ...projected, status, progressPercent: Math.max(progress.percent, activeProgress.percent), progressMilestone: activeProgress.milestone };
 }
