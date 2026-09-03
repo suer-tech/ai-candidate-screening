@@ -44,27 +44,43 @@ services:
 
   worker-control:
     environment: *production-worker-environment
+    deploy:
+      replicas: ${RABBITMQ_CONTROL_REPLICAS:-2}
 
   worker-documents:
     environment: *production-worker-environment
+    deploy:
+      replicas: ${RABBITMQ_DOCUMENTS_REPLICAS:-2}
 
   worker-media:
     environment: *production-worker-environment
+    deploy:
+      replicas: ${RABBITMQ_MEDIA_REPLICAS:-2}
 
   worker-transcription:
     environment: *production-worker-environment
+    deploy:
+      replicas: ${RABBITMQ_TRANSCRIPTION_REPLICAS:-2}
 
   worker-llm:
     environment: *production-worker-environment
+    deploy:
+      replicas: ${RABBITMQ_LLM_REPLICAS:-2}
 
   worker-reports:
     environment: *production-worker-environment
+    deploy:
+      replicas: ${RABBITMQ_REPORTS_REPLICAS:-2}
 
   worker-drive:
     environment: *production-worker-environment
+    deploy:
+      replicas: ${RABBITMQ_DRIVE_REPLICAS:-2}
 
   worker-notifications:
     environment: *production-worker-environment
+    deploy:
+      replicas: ${RABBITMQ_NOTIFICATIONS_REPLICAS:-2}
 
   media-processor:
     environment:

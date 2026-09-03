@@ -47,7 +47,7 @@ x-app-common: &app-common
     RABBITMQ_DEAD_LETTER_TTL_MS: "1209600000"
     RABBITMQ_REPUBLISH_AFTER_MS: "300000"
     RABBITMQ_GRACEFUL_TIMEOUT_MS: "30000"
-    RABBITMQ_MAX_PER_RUN: "2"
+    RABBITMQ_MAX_PER_RUN: "${RABBITMQ_MAX_PER_RUN:-2}"
     MATRIX_ROW_SHARD_SIZE: "8"
     HH_DOCKER_NETWORK: "1"
   volumes:
@@ -95,7 +95,7 @@ services:
       - rabbitmq-data:/var/lib/rabbitmq
       - config-root:/config:ro
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_port_connectivity"]
       interval: 10s
       timeout: 30s
       retries: 20
@@ -168,49 +168,49 @@ services:
   worker-control:
     <<: *app-common
     command: ["npm", "run", "service:rabbit-worker"]
-    environment: { <<: *app-env, AGENT_RUNTIME_WORKER_ID: docker-control, RABBITMQ_WORKER_CLASSES: control, RABBITMQ_PREFETCH: "2", RABBITMQ_POOL_CONCURRENCY: "4" }
+    environment: { <<: *app-env, AGENT_RUNTIME_WORKER_ID: docker-control, RABBITMQ_WORKER_CLASSES: control, RABBITMQ_PREFETCH: "${RABBITMQ_CONTROL_PREFETCH:-5}", RABBITMQ_POOL_CONCURRENCY: "${RABBITMQ_CONTROL_CONCURRENCY:-10}" }
     depends_on: { postgres: { condition: service_healthy }, rabbitmq: { condition: service_healthy }, migrate: { condition: service_completed_successfully }, web: { condition: service_started } }
 
   worker-documents:
     <<: *app-common
     command: ["npm", "run", "service:rabbit-worker"]
-    environment: { <<: *app-env, AGENT_RUNTIME_WORKER_ID: docker-documents, RABBITMQ_WORKER_CLASSES: documents, RABBITMQ_PREFETCH: "3", RABBITMQ_POOL_CONCURRENCY: "6" }
+    environment: { <<: *app-env, AGENT_RUNTIME_WORKER_ID: docker-documents, RABBITMQ_WORKER_CLASSES: documents, RABBITMQ_PREFETCH: "${RABBITMQ_DOCUMENTS_PREFETCH:-5}", RABBITMQ_POOL_CONCURRENCY: "${RABBITMQ_DOCUMENTS_CONCURRENCY:-10}" }
     depends_on: { postgres: { condition: service_healthy }, rabbitmq: { condition: service_healthy }, migrate: { condition: service_completed_successfully }, web: { condition: service_started } }
 
   worker-media:
     <<: *app-common
     command: ["npm", "run", "service:rabbit-worker"]
-    environment: { <<: *app-env, AGENT_RUNTIME_WORKER_ID: docker-media, RABBITMQ_WORKER_CLASSES: media, RABBITMQ_PREFETCH: "2", RABBITMQ_POOL_CONCURRENCY: "4" }
+    environment: { <<: *app-env, AGENT_RUNTIME_WORKER_ID: docker-media, RABBITMQ_WORKER_CLASSES: media, RABBITMQ_PREFETCH: "${RABBITMQ_MEDIA_PREFETCH:-5}", RABBITMQ_POOL_CONCURRENCY: "${RABBITMQ_MEDIA_CONCURRENCY:-10}" }
     depends_on: { postgres: { condition: service_healthy }, rabbitmq: { condition: service_healthy }, migrate: { condition: service_completed_successfully }, web: { condition: service_started } }
 
   worker-transcription:
     <<: *app-common
     command: ["npm", "run", "service:rabbit-worker"]
-    environment: { <<: *app-env, AGENT_RUNTIME_WORKER_ID: docker-transcription, RABBITMQ_WORKER_CLASSES: transcription, RABBITMQ_PREFETCH: "3", RABBITMQ_POOL_CONCURRENCY: "6" }
+    environment: { <<: *app-env, AGENT_RUNTIME_WORKER_ID: docker-transcription, RABBITMQ_WORKER_CLASSES: transcription, RABBITMQ_PREFETCH: "${RABBITMQ_TRANSCRIPTION_PREFETCH:-5}", RABBITMQ_POOL_CONCURRENCY: "${RABBITMQ_TRANSCRIPTION_CONCURRENCY:-10}" }
     depends_on: { postgres: { condition: service_healthy }, rabbitmq: { condition: service_healthy }, migrate: { condition: service_completed_successfully }, web: { condition: service_started } }
 
   worker-llm:
     <<: *app-common
     command: ["npm", "run", "service:rabbit-worker"]
-    environment: { <<: *app-env, AGENT_RUNTIME_WORKER_ID: docker-llm, RABBITMQ_WORKER_CLASSES: llm, RABBITMQ_PREFETCH: "4", RABBITMQ_POOL_CONCURRENCY: "8" }
+    environment: { <<: *app-env, AGENT_RUNTIME_WORKER_ID: docker-llm, RABBITMQ_WORKER_CLASSES: llm, RABBITMQ_PREFETCH: "${RABBITMQ_LLM_PREFETCH:-5}", RABBITMQ_POOL_CONCURRENCY: "${RABBITMQ_LLM_CONCURRENCY:-10}" }
     depends_on: { postgres: { condition: service_healthy }, rabbitmq: { condition: service_healthy }, migrate: { condition: service_completed_successfully }, web: { condition: service_started } }
 
   worker-reports:
     <<: *app-common
     command: ["npm", "run", "service:rabbit-worker"]
-    environment: { <<: *app-env, AGENT_RUNTIME_WORKER_ID: docker-reports, RABBITMQ_WORKER_CLASSES: reports, RABBITMQ_PREFETCH: "2", RABBITMQ_POOL_CONCURRENCY: "3" }
+    environment: { <<: *app-env, AGENT_RUNTIME_WORKER_ID: docker-reports, RABBITMQ_WORKER_CLASSES: reports, RABBITMQ_PREFETCH: "${RABBITMQ_REPORTS_PREFETCH:-5}", RABBITMQ_POOL_CONCURRENCY: "${RABBITMQ_REPORTS_CONCURRENCY:-10}" }
     depends_on: { postgres: { condition: service_healthy }, rabbitmq: { condition: service_healthy }, migrate: { condition: service_completed_successfully }, web: { condition: service_started } }
 
   worker-drive:
     <<: *app-common
     command: ["npm", "run", "service:rabbit-worker"]
-    environment: { <<: *app-env, AGENT_RUNTIME_WORKER_ID: docker-drive, RABBITMQ_WORKER_CLASSES: drive, RABBITMQ_PREFETCH: "2", RABBITMQ_POOL_CONCURRENCY: "3" }
+    environment: { <<: *app-env, AGENT_RUNTIME_WORKER_ID: docker-drive, RABBITMQ_WORKER_CLASSES: drive, RABBITMQ_PREFETCH: "${RABBITMQ_DRIVE_PREFETCH:-5}", RABBITMQ_POOL_CONCURRENCY: "${RABBITMQ_DRIVE_CONCURRENCY:-10}" }
     depends_on: { postgres: { condition: service_healthy }, rabbitmq: { condition: service_healthy }, migrate: { condition: service_completed_successfully }, web: { condition: service_started } }
 
   worker-notifications:
     <<: *app-common
     command: ["npm", "run", "service:rabbit-worker"]
-    environment: { <<: *app-env, AGENT_RUNTIME_WORKER_ID: docker-notifications, RABBITMQ_WORKER_CLASSES: notifications, RABBITMQ_PREFETCH: "2", RABBITMQ_POOL_CONCURRENCY: "3" }
+    environment: { <<: *app-env, AGENT_RUNTIME_WORKER_ID: docker-notifications, RABBITMQ_WORKER_CLASSES: notifications, RABBITMQ_PREFETCH: "${RABBITMQ_NOTIFICATIONS_PREFETCH:-5}", RABBITMQ_POOL_CONCURRENCY: "${RABBITMQ_NOTIFICATIONS_CONCURRENCY:-10}" }
     depends_on: { postgres: { condition: service_healthy }, rabbitmq: { condition: service_healthy }, migrate: { condition: service_completed_successfully }, web: { condition: service_started } }
 
   media-processor:

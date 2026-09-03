@@ -91,14 +91,31 @@ RabbitMQ имеет очереди `candidate.tasks.<class>` для `control`, `
 
 `GET /api/health/processing` возвращает broker status, consumer count по каждому обязательному пулу, queue depth и dispatch lag. Его `503` означает недоступность обработки, но не блокирует read-only web и обычный `/api/health`.
 
-Пулы масштабируются независимо, например:
+VPS-конфигурация по умолчанию запускает два consumer-контейнера для каждой
+очереди. Каждый consumer получает не более пяти unacked deliveries, а
+PostgreSQL допускает не более десяти одновременно активных задач одного
+routing class. При `RABBITMQ_MAX_PER_RUN=2` этого достаточно, чтобы пять
+кандидатов одновременно получали слоты, даже если каждый породил внутренние
+shards.
+
+Количество контейнеров и ёмкость каждого пула настраиваются через
+`RABBITMQ_<CLASS>_REPLICAS`, `RABBITMQ_<CLASS>_PREFETCH` и
+`RABBITMQ_<CLASS>_CONCURRENCY` в `deploy/docker/.env`. Пулы также можно
+масштабировать разовой командой, например:
 
 ```bash
 docker compose -f deploy/docker/docker-compose.yml -f deploy/docker/docker-compose.vps.yml up -d \
   --scale worker-documents=3 --scale worker-transcription=3 --scale worker-llm=4
 ```
 
-`RABBITMQ_PREFETCH` ограничивает unacked deliveries одного процесса, а `RABBITMQ_MAX_PER_RUN` не даёт одному кандидату занять весь пул. `RABBITMQ_REPUBLISH_AFTER_MS` повторно ставит в очередь давно подтверждённую, но всё ещё `RUNNABLE` задачу: это восстанавливает работу после потери или пересоздания durable queue, а PostgreSQL claim делает повторную доставку безопасной. Worker identity формируется из роли, hostname, PID и runtime instance ID, поэтому replicas не делят lease owner.
+Значение `PREFETCH` не является количеством контейнеров: оно ограничивает
+unacked deliveries одного consumer. `CONCURRENCY` — общий PostgreSQL-лимит
+активных задач routing class для всех replicas. `RABBITMQ_MAX_PER_RUN` не даёт
+одному кандидату занять весь пул. `RABBITMQ_REPUBLISH_AFTER_MS` повторно ставит
+в очередь давно подтверждённую, но всё ещё `RUNNABLE` задачу: это восстанавливает
+работу после потери или пересоздания durable queue, а PostgreSQL claim делает
+повторную доставку безопасной. Worker identity формируется из роли, hostname,
+PID и runtime instance ID, поэтому replicas не делят lease owner.
 
 Если RabbitMQ недоступен, новые runnable задачи остаются в transactional dispatch outbox. После восстановления publisher делает reconcile и переиздаёт недоставленные поколения; consumer всегда проверяет task version в PostgreSQL, поэтому stale/duplicate delivery безопасно ack-ается без повторного результата. Смотрите `rabbit-dispatch-publisher-error`, `rabbit-worker-delivery-error`, `rabbit-worker-dead-letter` и `/api/health/processing`; содержимое сообщений в логи не выводится.
 
