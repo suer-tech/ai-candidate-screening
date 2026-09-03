@@ -22,6 +22,78 @@ function safeError(status: number) {
   return { class: "provider_request_rejected" } satisfies JsonValue;
 }
 
+function outputTokenParameter(request: Readonly<ProviderAttemptRequest>) {
+  const generation = request.generationParameters && typeof request.generationParameters === "object" && !Array.isArray(request.generationParameters)
+    ? request.generationParameters as Record<string, JsonValue>
+    : {};
+  if (generation.max_tokens !== undefined || generation.max_completion_tokens !== undefined) return {};
+  const limits = request.limits && typeof request.limits === "object" && !Array.isArray(request.limits)
+    ? request.limits as Record<string, JsonValue>
+    : {};
+  return Number.isInteger(limits.maxOutputTokens) && Number(limits.maxOutputTokens) > 0
+    ? { max_tokens: Number(limits.maxOutputTokens) }
+    : {};
+}
+
+function balancedJsonValues(text: string) {
+  const values: string[] = [];
+  for (let start = 0; start < text.length; start += 1) {
+    if (text[start] !== "{" && text[start] !== "[") continue;
+    const stack: string[] = [];
+    let quoted = false;
+    let escaped = false;
+    for (let index = start; index < text.length; index += 1) {
+      const character = text[index];
+      if (quoted) {
+        if (escaped) escaped = false;
+        else if (character === "\\") escaped = true;
+        else if (character === '"') quoted = false;
+        continue;
+      }
+      if (character === '"') { quoted = true; continue; }
+      if (character === "{" || character === "[") stack.push(character);
+      else if (character === "}" || character === "]") {
+        const expected = character === "}" ? "{" : "[";
+        if (stack.pop() !== expected) break;
+        if (!stack.length) { values.push(text.slice(start, index + 1)); start = index; break; }
+      }
+    }
+  }
+  return values;
+}
+
+function requiredResponseKeys(responseFormat: JsonValue) {
+  if (!responseFormat || typeof responseFormat !== "object" || Array.isArray(responseFormat)) return [];
+  const jsonSchema = responseFormat.json_schema;
+  if (!jsonSchema || typeof jsonSchema !== "object" || Array.isArray(jsonSchema)) return [];
+  const schema = jsonSchema.schema;
+  if (!schema || typeof schema !== "object" || Array.isArray(schema) || !Array.isArray(schema.required)) return [];
+  return schema.required.filter((value): value is string => typeof value === "string");
+}
+
+function hasRequiredResponseKeys(value: JsonValue, responseFormat: JsonValue) {
+  const required = requiredResponseKeys(responseFormat);
+  return !required.length || Boolean(value && typeof value === "object" && !Array.isArray(value)
+    && required.every((key) => Object.prototype.hasOwnProperty.call(value, key)));
+}
+
+function parseStructuredContent(content: string, responseFormat: JsonValue): JsonValue {
+  const trimmed = content.trim();
+  try {
+    const parsed = JSON.parse(trimmed) as JsonValue;
+    if (hasRequiredResponseKeys(parsed, responseFormat)) return parsed;
+  } catch { /* accept a wrapped JSON value below */ }
+  const fenced = [...trimmed.matchAll(/```(?:json)?\s*([\s\S]*?)```/giu)].map((match) => match[1]?.trim()).filter(Boolean) as string[];
+  const candidates = [...fenced, ...balancedJsonValues(trimmed)].sort((left, right) => right.length - left.length);
+  for (const candidate of candidates) {
+    try {
+      const parsed = JSON.parse(candidate) as JsonValue;
+      if (hasRequiredResponseKeys(parsed, responseFormat)) return parsed;
+    } catch { /* inspect the next complete value */ }
+  }
+  throw new Error("INVALID_STRUCTURED_CONTENT");
+}
+
 export class OpenAiCompatibleProviderAdapter implements LlmProviderAdapter {
   async execute(request: Readonly<ProviderAttemptRequest>): Promise<ProviderAttemptResult> {
     let response: Response;
@@ -38,6 +110,7 @@ export class OpenAiCompatibleProviderAdapter implements LlmProviderAdapter {
           tools: request.toolDefinitions.length ? request.toolDefinitions : undefined,
           tool_choice: request.toolChoice,
           ...request.generationParameters as Record<string, JsonValue>,
+          ...outputTokenParameter(request),
           response_format: request.responseFormat,
         }),
         signal: AbortSignal.timeout(request.timeoutMs),
@@ -81,7 +154,7 @@ export class OpenAiCompatibleProviderAdapter implements LlmProviderAdapter {
     const content = message.content;
     let parsedOutput: JsonValue | undefined;
     if (typeof content === "string") {
-      try { parsedOutput = JSON.parse(content) as JsonValue; }
+      try { parsedOutput = parseStructuredContent(content, request.responseFormat); }
       catch { throw new LlmProviderAttemptError("invalid structured response", { class: "invalid_structured_output" }, response.status, true); }
     } else if (content && typeof content === "object") {
       parsedOutput = content as JsonValue;

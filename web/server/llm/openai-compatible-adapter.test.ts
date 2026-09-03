@@ -12,7 +12,7 @@ const request: ProviderAttemptRequest = {
   toolDefinitions: [],
   responseFormat: { type: "json_schema", json_schema: { name: "test", strict: true, schema: { type: "object", additionalProperties: false, required: [], properties: {} } } },
   generationParameters: {},
-  limits: {},
+  limits: { maxOutputTokens: 8192 },
   timeoutMs: 100,
 };
 
@@ -24,6 +24,64 @@ test("HTTP 200 with malformed provider JSON is a retryable typed failure", async
       assert.ok(error instanceof LlmProviderAttemptError);
       assert.equal(error.retryable, true);
       assert.deepEqual(error.traceError, { class: "invalid_provider_response" });
+      return true;
+    });
+  } finally {
+    globalThis.fetch = original;
+  }
+});
+
+test("passes the configured output-token limit to an OpenAI-compatible provider", async () => {
+  const original = globalThis.fetch;
+  let body: Record<string, unknown> = {};
+  globalThis.fetch = async (_input, init) => {
+    body = JSON.parse(String(init?.body)) as Record<string, unknown>;
+    return Response.json({ id: "response-1", model: "synthetic-model", choices: [{ finish_reason: "stop", message: { content: "{}" } }] });
+  };
+  try {
+    await new OpenAiCompatibleProviderAdapter().execute(request);
+    assert.equal(body.max_tokens, 8192);
+  } finally {
+    globalThis.fetch = original;
+  }
+});
+
+test("accepts one complete schema payload wrapped in markdown or provider commentary", async () => {
+  const original = globalThis.fetch;
+  for (const content of [
+    "```json\n{\"schemaVersion\":\"vacancy-matrix-draft/v1\",\"criteria\":[]}\n```",
+    "Готовый результат:\n{\"schemaVersion\":\"vacancy-matrix-draft/v1\",\"criteria\":[]}",
+  ]) {
+    globalThis.fetch = async () => Response.json({ id: "response-1", model: "synthetic-model", choices: [{ finish_reason: "stop", message: { content } }] });
+    const result = await new OpenAiCompatibleProviderAdapter().execute(request);
+    assert.deepEqual(result.normalizedOutput, { schemaVersion: "vacancy-matrix-draft/v1", criteria: [] });
+  }
+  globalThis.fetch = original;
+});
+
+test("does not accept an incomplete JSON payload", async () => {
+  const original = globalThis.fetch;
+  globalThis.fetch = async () => Response.json({ choices: [{ finish_reason: "stop", message: { content: "{\"schemaVersion\":\"vacancy-matrix-draft/v1\"" } }] });
+  try {
+    await assert.rejects(() => new OpenAiCompatibleProviderAdapter().execute(request), (error: unknown) => {
+      assert.ok(error instanceof LlmProviderAttemptError);
+      assert.deepEqual(error.traceError, { class: "invalid_structured_output" });
+      return true;
+    });
+  } finally {
+    globalThis.fetch = original;
+  }
+});
+
+test("does not mistake a complete nested object for a truncated top-level schema payload", async () => {
+  const original = globalThis.fetch;
+  const matrixRequest = { ...request, responseFormat: { type: "json_schema", json_schema: { name: "matrix", strict: true,
+    schema: { type: "object", required: ["schemaVersion", "criteria"], properties: {} } } } } as ProviderAttemptRequest;
+  globalThis.fetch = async () => Response.json({ choices: [{ finish_reason: "stop", message: { content: "{\"schemaVersion\":\"vacancy-matrix-draft/v1\",\"criteria\":[{\"temporaryId\":\"one\"}" } }] });
+  try {
+    await assert.rejects(() => new OpenAiCompatibleProviderAdapter().execute(matrixRequest), (error: unknown) => {
+      assert.ok(error instanceof LlmProviderAttemptError);
+      assert.deepEqual(error.traceError, { class: "invalid_structured_output" });
       return true;
     });
   } finally {
