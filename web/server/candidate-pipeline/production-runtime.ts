@@ -2032,15 +2032,17 @@ export async function createProductionCandidateToolExecution(input: { database: 
             accessToKe: "См. подтверждённые сведения в отчёте", resultPdfUrl: `https://drive.google.com/file/d/${encodeURIComponent(report.drive_file_id)}/view` });
           const store = new PostgresNotificationStore(input.database);
           const now = new Date();
+          await store.reconcileUnknown(now.toISOString());
           await store.register({ candidateId: candidatePk, runId, logicalKey, type: "candidate-ready", safePayload: { message }, createdAtUtc: now.toISOString() }, [recipientRef]);
           await new NotificationDispatcher(store, recipients, new TelegramBotTransport({ token: input.environment.TELEGRAM_BOT_TOKEN }),
             (payload) => payload.message ?? "Результат анализа готов").dispatch(now);
-          const delivery = await queryOne<{ state: string; attempts: number }>(input.database, `SELECT delivery.state,delivery.attempts FROM candidate_notification_deliveries delivery
+          const delivery = await queryOne<{ state: string; attempts: number; next_attempt_at_utc: string | null }>(input.database, `SELECT delivery.state,delivery.attempts,delivery.next_attempt_at_utc FROM candidate_notification_deliveries delivery
             JOIN candidate_notification_events event ON event.id=delivery.event_id WHERE event.logical_key=$1 AND delivery.recipient_ref=$2`, [logicalKey, recipientRef]);
           if (delivery?.state === "SENT") return { state: "SENT", attempts: delivery.attempts };
-          if (delivery?.state === "SENDING") throw new Error("TELEGRAM_DELIVERY_UNKNOWN");
+          if (delivery?.state === "SENDING") return { state: "UNKNOWN", attempts: delivery.attempts };
           if (delivery?.state === "PENDING") throw new Error("TELEGRAM_DELIVERY_RETRYABLE");
-          throw new Error("TELEGRAM_DELIVERY_FAILED");
+          if (delivery?.state === "FAILED") return { state: "FAILED", attempts: delivery.attempts };
+          throw new Error("TELEGRAM_DELIVERY_STATE_INVALID");
         },
       },
     },

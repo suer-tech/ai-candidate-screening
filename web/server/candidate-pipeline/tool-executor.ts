@@ -248,6 +248,7 @@ async function executeProductionTool(input: { toolKey: string; task: Record<stri
       await repository.waitForHuman({ taskId, obstacle: "GOOGLE_OAUTH_INVALID_GRANT", action: "Переподключить Google Drive" });
       return { outcome: "WAITING_FOR_HUMAN" as const, errorCode: code, obstacle: "GOOGLE_OAUTH_INVALID_GRANT", action: "Переподключить Google Drive" };
     }
+    if (code === "TELEGRAM_DELIVERY_RETRYABLE") return { outcome: "RETRY_LATER" as const, errorCode: code, retryAfterMs: 15_000 };
     if (code === "TELEGRAM_DELIVERY_UNKNOWN") return { outcome: "UNKNOWN_OUTCOME" as const, errorCode: code };
     return { outcome: "FAILED" as const, errorCode: code };
   }

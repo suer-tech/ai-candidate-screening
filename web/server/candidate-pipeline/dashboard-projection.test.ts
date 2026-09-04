@@ -12,6 +12,21 @@ test("server runtime projection maps durable task state to the product stage", (
   assert.equal(projectCandidate(candidate(), [{ ...runtime[0], taskKey: "publication" }]).status, "VALIDATING");
 });
 
+test("published candidate remains ready while Telegram delivery outcome is unknown", () => {
+  const projected = projectCandidate(candidate({ status: "READY", progressPercent: 100, progressMilestone: "Результат опубликован" }), [{
+    runId: "run",
+    runState: "ACTIVE",
+    lastProgressAt: "2026-08-20T00:10:00Z",
+    taskKey: "notification",
+    taskState: "UNKNOWN_OUTCOME",
+    attemptCount: 1,
+    errorCode: "TELEGRAM_DELIVERY_UNKNOWN",
+  }]);
+  assert.equal(projected.status, "READY");
+  assert.equal(projected.progressPercent, 100);
+  assert.equal(projected.progressMilestone, "Отчёт опубликован, уведомление отправляется");
+});
+
 test("active runtime projects one factual elapsed counter for dashboard and candidate views", () => {
   const runtime = [{ runId: "run", runState: "ACTIVE", startedAt: "2026-08-20T10:00:00Z", lastProgressAt: "2026-08-20T10:07:00Z", taskKey: "assessment", taskState: "RUNNING" }];
   const projected = projectCandidate(candidate({ elapsedMinutes: 1 }), runtime, undefined, new Date("2026-08-20T10:18:59Z"));

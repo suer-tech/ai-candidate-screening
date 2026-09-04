@@ -33,6 +33,7 @@ const PROGRESS_BY_TASK: Readonly<Record<string, { percent: number; milestone: st
   "assessment-join": { percent: 75, milestone: "Первичная оценка объединяется" },
   "critical-plan": { percent: 77, milestone: "Критические выводы отобраны для проверки" },
   "critical-join": { percent: 79, milestone: "Критические выводы проверены" },
+  notification: { percent: 100, milestone: "Отчёт опубликован, уведомление отправляется" },
 });
 
 function progressForTask(key: string | undefined) {
@@ -116,5 +117,8 @@ export function projectCandidate(candidate: CandidateRecord, runtime: readonly R
         : ["matrix", "claims", "global-evidence", "rows", "critical-verification", "recommendation", "evidence", "assessment"].includes(key) || /^(evidence|rows|abc|assessment|critical)/.test(key) ? "ANALYZING"
           : "VALIDATING";
   const activeProgress = progressForTask(key) ?? progress;
+  if (key === "notification" && candidate.status === "READY") {
+    return { ...projected, status: "READY", progressPercent: 100, progressMilestone: activeProgress.milestone };
+  }
   return { ...projected, status, progressPercent: Math.max(progress.percent, activeProgress.percent), progressMilestone: activeProgress.milestone };
 }

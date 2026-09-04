@@ -473,12 +473,30 @@ export class PostgresAgentRuntimeRepository {
   }
   async recoverStale(now: number) {
     return withTransaction(this.sql, async (transaction) => {
+      const recoveredAt = new Date(now).toISOString();
+      const completedNotifications = await transaction<{ id: string; run_id: string; goal_id: string; current_plan_version: number }[]>`UPDATE agent_tasks task
+        SET state='SUCCEEDED',revision=task.revision+1,lease_owner=NULL,lease_expires_at=NULL,available_at=0
+        FROM agent_runs run
+        WHERE task.run_id=run.id AND run.state='ACTIVE' AND task.state='UNKNOWN_OUTCOME'
+          AND task.tool_key='candidate.telegram/v1'
+          AND EXISTS (SELECT 1 FROM agent_tasks publication WHERE publication.run_id=task.run_id
+            AND publication.tool_key='candidate.drive-publication/v1' AND publication.state='SUCCEEDED')
+        RETURNING task.id,task.run_id,run.goal_id,run.current_plan_version`;
+      for (const task of completedNotifications) {
+        await transaction`UPDATE agent_runs SET last_progress_at=${recoveredAt},revision=revision+1 WHERE id=${task.run_id} AND state='ACTIVE'`;
+        const sequence = await this.nextSequence(task.run_id, transaction);
+        await transaction`INSERT INTO agent_events (id,run_id,sequence,event_identity,type,actor,plan_version,task_id,safe_payload_json,created_at)
+          VALUES (${randomUUID()},${task.run_id},${sequence},${`notification-logical-complete:${task.id}`},'NOTIFICATION_LOGICAL_COMPLETE','runtime',${task.current_plan_version},${task.id},
+            ${JSON.stringify({ deliveryOutcome: "UNKNOWN", candidateReadyUnaffected: true })},${recoveredAt}) ON CONFLICT (event_identity) DO NOTHING`;
+        const completed = await transaction`UPDATE agent_runs SET state='SUCCEEDED',revision=revision+1,last_progress_at=${recoveredAt}
+          WHERE id=${task.run_id} AND state='ACTIVE' AND NOT EXISTS (SELECT 1 FROM agent_tasks WHERE run_id=${task.run_id} AND state<>'SUCCEEDED') RETURNING id`;
+        if (completed.length) await transaction`UPDATE agent_goals SET state='SUCCEEDED',revision=revision+1 WHERE id=${task.goal_id} AND state='ACTIVE'`;
+      }
       const stale = await transaction<{ id: string; run_id: string; unknown_outcome: boolean }[]>`SELECT task.id,task.run_id,EXISTS (
         SELECT 1 FROM agent_outbox outbox WHERE outbox.run_id=task.run_id AND outbox.operation_identity=task.idempotency_identity AND outbox.state='UNKNOWN_OUTCOME'
       ) AS unknown_outcome FROM agent_tasks task JOIN agent_runs run ON run.id=task.run_id AND run.state='ACTIVE' WHERE (task.state='RUNNING' AND task.lease_expires_at<=${now}) OR (
         task.state='UNKNOWN_OUTCOME' AND NOT EXISTS (SELECT 1 FROM agent_outbox outbox WHERE outbox.run_id=task.run_id AND outbox.operation_identity=task.idempotency_identity)
       ) FOR UPDATE`;
-      const recoveredAt = new Date(now).toISOString();
       for (const task of stale) {
         const nextState = task.unknown_outcome ? "UNKNOWN_OUTCOME" : "RUNNABLE";
         await transaction`UPDATE agent_attempts SET state=${nextState === "RUNNABLE" ? "FAILED" : "UNKNOWN_OUTCOME"},unknown_outcome=${task.unknown_outcome},finished_at=${recoveredAt},error_code='LEASE_EXPIRED_RECOVERED' WHERE task_id=${task.id} AND state='RUNNING'`;
@@ -486,7 +504,7 @@ export class PostgresAgentRuntimeRepository {
         if (nextState === "RUNNABLE" && updated[0]) await enqueueDispatch(transaction, { id: task.id, run_id: task.run_id, revision: updated[0].revision, attempt_count: updated[0].attempt_count, tool_key: updated[0].tool_key });
         await transaction`UPDATE agent_runs SET last_progress_at=${recoveredAt},revision=revision+1 WHERE id=${task.run_id} AND state='ACTIVE'`;
       }
-      return stale.map((task) => task.id);
+      return [...completedNotifications.map((task) => task.id), ...stale.map((task) => task.id)];
     });
   }
   async claimDispatchBatch(input: { publisherId: string; now: number; leaseMs: number; limit: number }) {
