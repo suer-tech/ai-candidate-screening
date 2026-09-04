@@ -478,8 +478,9 @@ export class PostgresProductRepository implements ProductRepository {
           FROM report_lineage lineage JOIN agent_runs source ON source.id=lineage.id
           WHERE source.recovery_source_run_id IS NOT NULL AND lineage.depth<32
         )
-        SELECT r.candidate_id,r.analysis_version,r.run_id,r.state,d.id AS document_id,d.type,d.file_name,d.drive_file_id,a.recommendation,run.last_progress_at,
-          ROUND(EXTRACT(EPOCH FROM (run.last_progress_at::timestamptz - timing.started_at::timestamptz)) / 60)::integer AS elapsed_minutes,
+        SELECT r.candidate_id,r.analysis_version,r.run_id,r.state,d.id AS document_id,d.type,d.file_name,d.drive_file_id,a.recommendation,
+          COALESCE(publication.finished_at,run.last_progress_at) AS last_progress_at,
+          ROUND(EXTRACT(EPOCH FROM (COALESCE(publication.finished_at,run.last_progress_at)::timestamptz - timing.started_at::timestamptz)) / 60)::integer AS elapsed_minutes,
           snapshot_blob.content AS assessment_blob,
           evidence_blob.content AS evidence_blob,
           claims_blob.content AS claims_blob,
@@ -488,6 +489,13 @@ export class PostgresProductRepository implements ProductRepository {
           transcript.checksum AS transcript_checksum
         FROM candidate_report_versions r JOIN candidate_report_documents d ON d.report_version_id=r.id JOIN candidate_assessments a ON a.id=r.assessment_id JOIN agent_runs run ON run.id=r.run_id
         LEFT JOIN LATERAL (SELECT MIN(attempt.started_at) AS started_at FROM agent_tasks timing_task JOIN agent_attempts attempt ON attempt.task_id=timing_task.id WHERE timing_task.run_id=r.run_id) timing ON TRUE
+        LEFT JOIN LATERAL (
+          SELECT attempt.finished_at
+          FROM agent_tasks publication_task JOIN agent_attempts attempt ON attempt.task_id=publication_task.id
+          WHERE publication_task.run_id=r.run_id AND publication_task.tool_key='candidate.drive-publication/v1'
+            AND publication_task.state='SUCCEEDED' AND attempt.state='SUCCEEDED' AND attempt.finished_at IS NOT NULL
+          ORDER BY attempt.finished_at DESC LIMIT 1
+        ) publication ON TRUE
         JOIN candidate_domain_artifacts snapshot ON snapshot.payload_ref=(a.decision_evidence_json::jsonb->>'assessmentRef')
         JOIN artifact_blobs snapshot_blob ON snapshot_blob.checksum=snapshot.checksum AND snapshot_blob.scope=('candidate:' || r.candidate_id || ':run:' || snapshot.run_id)
         LEFT JOIN LATERAL (
