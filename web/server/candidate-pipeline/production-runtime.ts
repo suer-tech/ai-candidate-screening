@@ -267,6 +267,21 @@ export function validateAbcAssessmentSemantics(
   return value;
 }
 
+export function validateAbcJoinDirectionCoverage(
+  shards: readonly {
+    shardIdentity: string;
+    directions?: readonly { directionId?: unknown }[];
+  }[],
+) {
+  for (const shard of shards) {
+    if (shard.directions?.length !== 1
+      || String(shard.directions[0]?.directionId) !== shard.shardIdentity) {
+      throw new Error("ABC_JOIN_DIRECTION_COVERAGE_INVALID");
+    }
+  }
+  return shards;
+}
+
 export function partitionEvidenceLocators(
   locators: Readonly<Record<string, EvidenceLocator>>,
   maximumBatches = 6,
@@ -997,7 +1012,7 @@ export async function createProductionCandidateToolExecution(input: { database: 
             const group = await readGroup("abc");
             const shards = await Promise.all(group.members.map((member) => artifactStore.getJson<{ shardIdentity?: string; directions?: Array<Record<string, unknown>>; warnings?: string[]; traceRefs?: string[] }>(member.output_artifact_id!)));
             const ordered = canonicalJoin(group.descriptor.shards, shards.filter((item): item is typeof item & { shardIdentity: string } => typeof item.shardIdentity === "string"));
-            for (const shard of ordered) if (shard.directions?.length !== 1 || String(shard.directions[0]?.id) !== shard.shardIdentity) throw new Error("ABC_JOIN_DIRECTION_COVERAGE_INVALID");
+            validateAbcJoinDirectionCoverage(ordered);
             const stored = await storeJson("matrix-abc", operationIdentity, { schemaVersion: "candidate-abc-directions/v1", directions: ordered.flatMap((item) => item.directions ?? []), warnings: ordered.flatMap((item) => item.warnings ?? []), traceRefs: ordered.flatMap((item) => item.traceRefs ?? []) });
             await agentRuntime.completeFanout(group.groupId);
             return { artifactRef: stored.artifactRef, checksum: stored.checksum };
