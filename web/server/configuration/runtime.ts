@@ -23,7 +23,7 @@ const RUNTIME_KEYS = new Set([
   "APP_ORIGIN", "INTERNAL_APP_ORIGIN", "HOST", "PORT", "NODE_ENV", "AUTH_MODE", "LOCAL_AUTH_USER_ID", "LOCAL_AUTH_USER_EMAIL", "LOCAL_AUTH_USER_FULL_NAME",
   "DATABASE_MAX_CONNECTIONS", "DATABASE_IDLE_TIMEOUT_SECONDS", "DATABASE_CONNECT_TIMEOUT_SECONDS",
   "GOOGLE_OAUTH_CLIENT_ID", "GOOGLE_OAUTH_REDIRECT_URI", "GOOGLE_OAUTH_DEPLOYMENT_MODE",
-  "ROUTERAI_ENDPOINT", "ROUTERAI_MODEL", "ROUTERAI_STRUCTURED_OUTPUTS", "ROUTERAI_CONTEXT_WINDOW_TOKENS", "MATRIX_BATCH_SAFETY_TOKENS", "LLM_RELEASE_VERSION",
+  "ROUTERAI_ENDPOINT", "ROUTERAI_MODEL", "ROUTERAI_STRUCTURED_OUTPUTS", "ROUTERAI_CONTEXT_WINDOW_TOKENS", "MATRIX_BATCH_SAFETY_TOKENS", "MATRIX_EVIDENCE_MAX_OUTPUT_TOKENS", "LLM_RELEASE_VERSION",
   "AGENT_RUNTIME_ENVIRONMENT", "AGENT_RUNTIME_WORKER_ID", "AGENT_RUNTIME_POLLING_MS", "AGENT_RUNTIME_HEARTBEAT_MS", "AGENT_RUNTIME_LEASE_MS",
   "CANDIDATE_TOOL_EXECUTION_MODE", "CANDIDATE_PIPELINE_ROUTING", "CANDIDATE_PIPELINE_BUILD_ID",
   "CANDIDATE_DISPATCH_TRANSPORT", "RABBITMQ_HOST", "RABBITMQ_PORT", "RABBITMQ_USERNAME", "RABBITMQ_PREFETCH", "RABBITMQ_MAX_PER_RUN", "RABBITMQ_POOL_CONCURRENCY", "RABBITMQ_PUBLISH_BATCH_SIZE", "RABBITMQ_PUBLISH_LEASE_MS", "RABBITMQ_PUBLISH_POLLING_MS", "RABBITMQ_MESSAGE_TTL_MS", "RABBITMQ_DEAD_LETTER_TTL_MS", "RABBITMQ_GRACEFUL_TIMEOUT_MS", "RABBITMQ_WORKER_CLASSES", "MATRIX_ROW_SHARD_SIZE",
@@ -198,9 +198,13 @@ export function environmentProjection(configuration: RuntimeConfiguration): Reco
   if (values.ROUTERAI_STRUCTURED_OUTPUTS !== "true") throw new RuntimeConfigurationError("ROUTERAI_STRUCTURED_OUTPUTS_SUPPORT_REQUIRED");
   const contextWindowTokens = Number(values.ROUTERAI_CONTEXT_WINDOW_TOKENS || 128_000);
   const matrixBatchSafetyTokens = Number(values.MATRIX_BATCH_SAFETY_TOKENS || 4_096);
+  const matrixEvidenceMaxOutputTokens = Number(values.MATRIX_EVIDENCE_MAX_OUTPUT_TOKENS || 16_384);
   if (!Number.isInteger(contextWindowTokens) || contextWindowTokens < 1) throw new RuntimeConfigurationError("ROUTERAI_CONTEXT_WINDOW_TOKENS_INVALID");
   if (!Number.isInteger(matrixBatchSafetyTokens) || matrixBatchSafetyTokens < 1 || matrixBatchSafetyTokens >= contextWindowTokens) {
     throw new RuntimeConfigurationError("MATRIX_BATCH_SAFETY_TOKENS_INVALID");
+  }
+  if (!Number.isInteger(matrixEvidenceMaxOutputTokens) || matrixEvidenceMaxOutputTokens < 8_192 || matrixEvidenceMaxOutputTokens >= contextWindowTokens) {
+    throw new RuntimeConfigurationError("MATRIX_EVIDENCE_MAX_OUTPUT_TOKENS_INVALID");
   }
   const releaseVersion = values.LLM_RELEASE_VERSION || values.CANDIDATE_PIPELINE_BUILD_ID;
   const capability = (promptArtifact: string, responseSchemaArtifact: string, maxAttempts = 3) => ({
@@ -218,7 +222,7 @@ export function environmentProjection(configuration: RuntimeConfiguration): Reco
       speaker_mapping: capability("speaker-mapping/v1", "speaker-map/v1"),
       matrix_compiler: { ...capability("compile-vacancy-matrix/v1", "vacancy-matrix-draft/v1", 1), timeoutMs: 600_000 },
       matrix_critic: { ...capability("critique-vacancy-matrix/v2", "vacancy-matrix-critic/v2", 1), timeoutMs: 600_000 },
-      criterion_claim_extraction: { ...capability("extract-claims-for-criteria/v1", "candidate-claims/v1", 1), timeoutMs: 600_000 },
+      criterion_claim_extraction: { ...capability("extract-claims-for-criteria/v1", "candidate-claims/v1", 1), limits: { maxInputBytes: 1_000_000, maxOutputTokens: matrixEvidenceMaxOutputTokens }, timeoutMs: 600_000 },
       unmapped_signal_discovery: { ...capability("discover-unmapped-signals/v1", "candidate-unmapped-signals/v1", 1), timeoutMs: 600_000 },
       evidence_consolidation: { ...capability("consolidate-evidence/v1", "candidate-evidence-consolidation/v1", 1), timeoutMs: 600_000 },
       global_conflict_detection: { ...capability("detect-global-conflicts/v1", "candidate-global-conflicts/v1", 1), timeoutMs: 600_000 },
@@ -231,7 +235,7 @@ export function environmentProjection(configuration: RuntimeConfiguration): Reco
   const agentConfiguration = {
     version: values.CANDIDATE_PIPELINE_BUILD_ID || "unprovisioned",
     budgets: { wallTimeMs: 3_600_000, taskAttempts: 250, repairAttempts: 2, replans: 2, llmCalls: 30, tokens: 300_000, costMicrounits: 8_000_000, externalRequests: 200 },
-    leaseMs: Number(values.AGENT_RUNTIME_LEASE_MS || 30_000),
+    leaseMs: Number(values.AGENT_RUNTIME_LEASE_MS || 120_000),
     pollingMs: Number(values.AGENT_RUNTIME_POLLING_MS || 1_000),
     heartbeatMs: Number(values.AGENT_RUNTIME_HEARTBEAT_MS || 10_000),
     flags: { synthetic: false, shadow: false, acceptNewGoals: true,
@@ -242,6 +246,7 @@ export function environmentProjection(configuration: RuntimeConfiguration): Reco
     CANDIDATE_DISPATCH_TRANSPORT: dispatchTransport,
     ROUTERAI_CONTEXT_WINDOW_TOKENS: String(contextWindowTokens),
     MATRIX_BATCH_SAFETY_TOKENS: String(matrixBatchSafetyTokens),
+    MATRIX_EVIDENCE_MAX_OUTPUT_TOKENS: String(matrixEvidenceMaxOutputTokens),
     DATABASE_URL: overrides.DATABASE_URL ?? configuration.credentials["database-url"],
     GOOGLE_OAUTH_CLIENT_SECRET: configuration.credentials["google-oauth-client-secret"],
     GOOGLE_OAUTH_TOKEN_KEYRING_JSON: configuration.credentials["google-oauth-keyring.json"],

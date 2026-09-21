@@ -134,5 +134,5 @@ export function loadRuntimeConsumerConfig(source: NodeJS.ProcessEnv = process.en
     if (!Number.isInteger(value) || value <= 0) throw new Error(`Invalid ${name}`);
     return value;
   };
-  return { endpoint, token, workerId: source.AGENT_RUNTIME_WORKER_ID?.trim() || `worker-${process.pid}`, pollingMs: integer("AGENT_RUNTIME_POLLING_MS", 1_000), heartbeatMs: integer("AGENT_RUNTIME_HEARTBEAT_MS", 10_000), leaseMs: integer("AGENT_RUNTIME_LEASE_MS", 30_000) };
+  return { endpoint, token, workerId: source.AGENT_RUNTIME_WORKER_ID?.trim() || `worker-${process.pid}`, pollingMs: integer("AGENT_RUNTIME_POLLING_MS", 1_000), heartbeatMs: integer("AGENT_RUNTIME_HEARTBEAT_MS", 10_000), leaseMs: integer("AGENT_RUNTIME_LEASE_MS", 120_000) };
 }
