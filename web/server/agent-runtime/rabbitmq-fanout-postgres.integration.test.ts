@@ -120,9 +120,13 @@ integration("transactional fan-out is idempotent, fair, and promotes an exact jo
     await repository.outcome({ taskId: mediaTaskId, attemptId: mediaTask!.attemptId, worker: "media-worker", leaseToken: mediaTask!.lease_token,
       outcome: "FAILED", errorCode: "BLOB_SIZE_LIMIT_EXCEEDED" });
     const [failedGroup] = await sql<{ state: string }[]>`SELECT state FROM agent_fanout_groups WHERE id=${transcriptGroup.groupId}`;
-    const [promotedJoin] = await sql<{ state: string }[]>`SELECT state FROM agent_tasks WHERE id=${transcriptJoinId}`;
+    const [promotedJoin] = await sql<{ state: string; revision: number }[]>`SELECT state,revision FROM agent_tasks WHERE id=${transcriptJoinId}`;
     assert.equal(failedGroup.state, "FAILED");
     assert.equal(promotedJoin.state, "RUNNABLE", "a failed fan-out must promote its join even when descendant shards remain pending");
+    const failedJoin = await repository.claimById({ taskId: transcriptJoinId, taskVersion: promotedJoin.revision, routingClass: "control",
+      worker: "failed-join-worker", now: Date.now(), leaseMs: 30_000 });
+    assert.ok(failedJoin, "the promoted failed join must pass the same dependency rule during RabbitMQ claim");
+    await assert.rejects(() => repository.readFanout({ joinTaskId: transcriptJoinId, groupKey: "transcripts" }), /FANOUT_REQUIRED_SHARD_FAILED:/);
   } finally {
     await sql.end({ timeout: 2 });
   }

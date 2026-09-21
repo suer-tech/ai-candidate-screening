@@ -271,7 +271,9 @@ export class PostgresAgentRuntimeRepository {
       const rows = await transaction<(TaskRow & Row)[]>`SELECT t.*,g.candidate_id,g.input_version,g.profile_version,g.policy_version FROM agent_tasks t JOIN agent_runs r ON r.id=t.run_id JOIN agent_goals g ON g.id=r.goal_id
         WHERE t.state='RUNNABLE' AND r.state='ACTIVE' AND t.available_at<=${input.now} AND COALESCE(t.lease_expires_at,0)<=${input.now}
           AND NOT EXISTS (SELECT 1 FROM agent_task_dependencies dep JOIN agent_tasks required ON required.id=dep.depends_on_task_id WHERE dep.task_id=t.id AND
-            CASE WHEN EXISTS (SELECT 1 FROM agent_fanout_groups fanout WHERE fanout.join_task_id=t.id)
+            CASE WHEN EXISTS (SELECT 1 FROM agent_fanout_groups failed_fanout WHERE failed_fanout.join_task_id=t.id AND failed_fanout.state='FAILED')
+              THEN false
+              WHEN EXISTS (SELECT 1 FROM agent_fanout_groups fanout WHERE fanout.join_task_id=t.id)
               THEN required.state NOT IN ('SUCCEEDED','FAILED','CANCELLED','UNKNOWN_OUTCOME')
               ELSE required.state<>dep.required_outcome END)
           AND EXISTS (SELECT 1 FROM agent_budget_ledger b WHERE b.run_id=t.run_id AND b.kind='taskAttempts' AND b.used_value<b.limit_value) ORDER BY t.id FOR UPDATE SKIP LOCKED LIMIT 1`;
@@ -290,7 +292,9 @@ export class PostgresAgentRuntimeRepository {
         WHERE t.id=${input.taskId} AND t.revision=${input.taskVersion} AND t.routing_class=${input.routingClass}
           AND t.state='RUNNABLE' AND r.state='ACTIVE' AND t.available_at<=${input.now} AND COALESCE(t.lease_expires_at,0)<=${input.now}
           AND NOT EXISTS (SELECT 1 FROM agent_task_dependencies dep JOIN agent_tasks required ON required.id=dep.depends_on_task_id WHERE dep.task_id=t.id AND
-            CASE WHEN EXISTS (SELECT 1 FROM agent_fanout_groups fanout WHERE fanout.join_task_id=t.id)
+            CASE WHEN EXISTS (SELECT 1 FROM agent_fanout_groups failed_fanout WHERE failed_fanout.join_task_id=t.id AND failed_fanout.state='FAILED')
+              THEN false
+              WHEN EXISTS (SELECT 1 FROM agent_fanout_groups fanout WHERE fanout.join_task_id=t.id)
               THEN required.state NOT IN ('SUCCEEDED','FAILED','CANCELLED','UNKNOWN_OUTCOME')
               ELSE required.state<>dep.required_outcome END)
           AND (SELECT count(*) FROM agent_tasks active WHERE active.run_id=t.run_id AND active.routing_class=t.routing_class AND active.state='RUNNING')<${input.maxPerRun ?? 2}
@@ -303,7 +307,9 @@ export class PostgresAgentRuntimeRepository {
           (SELECT count(*)::integer FROM agent_tasks active WHERE active.run_id=task.run_id AND active.routing_class=task.routing_class AND active.state='RUNNING') AS active_count
           ,(SELECT count(*)::integer FROM agent_tasks active WHERE active.routing_class=task.routing_class AND active.state='RUNNING') AS pool_active_count
           ,EXISTS (SELECT 1 FROM agent_task_dependencies dep JOIN agent_tasks required ON required.id=dep.depends_on_task_id WHERE dep.task_id=task.id AND
-            CASE WHEN EXISTS (SELECT 1 FROM agent_fanout_groups fanout WHERE fanout.join_task_id=task.id)
+            CASE WHEN EXISTS (SELECT 1 FROM agent_fanout_groups failed_fanout WHERE failed_fanout.join_task_id=task.id AND failed_fanout.state='FAILED')
+              THEN false
+              WHEN EXISTS (SELECT 1 FROM agent_fanout_groups fanout WHERE fanout.join_task_id=task.id)
               THEN required.state NOT IN ('SUCCEEDED','FAILED','CANCELLED','UNKNOWN_OUTCOME') ELSE required.state<>dep.required_outcome END) AS dependency_blocked
           FROM agent_tasks task JOIN agent_runs run ON run.id=task.run_id WHERE task.id=${input.taskId} AND run.state='ACTIVE'`;
         if (deferred?.state === "RUNNABLE" && deferred.revision === input.taskVersion && deferred.routing_class === input.routingClass && deferred.active_count >= (input.maxPerRun ?? 2)) throw new RuntimeConflictError("RABBIT_RUN_CONCURRENCY_LIMIT");
