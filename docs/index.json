@@ -75,6 +75,11 @@
       "kind": "class",
       "summary": "Consumer routing-class очередей с manual ack, bounded prefetch, PostgreSQL claim/fencing, fair per-run limit и graceful drain."
     },
+    "createMediaProcessorServer": {
+      "file": "web/server/media-processor/server.ts",
+      "kind": "function",
+      "summary": "Приватный FFmpeg processor: потоково сохраняет входное видео во временный файл и потоково отдаёт аудио без полного входного или выходного буфера в Node heap."
+    },
     "createFanoutDescriptor": {
       "file": "web/server/agent-runtime/fanout.ts",
       "kind": "function",

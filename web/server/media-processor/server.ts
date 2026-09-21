@@ -1,8 +1,11 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 import { execFile } from "node:child_process";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
-import { access, readFile, writeFile } from "node:fs/promises";
+import { createReadStream, createWriteStream } from "node:fs";
+import { access, readFile, stat } from "node:fs/promises";
 import { join, resolve } from "node:path";
+import { Transform } from "node:stream";
+import { pipeline } from "node:stream/promises";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import ffmpegStaticPath from "ffmpeg-static";
@@ -55,17 +58,23 @@ function authorized(header: string | undefined, expected: string) {
   return left.length === right.length && timingSafeEqual(left, right);
 }
 
-async function bytes(request: IncomingMessage, limit: number) {
-  const chunks: Buffer[] = [];
+async function streamRequestToFile(request: IncomingMessage, target: string, limit: number) {
+  const declaredLength = Number(request.headers["content-length"] ?? 0);
+  if (Number.isFinite(declaredLength) && declaredLength > limit) throw new Error("MEDIA_INPUT_TOO_LARGE");
   let length = 0;
-  for await (const chunk of request) {
-    const value = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
-    length += value.length;
-    if (length > limit) throw new Error("MEDIA_INPUT_TOO_LARGE");
-    chunks.push(value);
-  }
+  const limiter = new Transform({ transform(chunk: Buffer, _encoding, callback) {
+    length += chunk.length;
+    callback(length > limit ? new Error("MEDIA_INPUT_TOO_LARGE") : null, chunk);
+  } });
+  await pipeline(request, limiter, createWriteStream(target, { mode: 0o600 }));
   if (!length) throw new Error("MEDIA_INPUT_EMPTY");
-  return Buffer.concat(chunks);
+  return length;
+}
+
+async function hashFile(path: string) {
+  const hash = createHash("sha256");
+  for await (const chunk of createReadStream(path)) hash.update(chunk as Buffer);
+  return hash.digest("hex");
 }
 
 function json(response: ServerResponse, status: number, body: Record<string, unknown>) {
@@ -87,29 +96,31 @@ export function createMediaProcessorServer(config: MediaProcessorConfig) {
     if (request.method !== "POST" || request.url !== "/v1/extract-audio") return json(response, 404, { code: "MEDIA_PROCESSOR_ROUTE_NOT_FOUND" });
     const work = await createPrivateTemp("hh-media-processor-");
     try {
-      const input = await bytes(request, config.maxInputBytes);
       const inputPath = join(work, "source.bin");
       const outputPath = join(work, "audio.m4a");
-      await writeFile(inputPath, input);
+      await streamRequestToFile(request, inputPath, config.maxInputBytes);
       const ffmpegPath = await readiness;
       const probe = await probeMediaContent(inputPath, ffmpegPath);
       await extractAudioTrack({ inputPath, outputPath, ffmpegPath });
-      const audio = await readFile(outputPath);
+      const audioSize = (await stat(outputPath)).size;
+      if (!audioSize) throw new Error("MEDIA_FILE_EMPTY");
+      const audioChecksum = await hashFile(outputPath);
       response.writeHead(200, {
         "content-type": "audio/mp4",
-        "content-length": String(audio.length),
+        "content-length": String(audioSize),
         "cache-control": "no-store",
         "x-content-type-options": "nosniff",
-        "x-audio-sha256": createHash("sha256").update(audio).digest("hex"),
+        "x-audio-sha256": audioChecksum,
         "x-media-probe": probe.containerEvidence,
         "x-media-duration-seconds": probe.durationSeconds === undefined ? "" : String(probe.durationSeconds),
         "x-extraction-config": "ffmpeg-audio/v1",
       });
-      response.end(audio);
+      await pipeline(createReadStream(outputPath), response);
     } catch (error) {
       const code = error instanceof Error && ["MEDIA_INPUT_TOO_LARGE", "MEDIA_INPUT_EMPTY", "MEDIA_CONTENT_PROBE_FAILED", "MEDIA_FILE_EMPTY", "FFMPEG_UNAVAILABLE"].includes(error.message)
         ? error.message : "MEDIA_PROCESSOR_FAILED";
-      json(response, code === "MEDIA_INPUT_TOO_LARGE" ? 413 : 422, { code });
+      if (!response.headersSent) json(response, code === "MEDIA_INPUT_TOO_LARGE" ? 413 : 422, { code });
+      else response.destroy();
     } finally {
       await removePrivateTemp(work);
     }

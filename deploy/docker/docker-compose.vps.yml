@@ -55,7 +55,7 @@ services:
   worker-media:
     environment: *production-worker-environment
     deploy:
-      replicas: ${RABBITMQ_MEDIA_REPLICAS:-2}
+      replicas: ${RABBITMQ_MEDIA_REPLICAS:-1}
 
   worker-transcription:
     environment: *production-worker-environment
