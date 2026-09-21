@@ -55,6 +55,23 @@ export class RabbitTaskWorker {
   }
 
   async start() {
+    let consecutiveFailures = 0;
+    while (!this.stopping) {
+      try {
+        await this.runSession();
+        consecutiveFailures = 0;
+      } catch (error) {
+        consecutiveFailures += 1;
+        const retryAfterMs = Math.min(30_000, 500 * 2 ** Math.min(consecutiveFailures - 1, 6));
+        console.info(JSON.stringify({ event: "rabbit-worker-connection-error", workerId: this.config.workerId,
+          safeCode: safeCode(error), consecutiveFailures, retryAfterMs }));
+        await this.disconnectSession();
+        if (!this.stopping) await new Promise((resolve) => setTimeout(resolve, retryAfterMs));
+      }
+    }
+  }
+
+  private async runSession() {
     this.connection = await connectRabbit(this.config.url);
     this.channel = await this.connection.createChannel();
     await assertRabbitTopology(this.channel, this.config);
@@ -71,7 +88,9 @@ export class RabbitTaskWorker {
       await Promise.race([new Promise<void>((resolve) => this.connection!.once("close", resolve)), cancellation]);
     } finally {
       this.rejectConsumerCancellation = undefined;
+      await this.disconnectSession();
     }
+    if (!this.stopping) throw new Error("RABBIT_CONNECTION_CLOSED");
   }
 
   async stop() {
@@ -86,8 +105,17 @@ export class RabbitTaskWorker {
       await this.executor.stop();
       await Promise.race([drain, new Promise((resolve) => setTimeout(resolve, Math.min(5_000, this.config.gracefulTimeoutMs)))]);
     }
+    await this.disconnectSession();
+  }
+
+  private async disconnectSession() {
+    const channel = this.channel;
+    const connection = this.connection;
+    this.channel = undefined;
+    this.connection = undefined;
+    this.consumerTags.length = 0;
     await channel?.close().catch(() => undefined);
-    await this.connection?.close().catch(() => undefined);
+    await connection?.close().catch(() => undefined);
   }
 
   private onMessage(message: ConsumeMessage | null) {

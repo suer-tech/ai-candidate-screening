@@ -119,14 +119,19 @@ export class RabbitDispatchPublisher {
   }
 
   async start() {
+    let consecutiveFailures = 0;
     while (!this.stopping) {
+      let delayMs = this.config.pollingMs;
       try {
         await this.runOnce();
+        consecutiveFailures = 0;
       } catch (error) {
-        console.info(JSON.stringify({ event: "rabbit-dispatch-publisher-error", safeCode: safePublishCode(error) }));
+        consecutiveFailures += 1;
+        delayMs = Math.min(30_000, Math.max(this.config.pollingMs, 500 * 2 ** Math.min(consecutiveFailures - 1, 6)));
+        console.info(JSON.stringify({ event: "rabbit-dispatch-publisher-error", safeCode: safePublishCode(error), consecutiveFailures, retryAfterMs: delayMs }));
         await this.disconnect();
       }
-      if (!this.stopping) await new Promise((resolve) => setTimeout(resolve, this.config.pollingMs));
+      if (!this.stopping) await new Promise((resolve) => setTimeout(resolve, delayMs));
     }
   }
 
