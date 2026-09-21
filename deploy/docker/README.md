@@ -123,6 +123,8 @@ PID и runtime instance ID, поэтому replicas не делят lease owner.
 
 Publisher и workers переподключаются к RabbitMQ с ограниченным exponential backoff до 30 секунд, чтобы перезапуск broker не создавал restart/log storm. Для аварийной остановки Rabbit-обработки на VPS меняйте `CANDIDATE_DISPATCH_TRANSPORT=postgres` именно в `deploy/docker/.env`: Docker process environment имеет приоритет над одноимённым значением `/etc/hh-agent/runtime.env`. После изменения контейнеры приложения требуется пересоздать; PostgreSQL и volumes удалять нельзя.
 
+RabbitMQ использует фиксированные `hostname: rabbitmq` и `RABBITMQ_NODENAME=rabbit@rabbitmq`. Без них Docker присваивает nodename по эфемерному container ID, и после `force-recreate` broker видит существующий volume как другой узел (`virgin node`), заново создаёт vhost/пользователя и задерживает подключение workers. Rabbit остаётся только транспортом: PostgreSQL dispatch outbox восстанавливает runnable deliveries даже при первом переходе на стабильный nodename.
+
 Для временного rollback транспорта установите `CANDIDATE_DISPATCH_TRANSPORT=postgres`, остановите `dispatch-publisher` и Rabbit-сервисы `worker-control`, `worker-documents`, `worker-media`, `worker-transcription`, `worker-llm`, `worker-reports`, `worker-drive`, `worker-notifications`, затем запустите прежний consumer командой `docker compose --profile postgres-transport up -d worker-postgres`. Он использует тот же executor, PostgreSQL claim/commit и продолжает новый graph последовательно. Не очищайте Rabbit queues, `agent_task_dispatch_outbox`, `agent_fanout_*` или `agent_tasks`.
 
 ## Резервное копирование

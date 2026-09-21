@@ -86,11 +86,13 @@ services:
 
   rabbitmq:
     image: rabbitmq:3.13-management-alpine
+    hostname: rabbitmq
     restart: unless-stopped
     entrypoint: ["/bin/sh", "-ec"]
     command: ["export RABBITMQ_DEFAULT_PASS=$$(tr -d '\\r\\n' < /config/credentials/rabbitmq-password); exec docker-entrypoint.sh rabbitmq-server"]
     environment:
       RABBITMQ_DEFAULT_USER: hh_agent
+      RABBITMQ_NODENAME: rabbit@rabbitmq
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
       - config-root:/config:ro
