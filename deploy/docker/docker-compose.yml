@@ -180,7 +180,10 @@ services:
   worker-media:
     <<: *app-common
     command: ["npm", "run", "service:rabbit-worker"]
-    environment: { <<: *app-env, AGENT_RUNTIME_WORKER_ID: docker-media, RABBITMQ_WORKER_CLASSES: media, RABBITMQ_PREFETCH: "${RABBITMQ_MEDIA_PREFETCH:-5}", RABBITMQ_POOL_CONCURRENCY: "${RABBITMQ_MEDIA_CONCURRENCY:-10}" }
+    # Video extraction holds the source video and produced audio in memory while
+    # crossing the processor boundary. Keep this pool deliberately smaller than
+    # the cheap control/document pools so several candidates cannot OOM the host.
+    environment: { <<: *app-env, AGENT_RUNTIME_WORKER_ID: docker-media, RABBITMQ_WORKER_CLASSES: media, RABBITMQ_PREFETCH: "${RABBITMQ_MEDIA_PREFETCH:-1}", RABBITMQ_POOL_CONCURRENCY: "${RABBITMQ_MEDIA_CONCURRENCY:-2}" }
     depends_on: { postgres: { condition: service_healthy }, rabbitmq: { condition: service_healthy }, migrate: { condition: service_completed_successfully }, web: { condition: service_started } }
 
   worker-transcription:

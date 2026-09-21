@@ -131,7 +131,11 @@ export class RabbitTaskWorker {
           retryAt: Date.now() + 1_000, reason: code } }).catch(() => ({ accepted: false }));
         if (deferred.accepted === true) { channel.ack(message); return; }
       }
-      if (!invalid) await new Promise((resolve) => setTimeout(resolve, 250));
+      // When the runtime API is restarting or the host is under pressure, an
+      // immediate nack creates a tight redelivery loop across all consumers.
+      // The database lease remains authoritative, so a short broker backoff is
+      // safe and prevents the retry storm from delaying API recovery.
+      if (!invalid) await new Promise((resolve) => setTimeout(resolve, message.fields.redelivered ? 2_000 : 1_000));
       channel.nack(message, false, !invalid);
     }
   }
