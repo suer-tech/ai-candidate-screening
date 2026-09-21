@@ -82,6 +82,15 @@ integration("transactional fan-out is idempotent, fair, and promotes an exact jo
     const exact = await repository.readFanout({ joinTaskId: joinId, groupKey: "documents" });
     assert.deepEqual(exact.members.map((member) => member.shard_identity), ["a", "b", "c"]);
 
+    const artifactOwnerRunId = randomUUID();
+    await sql`INSERT INTO agent_runs (id,goal_id,trigger_identity,state,revision,current_plan_version,last_progress_at,workflow_version)
+      VALUES (${artifactOwnerRunId},${goalId},${`artifact-owner:${artifactOwnerRunId}`},'FAILED',1,1,${new Date().toISOString()},'matrix-v4-rabbit-parallel')`;
+    await sql`UPDATE agent_memory_entries SET run_id=${artifactOwnerRunId} WHERE id=${`synthetic-memory-${runId}-0`}`;
+    const reusedArtifact = await repository.readFanout({ joinTaskId: joinId, groupKey: "documents" });
+    assert.deepEqual(reusedArtifact.members.map((member) => member.shard_identity), ["a", "b", "c"],
+      "join must validate a reused immutable artifact through its canonical source-run reference");
+    await sql`UPDATE agent_memory_entries SET run_id=${runId} WHERE id=${`synthetic-memory-${runId}-0`}`;
+
     const transcriptCoordinatorId = `${runId}:plan:1:transcripts-plan`;
     const transcriptJoinId = `${runId}:plan:1:transcripts-join`;
     await sql`UPDATE agent_tasks SET state='RUNNABLE' WHERE id=${transcriptCoordinatorId}`;

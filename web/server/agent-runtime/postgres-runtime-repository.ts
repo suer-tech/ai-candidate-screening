@@ -193,9 +193,9 @@ export class PostgresAgentRuntimeRepository {
         const [reuseCandidate] = coordinator.recovery_source_run_id ? await transaction<{ id: string; output_artifact_id: string; descriptor_json: string; schema_version: string; checksum: string }[]>`SELECT task.id,task.output_artifact_id,fanout.descriptor_json,ref.schema_version,ref.checksum
           FROM agent_tasks task
           JOIN agent_fanout_groups fanout ON fanout.id=task.fanout_group_id
-          JOIN agent_memory_entries memory ON memory.run_id=task.run_id AND memory.provenance=task.tool_key
+          JOIN agent_artifact_refs ref ON ref.storage_identity=task.output_artifact_id
+          JOIN agent_memory_entries memory ON memory.id=ref.memory_entry_id AND memory.provenance=task.tool_key
             AND memory.input_version=${input.descriptor.inputFingerprint} AND memory.profile_version=${input.descriptor.profileFingerprint}
-          JOIN agent_artifact_refs ref ON ref.memory_entry_id=memory.id AND ref.storage_identity=task.output_artifact_id
           WHERE task.run_id=${coordinator.recovery_source_run_id} AND task.tool_key=${shardToolKey} AND task.shard_identity=${shard.identity}
             AND task.state='SUCCEEDED' AND task.output_artifact_id IS NOT NULL AND ref.checksum<>''
           ORDER BY memory.id LIMIT 1` : [];
@@ -210,16 +210,6 @@ export class PostgresAgentRuntimeRepository {
           ON CONFLICT (id) DO NOTHING`;
         if (reusable) {
           await transaction`UPDATE agent_tasks SET reused_from_task_id=${reusable.id},output_artifact_id=${reusable.output_artifact_id} WHERE id=${shardTaskId}`;
-          const memoryId = `${shardTaskId}:reused-artifact`; const refId = `${memoryId}:ref`;
-          await transaction`INSERT INTO agent_memory_entries (id,goal_id,run_id,candidate_id,input_version,profile_version,kind,provenance,sensitivity,purpose,payload_json,immutable)
-            SELECT ${memoryId},${String(coordinator.goal_id)},${coordinator.run_id},candidate_id,input_version,profile_version,kind,provenance,sensitivity,${recoveryArtifactPurpose(input.descriptor.workflowVersion)},payload_json,true
-            FROM agent_memory_entries memory JOIN agent_artifact_refs ref ON ref.memory_entry_id=memory.id
-            WHERE memory.run_id=${coordinator.recovery_source_run_id} AND memory.provenance=${shardToolKey} AND ref.storage_identity=${reusable.output_artifact_id} LIMIT 1 ON CONFLICT DO NOTHING`;
-          await transaction`INSERT INTO agent_artifact_refs (id,memory_entry_id,storage_class,storage_identity,checksum,schema_version)
-            SELECT ${refId},${memoryId},ref.storage_class,ref.storage_identity,ref.checksum,ref.schema_version FROM agent_artifact_refs ref
-            WHERE ref.storage_identity=${reusable.output_artifact_id}
-              AND EXISTS (SELECT 1 FROM agent_memory_entries memory WHERE memory.id=${memoryId})
-            LIMIT 1 ON CONFLICT DO NOTHING`;
         }
         await transaction`INSERT INTO agent_task_dependencies (task_id,depends_on_task_id,required_outcome) VALUES (${shardTaskId},${input.coordinatorTaskId},'SUCCEEDED') ON CONFLICT DO NOTHING`;
         await transaction`INSERT INTO agent_task_dependencies (task_id,depends_on_task_id,required_outcome) VALUES (${input.joinTaskId},${shardTaskId},'SUCCEEDED') ON CONFLICT DO NOTHING`;
@@ -243,9 +233,9 @@ export class PostgresAgentRuntimeRepository {
     const group = groups[0]; if (!group) throw new RuntimeConflictError("FANOUT_GROUP_NOT_FOUND");
     const members = await this.sql<{ shard_identity: string; ordinal: number; required: boolean; task_id: string; state: string; tool_key: string; output_artifact_id: string | null; shard_payload_json: string; schema_version: string | null; checksum: string | null }[]>`SELECT member.shard_identity,member.ordinal,member.required,task.id AS task_id,task.state,task.tool_key,task.output_artifact_id,task.shard_payload_json,
         (SELECT ref.schema_version FROM agent_memory_entries memory JOIN agent_artifact_refs ref ON ref.memory_entry_id=memory.id
-          WHERE memory.run_id=task.run_id AND memory.provenance=task.tool_key AND ref.storage_identity=task.output_artifact_id LIMIT 1) AS schema_version,
+          WHERE memory.provenance=task.tool_key AND ref.storage_identity=task.output_artifact_id LIMIT 1) AS schema_version,
         (SELECT ref.checksum FROM agent_memory_entries memory JOIN agent_artifact_refs ref ON ref.memory_entry_id=memory.id
-          WHERE memory.run_id=task.run_id AND memory.provenance=task.tool_key AND ref.storage_identity=task.output_artifact_id LIMIT 1) AS checksum
+          WHERE memory.provenance=task.tool_key AND ref.storage_identity=task.output_artifact_id LIMIT 1) AS checksum
       FROM agent_fanout_members member JOIN agent_tasks task ON task.id=member.shard_task_id WHERE member.group_id=${group.id} ORDER BY member.ordinal`;
     if (members.length !== group.expected_count) throw new RuntimeConflictError("FANOUT_MEMBERSHIP_INCOMPLETE");
     const failed = members.find((member) => member.required && ["FAILED", "CANCELLED", "UNKNOWN_OUTCOME"].includes(member.state));
