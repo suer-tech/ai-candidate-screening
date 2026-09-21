@@ -4,6 +4,18 @@
 # HH_DOMAIN подставляется nginx entrypoint из /etc/nginx/templates/*.template.
 
 server {
+    listen 8080;
+    server_name _;
+    access_log off;
+    location = /stub_status {
+        stub_status;
+    }
+    location / {
+        return 404;
+    }
+}
+
+server {
     listen 80;
     listen [::]:80;
     server_name ${HH_DOMAIN};
@@ -28,10 +40,28 @@ server {
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
 
     client_max_body_size 32m;
+    # Не сохраняем request URI: он может содержать идентификаторы кандидатов.
+    access_log off;
 
     # Docker assigns a new IP when the web container is recreated. Resolve the
     # service name through Docker DNS instead of retaining the startup-time IP.
     resolver 127.0.0.11 valid=10s ipv6=off;
+
+    # Единственная внешняя monitoring boundary: только OCR VPS + bearer token,
+    # который дополнительно проверяет ops-gateway. Grafana/Prometheus/Loki наружу не публикуются.
+    location ^~ /api/ops/ {
+        allow ${HH_OPS_ALLOWED_IP};
+        deny all;
+        rewrite ^/api/ops/(.*)$ /$1 break;
+        set $ops_upstream ops-gateway:4313;
+        proxy_pass http://$ops_upstream;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header Authorization $http_authorization;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_read_timeout 15s;
+    }
 
     location / {
         set $web_upstream web:3000;

@@ -194,6 +194,16 @@
       "file": "web/server/storage/private-temp.ts",
       "kind": "function",
       "summary": "Создаёт allowlisted приватный 0700 temp-каталог для media/document work."
+    },
+    "OperationsService": {
+      "file": "web/server/operations/service.ts",
+      "kind": "class",
+      "summary": "Строит PII-free HR workload aggregates, Prometheus exposition и bounded allowlisted reads локальных Prometheus/Loki/Alertmanager для общего Pulse."
+    },
+    "createOperationsServer": {
+      "file": "web/server/operations/server.ts",
+      "kind": "function",
+      "summary": "Отдельная constant-time bearer-authenticated read-only HTTP boundary с exact routes, query keys и response limits."
     }
   }
 }

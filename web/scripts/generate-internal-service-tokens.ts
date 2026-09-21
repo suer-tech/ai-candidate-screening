@@ -5,7 +5,7 @@ import path from "node:path";
 const configurationRoot = process.env.HH_RUNTIME_CONFIG_ROOT?.trim() ? path.resolve(process.env.HH_RUNTIME_CONFIG_ROOT) : path.resolve(".runtime");
 const target = path.join(configurationRoot, "credentials", "internal-service-tokens.json");
 const rotate = process.argv.includes("--rotate");
-const names = ["AGENT_RUNTIME_INTERNAL_TOKEN", "CANDIDATE_TOOL_INTERNAL_TOKEN", "MEDIA_PROCESSOR_TOKEN", "DOCUMENT_PROCESSOR_TOKEN", "E2E_PREFLIGHT_TOKEN", "E2E_CONTROL_TOKEN", "E2E_FIXTURE_CONTROL_TOKEN"];
+const names = ["AGENT_RUNTIME_INTERNAL_TOKEN", "CANDIDATE_TOOL_INTERNAL_TOKEN", "MEDIA_PROCESSOR_TOKEN", "DOCUMENT_PROCESSOR_TOKEN", "E2E_PREFLIGHT_TOKEN", "E2E_CONTROL_TOKEN", "E2E_FIXTURE_CONTROL_TOKEN", "OPS_READ_INTERNAL_TOKEN"];
 await mkdir(path.dirname(target), { recursive: true });
 const temporary = `${target}.${process.pid}.${randomBytes(6).toString("hex")}.new`;
 const handle = await open(temporary, "wx", 0o600);

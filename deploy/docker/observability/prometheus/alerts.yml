@@ -1,0 +1,68 @@
+groups:
+  - name: hr-critical
+    rules:
+      - alert: HrOperationsExporterDown
+        expr: up{job="hr-operations"} == 0
+        for: 1m
+        labels: { system: hr, severity: critical }
+        annotations: { summary: "HR operations exporter недоступен" }
+      - alert: HrWebDown
+        expr: probe_success{probe="live"} == 0
+        for: 2m
+        labels: { system: hr, severity: critical }
+        annotations: { summary: "HR web health probe не проходит" }
+      - alert: HrProcessingNotReady
+        expr: probe_success{probe="processing"} == 0
+        for: 5m
+        labels: { system: hr, severity: critical }
+        annotations: { summary: "HR candidate processing не готов" }
+      - alert: HrRabbitMqMetricsDown
+        expr: up{job="rabbitmq"} == 0
+        for: 2m
+        labels: { system: hr, severity: critical }
+        annotations: { summary: "RabbitMQ metrics недоступны" }
+      - alert: HrLokiDown
+        expr: up{job="loki"} == 0
+        for: 2m
+        labels: { system: hr, severity: warning }
+        annotations: { summary: "HR Loki недоступен" }
+      - alert: HrAlertmanagerMetricsDown
+        expr: up{job="alertmanager"} == 0
+        for: 2m
+        labels: { system: hr, severity: critical }
+        annotations: { summary: "HR Alertmanager недоступен" }
+      - alert: HrRabbitMqConsumerMissing
+        expr: min(rabbitmq_queue_consumers{queue=~"candidate.tasks.(control|documents|media|transcription|llm|reports|drive|notifications)"}) < 1
+        for: 5m
+        labels: { system: hr, severity: critical }
+        annotations: { summary: "Один из обязательных RabbitMQ pools остался без consumer" }
+      - alert: HrRabbitMqBacklog
+        expr: sum(rabbitmq_queue_messages_ready{queue=~"candidate.tasks.*"}) > 25
+        for: 10m
+        labels: { system: hr, severity: warning }
+        annotations: { summary: "Очередь HR обработки устойчиво растёт" }
+      - alert: HrTerminalFailures
+        expr: hh_failed_runs_1h > 0
+        for: 2m
+        labels: { system: hr, severity: warning }
+        annotations: { summary: "Есть terminal failures HR за последний час" }
+      - alert: HrProcessingStalled
+        expr: hh_oldest_active_run_seconds > 3600
+        for: 10m
+        labels: { system: hr, severity: critical }
+        annotations: { summary: "Активный HR run не прогрессирует более часа" }
+      - alert: HrHostMemoryHigh
+        expr: (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) > 0.90
+        for: 10m
+        labels: { system: hr, severity: warning }
+        annotations: { summary: "HR VPS использует более 90% памяти" }
+      - alert: HrHostDiskLow
+        expr: node_filesystem_avail_bytes{mountpoint="/",fstype!~"tmpfs|overlay"} / node_filesystem_size_bytes{mountpoint="/",fstype!~"tmpfs|overlay"} < 0.10
+        for: 10m
+        labels: { system: hr, severity: critical }
+        annotations: { summary: "На HR VPS осталось менее 10% диска" }
+      - alert: HrContainerMemoryNearLimit
+        expr: max by (name) (container_memory_working_set_bytes{name!=""} / container_spec_memory_limit_bytes{name!=""}) > 0.90
+        for: 10m
+        labels: { system: hr, severity: warning }
+        annotations: { summary: "HR container приблизился к memory limit" }

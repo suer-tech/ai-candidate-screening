@@ -1,0 +1,201 @@
+services:
+  ops-gateway:
+    build:
+      context: ../../web
+      dockerfile: Dockerfile
+    image: hh-agent:local
+    restart: unless-stopped
+    command: ["npm", "run", "service:ops-gateway"]
+    env_file:
+      - .env
+    environment:
+      HH_RUNTIME_CONFIG_ROOT: /config
+      DATABASE_URL: postgresql://hh_agent:${HH_POSTGRES_PASSWORD:?set HH_POSTGRES_PASSWORD in .env}@postgres:5432/hh_agent
+      HH_DOCKER_NETWORK: "1"
+      OPS_HOST: "0.0.0.0"
+      OPS_PORT: "4313"
+      OPS_TIMEZONE: ${OPS_TIMEZONE:-Asia/Yekaterinburg}
+      OPS_PROMETHEUS_URL: http://prometheus:9090
+      OPS_LOKI_URL: http://loki:3100
+      OPS_ALERTMANAGER_URL: http://alertmanager:9093
+      INTERNAL_APP_ORIGIN: http://web:3000
+      MEDIA_PROCESSOR_URL: http://media-processor:4311/v1/extract-audio
+      MEDIA_PROCESSOR_HOST: media-processor
+      MEDIA_PROCESSOR_PORT: "4311"
+      DOCUMENT_PROCESSOR_URL: http://document-processor:4312/v1/extract-document
+      DOCUMENT_PROCESSOR_HOST: document-processor
+      DOCUMENT_PROCESSOR_PORT: "4312"
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: "5672"
+      RABBITMQ_USERNAME: hh_agent
+    expose:
+      - "4313"
+    volumes:
+      - config-root:/config:ro
+    depends_on:
+      postgres: { condition: service_healthy }
+      migrate: { condition: service_completed_successfully }
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4313/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    security_opt:
+      - no-new-privileges:true
+
+  prometheus:
+    image: prom/prometheus:v3.13.2
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=${HH_PROMETHEUS_RETENTION:-30d}
+    expose:
+      - "9090"
+    volumes:
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./observability/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus-data:/prometheus
+    depends_on:
+      alertmanager: { condition: service_started }
+      ops-gateway: { condition: service_started }
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:9090/-/healthy"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+    security_opt:
+      - no-new-privileges:true
+
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+    expose:
+      - "9093"
+    volumes:
+      - ./observability/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager-data:/alertmanager
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:9093/-/healthy"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+    security_opt:
+      - no-new-privileges:true
+
+  loki:
+    image: grafana/loki:3.1.1
+    restart: unless-stopped
+    command: ["-config.file=/etc/loki/config.yml"]
+    expose:
+      - "3100"
+    volumes:
+      - ./observability/loki/config.yml:/etc/loki/config.yml:ro
+      - loki-data:/loki
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:3100/ready"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    security_opt:
+      - no-new-privileges:true
+
+  alloy:
+    image: grafana/alloy:v1.0.0
+    restart: unless-stopped
+    command: ["run", "--storage.path=/var/lib/alloy/data", "/etc/alloy/config.alloy"]
+    volumes:
+      - ./observability/alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - alloy-data:/var/lib/alloy/data
+    depends_on:
+      loki: { condition: service_healthy }
+    security_opt:
+      - no-new-privileges:true
+
+  node-exporter:
+    image: quay.io/prometheus/node-exporter:v1.8.2
+    restart: unless-stopped
+    command: ["--path.rootfs=/host"]
+    expose:
+      - "9100"
+    volumes:
+      - /:/host:ro,rslave
+    security_opt:
+      - no-new-privileges:true
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.2
+    restart: unless-stopped
+    privileged: true
+    devices:
+      - /dev/kmsg:/dev/kmsg
+    command: ["--docker_only=true", "--housekeeping_interval=15s"]
+    expose:
+      - "8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+      - /dev/disk:/dev/disk:ro
+
+  blackbox-exporter:
+    image: prom/blackbox-exporter:v0.25.0
+    restart: unless-stopped
+    command: ["--config.file=/etc/blackbox/config.yml"]
+    expose:
+      - "9115"
+    volumes:
+      - ./observability/blackbox/config.yml:/etc/blackbox/config.yml:ro
+    security_opt:
+      - no-new-privileges:true
+
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:1.3.0
+    restart: unless-stopped
+    command: ["--nginx.scrape-uri=http://nginx:8080/stub_status"]
+    expose:
+      - "9113"
+    depends_on:
+      nginx: { condition: service_started }
+    security_opt:
+      - no-new-privileges:true
+
+  grafana:
+    image: grafana/grafana:11.1.4
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${HH_GRAFANA_PORT:-3002}:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${HH_GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD__FILE: /run/secrets/grafana-admin-password
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_SERVER_DOMAIN: localhost
+    volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana-data:/var/lib/grafana
+      - ${HH_GRAFANA_ADMIN_PASSWORD_FILE:-/etc/hh-observability/grafana-admin-password}:/run/secrets/grafana-admin-password:ro
+    depends_on:
+      prometheus: { condition: service_healthy }
+      loki: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:3000/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  prometheus-data:
+  alertmanager-data:
+  loki-data:
+  alloy-data:
+  grafana-data:

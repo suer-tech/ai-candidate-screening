@@ -1,0 +1,44 @@
+discovery.docker "hr" {
+  host = "unix:///var/run/docker.sock"
+  filter {
+    name   = "label"
+    values = ["com.docker.compose.project=hh-agent"]
+  }
+}
+
+discovery.relabel "hr" {
+  targets = discovery.docker.hr.targets
+
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+    target_label  = "service"
+  }
+
+  rule {
+    target_label = "system"
+    replacement  = "hr"
+  }
+}
+
+loki.source.docker "hr" {
+  host       = "unix:///var/run/docker.sock"
+  targets    = discovery.relabel.hr.output
+  labels     = { source = "docker" }
+  forward_to = [loki.process.hr.receiver]
+}
+
+loki.process "hr" {
+  stage.json {
+    expressions = { event = "event", level = "level" }
+  }
+  stage.labels {
+    values = { level = "" }
+  }
+  forward_to = [loki.write.local.receiver]
+}
+
+loki.write "local" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}

@@ -13,6 +13,7 @@ const entries: Record<string, string[]> = {
   discovery: ["--import", "tsx", path.join(webRoot, "server", "candidate-pipeline", "discovery-cli.ts")],
   media: ["--import", "tsx", path.join(webRoot, "server", "media-processor", "server.ts")],
   document: ["--import", "tsx", path.join(webRoot, "server", "document-processor", "server.ts")],
+  operations: ["--import", "tsx", path.join(webRoot, "server", "operations", "cli.ts")],
   controller: ["--import", "tsx", path.join(webRoot, "server", "e2e-controller", "cli.ts")],
 };
 const argumentsForService = service ? entries[service] : undefined;

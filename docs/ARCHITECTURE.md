@@ -69,6 +69,7 @@ Dashboard projection также проходит по recovery lineage: опуб
 - `web/server/product/postgres-repository.ts` разрешает `matrix-evidence.claimsRef` в отдельный `matrix-claims` artifact и строит публичную HR-проекцию всех строк. Внутренние claim/criterion/artifact IDs и verifier remarks остаются в audit; веб показывает название пункта, вывод, цитату и понятное место источника. `Резюме для принятия решения` детерминированно собирается из уже доказанных положительных выводов, затем зон внимания и дополнительного контекста; оно не вызывает LLM, не пересчитывает рекомендацию и не подменяет сохранённое основание итога. Та же HR-safe политика применяется при формировании PDF через `reports.ts`.
 - `web/server/candidate-pipeline/reports.ts` и `web/server/document-processor/server.ts` формируют единый компактный `candidate-report` из 11 последовательных HR-разделов по принятому образцу: кандидат/вакансия, исходные материалы, организационные моменты, ревью, ключевые доказательства, ABC по направлениям, технический чек, мотивация/соответствие, риски, решение и финальное HR-резюме. `compose-candidate-report/v2` получает только итоговые решения и компактный evidence catalog, группирует применимые темы технического чека и не может менять recommendation/ABC/row states; invalid/timeout response даёт deterministic fallback. `projectReportSourceMaterials` берёт только supported non-results entries immutable manifest, строит человекочитаемые подписи и allowlisted Google Drive/Docs HTTPS цели; renderer показывает их синими подчёркнутыми PDF `/Link` annotations. Полная матрица остаётся в model/web/audit, но не рендерится отдельным приложением PDF. Endpoint `/v1/render-candidate-report` возвращает один PDF/checksum; endpoint парных отчётов удалён.
 - `web/server/media-processor/`, `web/server/document-processor/` — loopback-only тяжёлые обработчики с отдельными bearer tokens.
+- `web/server/operations/` — отдельный read-only HR operations gateway и Prometheus exporter. Он выполняет только hard-coded агрегаты PostgreSQL и allowlisted запросы локальных Prometheus/Loki/Alertmanager, удаляет raw logs и идентификаторы и требует отдельный `OPS_READ_INTERNAL_TOKEN`. Public nginx пропускает `/api/ops/` только с разрешённого IP OCR VPS; Grafana остаётся на loopback HR VPS.
 - PDF processor fail-closed проверяет структуру, readability budgets, обязательные model sections и checksum. Text-extraction content oracle является диагностическим: его false negative сохраняется в `validation_json` как warning с безопасным fingerprint, но не останавливает публикацию структурно валидного отчёта.
 - `web/server/llm/` — RouterAI/OpenAI-compatible gateway, strict Structured Outputs через отдельный `response_format.json_schema`, рекурсивная fail-closed проверка response artifacts, capability routing, budgets и защищённые трассы без секретов в событиях. JSON Schema не дублируется в prompt messages; выбранная RouterAI-модель обязана явно поддерживать Structured Outputs.
 
@@ -90,7 +91,7 @@ Google доступ — только к явно выбранному корню
 
 ## Конфигурация и эксплуатация
 
-- Локально: `web/.runtime/runtime.env` и ровно восемь файлов в `web/.runtime/credentials/`; каталог игнорируется Git.
+- Локально: `web/.runtime/runtime.env` и точный allowlist файлов в `web/.runtime/credentials/`; каталог игнорируется Git. Operations credential хранится внутри `internal-service-tokens.json`, а пароль Grafana — вне application config root.
 - VPS: `/etc/hh-agent/runtime.env` и `/etc/hh-agent/credentials/`; web доступен через nginx HTTPS + Basic Auth, который перезаписывает доверенный principal, PostgreSQL и processors слушают только loopback.
 - `cd web && npm run build:id` — детерминированный immutable build ID из delivery-файлов без чтения ignored credentials/candidate.
 - Runtime preflight сверяет точный URL/host/port/route media и document processors, чтобы задача не стартовала при рассинхронизации loopback endpoint.
@@ -104,6 +105,7 @@ Google доступ — только к явно выбранному корню
 - `cd web && npm test` — build и основной unit/rendered/acceptance regression.
 - `cd web && npm run test:postgres-integration` — реальные PostgreSQL/OAuth/temp invariants.
 - `cd web && npm run test:vps-postgres` — migration/runtime/VPS acceptance.
+- `cd web && npm run test:operations-observability` — security/contract и static monitoring configuration acceptance.
 - `cd web && node --test tests/matrix-driven-assessment.acceptance.test.mjs` — независимый synthetic matrix-driven acceptance-контур.
 - `cd web && npm run local:status` — безопасная сводка web/worker/processors/PostgreSQL без PID, credentials и provider IDs.
 - `cd web && npm run e2e:required` — обязательные `E2E-VAC-001`, `E2E-TRN-001`, `E2E-ABC-001`, `E2E-RESULT-001` в provisioned среде.

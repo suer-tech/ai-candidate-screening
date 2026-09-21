@@ -15,6 +15,9 @@
 #   docker compose -f deploy/docker/docker-compose.yml -f deploy/docker/docker-compose.vps.yml up -d --build
 #   docker compose exec certbot certbot renew   (или системный таймер)
 
+include:
+  - docker-compose.observability.yml
+
 services:
   postgres:
     ports: []
@@ -98,12 +101,15 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    expose:
+      - "8080"
     volumes:
       - ./nginx.conf.template:/etc/nginx/templates/hh-web.conf.template:ro
       - /etc/letsencrypt:/etc/letsencrypt:ro
       - certbot-webroot:/var/www/certbot:rw
     environment:
       HH_DOMAIN: ${HH_DOMAIN}
+      HH_OPS_ALLOWED_IP: ${HH_OPS_ALLOWED_IP:?set OCR VPS public IP in .env}
     depends_on:
       web:
         condition: service_started

@@ -14,6 +14,9 @@ discovery, dispatch publisher, отдельные worker pools, media и documen
   nginx reverse proxy + certbot (HTTPS).
 - `.env.example` — переменные compose (копируется в `.env`, игнорируется git).
 - `nginx.conf.template` — nginx-конфиг, `${HH_DOMAIN}` подставляется entrypoint'ом.
+- `docker-compose.observability.yml` — HR Prometheus/Loki/Grafana/Alertmanager,
+  exporters и защищённый operations gateway; VPS override включает его автоматически.
+- `observability/README.md` — подготовка credentials, Pulse, SSH tunnel, smoke и rollback.
 
 ## Конфигурация
 
