@@ -3,10 +3,12 @@ import type { PostgresClient } from "./postgres.ts";
 import { withTransaction } from "./postgres.ts";
 
 export const GLOBAL_BLOB_LIMIT = 32 * 1024 * 1024;
+export const TRANSCRIPT_AUDIO_BLOB_LIMIT = 256 * 1024 * 1024;
 const KIND_LIMITS: Readonly<Record<string, number>> = Object.freeze({
   "protected-llm-trace": 4 * 1024 * 1024,
   "domain-artifact": 8 * 1024 * 1024,
   "report-pdf": 16 * 1024 * 1024,
+  "transcript-audio": TRANSCRIPT_AUDIO_BLOB_LIMIT,
 });
 
 export class BlobStoreError extends Error {
@@ -24,7 +26,7 @@ export interface BlobDescriptor {
   retentionUntilUtc?: string; protected: boolean; createdAtUtc: string;
 }
 
-function limitFor(kind: string) { return Math.min(KIND_LIMITS[kind] ?? GLOBAL_BLOB_LIMIT, GLOBAL_BLOB_LIMIT); }
+export function blobLimitFor(kind: string) { return KIND_LIMITS[kind] ?? GLOBAL_BLOB_LIMIT; }
 function digest(bytes: Uint8Array) { return createHash("sha256").update(bytes).digest("hex"); }
 
 export async function collectBoundedBytes(source: AsyncIterable<Uint8Array>, limit: number): Promise<Uint8Array> {
@@ -46,7 +48,7 @@ export class PostgresBlobStore {
   constructor(sql: PostgresClient) { this.sql = sql; }
 
   async put(input: BlobWrite): Promise<BlobDescriptor> {
-    if (!input.bytes.byteLength || input.bytes.byteLength > limitFor(input.kind)) throw new BlobStoreError("BLOB_SIZE_LIMIT_EXCEEDED");
+    if (!input.bytes.byteLength || input.bytes.byteLength > blobLimitFor(input.kind)) throw new BlobStoreError("BLOB_SIZE_LIMIT_EXCEEDED");
     const id = input.id ?? randomUUID();
     const checksum = digest(input.bytes);
     const createdAtUtc = new Date().toISOString();

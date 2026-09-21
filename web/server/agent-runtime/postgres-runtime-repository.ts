@@ -36,7 +36,9 @@ async function enqueueDispatch(transaction: PostgresClient, task: DispatchableTa
 async function promoteEligible(transaction: PostgresClient, runId: string) {
   const rows = await transaction<DispatchableTask[]>`UPDATE agent_tasks task SET state='RUNNABLE',revision=revision+1,available_at=0 WHERE task.run_id=${runId} AND task.state='PENDING'
     AND NOT EXISTS (SELECT 1 FROM agent_task_dependencies dep JOIN agent_tasks required ON required.id=dep.depends_on_task_id WHERE dep.task_id=task.id AND
-      CASE WHEN EXISTS (SELECT 1 FROM agent_fanout_groups fanout WHERE fanout.join_task_id=task.id)
+      CASE WHEN EXISTS (SELECT 1 FROM agent_fanout_groups failed_fanout WHERE failed_fanout.join_task_id=task.id AND failed_fanout.state='FAILED')
+        THEN false
+        WHEN EXISTS (SELECT 1 FROM agent_fanout_groups fanout WHERE fanout.join_task_id=task.id)
         THEN required.state NOT IN ('SUCCEEDED','FAILED','CANCELLED','UNKNOWN_OUTCOME')
         ELSE required.state<>dep.required_outcome END)
     RETURNING task.id,task.run_id,task.revision,task.attempt_count,task.tool_key,task.routing_class`;
@@ -504,7 +506,13 @@ export class PostgresAgentRuntimeRepository {
         if (nextState === "RUNNABLE" && updated[0]) await enqueueDispatch(transaction, { id: task.id, run_id: task.run_id, revision: updated[0].revision, attempt_count: updated[0].attempt_count, tool_key: updated[0].tool_key });
         await transaction`UPDATE agent_runs SET last_progress_at=${recoveredAt},revision=revision+1 WHERE id=${task.run_id} AND state='ACTIVE'`;
       }
-      return [...completedNotifications.map((task) => task.id), ...stale.map((task) => task.id)];
+      const failedFanoutRuns = await transaction<{ run_id: string }[]>`SELECT DISTINCT fanout.run_id
+        FROM agent_fanout_groups fanout JOIN agent_runs run ON run.id=fanout.run_id AND run.state='ACTIVE'
+        JOIN agent_tasks join_task ON join_task.id=fanout.join_task_id AND join_task.state='PENDING'
+        WHERE fanout.state='FAILED'`;
+      const promotedFailedJoins: string[] = [];
+      for (const run of failedFanoutRuns) promotedFailedJoins.push(...(await promoteEligible(transaction, run.run_id)).map((task) => task.id));
+      return [...completedNotifications.map((task) => task.id), ...stale.map((task) => task.id), ...promotedFailedJoins];
     });
   }
   async claimDispatchBatch(input: { publisherId: string; now: number; leaseMs: number; limit: number }) {

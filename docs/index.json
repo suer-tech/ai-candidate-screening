@@ -23,7 +23,7 @@
     "PostgresBlobStore": {
       "file": "web/server/storage/blob-store.ts",
       "kind": "class",
-      "summary": "Bounded immutable bytea artifact store со scope cleanup."
+      "summary": "Bounded immutable bytea artifact store со scope cleanup: 8 MiB для domain artifacts, 16 MiB для PDF, 32 MiB по умолчанию и отдельные 256 MiB для промежуточного transcript audio."
     },
     "PostgresProductRepository": {
       "file": "web/server/product/postgres-repository.ts",

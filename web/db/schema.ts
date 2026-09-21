@@ -643,5 +643,5 @@ export const artifactBlobs = pgTable("artifact_blobs", {
   uniqueIndex("artifact_blobs_scope_checksum_unique").on(table.scope, table.checksum),
   index("artifact_blobs_retention_idx").on(table.retentionUntilUtc, table.protected),
   check("artifact_blobs_checksum_sha256", sql`${table.checksum} ~ '^[0-9a-f]{64}$'`),
-  check("artifact_blobs_size_global", sql`${table.byteSize} > 0 AND ${table.byteSize} <= 33554432`),
+  check("artifact_blobs_size_global", sql`${table.byteSize} > 0 AND ${table.byteSize} <= 268435456`),
 ]);

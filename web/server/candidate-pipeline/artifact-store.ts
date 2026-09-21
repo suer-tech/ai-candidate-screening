@@ -10,7 +10,8 @@ export class PostgresCandidateArtifactStore {
   async getBytes(artifactRef: string) { const { id, scope } = this.parseRef(artifactRef); const value = await this.blobs.get(id, scope); if (!value) throw new Error("CANDIDATE_ARTIFACT_NOT_FOUND"); return value.bytes; }
   private async put(input: { candidatePk: number; runId: string; kind: string; identity: string; bytes: Uint8Array; contentType: string }) {
     const scope = `candidate:${input.candidatePk}:run:${input.runId}`; const id = `candidate:${input.candidatePk}:${input.runId}:${input.kind}:${input.identity}`;
-    const stored = await this.blobs.put({ id, scope, kind: "domain-artifact", mimeType: input.contentType, bytes: input.bytes });
+    const storageKind = input.kind === "transcript-audio" ? "transcript-audio" : "domain-artifact";
+    const stored = await this.blobs.put({ id, scope, kind: storageKind, mimeType: input.contentType, bytes: input.bytes });
     return { artifactRef: `${PREFIX}${encodeURIComponent(stored.id)}?scope=${encodeURIComponent(scope)}`, checksum: stored.checksum, byteSize: stored.byteSize };
   }
   private parseRef(value: string) { if (!value.startsWith(PREFIX)) throw new Error("CANDIDATE_ARTIFACT_REF_INVALID"); const body = value.slice(PREFIX.length); const separator = body.indexOf("?scope="); if (separator < 1) throw new Error("CANDIDATE_ARTIFACT_REF_INVALID"); return { id: decodeURIComponent(body.slice(0, separator)), scope: decodeURIComponent(body.slice(separator + 7)) }; }

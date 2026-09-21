@@ -89,6 +89,8 @@ RabbitMQ имеет очереди `candidate.tasks.<class>` для `control`, `
 
 Каждая запись интервью проходит по независимой PostgreSQL-цепочке `transcript-media-shard → transcript-submit-shard → transcript-collect-shard`; готовые текстовые стенограммы обрабатывает `transcript-normalize-shard`. Незавершённый collect возвращается в очередь только после `available_at`, поэтому ожидание AssemblyAI не удерживает worker slot или unacked delivery.
 
+Извлечённое аудио сохраняется как отдельный bounded artifact `transcript-audio` (до 256 MiB), не расширяя лимит обычных domain artifacts. Миграция `0013_transcript_audio_and_fanout_failure.sql` автоматически возвращает в очередь активные media-shards, ранее остановленные кодом `BLOB_SIZE_LIMIT_EXCEEDED`. Любая другая terminal shard error переводит зависимый join и candidate run в наблюдаемый `FAILED`; перезапуск контейнеров или ручная правка очередей для этого не нужны.
+
 `GET /api/health/processing` возвращает broker status, consumer count по каждому обязательному пулу, queue depth и dispatch lag. Его `503` означает недоступность обработки, но не блокирует read-only web и обычный `/api/health`.
 
 VPS-конфигурация по умолчанию запускает два consumer-контейнера для каждой

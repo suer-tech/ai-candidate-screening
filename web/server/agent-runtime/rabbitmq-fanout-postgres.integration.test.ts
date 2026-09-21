@@ -112,6 +112,17 @@ integration("transactional fan-out is idempotent, fair, and promotes an exact jo
       { task_identity: `${source}:collect`, dependency_identity: `${source}:submit` },
       { task_identity: `${source}:submit`, dependency_identity: `${source}:media` },
     ]);
+
+    const [{ id: mediaTaskId, revision: mediaRevision }] = await sql<{ id: string; revision: number }[]>`SELECT id,revision FROM agent_tasks
+      WHERE fanout_group_id=${transcriptGroup.groupId} AND tool_key='candidate.transcript-media-shard/v1'`;
+    const mediaTask = await repository.claimById({ taskId: mediaTaskId, taskVersion: mediaRevision, routingClass: "media", worker: "media-worker", now: Date.now(), leaseMs: 30_000 });
+    assert.ok(mediaTask);
+    await repository.outcome({ taskId: mediaTaskId, attemptId: mediaTask!.attemptId, worker: "media-worker", leaseToken: mediaTask!.lease_token,
+      outcome: "FAILED", errorCode: "BLOB_SIZE_LIMIT_EXCEEDED" });
+    const [failedGroup] = await sql<{ state: string }[]>`SELECT state FROM agent_fanout_groups WHERE id=${transcriptGroup.groupId}`;
+    const [promotedJoin] = await sql<{ state: string }[]>`SELECT state FROM agent_tasks WHERE id=${transcriptJoinId}`;
+    assert.equal(failedGroup.state, "FAILED");
+    assert.equal(promotedJoin.state, "RUNNABLE", "a failed fan-out must promote its join even when descendant shards remain pending");
   } finally {
     await sql.end({ timeout: 2 });
   }
