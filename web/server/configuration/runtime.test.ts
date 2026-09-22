@@ -53,10 +53,11 @@ test("docker environment overrides reroute processor endpoints and database url 
   }
 });
 
-test("configured Grok model reaches every LLM capability and env overrides the runtime file without changing contracts", () => {
+for (const model of ["x-ai/grok-4.7", "openai/gpt-5.6-luna-pro"])
+test(`configured ${model} reaches every LLM capability and env overrides the runtime file without changing contracts`, () => {
   const previous = process.env;
   try {
-    process.env = {};
+    process.env = { NODE_ENV: "test" };
     const configuration = {
       values: { ...valid, APP_ORIGIN: "http://localhost:3000", ROUTERAI_MODEL: "sol", ROUTERAI_STRUCTURED_OUTPUTS: "true", CANDIDATE_PIPELINE_BUILD_ID: "build-1" },
       credentials: { "database-url": "postgresql://synthetic:synthetic@127.0.0.1:5432/synthetic", "internal-service-tokens.json": "{}", "rabbitmq-password": "synthetic-rabbit-password" },
@@ -82,20 +83,21 @@ test("configured Grok model reaches every LLM capability and env overrides the r
     };
     const configured = environmentProjection({
       ...configuration,
-      values: { ...configuration.values, ROUTERAI_MODEL: "x-ai/grok-4.7" },
+      values: { ...configuration.values, ROUTERAI_MODEL: model },
     } as never);
-    process.env.ROUTERAI_MODEL = "x-ai/grok-4.7";
+    process.env.ROUTERAI_MODEL = model;
     const overridden = environmentProjection(configuration as never);
     assert.equal(configuration.values.ROUTERAI_MODEL, "sol");
     assert.deepEqual(overridden, configured);
     for (const projected of [configured, overridden]) {
-      assert.equal(projected.ROUTERAI_MODEL, "x-ai/grok-4.7");
+      assert.equal(projected.ROUTERAI_MODEL, model);
       const llm = JSON.parse(projected.LLM_RUNTIME_CONFIG_JSON);
       assert.deepEqual(Object.keys(llm.capabilities).sort(), Object.keys(schemas).sort());
       for (const [name, responseSchemaArtifact] of Object.entries(schemas)) {
         assert.equal(baselineLlm.capabilities[name].model, "sol", name);
         assert.deepEqual(llm.capabilities[name], {
-          ...baselineLlm.capabilities[name], model: "x-ai/grok-4.7",
+          ...baselineLlm.capabilities[name], model,
+          generationParameters: model === "openai/gpt-5.6-luna-pro" ? {} : { temperature: 0 },
         }, name);
         assert.equal(llm.capabilities[name].responseSchemaArtifact, responseSchemaArtifact, name);
         assert.deepEqual(llm.capabilities[name].limits, {
@@ -105,7 +107,7 @@ test("configured Grok model reaches every LLM capability and env overrides the r
       }
       assert.deepEqual(llm, { ...baselineLlm, capabilities: llm.capabilities });
       assert.deepEqual(projected, {
-        ...baseline, ROUTERAI_MODEL: "x-ai/grok-4.7", LLM_RUNTIME_CONFIG_JSON: projected.LLM_RUNTIME_CONFIG_JSON,
+        ...baseline, ROUTERAI_MODEL: model, LLM_RUNTIME_CONFIG_JSON: projected.LLM_RUNTIME_CONFIG_JSON,
       });
     }
   } finally {

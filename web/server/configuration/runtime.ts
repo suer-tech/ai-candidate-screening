@@ -207,9 +207,11 @@ export function environmentProjection(configuration: RuntimeConfiguration): Reco
     throw new RuntimeConfigurationError("MATRIX_EVIDENCE_MAX_OUTPUT_TOKENS_INVALID");
   }
   const releaseVersion = values.LLM_RELEASE_VERSION || values.CANDIDATE_PIPELINE_BUILD_ID;
+  // Luna Pro's RouterAI capability catalog does not advertise temperature.
+  const generationParameters = model === "openai/gpt-5.6-luna-pro" ? {} : { temperature: 0 };
   const capability = (promptArtifact: string, responseSchemaArtifact: string, maxAttempts = 3) => ({
     providerProfile: "routerai", model, promptArtifact, responseSchemaArtifact, toolSchemaArtifacts: ["no-tools/v1"],
-    generationParameters: { temperature: 0 }, limits: { maxInputBytes: 1_000_000, maxOutputTokens: 8192 }, timeoutMs: 120_000,
+    generationParameters: { ...generationParameters }, limits: { maxInputBytes: 1_000_000, maxOutputTokens: 8192 }, timeoutMs: 120_000,
     retryPolicy: { maxAttempts, initialBackoffMs: maxAttempts === 1 ? 0 : 1000, maximumBackoffMs: maxAttempts === 1 ? 0 : 5000 },
     fallbackPolicy: { mode: "disabled" },
   });
