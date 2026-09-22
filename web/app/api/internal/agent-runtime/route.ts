@@ -1,4 +1,5 @@
 import { RuntimeConflictError } from "../../../../server/agent-runtime/runtime.ts";
+import { classifyHeartbeatError } from "../../../../server/agent-runtime/heartbeat-errors.ts";
 
 const headers = { "cache-control": "private, no-store" };
 
@@ -23,7 +24,23 @@ export async function POST(request: Request) {
       case "wait-for-human": return Response.json(await repository.waitForHuman(body.input as Parameters<typeof repository.waitForHuman>[0]), { headers });
       case "issue-grant": return Response.json(await repository.issueGrant(body.input as Parameters<typeof repository.issueGrant>[0]), { headers });
       case "revoke-grant": await repository.revokeGrant(String(body.grantId), Number(body.revokedAt ?? Date.now())); return Response.json({ accepted: true }, { headers });
-      case "heartbeat": await repository.heartbeat(body.input as Parameters<typeof repository.heartbeat>[0]); return Response.json({ accepted: true }, { headers });
+      case "heartbeat": {
+        const input = body.input as Parameters<typeof repository.heartbeat>[0];
+        if (!input || typeof input.taskId !== "string" || !input.taskId || typeof input.worker !== "string" || !input.worker
+          || !Number.isSafeInteger(input.leaseToken) || input.leaseToken < 1
+          || !Number.isSafeInteger(input.now) || !Number.isSafeInteger(input.leaseMs) || input.leaseMs < 1) {
+          return Response.json({ error: "RUNTIME_HEARTBEAT_INPUT_INVALID" }, { status: 422, headers });
+        }
+        try {
+          await repository.heartbeat(input);
+          return Response.json({ accepted: true }, { headers });
+        } catch (error) {
+          const failure = classifyHeartbeatError(error);
+          console.info(JSON.stringify({ event: "runtime-heartbeat-error", taskId: input.taskId, workerId: input.worker,
+            httpStatus: failure.status, safeCode: failure.error, reasonCode: failure.reasonCode }));
+          return Response.json({ error: failure.error }, { status: failure.status, headers });
+        }
+      }
       case "checkpoint": await repository.checkpoint(body.input as Parameters<typeof repository.checkpoint>[0]); return Response.json({ accepted: true }, { headers });
       case "complete": await repository.outcome({ ...(body.input as Omit<Parameters<typeof repository.outcome>[0], "outcome">), outcome: "SUCCEEDED" }); return Response.json({ accepted: true }, { headers });
       case "defer": await repository.defer(body.input as Parameters<typeof repository.defer>[0]); return Response.json({ accepted: true }, { headers });

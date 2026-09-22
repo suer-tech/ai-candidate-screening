@@ -108,6 +108,7 @@ export class RabbitDispatchPublisher {
   private connection?: ChannelModel;
   private channel?: ConfirmChannel;
   private stopping = false;
+  private lastRecoveryAt = Number.NEGATIVE_INFINITY;
   private readonly config: RabbitRuntimeConfig;
   private readonly repository: PostgresAgentRuntimeRepository;
   private readonly publisherId: string;
@@ -136,6 +137,12 @@ export class RabbitDispatchPublisher {
   }
 
   async runOnce() {
+    const now = Date.now();
+    if (now - this.lastRecoveryAt >= Math.max(this.config.pollingMs, Math.min(this.config.publishLeaseMs, 30_000))) {
+      const recovered = await this.repository.recoverStale(now);
+      this.lastRecoveryAt = now;
+      if (recovered.length) console.info(JSON.stringify({ event: "rabbit-expired-tasks-recovered", publisherId: this.publisherId, count: recovered.length }));
+    }
     const channel = await this.ensureChannel();
     await this.repository.reconcileDispatch(Date.now(), this.config.republishAfterMs);
     const entries = await this.repository.claimDispatchBatch({ publisherId: this.publisherId, now: Date.now(), leaseMs: this.config.publishLeaseMs, limit: this.config.publishBatchSize });

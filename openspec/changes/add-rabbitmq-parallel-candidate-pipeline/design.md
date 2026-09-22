@@ -26,6 +26,12 @@ RabbitMQ в этом change не становится workflow engine или и�
 
 ## Decisions
 
+### Heartbeat incident correction (2026-09-22)
+
+Implement the existing RBQ-003 fencing and OPS-009 recovery contracts without changing candidate or provider retry policy. Only the explicit `STALE_LEASE_TOKEN` response proves ownership loss; HTTP 422 alone does not. Keep one bounded heartbeat request in flight per task, retain the last confirmed lease deadline across transport failures, and stop work if it expires. A cancelled/stale executor must not turn an adapter cancellation into a terminal task failure or publish an outcome. PostgreSQL recovery owns subsequent attempts; run stale-lease recovery periodically in the publisher, not only when a consumer starts. Preserve unknown-effect reconciliation and all server-side fencing.
+
+Heartbeat diagnostics include technical task/run/attempt identity, HTTP status and allowlisted error classification, never raw error text, requests, credentials or candidate content. Unexpected heartbeat infrastructure exceptions return a sanitized unavailable response, not a validation response falsely interpreted as lease loss. Synthetic behavioral checks are regression evidence only, not real broker or production E2E acceptance. The incident's underlying API stall remains unconfirmed; PostgreSQL diagnostics supplied by the operator show no deadlocks or current blocking.
+
 ### Production correction: bounded assessment summary and classified retries
 
 The 2026-09-22 failure exposed a contract mismatch: assessment-join requested a full row-evaluation response although it only consumed the holistic recommendation. Use a separately versioned `matrix_assessment_summary` capability and `candidate-assessment-summary/v1` response containing only schemaVersion, recommendation and recommendationReason. Preserve joined rows, ABC, evidence, warnings and trace lineage in the existing `candidate-matrix-rows-bundle/v3` artifact. Critical verification and the final recommendation gate remain downstream; this summary does not publish a result or change row decisions. Provider/model selection remains configuration-owned.

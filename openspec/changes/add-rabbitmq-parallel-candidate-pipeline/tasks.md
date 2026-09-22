@@ -113,3 +113,11 @@
 - [x] 13.3 Distinguish explicit output-length termination from invalid responses/refusals; retry length and transient transport failures at most twice, but fail closed for invalid output and provider blocks.
 - [x] 13.4 Run focused regression, types/lint/build and strict OpenSpec validation; document remaining production-like verification and safe deployment steps. See `docs/ASSESSMENT-JOIN-RECOVERY.md`; global baseline failures remain explicitly recorded, not marked green.
 - [ ] 13.5 Verify the correction on a provisioned immutable build with the four required production-like E2E and RabbitMQ acceptance; never replace these gates with mocked GREEN.
+
+## 14. Heartbeat incident correction (2026-09-22)
+
+- [x] 14.1 Independently reproduce false lease loss, overlapping/hung heartbeat and stale terminal commit as synthetic behavioral RED. Independent author recorded 20 initial failures and five additional cancellation regressions before their fixes.
+- [x] 14.2 Bound and serialize heartbeat requests, distinguish explicit fencing loss from transient failures, enforce the confirmed lease deadline and suppress stale/cancelled outcomes.
+- [x] 14.3 Preserve safe correlated diagnostics and periodically recover expired tasks through the existing PostgreSQL authority without modifying terminal failed runs. Scheduling/unit verification is not real database/broker recovery acceptance.
+- [x] 14.4 Run focused and full regression, types/lint/build and strict OpenSpec validation; document limitations and safe rollout. See `docs/HEARTBEAT-INCIDENT-RECOVERY.md`; baseline failures and infrastructure blockers remain explicit.
+- [ ] 14.5 Verify real PostgreSQL/Rabbit recovery and all four required production-like E2E on an immutable identity before claiming production recovery.

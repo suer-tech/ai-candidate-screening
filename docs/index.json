@@ -68,7 +68,7 @@
     "RabbitDispatchPublisher": {
       "file": "web/server/agent-runtime/rabbitmq.ts",
       "kind": "class",
-      "summary": "Публикует technical-only task envelopes из PostgreSQL dispatch outbox с persistent delivery, publisher confirms и reconnect."
+      "summary": "Периодически восстанавливает истёкшие leases через PostgreSQL и публикует technical-only task envelopes из dispatch outbox с persistent delivery, publisher confirms и reconnect."
     },
     "RabbitTaskWorker": {
       "file": "web/server/agent-runtime/rabbitmq-worker.ts",
@@ -88,7 +88,7 @@
     "AgentRuntimeConsumer": {
       "file": "web/server/agent-runtime/consumer.ts",
       "kind": "class",
-      "summary": "Общий executor PostgreSQL и Rabbit transports с fenced heartbeat, terminal commit и durable RETRY_LATER/defer."
+      "summary": "Общий executor PostgreSQL и Rabbit transports с bounded single-flight heartbeat, confirmed lease deadline, запретом outcome после abort, terminal commit и durable RETRY_LATER/defer."
     },
     "DurableAgentRuntime": {
       "file": "web/server/agent-runtime/runtime.ts",
