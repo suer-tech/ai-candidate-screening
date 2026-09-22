@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { environmentProjection, parseReleaseEvidence, parseRuntimeEnv, RuntimeConfigurationError, validateProcessorEndpoints } from "./runtime.ts";
+import { environmentProjection, parseReleaseEvidence, RuntimeConfigurationError, validateProcessorEndpoints } from "./runtime.ts";
 
 const valid = {
   MEDIA_PROCESSOR_URL: "http://127.0.0.1:4311/v1/extract-audio",
@@ -48,6 +48,66 @@ test("docker environment overrides reroute processor endpoints and database url 
     assert.equal(projected.INTERNAL_APP_ORIGIN, "http://web:3000");
     assert.equal(projected.AGENT_RUNTIME_ENDPOINT, "http://web:3000/api/internal/agent-runtime");
     assert.equal(projected.CANDIDATE_TOOL_ENDPOINT, "http://web:3000/api/internal/candidate-pipeline/tool");
+  } finally {
+    process.env = previous;
+  }
+});
+
+test("configured Grok model reaches every LLM capability and env overrides the runtime file without changing contracts", () => {
+  const previous = process.env;
+  try {
+    process.env = {};
+    const configuration = {
+      values: { ...valid, APP_ORIGIN: "http://localhost:3000", ROUTERAI_MODEL: "sol", ROUTERAI_STRUCTURED_OUTPUTS: "true", CANDIDATE_PIPELINE_BUILD_ID: "build-1" },
+      credentials: { "database-url": "postgresql://synthetic:synthetic@127.0.0.1:5432/synthetic", "internal-service-tokens.json": "{}", "rabbitmq-password": "synthetic-rabbit-password" },
+      root: "/synthetic/config",
+    };
+    const baseline = environmentProjection(configuration as never);
+    const baselineLlm = JSON.parse(baseline.LLM_RUNTIME_CONFIG_JSON);
+    const schemas = {
+      vacancy_generation: "vacancy-profile-response/v1",
+      ocr: "ocr-page/v1",
+      speaker_mapping: "speaker-map/v1",
+      matrix_compiler: "vacancy-matrix-draft/v1",
+      matrix_critic: "vacancy-matrix-critic/v2",
+      criterion_claim_extraction: "candidate-claims/v1",
+      unmapped_signal_discovery: "candidate-unmapped-signals/v1",
+      evidence_consolidation: "candidate-evidence-consolidation/v1",
+      global_conflict_detection: "candidate-global-conflicts/v1",
+      matrix_row_evaluation: "candidate-matrix-rows/v2",
+      matrix_assessment_summary: "candidate-assessment-summary/v1",
+      abc_matrix_assessment: "candidate-abc-matrix/v1",
+      critical_row_verification: "candidate-row-verification/v1",
+      candidate_report_composer: "candidate-report-composition/v2",
+    };
+    const configured = environmentProjection({
+      ...configuration,
+      values: { ...configuration.values, ROUTERAI_MODEL: "x-ai/grok-4.7" },
+    } as never);
+    process.env.ROUTERAI_MODEL = "x-ai/grok-4.7";
+    const overridden = environmentProjection(configuration as never);
+    assert.equal(configuration.values.ROUTERAI_MODEL, "sol");
+    assert.deepEqual(overridden, configured);
+    for (const projected of [configured, overridden]) {
+      assert.equal(projected.ROUTERAI_MODEL, "x-ai/grok-4.7");
+      const llm = JSON.parse(projected.LLM_RUNTIME_CONFIG_JSON);
+      assert.deepEqual(Object.keys(llm.capabilities).sort(), Object.keys(schemas).sort());
+      for (const [name, responseSchemaArtifact] of Object.entries(schemas)) {
+        assert.equal(baselineLlm.capabilities[name].model, "sol", name);
+        assert.deepEqual(llm.capabilities[name], {
+          ...baselineLlm.capabilities[name], model: "x-ai/grok-4.7",
+        }, name);
+        assert.equal(llm.capabilities[name].responseSchemaArtifact, responseSchemaArtifact, name);
+        assert.deepEqual(llm.capabilities[name].limits, {
+          maxInputBytes: 1_000_000,
+          maxOutputTokens: name === "criterion_claim_extraction" ? 16_384 : 8192,
+        }, name);
+      }
+      assert.deepEqual(llm, { ...baselineLlm, capabilities: llm.capabilities });
+      assert.deepEqual(projected, {
+        ...baseline, ROUTERAI_MODEL: "x-ai/grok-4.7", LLM_RUNTIME_CONFIG_JSON: projected.LLM_RUNTIME_CONFIG_JSON,
+      });
+    }
   } finally {
     process.env = previous;
   }
