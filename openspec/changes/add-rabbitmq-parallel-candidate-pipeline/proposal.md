@@ -4,6 +4,8 @@
 
 ## What Changes
 
+- Production correction on 2026-09-22: make repeated evidence token-budget planning cooperative with web I/O without changing batch content/identity; add phase-correlated, content-free media error diagnostics. Synthetic reproduction confirms event-loop starvation, but does not reconstruct the lost historical media exception.
+
 - Production correction approved on 2026-09-22: assessment join requests only a compact holistic recommendation, preserving completed rows/ABC. Explicit output-length termination receives bounded retries; schema failures and provider refusals/filters remain terminal with distinct safe diagnostics.
 
 - Добавляется RabbitMQ как durable transport только для готовых к выполнению технических задач; PostgreSQL остаётся источником истины для кандидатов, DAG, состояний, попыток, checkpoints, артефактов и outbox.

@@ -1,6 +1,8 @@
 import { createHash } from "node:crypto";
+import { setImmediate as yieldToIo } from "node:timers/promises";
 
 type UnknownRecord = Record<string, unknown>;
+type BatchSteps<T> = Generator<Readonly<UnknownRecord>, T, number>;
 
 export type CriterionClaimExtractionBatch = Readonly<{
   batchId: string;
@@ -108,7 +110,7 @@ function collectCriterionIds(value: unknown): string[] {
   });
 }
 
-function packDocuments(input: {
+function* packDocuments(input: {
   matrix: unknown;
   scope: unknown;
   flags: UnknownRecord;
@@ -116,14 +118,14 @@ function packDocuments(input: {
   maxContextTokens: number;
   countContextTokens: (request: Readonly<UnknownRecord>) => number;
   startOrder: number;
-}) {
+}): BatchSteps<CriterionClaimExtractionBatch[]> {
   const batches: CriterionClaimExtractionBatch[] = [];
   let current: unknown[] = [];
   const pending = [...input.segments];
   while (pending.length) {
     const segment = pending.shift();
     const candidate = makeRequest({ ...input, order: input.startOrder + batches.length, kind: "document", documents: [...current, segment] });
-    if (input.countContextTokens(candidate.request) <= input.maxContextTokens) {
+    if ((yield candidate.request) <= input.maxContextTokens) {
       current.push(segment);
       continue;
     }
@@ -138,7 +140,7 @@ function packDocuments(input: {
         const middle = Math.floor((low + high) / 2);
         const part = { ...source, text: segmentText.slice(0, middle) };
         const request = makeRequest({ ...input, order: input.startOrder + batches.length, kind: "document", documents: [part] });
-        if (input.countContextTokens(request.request) <= input.maxContextTokens) { accepted = middle; low = middle + 1; }
+        if ((yield request.request) <= input.maxContextTokens) { accepted = middle; low = middle + 1; }
         else high = middle - 1;
       }
       if (!accepted) throw new Error("MATRIX_CLAIM_DOCUMENT_SEGMENT_EXCEEDS_LIMIT");
@@ -161,7 +163,7 @@ function packDocuments(input: {
   return batches;
 }
 
-function packUtterances(input: {
+function* packUtterances(input: {
   matrix: unknown;
   scope: unknown;
   flags: UnknownRecord;
@@ -170,7 +172,7 @@ function packUtterances(input: {
   countContextTokens: (request: Readonly<UnknownRecord>) => number;
   overlapUtterances: number;
   startOrder: number;
-}) {
+}): BatchSteps<CriterionClaimExtractionBatch[]> {
   const batches: CriterionClaimExtractionBatch[] = [];
   const normalizedUtterances = input.utterances.map((utterance, utteranceIndex) => {
     const source = record(utterance);
@@ -189,9 +191,10 @@ function packUtterances(input: {
       ["timingOrigin", source.timingOrigin],
     ].filter(([, value]) => value !== undefined));
   });
-  const utterances = normalizedUtterances.flatMap((utterance, utteranceIndex) => {
+  const utterances: unknown[] = [];
+  for (const [utteranceIndex, utterance] of normalizedUtterances.entries()) {
     const single = makeRequest({ ...input, order: 999_999_999, kind: "transcript", utterances: [utterance] });
-    if (input.countContextTokens(single.request) <= input.maxContextTokens) return [utterance];
+    if ((yield single.request) <= input.maxContextTokens) { utterances.push(utterance); continue; }
     const source = record(utterance);
     const utteranceText = typeof source?.text === "string" ? source.text : undefined;
     if (!source || !utteranceText) throw new Error("MATRIX_CLAIM_UTTERANCE_EXCEEDS_LIMIT");
@@ -205,7 +208,7 @@ function packUtterances(input: {
         const middle = Math.floor((low + high) / 2);
         const part = { ...source, text: utteranceText.slice(cursor, middle), utterancePart: { sourceIndex: utteranceIndex, partIndex: parts.length } };
         const request = makeRequest({ ...input, order: 999_999_999, kind: "transcript", utterances: [part] });
-        if (input.countContextTokens(request.request) <= input.maxContextTokens) { accepted = middle; low = middle + 1; }
+        if ((yield request.request) <= input.maxContextTokens) { accepted = middle; low = middle + 1; }
         else high = middle - 1;
       }
       if (accepted === cursor) throw new Error("MATRIX_CLAIM_UTTERANCE_EXCEEDS_LIMIT");
@@ -214,14 +217,14 @@ function packUtterances(input: {
       const overlap = Math.min(256, Math.max(0, accepted - cursor - 1));
       cursor = Math.max(cursor + 1, accepted - overlap);
     }
-    return parts;
-  });
+    utterances.push(...parts);
+  }
   let start = 0;
   while (start < utterances.length) {
     let end = start;
     while (end < utterances.length) {
       const candidate = makeRequest({ ...input, order: input.startOrder + batches.length, kind: "transcript", utterances: utterances.slice(start, end + 1) });
-      if (input.countContextTokens(candidate.request) > input.maxContextTokens) break;
+      if ((yield candidate.request) > input.maxContextTokens) break;
       end += 1;
     }
     if (end === start) throw new Error("MATRIX_CLAIM_UTTERANCE_EXCEEDS_LIMIT");
@@ -232,14 +235,16 @@ function packUtterances(input: {
   return batches;
 }
 
-export function buildCriterionClaimExtractionBatches(input: Readonly<{
+type BatchInput = Readonly<{
   matrix: unknown;
   materials: unknown;
   scope: unknown;
   maxContextTokens: number;
   countContextTokens: (request: Readonly<UnknownRecord>) => number;
   overlapUtterances: number;
-}>): readonly CriterionClaimExtractionBatch[] {
+}>;
+
+function* batchSteps(input: BatchInput): BatchSteps<readonly CriterionClaimExtractionBatch[]> {
   if (!Number.isInteger(input.maxContextTokens) || input.maxContextTokens < 1) throw new Error("MATRIX_CLAIM_BATCH_LIMIT_INVALID");
   if (typeof input.countContextTokens !== "function") throw new Error("MATRIX_CLAIM_BATCH_TOKEN_COUNTER_INVALID");
   if (!Number.isInteger(input.overlapUtterances) || input.overlapUtterances < 0) throw new Error("MATRIX_CLAIM_BATCH_OVERLAP_INVALID");
@@ -250,15 +255,33 @@ export function buildCriterionClaimExtractionBatches(input: Readonly<{
   const flags = Object.fromEntries(Object.entries(materials).filter(([key]) => !["documents", "transcript"].includes(key)));
   const matrix = projectMatrixForClaimExtraction(input.matrix);
   const empty = makeRequest({ matrix, scope: input.scope, flags, order: 0, kind: "empty" });
-  if (input.countContextTokens(empty.request) > input.maxContextTokens) throw new Error("MATRIX_CLAIM_BATCH_BASE_EXCEEDS_LIMIT");
+  if ((yield empty.request) > input.maxContextTokens) throw new Error("MATRIX_CLAIM_BATCH_BASE_EXCEEDS_LIMIT");
 
-  const documents = packDocuments({ matrix, scope: input.scope, flags, segments: documentSegments(materials.documents), maxContextTokens: input.maxContextTokens,
+  const documents = yield* packDocuments({ matrix, scope: input.scope, flags, segments: documentSegments(materials.documents), maxContextTokens: input.maxContextTokens,
     countContextTokens: input.countContextTokens, startOrder: 0 });
-  const transcriptBatches = packUtterances({ matrix, scope: input.scope, flags, utterances, maxContextTokens: input.maxContextTokens,
+  const transcriptBatches = yield* packUtterances({ matrix, scope: input.scope, flags, utterances, maxContextTokens: input.maxContextTokens,
     countContextTokens: input.countContextTokens,
     overlapUtterances: input.overlapUtterances, startOrder: documents.length });
   const batches = [...documents, ...transcriptBatches];
   return batches.length ? batches : [empty];
+}
+
+export function buildCriterionClaimExtractionBatches(input: BatchInput): readonly CriterionClaimExtractionBatch[] {
+  const steps = batchSteps(input);
+  let step = steps.next();
+  while (!step.done) step = steps.next(input.countContextTokens(step.value));
+  return step.value;
+}
+
+export async function buildCriterionClaimExtractionBatchesAsync(input: BatchInput): Promise<readonly CriterionClaimExtractionBatch[]> {
+  const steps = batchSteps(input);
+  let step = steps.next();
+  while (!step.done) {
+    // A microtask-only yield still starves sockets and lease timers.
+    await yieldToIo();
+    step = steps.next(input.countContextTokens(step.value));
+  }
+  return step.value;
 }
 
 export type CriterionCoverageEntry = {

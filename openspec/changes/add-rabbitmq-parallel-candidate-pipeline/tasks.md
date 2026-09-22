@@ -121,3 +121,11 @@
 - [x] 14.3 Preserve safe correlated diagnostics and periodically recover expired tasks through the existing PostgreSQL authority without modifying terminal failed runs. Scheduling/unit verification is not real database/broker recovery acceptance.
 - [x] 14.4 Run focused and full regression, types/lint/build and strict OpenSpec validation; document limitations and safe rollout. See `docs/HEARTBEAT-INCIDENT-RECOVERY.md`; baseline failures and infrastructure blockers remain explicit.
 - [ ] 14.5 Verify real PostgreSQL/Rabbit recovery and all four required production-like E2E on an immutable identity before claiming production recovery.
+
+## 15. Event-loop starvation correction (2026-09-22)
+
+- [x] 15.1 Independently reproduce blocked local HTTP/control progress during synthetic evidence planning as behavioral RED.
+- [x] 15.2 Use cooperative planning at every production call site, preserving exact batch identity, content, limits and failures.
+- [x] 15.3 Add phase-correlated, content-free media diagnostics including allowlisted nested causes without changing retry policy.
+- [x] 15.4 Verify independent acceptance, focused regressions, lint/types/build and strict OpenSpec; record measured improvement and residual limits. See `docs/EVENT-LOOP-INCIDENT-RECOVERY.md` for baseline failures, not a global GREEN claim.
+- [ ] 15.5 Verify real PostgreSQL/Rabbit and all required production-like E2E on an immutable identity; do not claim historical root-cause proof or production recovery from synthetic checks alone.

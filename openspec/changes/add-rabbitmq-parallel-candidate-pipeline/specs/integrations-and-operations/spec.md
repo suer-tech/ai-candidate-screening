@@ -61,6 +61,17 @@ Concurrency MUST настраиваться раздельно по worker pool 
 - **THEN** первый запуск занимает не более своего лимита
 - **AND** второй кандидат получает доступный worker slot
 
+#### Scenario: Evidence planning shares the web process with control requests
+- **WHEN** a long transcript requires repeated token-budget calculations
+- **THEN** planning yields between calculations so pending control HTTP requests and timers can progress before the full plan completes
+- **AND** batch contents, identifiers, source coverage and token limits remain unchanged
+
+#### Scenario: A media shard fails with a nested infrastructure error
+- **WHEN** download, processor request, response read or artifact storage throws
+- **THEN** technical diagnostics identify the phase and run/task/attempt with an allowlisted cause code and elapsed time
+- **AND** raw error text, stack, filenames, URLs and material content are not logged
+- **AND** diagnostic recording does not replace the original error or alter retry policy
+
 ### Requirement: OPS-009 [CONFIRMED] Безопасное завершение workers
 
 При остановке worker MUST прекратить получение новых deliveries, дать выполняемым задачам ограниченное время на commit и ack и вернуть незавершённые deliveries broker. Истёкший lease MUST позволять другому worker безопасно продолжить задачу с новым fencing token.

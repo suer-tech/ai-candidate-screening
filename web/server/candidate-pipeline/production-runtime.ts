@@ -29,12 +29,13 @@ import { PostgresVacancyMatrixRepository } from "./matrix-postgres-repository.ts
 import { compileVacancyMatrix, type MatrixCompilationSkills } from "./matrix-compilation.ts";
 import { MATRIX_WORKFLOW_VERSION, applyCriticalVerificationDecisions, candidateClaimIsDecisionAdmissible, decisionSafeJson, matrixChecksum, validateCandidateMatrixRows, type CandidateMatrixRow, type CandidateSourceClaim, type CriticalUnmappedRisk, type CriticalVerificationDecision, type MatrixCriterion } from "./matrix-driven.ts";
 import { normalizeMatrixCapabilityOutput, type MatrixCapability } from "./matrix-schemas.ts";
-import { buildCriterionClaimExtractionBatches } from "./transcript-claim-batching.ts";
+import { buildCriterionClaimExtractionBatchesAsync } from "./transcript-claim-batching.ts";
 import { recoveryArtifactPurpose, recoveryArtifactSchema } from "./recovery-contracts.ts";
 import { deduplicateCoverageEvidence, matrixCriterionIds, technicalFallbackRow, validateExactCriterionCoverage, type BatchCoverageEntry } from "./matrix-coverage.ts";
 import { countOpenAiCompatibleContextTokens } from "../llm/token-counting.ts";
 import { canonicalJoin, createFanoutDescriptor } from "../agent-runtime/fanout.ts";
 import { buildAssessmentJoin } from "./assessment-join.ts";
+import { runCandidatePhase } from "./phase-diagnostics.ts";
 
 type ExecutionEnvironment = CandidatePipelineEnvironment & GoogleDriveOAuthEnvironment;
 
@@ -875,17 +876,22 @@ export async function createProductionCandidateToolExecution(input: { database: 
             };
             if (toolKey === "candidate.transcript-media-shard/v1") {
               if (!input.environment.MEDIA_PROCESSOR_URL || !input.environment.MEDIA_PROCESSOR_TOKEN) throw new Error("PRODUCTION_MEDIA_PROCESSOR_NOT_PROVISIONED");
-              const downloaded = await download();
+              const correlation = { runId, taskId, attemptId };
+              const downloaded = await runCandidatePhase(correlation, "media-source-download", download);
               const mediaUrl = new URL(input.environment.MEDIA_PROCESSOR_URL);
               if (input.environment.E2E_ENVIRONMENT === "local") {
                 if (!loopbackOrDockerHostname(mediaUrl.hostname) || !["http:", "https:"].includes(mediaUrl.protocol)) throw new Error("LOCAL_MEDIA_PROCESSOR_MUST_BE_LOOPBACK");
               } else if (mediaUrl.protocol !== "https:" && !dockerInternalProcessorEndpoint(mediaUrl, "media-processor")) throw new Error("REMOTE_MEDIA_PROCESSOR_MUST_USE_HTTPS");
               await auditBoundary("provider", downloaded.bytes);
-              const response = await fetch(mediaUrl, { method: "POST", headers: { authorization: `Bearer ${input.environment.MEDIA_PROCESSOR_TOKEN}`, "content-type": sourceEntry.mimeType },
-                body: downloaded.bytes.slice().buffer as ArrayBuffer, signal: AbortSignal.timeout(15 * 60_000) });
-              if (!response.ok) throw new Error(`MEDIA_PROCESSOR_HTTP_${response.status}`);
-              const audioBytes = new Uint8Array(await response.arrayBuffer());
-              const stored = await storeBytes("transcript-audio", operationIdentity, audioBytes, response.headers.get("content-type") ?? "audio/mpeg");
+              const response = await runCandidatePhase(correlation, "media-processor-request", async () => {
+                const result = await fetch(mediaUrl, { method: "POST", headers: { authorization: `Bearer ${input.environment.MEDIA_PROCESSOR_TOKEN}`, "content-type": sourceEntry.mimeType },
+                  body: downloaded.bytes.slice().buffer as ArrayBuffer, signal: AbortSignal.timeout(15 * 60_000) });
+                if (!result.ok) throw new Error(`MEDIA_PROCESSOR_HTTP_${result.status}`);
+                return result;
+              });
+              const audioBytes = await runCandidatePhase(correlation, "media-response-read", async () => new Uint8Array(await response.arrayBuffer()));
+              const stored = await runCandidatePhase(correlation, "media-artifact-store", () =>
+                storeBytes("transcript-audio", operationIdentity, audioBytes, response.headers.get("content-type") ?? "audio/mpeg"));
               return { artifactRef: stored.artifactRef, checksum: stored.checksum };
             }
             if (toolKey === "candidate.transcript-submit-shard/v1") {
@@ -951,7 +957,7 @@ export async function createProductionCandidateToolExecution(input: { database: 
             const signalConfig = llmDependencies.configuration.resolve("unmapped_signal_discovery");
             const maxContextTokens = Number(input.environment.ROUTERAI_CONTEXT_WINDOW_TOKENS ?? 128_000);
             const safetyTokens = Number(input.environment.MATRIX_BATCH_SAFETY_TOKENS ?? 4_096);
-            const batches = buildCriterionClaimExtractionBatches({ matrix, materials: context.materials,
+            const batches = await buildCriterionClaimExtractionBatchesAsync({ matrix, materials: context.materials,
               scope: { candidateId: candidatePk, runId, inputVersion, profileVersion }, maxContextTokens,
               countContextTokens: (request) => Math.max(
                 countOpenAiCompatibleContextTokens({ config: claimConfig, userContent: request as JsonValue, safetyTokens }),
@@ -1120,7 +1126,7 @@ export async function createProductionCandidateToolExecution(input: { database: 
             const claimConfig = llmDependencies.configuration.resolve("criterion_claim_extraction");
             const signalConfig = llmDependencies.configuration.resolve("unmapped_signal_discovery");
             const safetyTokens = Number(input.environment.MATRIX_BATCH_SAFETY_TOKENS ?? 4_096);
-            const batches = buildCriterionClaimExtractionBatches({ matrix, materials: context.materials,
+            const batches = await buildCriterionClaimExtractionBatchesAsync({ matrix, materials: context.materials,
               scope: { candidateId: candidatePk, runId, inputVersion, profileVersion }, maxContextTokens: Number(input.environment.ROUTERAI_CONTEXT_WINDOW_TOKENS ?? 128_000),
               countContextTokens: (request) => Math.max(countOpenAiCompatibleContextTokens({ config: claimConfig, userContent: request as JsonValue, safetyTokens }), countOpenAiCompatibleContextTokens({ config: signalConfig, userContent: request as JsonValue, safetyTokens })), overlapUtterances: 2 });
             const batch = batches.find((item) => item.batchId === batchId); if (!batch) throw new Error("EVIDENCE_SHARD_DESCRIPTOR_STALE");
@@ -1167,7 +1173,7 @@ export async function createProductionCandidateToolExecution(input: { database: 
             const signalConfig = llmDependencies.configuration.resolve("unmapped_signal_discovery");
             const maxContextTokens = Number(input.environment.ROUTERAI_CONTEXT_WINDOW_TOKENS ?? 128_000);
             const safetyTokens = Number(input.environment.MATRIX_BATCH_SAFETY_TOKENS ?? 4_096);
-            const claimBatches = buildCriterionClaimExtractionBatches({
+            const claimBatches = await buildCriterionClaimExtractionBatchesAsync({
               matrix,
               materials,
               scope: { candidateId: candidatePk, runId, inputVersion, profileVersion },

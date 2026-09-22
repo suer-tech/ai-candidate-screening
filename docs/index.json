@@ -1,5 +1,15 @@
 {
   "symbols": {
+    "buildCriterionClaimExtractionBatchesAsync": {
+      "file": "web/server/candidate-pipeline/transcript-claim-batching.ts",
+      "kind": "function",
+      "summary": "Cooperative production batch planner: yields to I/O between token counts while preserving deterministic synchronous batch content and identity."
+    },
+    "runCandidatePhase": {
+      "file": "web/server/candidate-pipeline/phase-diagnostics.ts",
+      "kind": "function",
+      "summary": "Content-free media failure diagnostics with run/task/attempt, phase, elapsed time and allowlisted nested cause; original outcome and retry classification unchanged."
+    },
     "loadRuntimeConfiguration": {
       "file": "web/server/configuration/runtime.ts",
       "kind": "function",

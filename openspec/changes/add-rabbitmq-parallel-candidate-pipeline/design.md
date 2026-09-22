@@ -142,6 +142,30 @@ UI/API получает агрегированный fan-out progress (`total`, 
 
 ## Risks / Trade-offs
 
+### Production correction: cooperative evidence batch planning (2026-09-22)
+
+The synchronous batch planner repeatedly tokenizes growing requests inside the web
+process, both when planning fan-out and again inside evidence shards. Synthetic
+300-utterance input blocks the event loop for 6.7 seconds on the developer host;
+timers cannot execute during that interval. This is a reproduced isolation defect,
+not proof of the exact original media exception. Operator logs show overlapping
+heartbeat timeouts and a PostgreSQL CONNECT_TIMEOUT without container restart/OOM.
+
+Use one deterministic generator for synchronous compatibility and an asynchronous
+production driver that yields to I/O between token counts. All production planning
+calls must await the cooperative driver. Preserve exact request bodies, batch IDs,
+source locators, overlap, token-budget checks and exceptions; do not truncate input,
+increase timeouts, change the model or add retries as a workaround. This removes
+whole-planning event-loop starvation, but does not promise constant-time individual
+tokenization or eliminate CPU cost. Independent acceptance must show a local HTTP
+control request progressing during planning and exact output parity.
+
+Media shard diagnostics must identify download, processor request/body and artifact
+storage phases using technical run/task/attempt IDs and allowlisted cause codes.
+Never log raw exception text, URLs, paths, material names or contents. Nested network
+errors must remain diagnosable without changing the persisted retry classification.
+The historical sanitized exception cannot be reconstructed from data never saved.
+
 - [Dual-write между БД и broker теряет задачу] → transactional dispatch outbox, publisher confirms и runnable reconciler.
 - [At-least-once повторяет дорогой LLM/provider call] → checkpoint до ack, provider idempotency reference, terminal deduplication и fencing. Там, где provider не поддерживает idempotency, результат повторного вызова не может заменить уже committed terminal result.
 - [Fan-out создаёт слишком много задач] → bounded batch/row grouping, global/per-run/provider limits и конфигурируемый prefetch.

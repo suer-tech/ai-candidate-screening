@@ -94,6 +94,15 @@ Google доступ — только к явно выбранному корню
 
 ## Конфигурация и эксплуатация
 
+Evidence batch planning in all three production paths now uses a cooperative
+driver (`buildCriterionClaimExtractionBatchesAsync`) over the same deterministic
+generator as the synchronous compatibility API. It yields to I/O between full
+token counts so planning does not monopolize web sockets/lease timers for the
+whole transcript. Tokenization itself remains synchronous; batch content, identity
+and limits are unchanged. Media shard errors have allowlisted, correlated phase
+diagnostics without changing retry classification. Reproduction, limitations and
+rollout boundaries: [event-loop incident recovery](EVENT-LOOP-INCIDENT-RECOVERY.md).
+
 По решению владельца Docker Compose и шаблоны runtime от 2026-09-22 используют `x-ai/grok-4.7` как модель по умолчанию. Compose явно передаёт `ROUTERAI_MODEL`, поэтому default перекрывает прежнее значение в mounted `runtime.env`; явный `ROUTERAI_MODEL` в Compose `.env` или окружении оператора имеет приоритет над default. Обычный `docker compose restart` не обновляет environment существующего контейнера: требуется recreation после завершения активных запусков. Выбор относится ко всем текущим LLM capabilities, но не к AssemblyAI. Каталог RouterAI объявляет поддержку `structured_outputs`, `response_format` и `temperature`; это не заменяет реальный provider smoke и четыре обязательных E2E. Промпты, лимиты, тайм-ауты и основной нормативный контракт этим выбором не меняются.
 
 - Локально: `web/.runtime/runtime.env` и ровно восемь файлов в `web/.runtime/credentials/`; каталог игнорируется Git.
