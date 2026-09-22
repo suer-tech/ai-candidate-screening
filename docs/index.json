@@ -145,6 +145,11 @@
       "kind": "function",
       "summary": "Детерминированно преобразует UTF-8 текст или извлечённый из DOCX текст в transcript-bundle-compatible utterances; несколько записей и готовых стенограмм объединяются без потери имени, версии и локатора каждого источника."
     },
+    "buildAssessmentJoin": {
+      "file": "web/server/candidate-pipeline/assessment-join.ts",
+      "kind": "function",
+      "summary": "Requests a recommendation-only structured summary and preserves completed rows, ABC, evidence and trace lineage in the joined artifact."
+    },
     "resolvePinnedRunInputSnapshot": {
       "file": "web/server/candidate-pipeline/production-runtime.ts",
       "kind": "function",

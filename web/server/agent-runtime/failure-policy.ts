@@ -1,6 +1,6 @@
 const TRANSIENT_CODES = [
   /(?:^|_)(?:NETWORK|TIMEOUT)(?:_|$)/,
-  /^LLM_CAPABILITY_FAILED:(?:timeout|network|rate_limit|provider_unavailable|invalid_provider_response|invalid_structured_output|missing_structured_output|incomplete_structured_output)$/,
+  /^LLM_CAPABILITY_FAILED:(?:timeout|network|rate_limit|provider_unavailable|output_length_exceeded)$/,
   /_FAILED_(?:429|5\d\d)$/,
   /_HTTP_(?:429|5\d\d)$/,
   /^HTTP_(?:429|5\d\d)$/,
@@ -25,6 +25,7 @@ const MAX_ATTEMPTS_BY_TOOL: Readonly<Record<string, number>> = Object.freeze({
   "candidate.evidence-shard/v1": 3,
   "candidate.row-shard/v1": 3,
   "candidate.abc-shard/v1": 3,
+  "candidate.assessment-join/v1": 3,
   "candidate.critical-shard/v1": 3,
 });
 
@@ -45,7 +46,13 @@ const RUSSIAN_FAILURES: Readonly<Record<string, string>> = Object.freeze({
   ASSEMBLYAI_TRANSCRIPTION_TIMEOUT: "Сервис транскрибации не завершил обработку за отведённое время",
   GOOGLE_DRIVE_REAUTH_REQUIRED: "Требуется повторно подключить Google Drive",
   "LLM_CAPABILITY_FAILED:timeout": "Модель не успела завершить ответ за отведённое время после разрешённых повторов. Запустите обработку повторно",
-  "LLM_CAPABILITY_FAILED:invalid_provider_response": "Модель не вернула корректный ответ после разрешённых повторов. Запустите обработку повторно; если ошибка повторится, обратитесь к администратору",
+  "LLM_CAPABILITY_FAILED:invalid_provider_response": "Модель не вернула корректный ответ. Автоматический повтор не выполняется; обратитесь к администратору",
+  "LLM_CAPABILITY_FAILED:output_length_exceeded": "Ответ модели оборвался по лимиту длины. Разрешённые попытки исчерпаны; обратитесь к администратору",
+  "LLM_CAPABILITY_FAILED:incomplete_structured_output": "Модель вернула незавершённый ответ без подтверждённой причины обрыва. Автоматический повтор не выполняется; обратитесь к администратору",
+  "LLM_CAPABILITY_FAILED:invalid_structured_output": "Ответ модели не соответствует ожидаемому формату. Автоматический повтор не выполняется; обратитесь к администратору",
+  "LLM_CAPABILITY_FAILED:missing_structured_output": "В ответе модели отсутствует результат. Автоматический повтор не выполняется; обратитесь к администратору",
+  "LLM_CAPABILITY_FAILED:provider_content_filter": "Провайдер заблокировал ответ модели фильтром содержимого. Автоматический повтор не выполняется; обратитесь к администратору",
+  "LLM_CAPABILITY_FAILED:provider_refusal": "Модель отказалась формировать ответ. Автоматический повтор не выполняется; обратитесь к администратору",
   "LLM_CAPABILITY_FAILED:provider_unavailable": "Сервис модели временно недоступен. Система выполнила разрешённые повторы; запустите обработку повторно, если сервис ещё не восстановился",
   "LLM_CAPABILITY_FAILED:network": "Не удалось получить ответ модели из-за временной сетевой ошибки. Система выполнила разрешённые повторы",
   "LLM_CAPABILITY_FAILED:rate_limit": "Сервис модели временно ограничил частоту запросов. Система выполнила разрешённые повторы",

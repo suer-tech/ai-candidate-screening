@@ -49,6 +49,12 @@ Canonical candidate DAG MUST позволять одновременно вып�
 - **AND** другие row shards продолжают выполнение
 - **AND** после обоих join используются результаты одной версии матрицы и evidence
 
+#### Scenario: Holistic summary does not regenerate completed rows
+- **WHEN** row and ABC joins have completed and assessment join requests a holistic recommendation
+- **THEN** the structured response contains only its version, one allowed recommendation and a non-empty rationale
+- **AND** completed rows, ABC decisions and evidence references are preserved unchanged in the joined artifact
+- **AND** an incomplete or invalid response cannot create a successful assessment or bypass downstream critical verification
+
 ### Requirement: WF-045 [CONFIRMED] Параллельная проверка критических строк
 
 После первичной оценки система MUST определить набор строк, требующих критической проверки, и создать по ним отдельные детерминированные shard-задачи. Нулевой набор MUST завершать join без LLM-вызова. Critical join MUST применить не более одного канонического результата на строку и сохранить исходную оценку для аудита.

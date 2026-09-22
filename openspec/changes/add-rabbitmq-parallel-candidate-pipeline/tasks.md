@@ -105,3 +105,11 @@
 - [ ] 12.7 Выполнить четыре обязательных production-like E2E на том же identity и явно сохранить существующий Drive requirements conflict как `RED/BLOCKED`, пока он не решён отдельным change.
 - [x] 12.8 Обновить `docs/ARCHITECTURE.md`, `docs/index.json` и операционную инструкцию фактическими процессами, очередями, recovery и rollback.
 - [ ] 12.9 Провести staged rollout с Rabbit transport feature flag, проверить queue age/redelivery/DLQ/provider limits и только затем сделать Rabbit production default.
+
+## 13. Assessment join production correction (2026-09-22)
+
+- [x] 13.1 Independent behavioral acceptance reproduces the oversized response contract and missing assessment-join retry budget as product RED on synthetic inputs.
+- [x] 13.2 Use a versioned recommendation-only capability for assessment join, preserving joined rows/ABC/evidence and downstream gates.
+- [x] 13.3 Distinguish explicit output-length termination from invalid responses/refusals; retry length and transient transport failures at most twice, but fail closed for invalid output and provider blocks.
+- [x] 13.4 Run focused regression, types/lint/build and strict OpenSpec validation; document remaining production-like verification and safe deployment steps. See `docs/ASSESSMENT-JOIN-RECOVERY.md`; global baseline failures remain explicitly recorded, not marked green.
+- [ ] 13.5 Verify the correction on a provisioned immutable build with the four required production-like E2E and RabbitMQ acceptance; never replace these gates with mocked GREEN.

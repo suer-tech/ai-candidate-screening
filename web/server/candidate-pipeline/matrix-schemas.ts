@@ -6,6 +6,7 @@ export const MATRIX_CAPABILITY_SCHEMAS = {
   evidence_consolidation: "candidate-evidence-consolidation/v1",
   global_conflict_detection: "candidate-global-conflicts/v1",
   matrix_row_evaluation: "candidate-matrix-rows/v2",
+  matrix_assessment_summary: "candidate-assessment-summary/v1",
   abc_matrix_assessment: "candidate-abc-matrix/v1",
   critical_row_verification: "candidate-row-verification/v1",
 } as const;
@@ -51,6 +52,11 @@ export function normalizeMatrixCapabilityOutput(capability: MatrixCapability, in
       if (typeof source.recommendationReason !== "string" || !source.recommendationReason.trim()) throw new Error("INVALID_MATRIX_STRUCTURED_OUTPUT:recommendationReason");
       break;
     case "abc_matrix_assessment": array(source.directions, "directions"); break;
+    case "matrix_assessment_summary":
+      if (Object.keys(source).some((key) => !["schemaVersion", "recommendation", "recommendationReason"].includes(key))) throw new Error("INVALID_MATRIX_STRUCTURED_OUTPUT:summaryFields");
+      if (typeof source.recommendation !== "string" || !new Set(["Рекомендовать", "Рекомендовать с оговорками", "Не рекомендовать", "Недостаточно данных"]).has(source.recommendation)) throw new Error("INVALID_MATRIX_STRUCTURED_OUTPUT:recommendation");
+      if (typeof source.recommendationReason !== "string" || !source.recommendationReason.trim()) throw new Error("INVALID_MATRIX_STRUCTURED_OUTPUT:recommendationReason");
+      break;
     case "critical_row_verification": array(source.results, "results"); break;
   }
   return Object.freeze(source);

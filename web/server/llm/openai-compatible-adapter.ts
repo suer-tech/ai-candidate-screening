@@ -135,7 +135,7 @@ export class OpenAiCompatibleProviderAdapter implements LlmProviderAdapter {
         timeout ? "provider response timeout" : "invalid provider response",
         { class: timeout ? "timeout" : "invalid_provider_response" },
         response.status,
-        true,
+        timeout,
       );
     }
     if (raw.error) {
@@ -148,19 +148,25 @@ export class OpenAiCompatibleProviderAdapter implements LlmProviderAdapter {
     if (typeof message.refusal === "string" && message.refusal.trim()) {
       throw new LlmProviderAttemptError("provider refusal", { class: "provider_refusal" }, response.status, false);
     }
-    if (finishReason === "length" || finishReason === "content_filter" || finishReason === "incomplete") {
-      throw new LlmProviderAttemptError("incomplete structured response", { class: "incomplete_structured_output", finishReason }, response.status, true);
+    if (finishReason === "length") {
+      throw new LlmProviderAttemptError("provider output length exceeded", { class: "output_length_exceeded", finishReason }, response.status, true);
+    }
+    if (finishReason === "content_filter") {
+      throw new LlmProviderAttemptError("provider content filter", { class: "provider_content_filter", finishReason }, response.status, false);
+    }
+    if (finishReason === "incomplete") {
+      throw new LlmProviderAttemptError("incomplete structured response", { class: "incomplete_structured_output", finishReason }, response.status, false);
     }
     const content = message.content;
     let parsedOutput: JsonValue | undefined;
     if (typeof content === "string") {
       try { parsedOutput = parseStructuredContent(content, request.responseFormat); }
-      catch { throw new LlmProviderAttemptError("invalid structured response", { class: "invalid_structured_output" }, response.status, true); }
+      catch { throw new LlmProviderAttemptError("invalid structured response", { class: "invalid_structured_output" }, response.status, false); }
     } else if (content && typeof content === "object") {
       parsedOutput = content as JsonValue;
     }
     if (parsedOutput === undefined) {
-      throw new LlmProviderAttemptError("missing structured response", { class: "missing_structured_output" }, response.status, true);
+      throw new LlmProviderAttemptError("missing structured response", { class: "missing_structured_output" }, response.status, false);
     }
     const actualSchemaVersion = parsedOutput && typeof parsedOutput === "object" && !Array.isArray(parsedOutput) && typeof parsedOutput.schemaVersion === "string" ? parsedOutput.schemaVersion : undefined;
     return {

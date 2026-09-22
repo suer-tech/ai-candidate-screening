@@ -20,6 +20,7 @@ export const LLM_CAPABILITIES = [
   "evidence_consolidation",
   "global_conflict_detection",
   "matrix_row_evaluation",
+  "matrix_assessment_summary",
   "abc_matrix_assessment",
   "critical_row_verification",
   "candidate_report_composer",

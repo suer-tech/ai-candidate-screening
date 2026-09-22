@@ -16,13 +16,13 @@ const request: ProviderAttemptRequest = {
   timeoutMs: 100,
 };
 
-test("HTTP 200 with malformed provider JSON is a retryable typed failure", async () => {
+test("HTTP 200 with malformed provider JSON is a terminal typed failure", async () => {
   const original = globalThis.fetch;
   globalThis.fetch = async () => new Response("{truncated", { status: 200, headers: { "content-type": "application/json" } });
   try {
     await assert.rejects(() => new OpenAiCompatibleProviderAdapter().execute(request), (error: unknown) => {
       assert.ok(error instanceof LlmProviderAttemptError);
-      assert.equal(error.retryable, true);
+      assert.equal(error.retryable, false);
       assert.deepEqual(error.traceError, { class: "invalid_provider_response" });
       return true;
     });

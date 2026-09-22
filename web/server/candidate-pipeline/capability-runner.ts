@@ -28,6 +28,9 @@ export async function runLlmCapabilityWithPolicy(dependencies: ExecuteLlmAttempt
       await budget.commit(reservation);
       lastError = error;
       const provider = error instanceof LlmProviderAttemptError ? error : null;
+      // Durable tasks own the length-truncation budget; nested retries would multiply it.
+      if (provider?.traceError && typeof provider.traceError === "object" && !Array.isArray(provider.traceError)
+        && provider.traceError.class === "output_length_exceeded") throw safeCapabilityError(error);
       if (!provider?.retryable || attempt >= config.retryPolicy.maxAttempts) throw safeCapabilityError(error);
       const configured = Math.min(config.retryPolicy.maximumBackoffMs, config.retryPolicy.initialBackoffMs * 2 ** (attempt - 1));
       const delay = Math.max(configured, provider.retryBackoffMs ?? 0);

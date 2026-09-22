@@ -34,6 +34,7 @@ import { recoveryArtifactPurpose, recoveryArtifactSchema } from "./recovery-cont
 import { deduplicateCoverageEvidence, matrixCriterionIds, technicalFallbackRow, validateExactCriterionCoverage, type BatchCoverageEntry } from "./matrix-coverage.ts";
 import { countOpenAiCompatibleContextTokens } from "../llm/token-counting.ts";
 import { canonicalJoin, createFanoutDescriptor } from "../agent-runtime/fanout.ts";
+import { buildAssessmentJoin } from "./assessment-join.ts";
 
 type ExecutionEnvironment = CandidatePipelineEnvironment & GoogleDriveOAuthEnvironment;
 
@@ -448,6 +449,7 @@ export async function createProductionCandidateToolExecution(input: { database: 
       "evidence_consolidation",
       "global_conflict_detection",
       "matrix_row_evaluation",
+      "matrix_assessment_summary",
       "abc_matrix_assessment",
       "critical_row_verification",
       "candidate_report_composer",
@@ -1311,13 +1313,9 @@ export async function createProductionCandidateToolExecution(input: { database: 
             const evidenceRef = text(rows.evidenceRef, "ASSESSMENT_JOIN_EVIDENCE_MISSING");
             const evidence = await artifactStore.getJson<Record<string, unknown>>(evidenceRef);
             const claimBundle = typeof evidence.claimsRef === "string" ? await artifactStore.getJson<{ claims?: CandidateSourceClaim[] }>(evidence.claimsRef) : {};
-            const holistic = await call("matrix_row_evaluation", { matrix, evidence: { ...evidence, claims: claimBundle.claims ?? [] }, preEvaluatedRows: rows.rows ?? [], abcDirections: abc.directions ?? [], requestedCriterionIds: matrixCriterionIds(matrix.criteria),
-              policy: { aggregateOnly: true, preservePreEvaluatedRows: true, chooseHolisticRecommendation: true, allowedRecommendations: ["Рекомендовать", "Рекомендовать с оговорками", "Не рекомендовать", "Недостаточно данных"], stopFactorsAlwaysReject: true, materialNonStopGapsMayReject: true } }, "assessment-join");
-            const allowed = new Set(["Рекомендовать", "Рекомендовать с оговорками", "Не рекомендовать", "Недостаточно данных"]);
-            const recommendation = allowed.has(String(holistic.output.recommendation)) ? String(holistic.output.recommendation) : "Недостаточно данных";
-            const stored = await storeJson("matrix-rows", operationIdentity, { schemaVersion: "candidate-matrix-rows-bundle/v3", matrixId: published.matrixId, evidenceRef, rows: rows.rows ?? [], abcDirections: abc.directions ?? [], recommendation,
-              recommendationReason: String(holistic.output.recommendationReason ?? "Итог сформирован по полной оценке строк матрицы и ABC-направлений."), coverageSummary: rows.coverageSummary,
-              warnings: [...(rows.warnings ?? []), ...(abc.warnings ?? [])], traceRefs: [...(rows.traceRefs ?? []), ...(abc.traceRefs ?? []), holistic.traceRef] });
+            const joined = await buildAssessmentJoin({ matrix, matrixId: published.matrixId, evidenceRef,
+              evidence: { ...evidence, claims: claimBundle.claims ?? [] }, rows, abc }, call);
+            const stored = await storeJson("matrix-rows", operationIdentity, joined);
             return { artifactRef: stored.artifactRef, checksum: stored.checksum };
           }
           if (toolKey === "candidate.critical-shard/v1") {
@@ -1431,7 +1429,7 @@ export async function createProductionCandidateToolExecution(input: { database: 
             const rowsRef = await latestArtifact(parallelWorkflow ? "candidate.assessment-join/v1" : "candidate.matrix-rows/v1");
             const verificationRef = await latestArtifact(parallelWorkflow ? "candidate.critical-join/v1" : "candidate.matrix-verify/v1");
             const verification = await artifactStore.getJson<{ results?: CriticalVerificationDecision[]; adjustedRows?: CandidateMatrixRow[] }>(verificationRef);
-            const bundle = await artifactStore.getJson<{ rows?: CandidateMatrixRow[]; recommendation?: string; recommendationReason?: string; abcDirections?: Array<Record<string, unknown>>; evidenceRef?: string; coverageSummary?: unknown; warnings?: string[] }>(rowsRef);
+            const bundle = await artifactStore.getJson<{ rows?: CandidateMatrixRow[]; recommendation?: string; recommendationReason?: string; recommendationPromptVersion?: string; recommendationSchemaVersion?: string; abcDirections?: Array<Record<string, unknown>>; evidenceRef?: string; coverageSummary?: unknown; warnings?: string[] }>(rowsRef);
             const effectiveRows = Array.isArray(verification.adjustedRows)
               ? verification.adjustedRows
               : applyCriticalVerificationDecisions(bundle.rows ?? [], verification.results ?? []);
@@ -1472,8 +1470,8 @@ export async function createProductionCandidateToolExecution(input: { database: 
               accessToKe: values.filter((row) => criterion.get(row.criterionId)?.category === "access-to-ke").map((row) => ({ ...itemFor(row), required: criterion.get(row.criterionId)?.required ?? false })),
               risks: [...negativeRows.filter((row) => !criterion.get(row.criterionId)?.hardRequired).map(itemFor), ...additionalConcerns], stopFactors: triggeredStops.map(itemFor) };
             const stored = await storeJson("matrix-assessment-snapshot", operationIdentity, { schemaVersion: "matrix-assessment-snapshot/v2", workflowVersion: goal.workflow_version, inputVersion, profileVersion, matrixId: published.matrixId, matrixChecksum: matrix.checksum,
-              skillVersions: { ...matrix.skillVersions, extraction: "extract-claims-for-criteria/v1", recommendation: "fill-matrix-rows/v2" }, modelVersions: matrix.modelVersions,
-              schemaVersions: { matrix: matrix.schemaVersion, rows: "candidate-matrix-rows/v2", verification: "candidate-row-verification/v1" }, policyVersions: { compiler: matrix.compilerPolicyVersion, recommendation: "ASM-050/coverage-first-evidence-v2" },
+              skillVersions: { ...matrix.skillVersions, extraction: "extract-claims-for-criteria/v1", recommendation: bundle.recommendationPromptVersion ?? "fill-matrix-rows/v2" }, modelVersions: matrix.modelVersions,
+              schemaVersions: { matrix: matrix.schemaVersion, rows: "candidate-matrix-rows/v2", recommendation: bundle.recommendationSchemaVersion ?? "candidate-matrix-rows/v2", verification: "candidate-row-verification/v1" }, policyVersions: { compiler: matrix.compilerPolicyVersion, recommendation: "ASM-050/coverage-first-evidence-v2" },
               rowsRef, evidenceRef, verificationRef, structuredAssessment, criticalUnmappedRisks: [], coverageSummary: bundle.coverageSummary, warnings: bundle.warnings ?? [],
               recommendation, recommendationReason: triggeredStops.length ? "Подтверждён явный стоп-фактор вакансии." : bundle.recommendationReason, selectedBranch, formulaInputs: { rows: values } });
             return { artifactRef: stored.artifactRef, checksum: stored.checksum };

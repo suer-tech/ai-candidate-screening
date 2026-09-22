@@ -4,6 +4,8 @@
 
 ## What Changes
 
+- Production correction approved on 2026-09-22: assessment join requests only a compact holistic recommendation, preserving completed rows/ABC. Explicit output-length termination receives bounded retries; schema failures and provider refusals/filters remain terminal with distinct safe diagnostics.
+
 - Добавляется RabbitMQ как durable transport только для готовых к выполнению технических задач; PostgreSQL остаётся источником истины для кандидатов, DAG, состояний, попыток, checkpoints, артефактов и outbox.
 - Добавляется transactional dispatch outbox, исключающий dual-write разрыв между переводом задачи в `RUNNABLE` и публикацией сообщения.
 - Добавляются отдельные worker pools и routing keys для control, documents, media/transcription, LLM, reports, Drive и notifications с bounded prefetch, retry и dead-letter routing.

@@ -227,6 +227,7 @@ export function environmentProjection(configuration: RuntimeConfiguration): Reco
       evidence_consolidation: { ...capability("consolidate-evidence/v1", "candidate-evidence-consolidation/v1", 1), timeoutMs: 600_000 },
       global_conflict_detection: { ...capability("detect-global-conflicts/v1", "candidate-global-conflicts/v1", 1), timeoutMs: 600_000 },
       matrix_row_evaluation: { ...capability("fill-matrix-rows/v2", "candidate-matrix-rows/v2", 1), timeoutMs: 600_000 },
+      matrix_assessment_summary: { ...capability("summarize-matrix-assessment/v1", "candidate-assessment-summary/v1", 1), timeoutMs: 600_000 },
       abc_matrix_assessment: { ...capability("assess-abc-direction/v2", "candidate-abc-matrix/v1", 1), timeoutMs: 600_000 },
       critical_row_verification: { ...capability("verify-critical-row/v1", "candidate-row-verification/v1", 1), timeoutMs: 600_000 },
       candidate_report_composer: { ...capability("compose-candidate-report/v2", "candidate-report-composition/v2", 1), timeoutMs: 300_000 },
