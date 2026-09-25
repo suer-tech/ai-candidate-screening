@@ -579,14 +579,16 @@ export class PostgresAgentRuntimeRepository {
   }
   async dispatchStats(now = Date.now()) {
     const [row] = await this.sql<{ pending: number; publishing: number; published: number; failed: number; oldest_pending_ms: number; runnable_without_delivery: number }[]>`SELECT
-      count(*) FILTER (WHERE state='PENDING')::integer AS pending,
-      count(*) FILTER (WHERE state='PUBLISHING')::integer AS publishing,
-      count(*) FILTER (WHERE state='PUBLISHED')::integer AS published,
-      count(*) FILTER (WHERE state='FAILED')::integer AS failed,
-      COALESCE(max(${now}-available_at) FILTER (WHERE state='PENDING' AND available_at<=${now}),0)::bigint AS oldest_pending_ms,
+      count(*) FILTER (WHERE dispatch.state='PENDING' AND run.state='ACTIVE')::integer AS pending,
+      count(*) FILTER (WHERE dispatch.state='PUBLISHING' AND run.state='ACTIVE')::integer AS publishing,
+      count(*) FILTER (WHERE dispatch.state='PUBLISHED' AND run.state='ACTIVE')::integer AS published,
+      count(*) FILTER (WHERE dispatch.state='FAILED' AND run.state='ACTIVE')::integer AS failed,
+      COALESCE(max(${now}-dispatch.available_at) FILTER (WHERE dispatch.state='PENDING' AND dispatch.available_at<=${now} AND run.state='ACTIVE'),0)::bigint AS oldest_pending_ms,
       (SELECT count(*)::integer FROM agent_tasks task JOIN agent_runs run ON run.id=task.run_id WHERE task.state='RUNNABLE' AND run.state='ACTIVE'
         AND NOT EXISTS (SELECT 1 FROM agent_task_dispatch_outbox dispatch WHERE dispatch.task_id=task.id AND dispatch.task_version=task.revision)) AS runnable_without_delivery
-      FROM agent_task_dispatch_outbox`;
+      FROM agent_task_dispatch_outbox dispatch
+      JOIN agent_tasks task ON task.id=dispatch.task_id
+      JOIN agent_runs run ON run.id=task.run_id`;
     return row ?? { pending: 0, publishing: 0, published: 0, failed: 0, oldest_pending_ms: 0, runnable_without_delivery: 0 };
   }
   async authorizeTool(input: { taskId: string; operation: string; sideEffectClass: "read-only" | "idempotent-write" | "reversible-write" | "irreversible-write"; now: number }) {
