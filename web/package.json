@@ -56,7 +56,7 @@
     "test:auth:green-evidence": "node --test --test-reporter=junit --test-reporter-destination=tests/acceptance/evidence/email-password-login-green.junit.xml tests/email-password-auth.acceptance.test.mjs",
     "test:product": "tsx --test app/product-model.test.ts",
     "test:theme": "tsx --test app/theme-preference.test.ts && node --test tests/theme-preference.acceptance.test.mjs",
-    "test:server-product": "tsx --test server/product/application.test.ts",
+    "test:server-product": "tsx --test server/product/application.test.ts tests/dashboard-summary-source.test.ts",
     "test:llm": "npm run test:matrix-pydantic && tsx --test server/llm/llm.test.ts tests/matrix-provider-incident.acceptance.test.ts tests/abc-direction-provider-contract.acceptance.test.ts",
     "test:matrix-pydantic": "node scripts/run-matrix-pydantic-tests.mjs",
     "test:matrix-isolated-postgres": "node -e \"if (!process.env.MATRIX_TEST_POSTGRES_URL) process.exit(1)\" && tsx --test server/candidate-pipeline/matrix-postgres-repository.integration.test.ts server/candidate-pipeline/production-runtime.integration.test.ts",

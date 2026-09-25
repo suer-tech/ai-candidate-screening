@@ -758,6 +758,7 @@ function ProductApp({
   const [previousView, setPreviousView] = useState<View>("dashboard");
   const [selectedCandidate, setSelectedCandidate] = useState<CandidateId>(1);
   const [candidates, setCandidates] = useState<UiCandidate[]>([]);
+  const [workspaceLoaded, setWorkspaceLoaded] = useState(false);
   const [vacancyState, setVacancyState] = useState<VacancyCreateState>({
     vacancies: [],
     operationBindings: {},
@@ -803,6 +804,7 @@ function ProductApp({
     };
   }, []);
   useEffect(() => {
+    if (view === "dashboard") return;
     let active = true;
     let inFlight = false;
     let controller: AbortController | null = null;
@@ -830,6 +832,7 @@ function ProductApp({
           vacancies: payload.vacancies.map(hydrateVacancy),
           operationBindings: {},
         });
+        setWorkspaceLoaded(true);
       } catch {
         // A later poll reconciles a temporary workspace read failure.
       } finally {
@@ -843,7 +846,7 @@ function ProductApp({
       controller?.abort();
       window.clearInterval(poll);
     };
-  }, []);
+  }, [view]);
   useEffect(() => {
     let active = true;
     const checkDrive = async () => {
@@ -1127,7 +1130,10 @@ function ProductApp({
           onQueueFilter={openFilteredQueue}
         />
       )}
-      {view === "vacancies" && (
+      {view !== "dashboard" && !workspaceLoaded && (
+        <section className="page" role="status">Загружаем рабочие данные…</section>
+      )}
+      {view === "vacancies" && workspaceLoaded && (
         <Vacancies
           candidates={candidates}
           vacancyState={vacancyState}
@@ -1140,7 +1146,7 @@ function ProductApp({
           }
         />
       )}
-      {view === "candidates" && (
+      {view === "candidates" && workspaceLoaded && (
         <Candidates
           items={matching}
           vacancies={vacancies}
@@ -1149,7 +1155,7 @@ function ProductApp({
           onClearDashboardFilter={() => setQueueFilter(null)}
         />
       )}
-      {view === "candidate" && candidates.length > 0 && (
+      {view === "candidate" && workspaceLoaded && candidates.length > 0 && (
         <CandidateDetail
           candidate={
             candidates.find((item) => item.id === selectedCandidate) ??

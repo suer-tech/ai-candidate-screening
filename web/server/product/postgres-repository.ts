@@ -460,7 +460,7 @@ export class PostgresProductRepository implements ProductRepository {
       if (!updated.length) throw new ProductConflictError("Состояние кандидата изменилось"); return candidate;
     });
   }
-  async dashboardSource() {
+  async dashboardSource(options: { summaryOnly?: boolean } = {}) {
     const [candidateRows, vacancyRows, runtimeRows, reportRows, materialRows] = await Promise.all([
       this.sql<{ id: number; revision: number; record_json: string }[]>`SELECT id,revision,record_json FROM candidates`,
       this.sql<{ record_json: string }[]>`SELECT record_json FROM vacancies`,
@@ -471,7 +471,23 @@ export class PostgresProductRepository implements ProductRepository {
           ON compilation.profile_version=g.profile_version
          AND compilation.workflow_identity=r.workflow_version
         WHERE g.goal_type IN ('candidate-analysis/v1','candidate-analysis-matrix/v1') ORDER BY g.candidate_id,g.created_at DESC,r.last_progress_at DESC,t.id`,
-      this.sql<Row[]>`WITH RECURSIVE report_lineage(report_run_id,id,depth) AS (
+      options.summaryOnly
+        ? this.sql<Row[]>`SELECT r.candidate_id,r.analysis_version,r.run_id,r.state,d.id AS document_id,d.type,d.file_name,d.drive_file_id,a.recommendation,
+            COALESCE(publication.finished_at,run.last_progress_at) AS last_progress_at,
+            ROUND(EXTRACT(EPOCH FROM (COALESCE(publication.finished_at,run.last_progress_at)::timestamptz - timing.started_at::timestamptz)) / 60)::integer AS elapsed_minutes
+          FROM candidate_report_versions r JOIN candidate_report_documents d ON d.report_version_id=r.id
+          JOIN candidate_assessments a ON a.id=r.assessment_id JOIN agent_runs run ON run.id=r.run_id
+          LEFT JOIN LATERAL (SELECT MIN(attempt.started_at) AS started_at FROM agent_tasks timing_task JOIN agent_attempts attempt ON attempt.task_id=timing_task.id WHERE timing_task.run_id=r.run_id) timing ON TRUE
+          LEFT JOIN LATERAL (
+            SELECT attempt.finished_at
+            FROM agent_tasks publication_task JOIN agent_attempts attempt ON attempt.task_id=publication_task.id
+            WHERE publication_task.run_id=r.run_id AND publication_task.tool_key='candidate.drive-publication/v1'
+              AND publication_task.state='SUCCEEDED' AND attempt.state='SUCCEEDED' AND attempt.finished_at IS NOT NULL
+            ORDER BY attempt.finished_at DESC LIMIT 1
+          ) publication ON TRUE
+          WHERE r.state='PUBLISHED' AND d.drive_file_id IS NOT NULL
+          ORDER BY r.candidate_id,r.analysis_version DESC,d.type`
+        : this.sql<Row[]>`WITH RECURSIVE report_lineage(report_run_id,id,depth) AS (
           SELECT DISTINCT published.run_id,published.run_id,0 FROM candidate_report_versions published WHERE published.state='PUBLISHED'
           UNION ALL
           SELECT lineage.report_run_id,source.recovery_source_run_id,lineage.depth+1
@@ -516,7 +532,7 @@ export class PostgresProductRepository implements ProductRepository {
           ORDER BY lineage.depth,transcript_blob.created_at_utc DESC LIMIT 1
         ) transcript ON transcript.kind='transcript-bundle'
         WHERE r.state='PUBLISHED' AND d.drive_file_id IS NOT NULL ORDER BY r.candidate_id,r.analysis_version DESC,d.type`,
-      this.sql<Row[]>`SELECT DISTINCT ON (candidate_id) candidate_id,manifest_json
+      options.summaryOnly ? Promise.resolve([] as Row[]) : this.sql<Row[]>`SELECT DISTINCT ON (candidate_id) candidate_id,manifest_json
         FROM candidate_input_versions ORDER BY candidate_id,sequence DESC`,
     ]);
     const parsedVacancies = vacancyRows.map((row) => parse<VacancyRecord>(row.record_json));

@@ -64,7 +64,7 @@ export interface ProductRepository extends VacancyGenerationRepository {
   findCurrentResult(principalId: string, candidateId: CandidateId, type: ResultDocumentType, version: number): Promise<ResultDocumentDescriptor | null>;
   appendAudit(event: AuditEvent): Promise<void>;
   commitResultPair(candidate: StoredCandidate, expectedRevision: number, descriptors: readonly [ResultDocumentDescriptor, ResultDocumentDescriptor]): Promise<StoredCandidate>;
-  dashboardSource(): Promise<{ candidates: CandidateRecord[]; vacancies: VacancyRecord[] }>;
+  dashboardSource(options?: { summaryOnly?: boolean }): Promise<{ candidates: CandidateRecord[]; vacancies: VacancyRecord[] }>;
 }
 
 export interface VacancyFolderGateway {
@@ -253,7 +253,7 @@ export async function getOperationalDashboard(
   period: 7 | 30 | 90,
   asOf = new Date(),
 ) {
-  const source = await repository.dashboardSource();
+  const source = await repository.dashboardSource({ summaryOnly: true });
   return buildDashboardSnapshot(source.candidates, source.vacancies, period, asOf);
 }
 

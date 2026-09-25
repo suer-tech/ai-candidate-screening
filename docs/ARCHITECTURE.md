@@ -61,6 +61,7 @@ Dashboard projection также проходит по recovery lineage: опуб
 - `web/server/configuration/` — fail-closed загрузка одного `runtime.env`, точного credential allowlist и server dependency container.
 - `web/server/storage/` и `web/drizzle-postgres/` — PostgreSQL pool, migrations, `bytea` blob store и приватные временные каталоги.
 - `web/server/product/` — вакансии, кандидаты, lifecycle, dashboard и LLM-генерация вакансии.
+- `/api/dashboard` запрашивает краткую проекцию статусов и опубликованных результатов без private artifact blobs и manifest; `/api/workspace` сохраняет полную проекцию для списков и карточек. Клиент загружает и обновляет workspace только при открытии соответствующих разделов, поэтому дашборд не ждёт тяжёлый запрос.
 - `web/server/google-drive-oauth/` — personal OAuth PKCE, AES-256-GCM token envelope, optimistic refresh, My Drive registry и descendant/tool-grant checks.
 - `web/server/agent-runtime/` — goal graph, durable queue, leases/fencing, checkpoints, grants, budgets, memory, eval/repair/replan, escalation/resume и outbox/compensation.
 - `web/server/candidate-pipeline/` — discovery, material classification, document/media/transcription tools, facts/evidence, assessment, reports, notifications и progress projection.
