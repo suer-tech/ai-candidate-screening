@@ -53,8 +53,8 @@ function capabilityConfig(
   return {
     providerProfile: "main",
     model: "configured-model",
-    promptArtifact: "candidate-assessment/v1",
-    responseSchemaArtifact: "facts/v1",
+    promptArtifact: "summarize-matrix-assessment/v1",
+    responseSchemaArtifact: "candidate-assessment-summary/v1",
     toolSchemaArtifacts: ["no-tools/v1"],
     generationParameters: { temperature: 0 },
     limits: { maxOutputTokens: 1000 },
@@ -77,13 +77,13 @@ function configDocument(): RuntimeConfigDocument {
         supportsStructuredOutputs: true,
       },
     },
-    capabilities: { assessment: capabilityConfig() },
+    capabilities: { matrix_assessment_summary: capabilityConfig() },
   };
 }
 
 function runtimeConfig() {
   return validateRuntimeConfiguration(configDocument(), secrets, {
-    requiredCapabilities: ["assessment"],
+    requiredCapabilities: ["matrix_assessment_summary"],
   });
 }
 
@@ -95,7 +95,7 @@ function traceInput(): AttemptTraceInput {
       attemptId: "attempt-1",
       attemptNumber: 1,
       workflowRunId: "run-1",
-      workflowStage: "assessment",
+      workflowStage: "matrix_assessment_summary",
       candidateId: "candidate-1",
       vacancyId: "vacancy-1",
       inputVersion: "input-v2",
@@ -103,8 +103,8 @@ function traceInput(): AttemptTraceInput {
       resultVersion: "result-v4",
       providerRequestId: "provider-request-1",
     },
-    capability: "assessment",
-    config: runtimeConfig().resolve("assessment"),
+    capability: "matrix_assessment_summary",
+    config: runtimeConfig().resolve("matrix_assessment_summary"),
     request: {
       messages: [{ role: "user", content: "full candidate content" }],
       toolDefinitions: [{ name: "evidence_lookup", inputSchema: { type: "object" } }],
@@ -156,12 +156,12 @@ function traceInput(): AttemptTraceInput {
 
 test("validates required capabilities and rejects implicit fallback", () => {
   const missingFallback = configDocument();
-  delete (missingFallback.capabilities.assessment as Partial<CapabilityConfigDocument>)
+  delete (missingFallback.capabilities.matrix_assessment_summary as Partial<CapabilityConfigDocument>)
     .fallbackPolicy;
   assert.throws(
     () =>
       validateRuntimeConfiguration(missingFallback, secrets, {
-        requiredCapabilities: ["assessment"],
+        requiredCapabilities: ["matrix_assessment_summary"],
       }),
     /fallback must be explicitly disabled or configured/,
   );
@@ -183,7 +183,7 @@ test("rejects STT as an LLM capability", () => {
   assert.throws(
     () =>
       validateRuntimeConfiguration(document, secrets, {
-        requiredCapabilities: ["assessment"],
+        requiredCapabilities: ["matrix_assessment_summary"],
       }),
     /unknown LLM capability: stt/,
   );
@@ -191,7 +191,7 @@ test("rejects STT as an LLM capability", () => {
 
 test("keeps runtime credentials outside non-secret config and effective snapshots", () => {
   const config = runtimeConfig();
-  const effective = config.resolve("assessment");
+  const effective = config.resolve("matrix_assessment_summary");
   assert.equal(config.readProviderCredential("main"), secretValue);
   assert.doesNotMatch(JSON.stringify(config.nonSecretSnapshot), new RegExp(secretValue));
   assert.doesNotMatch(JSON.stringify(effective), /provider\/main/);
@@ -210,7 +210,7 @@ test("fails readiness validation when a required runtime credential is absent", 
       validateRuntimeConfiguration(
         configDocument(),
         { has: () => false, read: () => undefined },
-        { requiredCapabilities: ["assessment"] },
+        { requiredCapabilities: ["matrix_assessment_summary"] },
       ),
     /missing its runtime credential/,
   );
@@ -218,13 +218,13 @@ test("fails readiness validation when a required runtime credential is absent", 
 
 test("rejects non-JSON runtime parameters before service readiness", () => {
   const document = configDocument();
-  document.capabilities.assessment = capabilityConfig({
+  document.capabilities.matrix_assessment_summary = capabilityConfig({
     generationParameters: { temperature: Number.NaN },
   });
   assert.throws(
     () =>
       validateRuntimeConfiguration(document, secrets, {
-        requiredCapabilities: ["assessment"],
+        requiredCapabilities: ["matrix_assessment_summary"],
       }),
     /finite JSON numbers/,
   );
@@ -232,7 +232,7 @@ test("rejects non-JSON runtime parameters before service readiness", () => {
 
 test("uses explicit fallback only when the caller selects a configured policy", () => {
   const document = configDocument();
-  document.capabilities.assessment = capabilityConfig({
+  document.capabilities.matrix_assessment_summary = capabilityConfig({
     fallbackPolicy: {
       mode: "explicit",
       policyVersion: "fallback-v1",
@@ -240,10 +240,10 @@ test("uses explicit fallback only when the caller selects a configured policy", 
     },
   });
   const config = validateRuntimeConfiguration(document, secrets, {
-    requiredCapabilities: ["assessment"],
+    requiredCapabilities: ["matrix_assessment_summary"],
   });
-  assert.equal(config.resolve("assessment").actualModel, "configured-model");
-  const fallback = config.resolve("assessment", { explicitFallbackIndex: 0 });
+  assert.equal(config.resolve("matrix_assessment_summary").actualModel, "configured-model");
+  const fallback = config.resolve("matrix_assessment_summary", { explicitFallbackIndex: 0 });
   assert.equal(fallback.actualModel, "alternative-model");
   assert.deepEqual(fallback.fallback, {
     used: true,
@@ -373,7 +373,7 @@ test("rejects secret-bearing provider endpoints without echoing secret values", 
   document.providers.main.endpoint = "https://llm.example.test/v1?api_key=do-not-echo";
   let error: unknown;
   try {
-    validateRuntimeConfiguration(document, secrets, { requiredCapabilities: ["assessment"] });
+    validateRuntimeConfiguration(document, secrets, { requiredCapabilities: ["matrix_assessment_summary"] });
   } catch (caught) {
     error = caught;
   }
@@ -410,7 +410,7 @@ test("gateway executes through effective config and persists the exact attempt w
     clock: () => times[Math.min(clockIndex++, times.length - 1)],
     monotonicClock: (() => { let tick = 100; return () => (tick += 25); })(),
   }, {
-    capability: "assessment",
+    capability: "matrix_assessment_summary",
     correlation: { ...source.correlation, providerRequestId: undefined },
     request: source.request,
     inputSnapshot: source.inputSnapshot,
@@ -437,7 +437,7 @@ test("gateway traces provider failure and preserves the business failure during 
       clock: () => new Date("2026-08-19T10:00:00.000Z"),
       monotonicClock: () => 10,
     }, {
-      capability: "assessment",
+      capability: "matrix_assessment_summary",
       correlation: { ...source.correlation, providerRequestId: undefined },
       request: source.request,
       inputSnapshot: source.inputSnapshot,
@@ -452,8 +452,8 @@ test("runtime loader separates versioned non-secret config from environment cred
   const config = loadRuntimeConfiguration({
     LLM_RUNTIME_CONFIG_JSON: JSON.stringify(configDocument()),
     "provider/main": secretValue,
-  }, ["assessment"]);
+  }, ["matrix_assessment_summary"]);
   assert.equal(config.readProviderCredential("main"), secretValue);
   assert.doesNotMatch(JSON.stringify(config.nonSecretSnapshot), new RegExp(secretValue));
-  assert.throws(() => loadRuntimeConfiguration({ LLM_RUNTIME_CONFIG_JSON: "{}" }, ["assessment"]), /releaseVersion|providers/);
+  assert.throws(() => loadRuntimeConfiguration({ LLM_RUNTIME_CONFIG_JSON: "{}" }, ["matrix_assessment_summary"]), /releaseVersion|providers/);
 });

@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
-import path from "node:path";
 import test from "node:test";
-import { environmentProjection, loadRuntimeConfiguration } from "../configuration/runtime.ts";
+import path from "node:path";
 import { migratePostgres } from "../storage/migrations.ts";
 import { createPostgresClient } from "../storage/postgres.ts";
 import { canonicalizeVacancyMatrix, type MatrixCriterionDraft } from "./matrix-driven.ts";
@@ -9,9 +8,8 @@ import { PostgresVacancyMatrixRepository } from "./matrix-postgres-repository.ts
 
 process.env.ROUTERAI_STRUCTURED_OUTPUTS = "true";
 
-test("PostgreSQL matrix repository fences concurrent owners and isolates candidate artifacts", async () => {
-  const configuration = await loadRuntimeConfiguration(path.resolve(import.meta.dirname, "../.."));
-  const baseUrl = environmentProjection(configuration).DATABASE_URL;
+test("PostgreSQL matrix repository fences concurrent owners and isolates candidate artifacts", { skip: !process.env.MATRIX_TEST_POSTGRES_URL }, async () => {
+  const baseUrl = process.env.MATRIX_TEST_POSTGRES_URL!;
   const admin = createPostgresClient({ url: baseUrl, max: 1 });
   const databaseName = `matrix_integration_${Date.now()}_${Math.random().toString(16).slice(2)}`;
   const isolated = new URL(baseUrl); isolated.pathname = `/${databaseName}`;

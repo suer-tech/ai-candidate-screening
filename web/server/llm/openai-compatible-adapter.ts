@@ -22,6 +22,21 @@ function safeError(status: number) {
   return { class: "provider_request_rejected" } satisfies JsonValue;
 }
 
+function protectedResponse(raw: Record<string, unknown>, status: number) {
+  const choices = Array.isArray(raw.choices) ? raw.choices : [];
+  const first = choices[0] && typeof choices[0] === "object" ? choices[0] as Record<string, unknown> : {};
+  const message = first.message && typeof first.message === "object" ? first.message as Record<string, unknown> : {};
+  return {
+    providerRequestId: typeof raw.id === "string" ? raw.id : undefined,
+    reportedModel: typeof raw.model === "string" ? raw.model : undefined,
+    providerStatus: status,
+    rawEnvelope: raw as JsonValue,
+    assistantMessages: Object.keys(message).length ? [message as JsonValue] : [],
+    finishReason: typeof first.finish_reason === "string" ? first.finish_reason : undefined,
+    usage: raw.usage as JsonValue | undefined,
+  };
+}
+
 function outputTokenParameter(request: Readonly<ProviderAttemptRequest>) {
   const generation = request.generationParameters && typeof request.generationParameters === "object" && !Array.isArray(request.generationParameters)
     ? request.generationParameters as Record<string, JsonValue>
@@ -77,6 +92,35 @@ function hasRequiredResponseKeys(value: JsonValue, responseFormat: JsonValue) {
     && required.every((key) => Object.prototype.hasOwnProperty.call(value, key)));
 }
 
+function matrixValidationCode(output: JsonValue, responseFormat: JsonValue): string | null {
+  if (!responseFormat || typeof responseFormat !== "object" || Array.isArray(responseFormat)) return null;
+  const envelope = responseFormat.json_schema;
+  if (!envelope || typeof envelope !== "object" || Array.isArray(envelope)) return null;
+  const schema = envelope.schema;
+  if (!schema || typeof schema !== "object" || Array.isArray(schema) || !schema.$defs || typeof schema.$defs !== "object" || Array.isArray(schema.$defs)
+    || !Object.hasOwn(schema.$defs, "criterion")) return null;
+  if (!output || typeof output !== "object" || Array.isArray(output)) return "MATRIX_CRITERIA_INVALID";
+  const container = output.successor && typeof output.successor === "object" && !Array.isArray(output.successor) ? output.successor : output;
+  if (!container || typeof container !== "object" || Array.isArray(container) || !Array.isArray(container.criteria)) return "MATRIX_CRITERIA_INVALID";
+  const criterionSchema = schema.$defs.criterion;
+  const refSchema = criterionSchema && typeof criterionSchema === "object" && !Array.isArray(criterionSchema)
+    && criterionSchema.properties && typeof criterionSchema.properties === "object" && !Array.isArray(criterionSchema.properties)
+    ? criterionSchema.properties.sourceRefs : undefined;
+  const allowedRefs = refSchema && typeof refSchema === "object" && !Array.isArray(refSchema)
+    && refSchema.items && typeof refSchema.items === "object" && !Array.isArray(refSchema.items)
+    && Array.isArray(refSchema.items.enum) ? new Set(refSchema.items.enum) : null;
+  const inspect = (nodes: JsonValue[]): string | null => {
+    for (const node of nodes) {
+      if (!node || typeof node !== "object" || Array.isArray(node)) return "MATRIX_CRITERIA_INVALID";
+      if (typeof node.missingDataQuestion !== "string" || !node.missingDataQuestion.trim()) return "MATRIX_MISSING_QUESTION_INVALID";
+      if (!Array.isArray(node.sourceRefs) || !node.sourceRefs.length || allowedRefs && node.sourceRefs.some((ref) => !allowedRefs.has(ref))) return "MATRIX_SOURCE_REF_INVALID";
+      if (node.children !== undefined && (!Array.isArray(node.children) || inspect(node.children))) return "MATRIX_CHILDREN_INVALID";
+    }
+    return null;
+  };
+  return inspect(container.criteria);
+}
+
 function parseStructuredContent(content: string, responseFormat: JsonValue): JsonValue {
   const trimmed = content.trim();
   try {
@@ -122,7 +166,13 @@ export class OpenAiCompatibleProviderAdapter implements LlmProviderAdapter {
     if (!response.ok) {
       const retryable = response.status === 429 || response.status >= 500;
       const retryAfter = Number(response.headers.get("retry-after"));
-      throw new LlmProviderAttemptError("provider request failed", safeError(response.status), response.status, retryable, Number.isFinite(retryAfter) ? retryAfter * 1_000 : undefined);
+      let protectedFailure: ReturnType<typeof protectedResponse> | undefined;
+      try {
+        const decoded = await response.json();
+        if (decoded && typeof decoded === "object" && !Array.isArray(decoded)) protectedFailure = protectedResponse(decoded as Record<string, unknown>, response.status);
+      } catch { /* The safe HTTP status remains usable when the body is unavailable. */ }
+      throw new LlmProviderAttemptError("provider request failed", safeError(response.status), response.status, retryable,
+        Number.isFinite(retryAfter) ? retryAfter * 1_000 : undefined, protectedFailure);
     }
     let raw: Record<string, unknown>;
     try {
@@ -139,34 +189,38 @@ export class OpenAiCompatibleProviderAdapter implements LlmProviderAdapter {
       );
     }
     if (raw.error) {
-      throw new LlmProviderAttemptError("provider returned an error envelope", { class: "provider_request_rejected" }, response.status, false);
+      throw new LlmProviderAttemptError("provider returned an error envelope", { class: "provider_request_rejected" }, response.status, false, undefined, protectedResponse(raw, response.status));
     }
     const choices = Array.isArray(raw.choices) ? raw.choices : [];
     const first = choices[0] && typeof choices[0] === "object" ? choices[0] as Record<string, unknown> : {};
     const message = first.message && typeof first.message === "object" ? first.message as Record<string, unknown> : {};
     const finishReason = typeof first.finish_reason === "string" ? first.finish_reason : undefined;
     if (typeof message.refusal === "string" && message.refusal.trim()) {
-      throw new LlmProviderAttemptError("provider refusal", { class: "provider_refusal" }, response.status, false);
+      throw new LlmProviderAttemptError("provider refusal", { class: "provider_refusal" }, response.status, false, undefined, protectedResponse(raw, response.status));
     }
     if (finishReason === "length") {
-      throw new LlmProviderAttemptError("provider output length exceeded", { class: "output_length_exceeded", finishReason }, response.status, true);
+      throw new LlmProviderAttemptError("provider output length exceeded", { class: "output_length_exceeded", finishReason }, response.status, true, undefined, protectedResponse(raw, response.status));
     }
     if (finishReason === "content_filter") {
-      throw new LlmProviderAttemptError("provider content filter", { class: "provider_content_filter", finishReason }, response.status, false);
+      throw new LlmProviderAttemptError("provider content filter", { class: "provider_content_filter", finishReason }, response.status, false, undefined, protectedResponse(raw, response.status));
     }
     if (finishReason === "incomplete") {
-      throw new LlmProviderAttemptError("incomplete structured response", { class: "incomplete_structured_output", finishReason }, response.status, false);
+      throw new LlmProviderAttemptError("incomplete structured response", { class: "incomplete_structured_output", finishReason }, response.status, false, undefined, protectedResponse(raw, response.status));
     }
     const content = message.content;
     let parsedOutput: JsonValue | undefined;
     if (typeof content === "string") {
       try { parsedOutput = parseStructuredContent(content, request.responseFormat); }
-      catch { throw new LlmProviderAttemptError("invalid structured response", { class: "invalid_structured_output" }, response.status, false); }
+      catch { throw new LlmProviderAttemptError("invalid structured response", { class: "invalid_structured_output" }, response.status, false, undefined, protectedResponse(raw, response.status)); }
     } else if (content && typeof content === "object") {
       parsedOutput = content as JsonValue;
     }
     if (parsedOutput === undefined) {
-      throw new LlmProviderAttemptError("missing structured response", { class: "missing_structured_output" }, response.status, false);
+      throw new LlmProviderAttemptError("missing structured response", { class: "missing_structured_output" }, response.status, false, undefined, protectedResponse(raw, response.status));
+    }
+    const matrixError = matrixValidationCode(parsedOutput, request.responseFormat);
+    if (matrixError) {
+      throw new LlmProviderAttemptError("invalid matrix structured response", { class: "invalid_structured_output", validationCode: matrixError }, response.status, false, undefined, protectedResponse(raw, response.status));
     }
     const actualSchemaVersion = parsedOutput && typeof parsedOutput === "object" && !Array.isArray(parsedOutput) && typeof parsedOutput.schemaVersion === "string" ? parsedOutput.schemaVersion : undefined;
     return {

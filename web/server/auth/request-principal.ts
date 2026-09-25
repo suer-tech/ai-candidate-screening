@@ -13,7 +13,9 @@ export async function requestAuthPrincipal(request: Request): Promise<AuthPrinci
     return { id: process.env.LOCAL_AUTH_USER_ID.trim(), email: process.env.LOCAL_AUTH_USER_EMAIL?.trim() || "local@example.invalid", displayName: process.env.LOCAL_AUTH_USER_FULL_NAME?.trim() || "Local HR", role: "HR-владелец вакансии", scope: "FULL", sessionId: "local-e2e", csrfHash: "local-e2e" };
   }
   const cookies = parseCookies(request);
-  return (await authService()).authenticate(cookies[SESSION_COOKIE] ?? cookies[LOCAL_SESSION_COOKIE]);
+  const session = cookies[SESSION_COOKIE] ?? cookies[LOCAL_SESSION_COOKIE];
+  if (!session) return null;
+  return (await authService()).authenticate(session);
 }
 
 export async function requestPrincipal(request: Request) {

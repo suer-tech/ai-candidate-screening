@@ -122,8 +122,12 @@ function observation(input: Input) {
     case "best-effort-no-threshold": {
       const sourceText = scenarioInput.sourceText as string;
       const interpretation = "Встречи организованы корректно, уместно и комфортно с учётом контекста участников";
-      const compiled = matrix(manifest, "policy-v1", [criterion(scenarioInput.sourceRef, { sourceText, interpretation, interpretationNotes: ["Качественный критерий без числового порога"] })]);
-      return { criterionCreated: compiled.criteria.length === 1, sourceRef: compiled.criteria[0].sourceRefs[0], interpretationNote: compiled.criteria[0].interpretationNotes[0], inventedNumericThresholds: interpretation.match(/\d+/g) ?? [] };
+      const refs = manifest.profile.sourceFragments as Record<string, string>;
+      const completeCriteria = [criterion(scenarioInput.sourceRef, { sourceText, interpretation, interpretationNotes: ["Качественный критерий без числового порога"] }),
+        ...(manifest.profile.sourceOrder as string[]).filter((ref) => ref !== scenarioInput.sourceRef)
+          .map((ref) => criterion(ref, { sourceText: refs[ref], interpretation: refs[ref] }))];
+      const compiled = matrix(manifest, "policy-v1", completeCriteria);
+      return { criterionCreated: compiled.criteria.some((item) => item.sourceRefs.includes(scenarioInput.sourceRef)), sourceRef: compiled.criteria[0].sourceRefs[0], interpretationNote: compiled.criteria[0].interpretationNotes[0], inventedNumericThresholds: interpretation.match(/\d+/g) ?? [] };
     }
     case "invented-policy-repair": {
       const violations = ["INVENTED_THRESHOLD", "INVENTED_STOP_FACTOR"];

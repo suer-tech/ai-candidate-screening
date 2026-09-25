@@ -37,9 +37,15 @@ export function parseReadyTranscript(input: { fileId: string; fileVersion: strin
   const lines = text.split("\n");
   const utterances: TranscriptUtterance[] = [];
   let cue: { start: number; end: number } | undefined;
+  let currentSpeaker: string | undefined;
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index].trim();
     if (!line || /^WEBVTT$/iu.test(line) || /^\d+$/u.test(line)) continue;
+    const speakerHeader = line.match(/^(?:[-–—]\s*)?(?:спикер|speaker)\s+([^:\n]{1,80}):\s*$/iu);
+    if (speakerHeader) {
+      currentSpeaker = speakerHeader[1].trim();
+      continue;
+    }
     const cueMatch = line.match(/^([\d:,\.]+)\s*-->\s*([\d:,\.]+)/u);
     if (cueMatch) {
       const start = timestampMilliseconds(cueMatch[1]);
@@ -51,11 +57,13 @@ export function parseReadyTranscript(input: { fileId: string; fileVersion: strin
     const explicitStart = inline ? timestampMilliseconds(inline[1]) : cue?.start;
     const explicitEnd = inline?.[2] ? timestampMilliseconds(inline[2]) : cue?.end;
     const spoken = splitSpeaker(inline?.[3] ?? line);
-    if (!spoken.text) continue;
+    const spokenText = spoken.text.replace(/^[-–—]\s+/u, "");
+    if (!spokenText) continue;
+    if (spoken.speaker !== "UNKNOWN") currentSpeaker = spoken.speaker;
     const derivedStart = utterances.at(-1)?.end ?? utterances.length * 1_000;
     const start = explicitStart ?? derivedStart;
     const end = explicitEnd && explicitEnd > start ? explicitEnd : start + 1_000;
-    utterances.push({ text: spoken.text, start, end, speaker: spoken.speaker, confidence: 1, sourceLine: index + 1,
+    utterances.push({ text: spokenText, start, end, speaker: spoken.speaker === "UNKNOWN" ? currentSpeaker ?? "UNKNOWN" : spoken.speaker, confidence: 1, sourceLine: index + 1,
       timingOrigin: explicitStart !== undefined ? "explicit-text" : "derived-line-order" });
     cue = undefined;
   }

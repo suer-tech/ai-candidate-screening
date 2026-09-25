@@ -6,6 +6,7 @@ export const GLOBAL_BLOB_LIMIT = 32 * 1024 * 1024;
 export const TRANSCRIPT_AUDIO_BLOB_LIMIT = 256 * 1024 * 1024;
 const KIND_LIMITS: Readonly<Record<string, number>> = Object.freeze({
   "protected-llm-trace": 4 * 1024 * 1024,
+  "protected-jev-trace": 128 * 1024,
   "domain-artifact": 8 * 1024 * 1024,
   "report-pdf": 16 * 1024 * 1024,
   "transcript-audio": TRANSCRIPT_AUDIO_BLOB_LIMIT,

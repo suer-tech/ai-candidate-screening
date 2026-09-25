@@ -49,7 +49,7 @@ test("registry fences stale publishers and never creates a second matrix", () =>
   const registry = new InMemoryVacancyMatrixRegistry();
   const first = registry.claim("profile-v1", "one", 0, 10);
   const recovered = registry.claim("profile-v1", "two", 11, 10);
-  const matrix = canonicalizeVacancyMatrix({ profileVersion: "profile-v1", compilerPolicyVersion: "c", skillVersions: { compiler: "v1" }, sourceFragments, criteria: [draft("one", "profile.one")] });
+  const matrix = canonicalizeVacancyMatrix({ profileVersion: "profile-v1", compilerPolicyVersion: "c", skillVersions: { compiler: "v1" }, sourceFragments, criteria: [draft("one", "profile.one"), draft("two", "profile.two")] });
   assert.throws(() => registry.publish("profile-v1", "one", first.fencingToken, matrix), /MATRIX_STALE_FENCING_TOKEN/);
   registry.publish("profile-v1", "two", recovered.fencingToken, matrix);
   assert.equal(registry.claim("profile-v1", "three", 100, 10).matrix?.checksum, matrix.checksum);

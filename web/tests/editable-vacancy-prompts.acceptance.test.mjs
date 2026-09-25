@@ -99,14 +99,14 @@ test("ASM-062/TST-086: user clarification real prompt contracts and production b
 
   const productionRuntimePath = path.resolve(import.meta.dirname, "../server/candidate-pipeline/production-runtime.ts");
   const productionSource = await readFile(productionRuntimePath, "utf8");
-  const assessmentStart = productionSource.indexOf('if (capability === "assessment")');
-  const assessmentEnd = productionSource.indexOf("if (capability ===", assessmentStart + 1);
+  const assessmentStart = productionSource.indexOf('if (capability === "matrix_assessment_summary")');
+  const assessmentEnd = productionSource.indexOf("const sourceFragments", assessmentStart + 1);
   const assessmentBoundary = productionSource.slice(assessmentStart, assessmentEnd < 0 ? undefined : assessmentEnd);
   assert.ok(assessmentStart >= 0, "production assessment capability boundary is present");
   assert.match(assessmentBoundary, /SELECT analysis_prompt_text,analysis_prompt_artifact_id,analysis_prompt_hash FROM agent_runs WHERE id=\$1/);
-  assert.match(assessmentBoundary, /composeProtectedAssessmentInstruction\(promptSnapshot\)/);
-  assert.match(assessmentBoundary, /capability:\s*"assessment"/);
-  assert.equal((productionSource.match(/composeProtectedAssessmentInstruction\(promptSnapshot\)/g) ?? []).length, 1, "vacancy prompt composition has one production call site");
+  assert.match(assessmentBoundary, /composeProtectedAssessmentInstruction\(verified\)/);
+  assert.match(assessmentBoundary, /verified\.hash !== promptSnapshot\.analysis_prompt_hash/);
+  assert.equal((productionSource.match(/composeProtectedAssessmentInstruction\(verified\)/g) ?? []).length, 1, "vacancy prompt composition has one production call site");
 
   const preAssessmentPipeline = productionSource.slice(0, assessmentStart);
   assert.equal(preAssessmentPipeline.includes("analysis_prompt_text"), false, "document, transcription and fact stages do not read the analysis prompt");

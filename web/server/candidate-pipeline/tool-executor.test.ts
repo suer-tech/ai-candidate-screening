@@ -2,11 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { candidateToolErrorCode, executeCandidateTool, type ProductionRuntime } from "./tool-executor.ts";
 
-test("controlled local tool outcome is derived from canonical stage evidence", async () => {
-  const result = await executeCandidateTool({ mode: "controlled-local", environment: "local", toolKey: "candidate.transcription/v1", task: { id: "task-1" } });
-  assert.equal(result.outcome, "SUCCEEDED");
-  assert.equal(result.evidence?.productionLikeAcceptanceClaimed, false);
-  assert.deepEqual(result.evidence?.stages, ["media-probe-and-audio", "assemblyai-transcription", "speaker-role-mapping"]);
+test("candidate tools fail closed when no runtime is provisioned", async () => {
+  const result = await executeCandidateTool({ toolKey: "candidate.transcription/v1", task: { id: "task-1" } });
+  assert.deepEqual(result, { outcome: "FAILED", errorCode: "PRODUCTION_TOOL_RUNTIME_NOT_PROVISIONED" });
 });
 
 test("production mode fails closed when its environment runtime is absent", async () => {
@@ -21,8 +19,8 @@ test("production failures expose stable codes instead of private diagnostics", (
   assert.equal(candidateToolErrorCode(Object.assign(new Error("FACT_EXTRACTION_EXECUTION_FAILED"), { code: "PRODUCTION_TOOL_EXECUTION_FAILED" })), "FACT_EXTRACTION_EXECUTION_FAILED");
 });
 
-const readyShadowEnvironment = {
-  CANDIDATE_PIPELINE_ROUTING: "shadow",
+const readyIsolatedEnvironment = {
+  CANDIDATE_PIPELINE_ROUTING: "effectful",
   AGENT_RUNTIME_INTERNAL_TOKEN: "synthetic",
   AGENT_RUNTIME_CONFIG_JSON: "{}",
   GOOGLE_OAUTH_CLIENT_ID: "synthetic",
@@ -33,6 +31,8 @@ const readyShadowEnvironment = {
   LLM_RUNTIME_CONFIG_JSON: "{}",
   ROUTERAI_API_KEY: "synthetic",
   ASSEMBLYAI_API_KEY: "synthetic",
+  TELEGRAM_BOT_TOKEN: "synthetic",
+  TELEGRAM_RECIPIENT_REFS_JSON: "{}",
 };
 
 function evidenceRuntime(failAt: "artifact" | "checkpoint"): ProductionRuntime {
@@ -51,18 +51,19 @@ function evidenceRuntime(failAt: "artifact" | "checkpoint"): ProductionRuntime {
       assemblyAI: { async create() { return { remoteJobId: "synthetic" }; }, async poll() { return {}; } },
       pdf: { async renderPair() { return []; } },
       telegram: { async send() {} },
+      matrix: { async execute() { return { artifactRef: "artifact:evidence:synthetic" }; } },
     },
   };
 }
 
 const evidenceTask = { id: "task-evidence", idempotencyIdentity: "run:evidence", authorizationGrantId: "grant-evidence", inputVersion: "input-v1", profileVersion: "profile-v1" };
 
-test("evidence post-processing identifies artifact registration failures without private diagnostics", async () => {
-  const result = await executeCandidateTool({ mode: "production", environmentBindings: readyShadowEnvironment, runtime: evidenceRuntime("artifact"), toolKey: "candidate.evidence-extraction/v1", task: evidenceTask });
-  assert.deepEqual(result, { outcome: "FAILED", errorCode: "FACT_EXTRACTION_ARTIFACT_REFERENCE_FAILED" });
+test("matrix post-processing identifies artifact registration failures without private diagnostics", async () => {
+  const result = await executeCandidateTool({ environmentBindings: readyIsolatedEnvironment, runtime: evidenceRuntime("artifact"), toolKey: "candidate.matrix-claims/v1", task: evidenceTask });
+  assert.deepEqual(result, { outcome: "FAILED", errorCode: "MATRIX_ARTIFACT_REFERENCE_FAILED" });
 });
 
-test("evidence post-processing identifies checkpoint failures without private diagnostics", async () => {
-  const result = await executeCandidateTool({ mode: "production", environmentBindings: readyShadowEnvironment, runtime: evidenceRuntime("checkpoint"), toolKey: "candidate.evidence-extraction/v1", task: evidenceTask });
-  assert.deepEqual(result, { outcome: "FAILED", errorCode: "FACT_EXTRACTION_CHECKPOINT_FAILED" });
+test("matrix post-processing identifies checkpoint failures without private diagnostics", async () => {
+  const result = await executeCandidateTool({ environmentBindings: readyIsolatedEnvironment, runtime: evidenceRuntime("checkpoint"), toolKey: "candidate.matrix-claims/v1", task: evidenceTask });
+  assert.deepEqual(result, { outcome: "FAILED", errorCode: "MATRIX_CHECKPOINT_FAILED" });
 });

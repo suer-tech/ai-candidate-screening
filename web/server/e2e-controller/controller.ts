@@ -50,7 +50,7 @@ const GOAL_BUDGETS: BudgetLimits = {
   taskAttempts: 50,
   repairAttempts: 2,
   replans: 2,
-  llmCalls: 30,
+  llmCalls: 50,
   tokens: 300_000,
   costMicrounits: 8_000_000,
   externalRequests: 150,

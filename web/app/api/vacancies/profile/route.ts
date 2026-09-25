@@ -1,7 +1,7 @@
 import { requestPrincipal } from "../../../../server/auth/request-principal.ts";
 import { serverContainer } from "../../../../server/configuration/container.ts";
 import { validateAbcProfile, type AbcProfileDirection } from "../../../abc-profile-validation.ts";
-import type { VacancyRecord } from "../../../product-model.ts";
+import { validateFullVacancyProfile, type VacancyRecord } from "../../../product-model.ts";
 import { CANDIDATE_ASSESSMENT_PROMPT_ARTIFACT, createEditablePromptSnapshot } from "../../../../server/product/prompt-contracts.ts";
 import { randomUUID } from "node:crypto";
 
@@ -24,6 +24,11 @@ export async function POST(request: Request) {
     if (!rows[0]) return Response.json({ error: "Вакансия не найдена" }, { status: 404, headers });
     const current = JSON.parse(rows[0].record_json) as VacancyRecord;
     if (current.version !== payload.expectedVersion) return Response.json({ error: "Профиль уже изменён. Обновите страницу" }, { status: 409, headers });
+    if (current.active) {
+      const missing = validateFullVacancyProfile({ operationId: `profile-save:${current.id}`, title: current.title,
+        profile, abcDirections, templateVersion: current.templateVersion });
+      if (missing.length) return Response.json({ error: `Заполните обязательные поля: ${missing.join(", ")}` }, { status: 422, headers });
+    }
     let analysisPrompt = current.analysisPrompt;
     if (payload.analysisPrompt !== undefined) {
       try { analysisPrompt = createEditablePromptSnapshot(payload.analysisPrompt, CANDIDATE_ASSESSMENT_PROMPT_ARTIFACT); }

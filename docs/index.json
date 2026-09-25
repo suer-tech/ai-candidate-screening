@@ -10,6 +10,11 @@
       "kind": "function",
       "summary": "Content-free media failure diagnostics with run/task/attempt, phase, elapsed time and allowlisted nested cause; original outcome and retry classification unchanged."
     },
+    "registerCanonicalCandidatePipeline": {
+      "file": "web/server/candidate-pipeline/goal.ts",
+      "kind": "function",
+      "summary": "Регистрирует matrix-v3 и matrix-v4 DAG: context-search ждёт публикации shared matrix и готовности документов и стенограммы."
+    },
     "loadRuntimeConfiguration": {
       "file": "web/server/configuration/runtime.ts",
       "kind": "function",
@@ -54,6 +59,31 @@
       "file": "web/server/llm/gateway.ts",
       "kind": "function",
       "summary": "Строит provider-safe strict json_schema response format из точного versioned artifact."
+    },
+    "matrixResponseSchemaForProfile": {
+      "file": "web/server/llm/matrix-response-schema.ts",
+      "kind": "function",
+      "summary": "Добавляет в strict JSON schema допустимые sourceRefs из immutable sourceFragments вакансии; для ABC ограничивает число направлений и допустимые directionId; пересчитывает hash схемы."
+    },
+    "validateMatrixWithPydanticAi": {
+      "file": "web/server/candidate-pipeline/pydantic-matrix-validator.ts",
+      "kind": "function",
+      "summary": "Передаёт ответ матрицы и профильную схему Python PydanticAI через stdin; возвращает только безопасный код валидации."
+    },
+    "callRouterAiJev": {
+      "file": "web/server/candidate-pipeline/jev-decisions.ts",
+      "kind": "function",
+      "summary": "Типизированный Choice-вызов закреплённой Jev-модели через RouterAI decisions API; используется для проверки ABC и итоговой рекомендации, сохраняет только категориальный outcome и закрытую трассу без числовой уверенности."
+    },
+    "testMatrixIsolated": {
+      "file": "deploy/local/test-matrix-isolated.ps1",
+      "kind": "script",
+      "summary": "Создаёт одноразовый PostgreSQL 16 на loopback, запускает синтетические интеграционные тесты матрицы и E2E harness, затем удаляет контейнер."
+    },
+    "isolatedCandidateE2e": {
+      "file": "web/tests/e2e/isolated-candidate.test.ts",
+      "kind": "test",
+      "summary": "Локальный синтетический путь PDF и готовой стенограммы через матрицу, проверку доказательств, PDF и границы валидации/отчёта без записи в Drive и Telegram."
     },
     "createGoogleDriveOAuthRuntime": {
       "file": "web/server/google-drive-oauth/runtime.ts",

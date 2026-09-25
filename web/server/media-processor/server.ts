@@ -11,6 +11,7 @@ import { promisify } from "node:util";
 import ffmpegStaticPath from "ffmpeg-static";
 import { probeMediaContent } from "../candidate-pipeline/media-tool.ts";
 import { extractAudioTrack } from "../transcription/extract-audio.ts";
+import { TRANSCRIPT_AUDIO_BLOB_LIMIT } from "../storage/blob-store.ts";
 import { createPrivateTemp, removePrivateTemp } from "../storage/private-temp.ts";
 
 export type MediaProcessorConfig = { token: string; host: string; port: number; maxInputBytes: number };
@@ -101,7 +102,7 @@ export function createMediaProcessorServer(config: MediaProcessorConfig) {
       await streamRequestToFile(request, inputPath, config.maxInputBytes);
       const ffmpegPath = await readiness;
       const probe = await probeMediaContent(inputPath, ffmpegPath);
-      await extractAudioTrack({ inputPath, outputPath, ffmpegPath });
+      await extractAudioTrack({ inputPath, outputPath, ffmpegPath, maxOutputBytes: TRANSCRIPT_AUDIO_BLOB_LIMIT });
       const audioSize = (await stat(outputPath)).size;
       if (!audioSize) throw new Error("MEDIA_FILE_EMPTY");
       const audioChecksum = await hashFile(outputPath);
@@ -117,9 +118,9 @@ export function createMediaProcessorServer(config: MediaProcessorConfig) {
       });
       await pipeline(createReadStream(outputPath), response);
     } catch (error) {
-      const code = error instanceof Error && ["MEDIA_INPUT_TOO_LARGE", "MEDIA_INPUT_EMPTY", "MEDIA_CONTENT_PROBE_FAILED", "MEDIA_FILE_EMPTY", "FFMPEG_UNAVAILABLE"].includes(error.message)
+      const code = error instanceof Error && ["MEDIA_INPUT_TOO_LARGE", "MEDIA_INPUT_EMPTY", "MEDIA_CONTENT_PROBE_FAILED", "MEDIA_FILE_EMPTY", "FFMPEG_UNAVAILABLE", "MEDIA_AUDIO_TOO_LARGE"].includes(error.message)
         ? error.message : "MEDIA_PROCESSOR_FAILED";
-      if (!response.headersSent) json(response, code === "MEDIA_INPUT_TOO_LARGE" ? 413 : 422, { code });
+      if (!response.headersSent) json(response, ["MEDIA_INPUT_TOO_LARGE", "MEDIA_AUDIO_TOO_LARGE"].includes(code) ? 413 : 422, { code });
       else response.destroy();
     } finally {
       await removePrivateTemp(work);

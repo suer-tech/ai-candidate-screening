@@ -73,7 +73,7 @@ test("matrix-v4 graph keeps every required join ahead of recommendation", () => 
   const plan = registries.goals.createPlan(goal);
   assert.equal(validatePlan(goal, plan, registries.tools, goal), true);
   const byKey = new Map(plan.map((item) => [item.key, item]));
-  assert.deepEqual(byKey.get("context-search")?.dependencies.sort(), ["documents-join", "transcripts-join"]);
+  assert.deepEqual(byKey.get("context-search")?.dependencies.sort(), ["documents-join", "matrix", "transcripts-join"]);
   assert.deepEqual(byKey.get("assessment-join")?.dependencies.sort(), ["abc-join", "rows-join"]);
   assert.deepEqual(byKey.get("recommendation")?.dependencies, ["critical-join"]);
 

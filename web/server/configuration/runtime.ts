@@ -237,7 +237,7 @@ export function environmentProjection(configuration: RuntimeConfiguration): Reco
   };
   const agentConfiguration = {
     version: values.CANDIDATE_PIPELINE_BUILD_ID || "unprovisioned",
-    budgets: { wallTimeMs: 3_600_000, taskAttempts: 250, repairAttempts: 2, replans: 2, llmCalls: 30, tokens: 300_000, costMicrounits: 8_000_000, externalRequests: 200 },
+    budgets: { wallTimeMs: 3_600_000, taskAttempts: 250, repairAttempts: 2, replans: 2, llmCalls: 50, tokens: 300_000, costMicrounits: 8_000_000, externalRequests: 200 },
     leaseMs: Number(values.AGENT_RUNTIME_LEASE_MS || 120_000),
     pollingMs: Number(values.AGENT_RUNTIME_POLLING_MS || 1_000),
     heartbeatMs: Number(values.AGENT_RUNTIME_HEARTBEAT_MS || 10_000),

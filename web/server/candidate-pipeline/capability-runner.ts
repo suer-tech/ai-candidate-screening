@@ -42,6 +42,9 @@ export async function runLlmCapabilityWithPolicy(dependencies: ExecuteLlmAttempt
 
 function safeCapabilityError(error: unknown) {
   if (error instanceof LlmProviderAttemptError) {
+    const validationCode = error.traceError && typeof error.traceError === "object" && !Array.isArray(error.traceError)
+      ? error.traceError.validationCode : undefined;
+    if (typeof validationCode === "string" && /^MATRIX_[A-Z0-9_]+$/.test(validationCode)) return new Error(validationCode);
     const errorClass = error.traceError && typeof error.traceError === "object" && !Array.isArray(error.traceError) && typeof error.traceError.class === "string" ? error.traceError.class : "provider_failure";
     return new Error(`LLM_CAPABILITY_FAILED:${errorClass}`);
   }

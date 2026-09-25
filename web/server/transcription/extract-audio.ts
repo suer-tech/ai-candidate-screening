@@ -9,6 +9,7 @@ export interface ExtractAudioOptions {
   inputPath: string;
   outputPath: string;
   ffmpegPath?: string;
+  maxOutputBytes?: number;
 }
 
 async function runFfmpeg(binaryPath: string, args: string[]): Promise<void> {
@@ -56,6 +57,9 @@ export async function extractAudioTrack(options: ExtractAudioOptions): Promise<E
   }
 
   await assertUsableFile(options.inputPath, "Исходное видео");
+  if (options.maxOutputBytes !== undefined && (!Number.isSafeInteger(options.maxOutputBytes) || options.maxOutputBytes < 1)) {
+    throw new Error("MEDIA_AUDIO_LIMIT_INVALID");
+  }
   await mkdir(dirname(options.outputPath), { recursive: true });
   await rm(options.outputPath, { force: true });
 
@@ -78,35 +82,43 @@ export async function extractAudioTrack(options: ExtractAudioOptions): Promise<E
     "-1",
   ];
 
+  let copyError: unknown;
   try {
     await runFfmpeg(binaryPath, [...commonArgs, "-c:a", "copy", "-movflags", "+faststart", options.outputPath]);
     const sizeBytes = await assertUsableFile(options.outputPath, "Извлечённое аудио");
-    return { path: options.outputPath, sizeBytes, mode: "stream_copy" };
-  } catch (copyError) {
-    await rm(options.outputPath, { force: true });
-
-    try {
-      await runFfmpeg(binaryPath, [
-        ...commonArgs,
-        "-c:a",
-        "aac",
-        "-b:a",
-        "96k",
-        "-ac",
-        "1",
-        "-ar",
-        "48000",
-        "-movflags",
-        "+faststart",
-        options.outputPath,
-      ]);
-      const sizeBytes = await assertUsableFile(options.outputPath, "Извлечённое аудио");
-      return { path: options.outputPath, sizeBytes, mode: "aac_transcode" };
-    } catch (transcodeError) {
-      throw new AggregateError(
-        [copyError, transcodeError],
-        "Не удалось извлечь первую аудиодорожку из видео.",
-      );
+    if (options.maxOutputBytes === undefined || sizeBytes <= options.maxOutputBytes) {
+      return { path: options.outputPath, sizeBytes, mode: "stream_copy" };
     }
+    copyError = new Error("MEDIA_AUDIO_COPY_TOO_LARGE");
+  } catch (error) {
+    copyError = error;
   }
+  await rm(options.outputPath, { force: true });
+  try {
+    await runFfmpeg(binaryPath, [
+      ...commonArgs,
+      "-c:a",
+      "aac",
+      "-b:a",
+      "96k",
+      "-ac",
+      "1",
+      "-ar",
+      "48000",
+      "-movflags",
+      "+faststart",
+      options.outputPath,
+    ]);
+  } catch (transcodeError) {
+    throw new AggregateError(
+      [copyError, transcodeError],
+      "Не удалось извлечь первую аудиодорожку из видео.",
+    );
+  }
+  const sizeBytes = await assertUsableFile(options.outputPath, "Извлечённое аудио");
+  if (options.maxOutputBytes !== undefined && sizeBytes > options.maxOutputBytes) {
+    await rm(options.outputPath, { force: true });
+    throw new Error("MEDIA_AUDIO_TOO_LARGE");
+  }
+  return { path: options.outputPath, sizeBytes, mode: "aac_transcode" };
 }

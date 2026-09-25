@@ -18,7 +18,8 @@ const cases = [
 ];
 
 for (const [title, fixture] of cases) {
-  test(`${fixture.scenarioId}: ${title}`, async () => {
+  const needsIsolatedPostgres = fixture.kind === "postgres-clean-upgrade" || fixture.kind === "postgres-durable-concurrency";
+  test(`${fixture.scenarioId}: ${title}`, { skip: needsIsolatedPostgres && !process.env.MATRIX_TEST_POSTGRES_URL }, async () => {
     const actual = await runVpsPostgresAcceptanceScenario(structuredClone(fixture));
     const failures = verifyVpsPostgresOracle(actual, fixture.oracle);
     assert.equal(failures.length, 0, `${failures.join("\n")}\nobserved=${JSON.stringify(actual)}`);

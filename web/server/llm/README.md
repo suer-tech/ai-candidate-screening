@@ -57,8 +57,8 @@ effective configuration records response artifact id, version, and hash.
 
 The included `PostgresProtectedTracePersistence` uses the protected PostgreSQL blob store and
 `PROTECTED_LLM_TRACES` binding. Application routes do not expose that binding;
-retention maintenance must call `purgeExpired` at least daily and monitor its
-result. A deployment may replace this adapter without changing the trace
+the Rabbit publisher calls `purgeExpired` on startup and at least daily, logging
+only the number deleted or a safe error code. A deployment may replace this adapter without changing the trace
 contract.
 
 If protected persistence fails, `writeProtectedTraceFailOpen` lets processing
@@ -70,3 +70,9 @@ through this contract.
 The request-serving store, application-data store, background processor, and
 protected trace store are separate logical roles. Deployment may colocate them,
 but access policies and adapters must preserve those boundaries.
+
+## Local matrix validator test
+
+`npm run test:matrix-pydantic` creates an ignored `web/.runtime/matrix-venv`, installs the pinned
+Python dependency, and runs the real PydanticAI validator tests. Set
+`MATRIX_TEST_SYSTEM_PYTHON` if `python` (Windows) or `python3` (Unix) is not on PATH.

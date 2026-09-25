@@ -229,6 +229,19 @@ export function canonicalizeVacancyMatrix(input: {
     topLevelSourcePoints.add(sourcePoint);
   }
   const criteria = input.criteria.map((criterion, index) => validateDraftNode(criterion, input.sourceFragments, [index + 1], ids));
+  const representedSources = new Set<string>();
+  const recordSources = (criterion: MatrixCriterion) => {
+    for (const ref of criterion.sourceRefs) {
+      if (input.sourceFragments[ref].includes(criterion.sourceText)) representedSources.add(ref);
+    }
+    criterion.children.forEach(recordSources);
+  };
+  criteria.forEach(recordSources);
+  for (const [ref, value] of Object.entries(input.sourceFragments)) {
+    if (/^(?:vacancy\.)?profile\./.test(ref) && value.trim() && !representedSources.has(ref)) {
+      throw new Error("MATRIX_SOURCE_COVERAGE_INCOMPLETE");
+    }
+  }
   const body = {
     schemaVersion: MATRIX_SCHEMA_VERSION,
     profileVersion: input.profileVersion,

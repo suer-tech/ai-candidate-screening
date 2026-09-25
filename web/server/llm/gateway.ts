@@ -13,6 +13,7 @@ import {
   type TraceCorrelation,
 } from "./tracing.ts";
 import type { JsonValue } from "./value-utils.ts";
+import { matrixResponseSchemaForProfile } from "./matrix-response-schema.ts";
 
 export interface ProviderAttemptRequest {
   endpoint: string;
@@ -53,6 +54,7 @@ export class LlmProviderAttemptError extends Error {
   readonly providerStatus?: string | number;
   readonly retryable?: boolean;
   readonly retryBackoffMs?: number;
+  readonly protectedResponse?: Omit<ProviderAttemptResult, "toolEvents">;
 
   constructor(
     message: string,
@@ -60,6 +62,7 @@ export class LlmProviderAttemptError extends Error {
     providerStatus?: string | number,
     retryable?: boolean,
     retryBackoffMs?: number,
+    protectedResponse?: Omit<ProviderAttemptResult, "toolEvents">,
   ) {
     super(message);
     this.name = "LlmProviderAttemptError";
@@ -67,6 +70,7 @@ export class LlmProviderAttemptError extends Error {
     this.providerStatus = providerStatus;
     this.retryable = retryable;
     this.retryBackoffMs = retryBackoffMs;
+    Object.defineProperty(this, "protectedResponse", { value: protectedResponse, enumerable: false });
   }
 }
 
@@ -82,6 +86,7 @@ export interface ExecuteLlmAttemptInput {
   };
   inputSnapshot: { materials: MaterialSnapshot[]; context: JsonValue };
   explicitFallbackIndex?: number;
+  responseValidator?: (output: JsonValue, schema: SchemaArtifact) => Promise<void>;
 }
 
 function jsonSchemaPrimitiveType(value: JsonValue | undefined): string | undefined {
@@ -147,8 +152,10 @@ export async function executeLlmAttempt(
     input.capability,
     input.explicitFallbackIndex === undefined ? undefined : { explicitFallbackIndex: input.explicitFallbackIndex },
   );
-  const config: Readonly<EffectiveCapabilityConfig> = input.responseSchema
-    ? Object.freeze({ ...resolvedConfig, responseSchema: input.responseSchema })
+  const responseSchema = matrixResponseSchemaForProfile(input.capability,
+    input.responseSchema ?? resolvedConfig.responseSchema, input.inputSnapshot.context);
+  const config: Readonly<EffectiveCapabilityConfig> = responseSchema !== resolvedConfig.responseSchema
+    ? Object.freeze({ ...resolvedConfig, responseSchema })
     : resolvedConfig;
   const responseFormat = structuredResponseFormat(config.responseSchema);
   const tracedRequest = {
@@ -176,6 +183,17 @@ export async function executeLlmAttempt(
       limits: structuredClone(config.limits),
       timeoutMs: config.timeoutMs,
     }));
+    if (input.responseValidator) {
+      try {
+        await input.responseValidator(response.normalizedOutput ?? null, config.responseSchema);
+      } catch (error) {
+        const validationCode = error instanceof Error && /^MATRIX_[A-Z0-9_]+$/.test(error.message)
+          ? error.message : "MATRIX_PYDANTIC_RUNTIME_FAILED";
+        const { toolEvents: _toolEvents, ...protectedResponse } = response;
+        throw new LlmProviderAttemptError("structured output validation failed",
+          { class: "output_validation_failed", validationCode }, response.providerStatus, false, undefined, protectedResponse);
+      }
+    }
     const endedAt = clock().toISOString();
     const trace = createProtectedLlmTrace({
       correlation: { ...input.correlation, providerRequestId: response.providerRequestId },
@@ -215,6 +233,7 @@ export async function executeLlmAttempt(
       request: tracedRequest,
       inputSnapshot: input.inputSnapshot,
       toolEvents: [],
+      response: providerError?.protectedResponse,
       execution: {
         startedAt,
         endedAt,

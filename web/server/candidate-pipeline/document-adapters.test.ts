@@ -6,7 +6,7 @@ import { MammothDocxExtractionAdapter, PdfJsExtractionAdapter, documentLocator, 
 import { renderMinimalPdf, requiredReportSections, type ReportModel } from "./reports.ts";
 
 function pdfBytes() {
-  const model: ReportModel = { type: "abc-test", candidateId: "candidate-1", candidateDisplayName: "Candidate", vacancyId: "vacancy-1", vacancyTitle: "Vacancy", profileVersion: "profile-1", analysisVersion: 1, generatedAtUtc: "2026-08-20T00:00:00Z", recommendation: "Рекомендовать", sections: requiredReportSections("abc-test").map((id) => ({ id, title: id, body: `known-${id}` })), evidence: [] };
+  const model: ReportModel = { type: "candidate-report", candidateId: "candidate-1", candidateDisplayName: "Candidate", vacancyId: "vacancy-1", vacancyTitle: "Vacancy", profileVersion: "profile-1", analysisVersion: 1, generatedAtUtc: "2026-08-20T00:00:00Z", recommendation: "Рекомендовать", sections: requiredReportSections("candidate-report").map((id) => ({ id, title: id, body: `known-${id}` })), evidence: [] };
   return renderMinimalPdf(model);
 }
 

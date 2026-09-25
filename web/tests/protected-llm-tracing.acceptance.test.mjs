@@ -13,9 +13,9 @@ function configDocument(overrides = {}) {
   return {
     releaseVersion: "acceptance-release",
     providers: { main: { provider: "controlled", endpoint: "https://llm.example.test/v1", secretReference: "provider/main", apiContractVersion: "v1", supportsStructuredOutputs: true } },
-    capabilities: { assessment: {
-      providerProfile: "main", model: "controlled-v1", promptArtifact: "candidate-assessment/v1",
-      responseSchemaArtifact: "facts/v1", toolSchemaArtifacts: ["no-tools/v1"], generationParameters: { temperature: 0 },
+    capabilities: { matrix_assessment_summary: {
+      providerProfile: "main", model: "controlled-v1", promptArtifact: "summarize-matrix-assessment/v1",
+      responseSchemaArtifact: "candidate-assessment-summary/v1", toolSchemaArtifacts: ["no-tools/v1"], generationParameters: { temperature: 0 },
       limits: { maxOutputTokens: 1000 }, timeoutMs: 10_000,
       retryPolicy: { maxAttempts: 2, initialBackoffMs: 10, maximumBackoffMs: 100 }, fallbackPolicy: { mode: "disabled" },
       ...overrides,
@@ -24,10 +24,10 @@ function configDocument(overrides = {}) {
 }
 
 function attempt(attemptNumber = 1) {
-  const config = tracing.validateRuntimeConfiguration(configDocument(), secrets, { requiredCapabilities: ["assessment"] }).resolve("assessment");
+  const config = tracing.validateRuntimeConfiguration(configDocument(), secrets, { requiredCapabilities: ["matrix_assessment_summary"] }).resolve("matrix_assessment_summary");
   return {
     correlation: { traceId: `trace-${attemptNumber}`, callId: `call-${attemptNumber}`, attemptId: `attempt-${attemptNumber}`, attemptNumber, workflowRunId: "run-1", workflowStage: "assessment", candidateId: "candidate-1", vacancyId: "vacancy-1" },
-    capability: "assessment", config,
+    capability: "matrix_assessment_summary", config,
     request: { messages: [{ role: "user", content: "synthetic PII" }], toolDefinitions: [] },
     inputSnapshot: { materials: [{ materialId: "resume", mediaType: "text/plain", fileName: "resume.txt", content: "owned snapshot" }], context: { profile: "v1" } },
     toolEvents: attemptNumber === 1 ? [] : [{ sequence: 0, callId: "tool-1", name: "lookup", arguments: { id: 1 }, result: { ok: true } }],
@@ -94,10 +94,10 @@ test("TST-101: trace outage is fail-open and emits one correlated metadata-only 
 });
 
 test("TST-102: startup config rejects partial/secretless config and fallback is never implicit", async () => {
-  assert.throws(() => tracing.validateRuntimeConfiguration(configDocument(), { has: () => false, read: () => undefined }, { requiredCapabilities: ["assessment"] }), /missing.*credential/i);
-  assert.throws(() => tracing.validateRuntimeConfiguration(configDocument({ fallbackPolicy: undefined }), secrets, { requiredCapabilities: ["assessment"] }), /fallback.*explicitly/i);
-  const valid = tracing.validateRuntimeConfiguration(configDocument(), secrets, { requiredCapabilities: ["assessment"] });
-  assert.deepEqual(valid.resolve("assessment").fallback, { used: false });
+  assert.throws(() => tracing.validateRuntimeConfiguration(configDocument(), { has: () => false, read: () => undefined }, { requiredCapabilities: ["matrix_assessment_summary"] }), /missing.*credential/i);
+  assert.throws(() => tracing.validateRuntimeConfiguration(configDocument({ fallbackPolicy: undefined }), secrets, { requiredCapabilities: ["matrix_assessment_summary"] }), /fallback.*explicitly/i);
+  const valid = tracing.validateRuntimeConfiguration(configDocument(), secrets, { requiredCapabilities: ["matrix_assessment_summary"] });
+  assert.deepEqual(valid.resolve("matrix_assessment_summary").fallback, { used: false });
   assert.doesNotMatch(JSON.stringify(valid.nonSecretSnapshot), new RegExp(secret));
 
   const files = [];

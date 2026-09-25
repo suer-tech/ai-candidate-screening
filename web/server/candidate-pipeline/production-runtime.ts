@@ -29,13 +29,17 @@ import { PostgresVacancyMatrixRepository } from "./matrix-postgres-repository.ts
 import { compileVacancyMatrix, type MatrixCompilationSkills } from "./matrix-compilation.ts";
 import { MATRIX_WORKFLOW_VERSION, applyCriticalVerificationDecisions, candidateClaimIsDecisionAdmissible, decisionSafeJson, matrixChecksum, validateCandidateMatrixRows, type CandidateMatrixRow, type CandidateSourceClaim, type CriticalUnmappedRisk, type CriticalVerificationDecision, type MatrixCriterion } from "./matrix-driven.ts";
 import { normalizeMatrixCapabilityOutput, type MatrixCapability } from "./matrix-schemas.ts";
+import { matrixResponseSchemaForProfile } from "../llm/matrix-response-schema.ts";
+import { validateMatrixWithPydanticAi } from "./pydantic-matrix-validator.ts";
 import { buildCriterionClaimExtractionBatchesAsync } from "./transcript-claim-batching.ts";
 import { recoveryArtifactPurpose, recoveryArtifactSchema } from "./recovery-contracts.ts";
 import { deduplicateCoverageEvidence, matrixCriterionIds, technicalFallbackRow, validateExactCriterionCoverage, type BatchCoverageEntry } from "./matrix-coverage.ts";
 import { countOpenAiCompatibleContextTokens } from "../llm/token-counting.ts";
 import { canonicalJoin, createFanoutDescriptor } from "../agent-runtime/fanout.ts";
 import { buildAssessmentJoin } from "./assessment-join.ts";
+import { callRouterAiJev, protectedJevTrace, reviewAbcDirectionWithJev, type JevChoiceCall } from "./jev-decisions.ts";
 import { runCandidatePhase } from "./phase-diagnostics.ts";
+import { CANDIDATE_ASSESSMENT_PROMPT_ARTIFACT, composeProtectedAssessmentInstruction, createEditablePromptSnapshot } from "../product/prompt-contracts.ts";
 
 type ExecutionEnvironment = CandidatePipelineEnvironment & GoogleDriveOAuthEnvironment;
 
@@ -728,7 +732,7 @@ export async function createProductionCandidateToolExecution(input: { database: 
               if (!input.environment.DOCUMENT_PROCESSOR_URL || !input.environment.DOCUMENT_PROCESSOR_TOKEN) throw new Error("PRODUCTION_DOCUMENT_PROCESSOR_NOT_PROVISIONED");
               await authorizeFile("download", document.fileId);
               const expectedChecksum = await immutableFileChecksum(document.fileId);
-              const downloaded = await drive.downloadVersion({
+              const downloaded = await runCandidatePhase({ runId, taskId, attemptId }, "document-source-download", () => drive.downloadVersion({
                 fileId: document.fileId,
                 expectedVersion: document.version,
                 expectedSize: document.size,
@@ -736,16 +740,16 @@ export async function createProductionCandidateToolExecution(input: { database: 
                 expectedChecksum,
                 checkpoint: (entry) => checkpoint({ kind: "drive-download", identity: `${operationIdentity}:${document.fileId}`,
                   artifactIdentity: `${entry.fileId}:${entry.version}`, checksum: entry.checksum }),
-              });
+              }));
               const processorUrl = new URL(input.environment.DOCUMENT_PROCESSOR_URL);
               if (input.environment.E2E_ENVIRONMENT === "local") {
                 if (!loopbackOrDockerHostname(processorUrl.hostname) || !["http:", "https:"].includes(processorUrl.protocol)) throw new Error("LOCAL_DOCUMENT_PROCESSOR_MUST_BE_LOOPBACK");
               } else if (processorUrl.protocol !== "https:" && !dockerInternalProcessorEndpoint(processorUrl, "document-processor")) throw new Error("REMOTE_DOCUMENT_PROCESSOR_MUST_USE_HTTPS");
               await auditBoundary("provider", downloaded.bytes);
-              const extractionResponse = await fetch(processorUrl, { method: "POST",
+              const extractionResponse = await runCandidatePhase({ runId, taskId, attemptId }, "document-processor-request", () => fetch(processorUrl, { method: "POST",
                 headers: { authorization: `Bearer ${input.environment.DOCUMENT_PROCESSOR_TOKEN}`, "content-type": document.mimeType },
-                body: downloaded.bytes.slice().buffer as ArrayBuffer, signal: AbortSignal.timeout(5 * 60_000) });
-              const extracted = await extractionResponse.json() as { code?: string; kind?: string; pages?: ExtractedPage[]; sections?: ExtractedSection[] };
+                body: downloaded.bytes.slice().buffer as ArrayBuffer, signal: AbortSignal.timeout(5 * 60_000) }));
+              const extracted = await runCandidatePhase({ runId, taskId, attemptId }, "document-response-read", () => extractionResponse.json()) as { code?: string; kind?: string; pages?: ExtractedPage[]; sections?: ExtractedSection[] };
               if (!extractionResponse.ok) throw new Error(extracted.code ?? `DOCUMENT_PROCESSOR_HTTP_${extractionResponse.status}`);
               const processed = await processDocument({ mimeType: document.mimeType, fileId: document.fileId, fileVersion: document.version,
                 bytes: downloaded.bytes,
@@ -886,7 +890,12 @@ export async function createProductionCandidateToolExecution(input: { database: 
               const response = await runCandidatePhase(correlation, "media-processor-request", async () => {
                 const result = await fetch(mediaUrl, { method: "POST", headers: { authorization: `Bearer ${input.environment.MEDIA_PROCESSOR_TOKEN}`, "content-type": sourceEntry.mimeType },
                   body: downloaded.bytes.slice().buffer as ArrayBuffer, signal: AbortSignal.timeout(15 * 60_000) });
-                if (!result.ok) throw new Error(`MEDIA_PROCESSOR_HTTP_${result.status}`);
+                if (!result.ok) {
+                  const failure = await result.json().catch(() => null) as { code?: unknown } | null;
+                  const safeCode = failure?.code === "MEDIA_AUDIO_TOO_LARGE" || failure?.code === "MEDIA_INPUT_TOO_LARGE"
+                    ? failure.code : `MEDIA_PROCESSOR_HTTP_${result.status}`;
+                  throw new Error(safeCode);
+                }
                 return result;
               });
               const audioBytes = await runCandidatePhase(correlation, "media-response-read", async () => new Uint8Array(await response.arrayBuffer()));
@@ -904,7 +913,8 @@ export async function createProductionCandidateToolExecution(input: { database: 
                 const audioBytes = await artifactStore.getBytes(audioRef);
                 await auditBoundary("provider", audioBytes);
                 const provider = new DurableAssemblyAiAdapter({ apiKey: input.environment.ASSEMBLYAI_API_KEY });
-                const created = await provider.create({ audioBytes, operationIdentity, checkpoint: async ({ remoteJobId }) => checkpoint({ kind: "provider-job-created", identity: operationIdentity, remoteJobId }) });
+                const created = await runCandidatePhase({ runId, taskId, attemptId }, "assemblyai-create", () =>
+                  provider.create({ audioBytes, operationIdentity, checkpoint: async ({ remoteJobId }) => checkpoint({ kind: "provider-job-created", identity: operationIdentity, remoteJobId }) }));
                 providerJobId = created.remoteJobId;
               }
               const stored = await storeJson("transcript-provider-job", operationIdentity, { schemaVersion: "transcript-provider-job/v1", providerJobId, source: sourceIdentity });
@@ -914,11 +924,12 @@ export async function createProductionCandidateToolExecution(input: { database: 
             const submitRef = await dependencyArtifact("candidate.transcript-submit-shard/v1");
             const submission = await artifactStore.getJson<{ schemaVersion?: string; providerJobId?: string; source?: TranscriptSourceIdentity }>(submitRef);
             if (submission.schemaVersion !== "transcript-provider-job/v1" || !submission.providerJobId || !submission.source) throw new Error("TRANSCRIPT_PROVIDER_JOB_INVALID");
+            const providerJobId = submission.providerJobId;
             const provider = new DurableAssemblyAiAdapter({ apiKey: input.environment.ASSEMBLYAI_API_KEY });
-            const raw = await provider.poll(submission.providerJobId);
+            const raw = await runCandidatePhase({ runId, taskId, attemptId }, "assemblyai-poll", () => provider.poll(providerJobId));
             if (raw.status !== "completed" && raw.status !== "error") return { artifactRef: "", deferred: true, retryAfterMs: 15_000 };
             if (raw.status !== "completed") throw new Error("ASSEMBLYAI_TRANSCRIPTION_FAILED");
-            const representation = { ...transcriptRepresentations({ providerJobId: submission.providerJobId, raw,
+            const representation = { ...transcriptRepresentations({ providerJobId, raw,
               words: (Array.isArray(raw.words) ? raw.words : []) as TranscriptWord[], utterances: (Array.isArray(raw.utterances) ? raw.utterances : []) as TranscriptUtterance[], source: submission.source }), shardIdentity: task.shardIdentity };
             const stored = await storeJson("transcript-bundle", operationIdentity, representation);
             return { artifactRef: stored.artifactRef, checksum: stored.checksum };
@@ -1065,16 +1076,75 @@ export async function createProductionCandidateToolExecution(input: { database: 
           const call = async (capability: MatrixCapability, context: Record<string, unknown>, suffix: string) => {
             const correlation = traceCorrelation(capability, suffix);
             const config = llmDependencies.configuration.resolve(capability);
-            const attempt = await runLlmCapabilityWithPolicy(llmDependencies, llmBudget, {
-              capability,
-              correlation,
-              request: { messages: [
-                { role: "system", content: config.prompt.template },
-                { role: "user", content: context },
-              ] as JsonValue[], toolDefinitions: [] },
-              inputSnapshot: { materials: [], context: JSON.parse(JSON.stringify(context)) as JsonValue },
-            });
-            return { output: normalizeMatrixCapabilityOutput(capability, attempt.response.normalizedOutput), traceRef: correlation.traceId, model: config.actualModel };
+            const schema = matrixResponseSchemaForProfile(capability, config.responseSchema, context as JsonValue);
+            let assessmentInstruction: string | undefined;
+            if (capability === "matrix_assessment_summary") {
+              const promptSnapshot = await queryOne<{ analysis_prompt_text: string; analysis_prompt_artifact_id: string; analysis_prompt_hash: string }>(input.database,
+                "SELECT analysis_prompt_text,analysis_prompt_artifact_id,analysis_prompt_hash FROM agent_runs WHERE id=$1", [runId]);
+              if (!promptSnapshot || promptSnapshot.analysis_prompt_artifact_id !== CANDIDATE_ASSESSMENT_PROMPT_ARTIFACT) throw new Error("ASSESSMENT_PROMPT_SNAPSHOT_MISSING");
+              const verified = createEditablePromptSnapshot(promptSnapshot.analysis_prompt_text, CANDIDATE_ASSESSMENT_PROMPT_ARTIFACT);
+              if (verified.hash !== promptSnapshot.analysis_prompt_hash) throw new Error("ASSESSMENT_PROMPT_INTEGRITY_MISMATCH");
+              assessmentInstruction = composeProtectedAssessmentInstruction(verified);
+            }
+            const matrixDraftCapability = capability === "matrix_compiler" || capability === "matrix_critic";
+            const sourceFragments = matrixDraftCapability ? context.sourceFragments : undefined;
+            const sourceRefs = sourceFragments && typeof sourceFragments === "object" && !Array.isArray(sourceFragments)
+              ? Object.entries(sourceFragments)
+                .filter(([key, value]) => key.trim() && typeof value === "string" && value.trim())
+                .map(([key]) => key).sort()
+              : [];
+            try {
+              const attempt = await runLlmCapabilityWithPolicy(llmDependencies, llmBudget, {
+                capability,
+                correlation,
+                request: { messages: [
+                  { role: "system", content: config.prompt.template },
+                  ...(assessmentInstruction ? [{ role: "system", content: assessmentInstruction }] : []),
+                  { role: "user", content: context },
+                ] as JsonValue[], toolDefinitions: [] },
+                inputSnapshot: { materials: [], context: JSON.parse(JSON.stringify(context)) as JsonValue },
+                responseValidator: matrixDraftCapability ? async (output, responseSchema) => {
+                  await validateMatrixWithPydanticAi({ capability,
+                    schema: JSON.parse(JSON.stringify(responseSchema.schema)) as JsonValue,
+                    output, sourceRefs });
+                } : undefined,
+              });
+              const traceId = `${correlation.traceId}:attempt:${attempt.attempts}`;
+              console.info(JSON.stringify({ event: "matrix-answer-validated", runId, taskId, attemptId,
+                traceId, capability, schemaHash: schema.hash, sourceRefCount: sourceRefs.length }));
+              return { output: normalizeMatrixCapabilityOutput(capability, attempt.response.normalizedOutput), traceRef: traceId, model: config.actualModel };
+            } catch (error) {
+              const providerClass = error instanceof LlmProviderAttemptError
+                ? (error.traceError as { class?: unknown }).class : undefined;
+              const code = typeof providerClass === "string" && /^[a-z_]{1,64}$/.test(providerClass)
+                ? providerClass
+                : error instanceof Error && /^(?:MATRIX_[A-Z0-9_]+|LLM_CAPABILITY_FAILED:[a-z_]+)$/.test(error.message)
+                  ? error.message : "MATRIX_ANSWER_FAILED";
+              console.info(JSON.stringify({ event: "matrix-answer-failed", runId, taskId, attemptId,
+                traceIdPrefix: correlation.traceId, capability, schemaHash: schema.hash, sourceRefCount: sourceRefs.length, safeCode: code }));
+              throw error;
+            }
+          };
+          const jevChoice: JevChoiceCall = async (request) => {
+            const reservation = { llmCalls: 1, externalRequests: 1 } as const;
+            await llmBudget.reserve(reservation);
+            try {
+              const response = await callRouterAiJev(request, input.environment.ROUTERAI_API_KEY ?? "");
+              const correlation = traceCorrelation("jev-decision", Object.keys(request.questions).sort().join("-"));
+              const trace = protectedJevTrace(correlation, request, response);
+              try {
+                await new PostgresBlobStore(input.database).put({ id: `trace:${correlation.traceId}`,
+                  scope: "protected-jev-traces", kind: "protected-jev-trace", mimeType: "application/json",
+                  bytes: new TextEncoder().encode(JSON.stringify(trace)), retentionUntilUtc: trace.expiresAt, protected: true });
+              } catch { throw new Error("JEV_TRACE_WRITE_FAILED"); }
+              console.info(JSON.stringify({ event: "jev-decision-validated", runId, taskId, attemptId,
+                traceRef: correlation.traceId, model: response.model, questionIds: Object.keys(request.questions) }));
+              return { ...response, traceRef: correlation.traceId };
+            } catch (error) {
+              console.info(JSON.stringify({ event: "jev-decision-failed", runId, taskId, attemptId,
+                safeCode: error instanceof Error && /^JEV_[A-Z0-9_]+$/.test(error.message) ? error.message : "JEV_UNEXPECTED_FAILURE" }));
+              throw error;
+            } finally { await llmBudget.commit(reservation); }
           };
           const profileContext = await vacancyContext();
           const vacancy = profileContext.vacancy ?? {};
@@ -1308,9 +1378,13 @@ export async function createProductionCandidateToolExecution(input: { database: 
             const evidenceRef = await latestArtifact("candidate.matrix-conflict-submit/v1");
             const evidence = await artifactStore.getJson<Record<string, unknown>>(evidenceRef);
             const claimBundle = typeof evidence.claimsRef === "string" ? await artifactStore.getJson<{ claims?: CandidateSourceClaim[] }>(evidence.claimsRef) : {};
-            const assessed = await call("abc_matrix_assessment", { directions, evidence: { ...evidence, claims: claimBundle.claims ?? [] }, policy: { bestFit: true, fullCoverageRequired: true, selfReportAdmissible: true, inferMissingLevelDefinitions: true,
+            const claims = claimBundle.claims ?? [];
+            const assessed = await call("abc_matrix_assessment", { directions, evidence: { ...evidence, claims }, policy: { bestFit: true, fullCoverageRequired: true, selfReportAdmissible: true, inferMissingLevelDefinitions: true,
               fallbackScale: { A: "выше ожиданий роли", B: "соответствует ожиданиям роли", C: "ниже ожиданий или требует заметной поддержки" }, insufficientOnlyWhenNoRelevantCandidateEvidence: true } }, `abc-shard-${directionId}`);
-            const stored = await storeJson("matrix-abc-shard", operationIdentity, { schemaVersion: "matrix-abc-shard/v1", shardIdentity: task.shardIdentity, directions: assessed.output.directions as unknown[], warnings: [], traceRefs: [assessed.traceRef] });
+            const assessedDirections = assessed.output.directions as Array<Record<string, unknown>>;
+            if (assessedDirections.length !== 1 || assessedDirections[0]?.directionId !== directionId) throw new Error("ABC_SHARD_DIRECTION_COVERAGE_INVALID");
+            const jevReview = await reviewAbcDirectionWithJev({ ...(directions[0] as Record<string, unknown>), vacancyTitle: vacancy.vacancy?.title }, assessedDirections[0], claims, jevChoice);
+            const stored = await storeJson("matrix-abc-shard", operationIdentity, { schemaVersion: "matrix-abc-shard/v1", shardIdentity: task.shardIdentity, directions: assessedDirections, warnings: jevReview.warning ? [jevReview.warning] : [], traceRefs: [assessed.traceRef, jevReview.traceRef].filter((value): value is string => Boolean(value)) });
             return { artifactRef: stored.artifactRef, checksum: stored.checksum };
           }
           if (toolKey === "candidate.assessment-join/v1") {
@@ -1320,7 +1394,7 @@ export async function createProductionCandidateToolExecution(input: { database: 
             const evidence = await artifactStore.getJson<Record<string, unknown>>(evidenceRef);
             const claimBundle = typeof evidence.claimsRef === "string" ? await artifactStore.getJson<{ claims?: CandidateSourceClaim[] }>(evidence.claimsRef) : {};
             const joined = await buildAssessmentJoin({ matrix, matrixId: published.matrixId, evidenceRef,
-              evidence: { ...evidence, claims: claimBundle.claims ?? [] }, rows, abc }, call);
+              evidence: { ...evidence, claims: claimBundle.claims ?? [] }, rows, abc }, call, jevChoice);
             const stored = await storeJson("matrix-rows", operationIdentity, joined);
             return { artifactRef: stored.artifactRef, checksum: stored.checksum };
           }
@@ -1543,7 +1617,12 @@ export async function createProductionCandidateToolExecution(input: { database: 
               await auditBoundary("provider", source.bytes);
               const mediaResponse = await fetch(mediaUrl, { method: "POST", headers: { authorization: `Bearer ${input.environment.MEDIA_PROCESSOR_TOKEN}`, "content-type": interview.mimeType },
                 body: source.bytes.slice().buffer as ArrayBuffer, signal: AbortSignal.timeout(15 * 60_000) });
-              if (!mediaResponse.ok) throw new Error(`MEDIA_PROCESSOR_HTTP_${mediaResponse.status}`);
+              if (!mediaResponse.ok) {
+                const failure = await mediaResponse.json().catch(() => null) as { code?: unknown } | null;
+                const safeCode = failure?.code === "MEDIA_AUDIO_TOO_LARGE" || failure?.code === "MEDIA_INPUT_TOO_LARGE"
+                  ? failure.code : `MEDIA_PROCESSOR_HTTP_${mediaResponse.status}`;
+                throw new Error(safeCode);
+              }
               const audioBytes = new Uint8Array(await mediaResponse.arrayBuffer());
               const audioChecksum = mediaResponse.headers.get("x-audio-sha256") ?? sha256(audioBytes);
               await checkpoint({ kind: "audio-extracted", identity: `${sourceOperationIdentity}:audio`, artifactIdentity: `audio:${audioChecksum}`, checksum: audioChecksum });

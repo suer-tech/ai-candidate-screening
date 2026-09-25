@@ -1,4 +1,6 @@
-type Phase = "media-source-download" | "media-processor-request" | "media-response-read" | "media-artifact-store";
+type Phase = "media-source-download" | "media-processor-request" | "media-response-read" | "media-artifact-store"
+  | "document-source-download" | "document-processor-request" | "document-response-read"
+  | "assemblyai-create" | "assemblyai-poll";
 type Correlation = { runId: string; taskId: string; attemptId: string };
 
 const safeCodes = new Set([
@@ -7,6 +9,7 @@ const safeCodes = new Set([
   "UND_ERR_CONNECT_TIMEOUT", "UND_ERR_HEADERS_TIMEOUT", "UND_ERR_BODY_TIMEOUT", "UND_ERR_SOCKET",
   "08000", "08001", "08003", "08006", "08004", "08007", "08P01", "40001", "40P01", "53300", "53400", "55P03", "57014", "57P01", "57P02", "57P03",
   "BLOB_SIZE_LIMIT_EXCEEDED", "BLOB_IDENTITY_CONFLICT", "BLOB_CHECKSUM_MISMATCH",
+  "MEDIA_AUDIO_TOO_LARGE", "MEDIA_INPUT_TOO_LARGE",
 ]);
 
 function safeReason(error: unknown): string {
@@ -16,6 +19,7 @@ function safeReason(error: unknown): string {
     seen.add(current);
     const value = current as { code?: unknown; name?: unknown; message?: unknown; cause?: unknown };
     if (typeof value.code === "string" && safeCodes.has(value.code)) return value.code;
+    if (typeof value.message === "string" && safeCodes.has(value.message)) return value.message;
     if (value.name === "TimeoutError") return "TIMEOUT";
     if (value.name === "AbortError") return "ABORTED";
     if (typeof value.message === "string" && /^MEDIA_PROCESSOR_HTTP_[1-5]\d{2}$/.test(value.message)) return value.message;

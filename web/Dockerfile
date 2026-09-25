@@ -23,10 +23,14 @@ RUN npm run build
 FROM node:22-bookworm-slim AS runtime
 ENV NODE_ENV=production
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends ffmpeg \
+  && apt-get install -y --no-install-recommends ffmpeg python3 python3-venv \
   && ffmpeg -version \
   && rm -rf /var/lib/apt/lists/*
 WORKDIR /app/web
+COPY --from=build /app/web/python ./python
+RUN python3 -m venv /opt/matrix-venv \
+  && /opt/matrix-venv/bin/pip install --no-cache-dir -r python/requirements-matrix.txt
+ENV MATRIX_PYDANTIC_PYTHON=/opt/matrix-venv/bin/python
 COPY --from=deps /app/web/node_modules ./node_modules
 COPY --from=build /app/web/.output ./.output
 COPY --from=build /app/web/drizzle-postgres ./drizzle-postgres

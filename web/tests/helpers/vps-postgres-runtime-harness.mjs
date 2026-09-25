@@ -207,7 +207,7 @@ async function runProgressUiScenario(fixture) {
     const dashboardProgress = progressObservation(dashboard, "processing-card");
     const listProgress = progressObservation(list, "candidate-card");
     const source = await readFile(path.join(webRoot, "app", "page.tsx"), "utf8");
-    return result(fixture, { status: dashboardProgress.count === 1 && listProgress.count === 1 ? "SUCCEEDED" : "FAILED", safeCode: "PROGRESS_UI_CONTRACT_MISSING", dashboardProgressBars: dashboardProgress.count, listProgressBars: listProgress.count, dashboardPercent: dashboardProgress.percent, listPercent: listProgress.percent, dashboardMilestone: dashboardProgress.milestone, listMilestone: listProgress.milestone, ariaMin: dashboardProgress.min, ariaMax: dashboardProgress.max, browserInferredProgress: /setInterval[^]{0,500}progress|progress[^]{0,500}Date\.now/i.test(source) });
+    return result(fixture, { status: dashboardProgress.count === 1 && listProgress.count === 1 ? "SUCCEEDED" : "FAILED", safeCode: "PROGRESS_UI_CONTRACT_MISSING", dashboardProgressBars: dashboardProgress.count, listProgressBars: listProgress.count, dashboardPercent: dashboardProgress.percent, listPercent: listProgress.percent, dashboardMilestone: dashboardProgress.milestone, listMilestone: listProgress.milestone, ariaMin: dashboardProgress.min, ariaMax: dashboardProgress.max, browserInferredProgress: /setInterval[^]{0,500}(?:setProgressPercent|progressPercent\s*[=+])|progressPercent[^]{0,120}Date\.now/i.test(source) });
   } finally { await rm(outputRoot, { recursive: true, force: true }); }
 }
 

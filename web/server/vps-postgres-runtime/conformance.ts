@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import os from "node:os";
 import path from "node:path";
 import { PrivateBenchmarkFirewall } from "../../scripts/private-benchmark-firewall.ts";
-import { environmentProjection, credentialNamesAreExact, credentialPathIsSafe, loadRuntimeConfiguration, parseRuntimeEnv, RuntimeConfigurationError } from "../configuration/runtime.ts";
+import { credentialNamesAreExact, credentialPathIsSafe, parseRuntimeEnv, RuntimeConfigurationError } from "../configuration/runtime.ts";
 import { handleInternalTaskRequest } from "../http/internal-task-route.ts";
 import { BlobStoreError, GLOBAL_BLOB_LIMIT, PostgresBlobStore } from "../storage/blob-store.ts";
 import { migratePostgres } from "../storage/migrations.ts";
@@ -70,8 +70,8 @@ type Fixture = {
 const migrationRoot = path.resolve(import.meta.dirname, "../../drizzle-postgres");
 
 async function isolatedDatabase(operation: (client: PostgresClient, database: string) => Promise<Record<string, unknown>>) {
-  const configuration = await loadRuntimeConfiguration();
-  const url = environmentProjection(configuration).DATABASE_URL;
+  const url = process.env.MATRIX_TEST_POSTGRES_URL;
+  if (!url) throw new Error("ISOLATED_TEST_POSTGRES_URL_REQUIRED");
   const admin = createPostgresClient({ url, max: 1 });
   const database = `acceptance_${Date.now()}_${Math.random().toString(16).slice(2)}`;
   const isolatedUrl = new URL(url);
@@ -142,8 +142,7 @@ async function postgresDurabilityScenario() {
     await client`INSERT INTO agent_tasks
       (id,run_id,plan_version_id,task_key,tool_key,state,revision,attempt_count,lease_token,idempotency_identity,preconditions_json,expected_outputs_json)
       VALUES ('task-conformance','run-conformance','plan-conformance','evidence','llm','RUNNABLE',1,0,0,'operation-conformance','{}','{}')`;
-    const configuration = await loadRuntimeConfiguration();
-    const isolatedUrl = new URL(environmentProjection(configuration).DATABASE_URL);
+    const isolatedUrl = new URL(process.env.MATRIX_TEST_POSTGRES_URL!);
     isolatedUrl.pathname = `/${database}`;
     const second = createPostgresClient({ url: isolatedUrl.toString(), max: 1 });
     let selected!: () => void; let release!: () => void;
