@@ -1,5 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { randomUUID } from "node:crypto";
+import { mkdir, unlink } from "node:fs/promises";
+import { dirname, join } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import { build } from "esbuild";
 import { RESPONSE_SCHEMA_ARTIFACTS } from "../server/llm/artifacts.ts";
 import { matrixResponseSchemaForProfile } from "../server/llm/matrix-response-schema.ts";
 import { validateMatrixWithPydanticAi } from "../server/candidate-pipeline/pydantic-matrix-validator.ts";
@@ -51,4 +56,23 @@ test("PydanticAI validates the critic's complete successor", async () => {
   await assert.doesNotReject(input(critic));
   await assert.rejects(input({ ...critic, successor: { ...draft, criteria: [{ ...criterion, missingDataQuestion: "" }] } }),
     /MATRIX_MISSING_QUESTION_INVALID/);
+});
+
+test("bundled runtime locates Pydantic validator and preserves semantic rejection", async (t) => {
+  // Nitro places server chunks beneath .output/server/chunks; import.meta.url changes there.
+  // Exercise the shipped source as a bundle so a relative source-module path cannot mask
+  // a missing Python entry point in the container.
+  const webRoot = fileURLToPath(new URL("../", import.meta.url));
+  const entry = join(webRoot, "server", "candidate-pipeline", "pydantic-matrix-validator.ts");
+  const outfile = join(webRoot, ".output", "server", "chunks", `matrix-validator-acceptance-${randomUUID()}.mjs`);
+  await mkdir(dirname(outfile), { recursive: true });
+  t.after(() => unlink(outfile));
+  await build({ entryPoints: [entry], outfile, bundle: true, platform: "node", format: "esm", target: "node22" });
+  const bundled = await import(pathToFileURL(outfile).href) as typeof import("../server/candidate-pipeline/pydantic-matrix-validator.ts");
+  const input = (output: unknown) => bundled.validateMatrixWithPydanticAi({
+    capability: "matrix_compiler", schema, output: output as JsonValue, sourceRefs: ["vacancy.result.goal"],
+  });
+  await assert.doesNotReject(input(draft), "a valid matrix must pass in the deployed bundle layout");
+  await assert.rejects(input({ ...draft, criteria: [criterion, { ...criterion, temporaryId: "criterion-2" }] }),
+    /MATRIX_OVER_SPLIT/, "duplicated decision points must remain a semantic validation error");
 });

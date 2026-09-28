@@ -1,10 +1,11 @@
 import { spawn } from "node:child_process";
-import { fileURLToPath } from "node:url";
+import { resolve } from "node:path";
 import type { JsonValue } from "../llm/value-utils.ts";
 import type { MatrixCapability } from "./matrix-schemas.ts";
 
 const PYTHON = process.env.MATRIX_PYDANTIC_PYTHON ?? (process.platform === "win32" ? "python" : "python3");
-const SCRIPT = fileURLToPath(new URL("../../python/matrix_validator.py", import.meta.url));
+// Bundlers relocate this module; the Python asset stays at the web runtime root.
+const SCRIPT = resolve(process.cwd(), "python/matrix_validator.py");
 const MAX_INPUT = 2 * 1024 * 1024;
 
 export async function validateMatrixWithPydanticAi(input: {
