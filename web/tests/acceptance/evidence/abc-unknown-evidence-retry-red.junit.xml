@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="ABC review rejects an invented evidence ID before the independent decision call" time="0.002169" classname="test" file="E:\Projects\ai-candidate-screening\web\tests\abc-unknown-evidence-retry.acceptance.test.ts"/>
+	<testcase name="JEV_ABC_EVIDENCE_UNKNOWN retries only the ABC shard once, after five seconds" time="0.002651" classname="test" file="E:\Projects\ai-candidate-screening\web\tests\abc-unknown-evidence-retry.acceptance.test.ts" failure="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;  {&#10;+   delayMs: 0,&#10;+   maxAttempts: 3,&#10;+   retry: false&#10;-   delayMs: 5000,&#10;-   maxAttempts: 2,&#10;-   retry: true&#10;  }&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;  {&#10;+   delayMs: 0,&#10;+   maxAttempts: 3,&#10;+   retry: false&#10;-   delayMs: 5000,&#10;-   maxAttempts: 2,&#10;-   retry: true&#10;  }">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly deep-equal:
++ actual - expected
+
+  {
++   delayMs: 0,
++   maxAttempts: 3,
++   retry: false
+-   delayMs: 5000,
+-   maxAttempts: 2,
+-   retry: true
+  }
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    {
+  +   delayMs: 0,
+  +   maxAttempts: 3,
+  +   retry: false
+  -   delayMs: 5000,
+  -   maxAttempts: 2,
+  -   retry: true
+    }
+  
+      at TestContext.&lt;anonymous> (E:\Projects\ai-candidate-screening\web\tests\abc-unknown-evidence-retry.acceptance.test.ts:22:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { retry: false, delayMs: 0, maxAttempts: 3 },
+    expected: { retry: true, delayMs: 5000, maxAttempts: 2 },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="a second unknown ID remains a failure rather than an accepted ABC assessment" time="0.000527" classname="test" file="E:\Projects\ai-candidate-screening\web\tests\abc-unknown-evidence-retry.acceptance.test.ts"/>
+	<testcase name="a corrected ABC assessment can complete on the second attempt using the pinned claims" time="0.000604" classname="test" file="E:\Projects\ai-candidate-screening\web\tests\abc-unknown-evidence-retry.acceptance.test.ts"/>
+	<!-- tests 4 -->
+	<!-- suites 0 -->
+	<!-- pass 3 -->
+	<!-- fail 1 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 277.7285 -->
+</testsuites>

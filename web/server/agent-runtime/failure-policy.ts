@@ -33,9 +33,10 @@ const MAX_ATTEMPTS_BY_TOOL: Readonly<Record<string, number>> = Object.freeze({
 const BACKOFF_MS = [5_000, 15_000, 45_000] as const;
 
 export function taskFailurePolicy(toolKey: string, errorCode: string, attemptCount: number) {
-  const maxAttempts = MAX_ATTEMPTS_BY_TOOL[toolKey] ?? 1;
+  const unknownAbcEvidence = toolKey === "candidate.abc-shard/v1" && errorCode === "JEV_ABC_EVIDENCE_UNKNOWN";
+  const maxAttempts = unknownAbcEvidence ? 2 : MAX_ATTEMPTS_BY_TOOL[toolKey] ?? 1;
   const transient = TRANSIENT_CODES.some((pattern) => pattern.test(errorCode));
-  const retry = transient && attemptCount < maxAttempts;
+  const retry = (transient || unknownAbcEvidence) && attemptCount < maxAttempts;
   return { retry, delayMs: retry ? BACKOFF_MS[Math.min(Math.max(attemptCount - 1, 0), BACKOFF_MS.length - 1)] : 0, maxAttempts };
 }
 
@@ -58,6 +59,7 @@ const RUSSIAN_FAILURES: Readonly<Record<string, string>> = Object.freeze({
   "LLM_CAPABILITY_FAILED:network": "Не удалось получить ответ модели из-за временной сетевой ошибки. Система выполнила разрешённые повторы",
   "LLM_CAPABILITY_FAILED:rate_limit": "Сервис модели временно ограничил частоту запросов. Система выполнила разрешённые повторы",
   JEV_ABC_DISAGREEMENT: "Независимая проверка ABC не согласилась с оценкой. Результат не опубликован; требуется расследование администратором",
+  JEV_ABC_EVIDENCE_UNKNOWN: "Модель указала несуществующее доказательство ABC. Повторная попытка не помогла; результат не опубликован",
   JEV_RECOMMENDATION_DISAGREEMENT: "Независимая проверка итоговой рекомендации выявила расхождение. Результат не опубликован; требуется расследование администратором",
   JEV_PROVIDER_REJECTED: "Сервис независимой проверки отклонил запрос. Обратитесь к администратору",
   JEV_RESPONSE_INVALID: "Сервис независимой проверки вернул некорректный ответ. Результат не опубликован",
