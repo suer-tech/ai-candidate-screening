@@ -817,7 +817,7 @@ function ProductApp({
       inFlight = true;
       controller = new AbortController();
       try {
-        const summaryOnly = view === "vacancies";
+        const summaryOnly = view === "vacancies" || view === "candidates";
         const response = await fetch(summaryOnly ? "/api/workspace?summary=1" : "/api/workspace", {
           cache: "no-store",
           signal: controller.signal,
@@ -1167,7 +1167,7 @@ function ProductApp({
           onQueueFilter={openFilteredQueue}
         />
       )}
-      {view !== "dashboard" && (!workspaceLoaded || (view !== "vacancies" && workspaceLoaded !== "full")) && (
+      {view !== "dashboard" && (!workspaceLoaded || (view === "candidate" && workspaceLoaded !== "full")) && (
         <section className="page" role="status">Загружаем рабочие данные…</section>
       )}
       {view === "vacancies" && workspaceLoaded && (
@@ -1183,7 +1183,7 @@ function ProductApp({
           }
         />
       )}
-      {view === "candidates" && workspaceLoaded === "full" && (
+      {view === "candidates" && workspaceLoaded && (
         <Candidates
           items={matching}
           vacancies={vacancies}

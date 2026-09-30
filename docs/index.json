@@ -48,7 +48,7 @@
     "PostgresProductRepository": {
       "file": "web/server/product/postgres-repository.ts",
       "kind": "class",
-      "summary": "PostgreSQL repository вакансий, кандидатов, lifecycle и results; для /api/dashboard и /api/workspace?summary=1 строит краткую проекцию без private artifact blobs и manifest, для /api/workspace сохраняет полную evidence-backed HR-safe проекцию с matrix claimsRef и детерминированным decision summary."
+      "summary": "PostgreSQL repository вакансий, кандидатов, lifecycle и results; для дашборда и списков вакансий/кандидатов строит краткую проекцию через /api/dashboard и /api/workspace?summary=1 без private artifact blobs и manifest, для карточки кандидата через /api/workspace сохраняет полную evidence-backed HR-safe проекцию с matrix claimsRef и детерминированным decision summary."
     },
     "generateVacancyProfile": {
       "file": "web/server/product/vacancy-generation.ts",
