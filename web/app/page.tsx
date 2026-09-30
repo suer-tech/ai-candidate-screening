@@ -2462,7 +2462,9 @@ export function VacancySettings({
       const payload = await response.json() as { vacancy?: VacancyRecord; error?: string };
       if (!response.ok || !payload.vacancy) throw new Error(payload.error ?? "Не удалось сохранить профиль вакансии");
       setVersion(payload.vacancy.version);
-      savedSnapshot.current = { values: structuredClone(payload.vacancy.profile), abcDirections: payload.vacancy.abcDirections.map((item) => ({ ...item })), analysisPrompt: payload.vacancy.analysisPrompt?.text ?? analysisPrompt };
+      const savedAnalysisPrompt = payload.vacancy.analysisPrompt?.text ?? analysisPrompt;
+      setAnalysisPrompt(savedAnalysisPrompt);
+      savedSnapshot.current = { values: structuredClone(payload.vacancy.profile), abcDirections: payload.vacancy.abcDirections.map((item) => ({ ...item })), analysisPrompt: savedAnalysisPrompt };
       onSaved?.(payload.vacancy);
       onSaveError?.("");
       onNotify(activeRule === "Промпт для анализа" ? "Промпт для анализа сохранён" : "Профиль вакансии сохранён");

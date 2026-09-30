@@ -190,6 +190,30 @@ test("VAC-046 save failure stays visible in the exit dialog until the form is fi
   assert.equal(button(component.render(), /^Активность$/).props.className, "active", "navigation resumes after save");
 });
 
+test("VacancySettings adopts the server-normalized prompt after a successful save", async (t) => {
+  const runtime = await loadVacancySettingsHarness();
+  t.after(() => runtime.cleanup());
+  const previousFetch = globalThis.fetch;
+  const source = { ...vacancy({ "Образ результата": "Есть", "Компетенции": "Есть", "Стоп-факторы": "Есть", "Допуск к КЕ": "Есть" }),
+    analysisPrompt: { text: "Исходный промпт" } };
+  globalThis.fetch = async (_url, init) => {
+    const submitted = JSON.parse(init.body);
+    assert.equal(submitted.analysisPrompt, "  Новый промпт  ");
+    return { ok: true, json: async () => ({ vacancy: { ...source, version: 4, analysisPrompt: { text: "Новый промпт" } } }) };
+  };
+  t.after(() => { globalThis.fetch = previousFetch; });
+  const navigationRef = { current: null };
+  const component = runtime.create({ vacancy: source, navigationRef, onNotify() {} });
+  button(component.render(), /^Промпт для анализа$/).props.onClick();
+  let tree = component.render();
+  findAll(tree, (node) => node.type === "textarea")[0].props.onChange({ target: { value: "  Новый промпт  " } });
+  component.render();
+  assert.equal(await navigationRef.current.save(), true);
+  tree = component.render();
+  assert.equal(findAll(tree, (node) => node.type === "textarea")[0].props.value, "Новый промпт",
+    "the editor displays exactly the saved snapshot instead of remaining dirty after normalization");
+});
+
 test("unsaved-changes confirmation copy uses the full modal width instead of the empty icon column", async () => {
   const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
   assert.match(cssRule(css, ".confirmation-modal.unsaved-changes-modal"), /grid-template-columns\s*:\s*minmax\(0\s*,\s*1fr\)/i,
