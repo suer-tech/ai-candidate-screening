@@ -443,6 +443,7 @@ html[data-theme="dark"] .generate-field-button{background:#172b42;border-color:#
 .confirmation-copy p{margin:0;color:var(--muted);font-size:13px;line-height:1.55}
 .confirmation-modal.unsaved-changes-modal{grid-template-columns:minmax(0,1fr)}
 .confirmation-modal.unsaved-changes-modal .confirmation-copy{grid-column:1/-1;padding-right:28px}
+.confirmation-modal.unsaved-changes-modal .abc-validation-summary{grid-column:1/-1;overflow-wrap:anywhere}
 .confirmation-actions{grid-column:1/-1;display:flex;justify-content:flex-end;gap:9px;margin-top:6px}
 .confirmation-actions button{min-width:104px}
 .confirmation-summary{display:grid;grid-template-columns:1fr auto auto;gap:10px;margin:14px 0;padding:12px 13px;border:1px solid var(--line);border-radius:11px;background:var(--canvas);font-size:12px}

@@ -1609,6 +1609,7 @@ function Vacancies({
   const [generatedDraft, setGeneratedDraft] = useState<GeneratedCreationProfile | null>(null);
   const [settingsDirty, setSettingsDirty] = useState(false);
   const [settingsSaving, setSettingsSaving] = useState(false);
+  const [settingsSaveError, setSettingsSaveError] = useState("");
   const [pendingTab, setPendingTab] = useState<string | null>(null);
   const [pendingGenerationTab, setPendingGenerationTab] = useState<string | null>(null);
   const [confirmation, setConfirmation] = useState<"archive" | "delete" | null>(null);
@@ -1673,7 +1674,7 @@ function Vacancies({
   const requestTab = (nextTab: string) => {
     if (nextTab === tab) return;
     if (settingsNavigation.current?.isGenerating()) { setPendingGenerationTab(nextTab); return; }
-    if (tab === "Параметры оценки" && settingsDirty) setPendingTab(nextTab);
+    if (tab === "Параметры оценки" && settingsDirty) { setSettingsSaveError(""); setPendingTab(nextTab); }
     else setTab(nextTab);
   };
   const cancelGenerationAndNavigateTab = () => {
@@ -1695,6 +1696,7 @@ function Vacancies({
     setSettingsSaving(true);
     try {
       if (!await settingsNavigation.current.save()) return;
+      setSettingsSaveError("");
       setGeneratedDraft(null);
       setSettingsDirty(false);
       if (pendingTab) setTab(pendingTab);
@@ -1904,6 +1906,7 @@ function Vacancies({
                 initialDraft={generatedDraft}
                 onNotify={onNotify}
                 onDirtyChange={setSettingsDirty}
+                onSaveError={setSettingsSaveError}
                 navigationRef={settingsNavigation}
                 onSaved={(saved) => {
                   setGeneratedDraft(null);
@@ -1937,6 +1940,7 @@ function Vacancies({
             )}
             {pendingTab && UnsavedChangesDialog({
               busy: settingsSaving,
+              error: settingsSaveError,
               onClose: () => setPendingTab(null),
               onDiscard: discardSettingsAndNavigate,
               onSave: () => void saveSettingsAndNavigate(),
@@ -2351,6 +2355,7 @@ export function VacancySettings({
   onNotify,
   onSaved,
   onDirtyChange,
+  onSaveError,
   navigationRef,
 }: {
   vacancy: UiVacancy;
@@ -2358,6 +2363,7 @@ export function VacancySettings({
   onNotify: (message: string) => void;
   onSaved?: (vacancy: VacancyRecord) => void;
   onDirtyChange?: (dirty: boolean) => void;
+  onSaveError?: (message: string) => void;
   navigationRef?: MutableRefObject<VacancySettingsNavigation | null>;
 }) {
   const [activeRule, setActiveRule] = useState("Образ результата");
@@ -2384,7 +2390,6 @@ export function VacancySettings({
   const [generationKey, setGenerationKey] = useState<GenerationPromptKey | null>(null);
   const [generationConfirmation, setGenerationConfirmation] = useState<GenerationPromptKey | null>(null);
   const [pendingGenerationRule, setPendingGenerationRule] = useState<string | null>(null);
-  const [pendingRule, setPendingRule] = useState<string | null>(null);
   const generationAbortRef = useRef<AbortController | null>(null);
   const generationRunRef = useRef(0);
   const generationActiveRef = useRef(false);
@@ -2448,6 +2453,7 @@ export function VacancySettings({
     if (!validation.valid) {
       setAbcErrors(validation.errors);
       onNotify(validation.errors[0].message);
+      onSaveError?.(validation.errors[0].message);
       return false;
     }
     setAbcErrors([]); setGenerationError(""); setSaving(true);
@@ -2458,9 +2464,10 @@ export function VacancySettings({
       setVersion(payload.vacancy.version);
       savedSnapshot.current = { values: structuredClone(payload.vacancy.profile), abcDirections: payload.vacancy.abcDirections.map((item) => ({ ...item })), analysisPrompt: payload.vacancy.analysisPrompt?.text ?? analysisPrompt };
       onSaved?.(payload.vacancy);
+      onSaveError?.("");
       onNotify(activeRule === "Промпт для анализа" ? "Промпт для анализа сохранён" : "Профиль вакансии сохранён");
       return true;
-    } catch (reason) { const message = reason instanceof Error ? reason.message : "Не удалось сохранить профиль вакансии"; setGenerationError(message); onNotify(message); return false; }
+    } catch (reason) { const message = reason instanceof Error ? reason.message : "Не удалось сохранить профиль вакансии"; setGenerationError(message); onSaveError?.(message); onNotify(message); return false; }
     finally { setSaving(false); }
   };
   const errorFor = (directionId: string, field: AbcDirectionField) =>
@@ -2483,21 +2490,14 @@ export function VacancySettings({
   const requestRule = (item: string) => {
     if (item === activeRule) return;
     if (generationKey) { setPendingGenerationRule(item); return; }
-    if (isDirty) setPendingRule(item); else setActiveRule(item);
+    setActiveRule(item);
   };
   const cancelGenerationAndContinue = () => {
     const nextRule = pendingGenerationRule;
     cancelGeneration();
     setPendingGenerationRule(null);
     if (!nextRule) return;
-    if (isDirty) setPendingRule(nextRule); else setActiveRule(nextRule);
-  };
-  const discardAndContinue = () => {
-    setValues(structuredClone(savedSnapshot.current.values));
-    setAbcDirections(savedSnapshot.current.abcDirections.map((item) => ({ ...item })));
-    setAnalysisPrompt(savedSnapshot.current.analysisPrompt);
-    if (pendingRule) setActiveRule(pendingRule);
-    setPendingRule(null); setGenerationError(""); setAbcErrors([]);
+    setActiveRule(nextRule);
   };
   const discard = () => {
     setValues(structuredClone(savedSnapshot.current.values));
@@ -2515,11 +2515,6 @@ export function VacancySettings({
     onDirtyChange?.(isDirty);
     return () => onDirtyChange?.(false);
   }, [isDirty, onDirtyChange]);
-  const saveAndContinue = async () => {
-    if (!await save()) return;
-    if (pendingRule) setActiveRule(pendingRule);
-    setPendingRule(null);
-  };
   const openPromptEditor = (key: GenerationPromptKey) => {
     setPromptEditorKey(key); setPromptDraft(fieldPrompts[key]?.text ?? fieldDefaults[key]?.text ?? ""); setGenerationError("");
   };
@@ -2798,12 +2793,6 @@ export function VacancySettings({
           onSave={() => void saveGenerationPrompt()}
         />
       )}
-      {pendingRule && UnsavedChangesDialog({
-          busy: saving,
-          onClose: () => setPendingRule(null),
-          onDiscard: discardAndContinue,
-          onSave: () => void saveAndContinue(),
-        })}
       {pendingGenerationRule && (
         <ConfirmationDialog
           title="Прервать генерацию и перейти?"
@@ -2849,11 +2838,12 @@ function GenerationPromptEditorModal({ vacancyTitle, operation, prompt, defaultP
   </div>;
 }
 
-function UnsavedChangesDialog({ busy, onClose, onDiscard, onSave }: { busy: boolean; onClose: () => void; onDiscard: () => void; onSave: () => void }) {
+function UnsavedChangesDialog({ busy, error, onClose, onDiscard, onSave }: { busy: boolean; error?: string; onClose: () => void; onDiscard: () => void; onSave: () => void }) {
   return <div className="modal-backdrop confirmation-backdrop" role="presentation">
     <section className="confirmation-modal unsaved-changes-modal panel" role="dialog" aria-modal="true" aria-labelledby="unsaved-title">
       <button className="modal-close-button" type="button" aria-label="Закрыть" disabled={busy} onClick={onClose}>×</button>
       <div className="confirmation-copy"><h2 id="unsaved-title">Покинуть раздел без сохранения?</h2><p>Несохранённые изменения будут сброшены.</p></div>
+      {error && <div className="abc-validation-summary" role="alert">{error}</div>}
       <div className="confirmation-actions"><button className="danger-button red-action" disabled={busy} onClick={onDiscard}>Не сохранять</button><button autoFocus className="primary-button blue-action" disabled={busy} onClick={onSave}>{busy ? "Сохраняем…" : "Сохранить изменения"}</button></div>
     </section>
   </div>;

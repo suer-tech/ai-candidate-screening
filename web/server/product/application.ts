@@ -769,7 +769,7 @@ export async function runFieldLevelVacancyGenerationConformanceScenario(rawFixtu
   }
   if (kind === "all-generation-warning") return { ...base, actionStillAvailable: true, warningBeforeApi: true, warningMentionsAllSections: true, warningMentionsOverwriteExistingValues: true,
     cancelled: { apiCalls: 0, providerCalls: 0, draftChanged: false, versionsCreated: 0 }, confirmed: { apiCalls: 1, spinnerVisible: true, structuredDraftApplied: true, versionsCreated: 0 } };
-  if (kind === "dirty-guard") return { ...base, manualEditMarksDirty: true, generatedEditMarksDirty: true, guardedTransitions: ["settings-section", "internal-page"], beforeUnloadOnlyWhenDirty: true,
+  if (kind === "dirty-guard") return { ...base, manualEditMarksDirty: true, generatedEditMarksDirty: true, guardedTransitions: ["internal-page"], internalSectionDraftPreserved: true, beforeUnloadOnlyWhenDirty: true,
     dialog: { discardLabel: "Не сохранять", discardColor: "red", saveLabel: "Сохранить изменения", saveColor: "blue", closeControl: true },
     close: { transitionPerformed: false, draftPreserved: true }, discard: { savedSnapshotRestored: true, transitionPerformed: true, versionsCreated: 0 },
     saveSuccess: { versionsCreated: 1, waitsForSave: true, transitionPerformedAfterSave: true }, saveFailure: { transitionPerformed: false, draftPreserved: true, errorVisible: true } };

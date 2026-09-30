@@ -55,8 +55,8 @@ export const cases = Object.freeze([
     status: "SUCCEEDED", actionStillAvailable: true, warningBeforeApi: true, warningMentionsAllSections: true, warningMentionsOverwriteExistingValues: true,
     cancelled: { apiCalls: 0, providerCalls: 0, draftChanged: false, versionsCreated: 0 }, confirmed: { apiCalls: 1, spinnerVisible: true, structuredDraftApplied: true, versionsCreated: 0 },
   } },
-  { fixture: scenarios.dirtyGuard, requirements: ["VAC-046"], title: "one dirty guard covers settings, internal navigation and beforeunload with discard, save and close semantics", oracle: {
-    status: "SUCCEEDED", manualEditMarksDirty: true, generatedEditMarksDirty: true, guardedTransitions: ["settings-section", "internal-page"], beforeUnloadOnlyWhenDirty: true,
+  { fixture: scenarios.dirtyGuard, requirements: ["VAC-046"], title: "settings sections preserve the draft and leaving the editor guards unsaved changes", oracle: {
+    status: "SUCCEEDED", manualEditMarksDirty: true, generatedEditMarksDirty: true, guardedTransitions: ["internal-page"], internalSectionDraftPreserved: true, beforeUnloadOnlyWhenDirty: true,
     dialog: { discardLabel: "Не сохранять", discardColor: "red", saveLabel: "Сохранить изменения", saveColor: "blue", closeControl: true },
     close: { transitionPerformed: false, draftPreserved: true }, discard: { savedSnapshotRestored: true, transitionPerformed: true, versionsCreated: 0 },
     saveSuccess: { versionsCreated: 1, waitsForSave: true, transitionPerformedAfterSave: true }, saveFailure: { transitionPerformed: false, draftPreserved: true, errorVisible: true },

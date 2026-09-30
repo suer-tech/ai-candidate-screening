@@ -141,7 +141,7 @@ test("VAC-045 real all-generation cancellation warns about overwriting all popul
   assert.equal(calls.filter((call) => call.method === "POST").length, 0, "cancelling confirmation sends no generation API request");
 });
 
-test("VAC-046 real VacancySettings opens the three-action dirty guard before changing settings section", async (t) => {
+test("real VacancySettings keeps edits while moving between required sections", async (t) => {
   const runtime = await loadVacancySettingsHarness();
   t.after(() => runtime.cleanup());
   const component = runtime.create({ vacancy: vacancy({ "Образ результата": "Сохранённое значение", "Компетенции": "" }), onNotify() {} });
@@ -151,14 +151,43 @@ test("VAC-046 real VacancySettings opens the three-action dirty guard before cha
   tree = component.render();
   button(tree, /^Компетенции$/).props.onClick();
   tree = component.render();
-  const dialog = findAll(tree, (node) => node.props?.role === "dialog")[0];
-  assert.ok(dialog, "dirty settings transition opens an application dialog");
-  const discard = button(dialog, /^Не сохранять$/);
-  const save = button(dialog, /^Сохранить изменения$/);
-  const close = button(dialog, /закрыть|×|✕/i);
-  assert.ok(discard && /danger|red/i.test(String(discard.props?.className ?? "")), "discard is the red action");
-  assert.ok(save && /primary|save|blue/i.test(String(save.props?.className ?? "")), "save is the blue action");
-  assert.ok(close, "dialog has a close control that cancels navigation");
+  assert.equal(findAll(tree, (node) => node.props?.role === "dialog").length, 0, "editing another section needs no premature save");
+  assert.match(textContent(tree), /Компетенции/, "next section is available");
+  button(tree, /^Образ результата$/).props.onClick();
+  tree = component.render();
+  assert.equal(findAll(tree, (node) => node.type === "textarea" && node.props?.id === "vacancy-description-field")[0].props.value,
+    "Несохранённое изменение", "the draft survives internal navigation");
+});
+
+test("VAC-046 save failure stays visible in the exit dialog until the form is fixed", async (t) => {
+  const runtime = await loadVacanciesHarness();
+  t.after(() => runtime.cleanup());
+  let saveResult = false;
+  let settingsProps;
+  const settingsNavigationRef = { current: {
+    async save() { if (!saveResult) { settingsProps.onSaveError("Заполните обязательные поля: Компетенции, Допуск к КЕ"); return false; } return true; },
+    discard() {}, isGenerating() { return false; }, cancelGeneration() {},
+  } };
+  const component = runtime.create({
+    candidates: [], vacancyState: { vacancies: [vacancy()], operationBindings: {} }, settingsNavigationRef,
+    onState() {}, onOpen() {}, onNotify() {}, onCandidatesDeleted() {},
+  });
+  button(component.render(), /^Параметры оценки$/).props.onClick();
+  settingsProps = findAll(component.render(), (node) => node.type?.name === "VacancySettings")[0].props;
+  settingsProps.onDirtyChange(true);
+  button(component.render(), /^Активность$/).props.onClick();
+  let dialog = findAll(component.render(), (node) => node.props?.role === "dialog")[0];
+  assert.ok(dialog, "leaving the editor still guards unsaved changes");
+  button(dialog, /^Сохранить изменения$/).props.onClick();
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  dialog = findAll(component.render(), (node) => node.props?.role === "dialog")[0];
+  assert.match(textContent(dialog), /Заполните обязательные поля: Компетенции, Допуск к КЕ/, "server rejection is visible inside the dialog");
+  assert.equal(button(component.render(), /^Параметры оценки$/).props.className, "active", "failed save does not navigate away");
+  saveResult = true;
+  button(dialog, /^Сохранить изменения$/).props.onClick();
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.equal(findAll(component.render(), (node) => node.props?.role === "dialog").length, 0, "successful save closes the dialog");
+  assert.equal(button(component.render(), /^Активность$/).props.className, "active", "navigation resumes after save");
 });
 
 test("unsaved-changes confirmation copy uses the full modal width instead of the empty icon column", async () => {

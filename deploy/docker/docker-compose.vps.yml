@@ -117,11 +117,13 @@ services:
       - /etc/letsencrypt:/etc/letsencrypt:rw
       - certbot-webroot:/var/www/certbot:rw
     entrypoint: ["/bin/sh", "-c"]
-    command: >
-      trap exit TERM; while :; do
-        certbot renew --webroot -w /var/www/certbot;
-        sleep 12h & wait $${!};
-      done
+    command:
+      - |
+        trap 'exit 0' TERM
+        while :; do
+          certbot renew --webroot -w /var/www/certbot
+          sleep 12h & wait $$!
+        done
 
 volumes:
   config-root:
