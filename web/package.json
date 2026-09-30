@@ -17,7 +17,7 @@
     "test:acceptance": "node --test tests/vacancy-abc-profile.acceptance.test.mjs && npm run test:vacancy-active-profile",
     "test:vacancy-active-profile": "tsx --experimental-test-module-mocks --test tests/vacancy-active-profile-required-fields.acceptance.test.ts",
     "test:abc": "tsx --test app/abc-profile-validation.test.ts",
-    "test:ui": "node --test tests/vacancy-abc-profile.ui.test.mjs tests/vacancy-navigation-guard.acceptance.test.mjs",
+    "test:ui": "node --test tests/vacancy-abc-profile.ui.test.mjs tests/vacancy-navigation-guard.acceptance.test.mjs && node --import tsx --experimental-test-module-mocks --test tests/workspace-vacancy-summary.acceptance.test.mjs",
     "test:transcription": "tsx --test server/transcription/transcription.test.ts server/candidate-pipeline/transcription.test.ts tests/ready-transcript-speaker-header.acceptance.test.ts tests/audio-output-limit.acceptance.test.ts",
     "test:changes": "node --test tests/vacancy-operator-flow-v2.acceptance.test.mjs tests/vacancy-lifecycle.acceptance.test.mjs tests/candidate-lifecycle-controls.acceptance.test.mjs tests/in-app-report-preview.acceptance.test.mjs tests/operational-dashboard.acceptance.test.mjs tests/protected-llm-tracing.acceptance.test.mjs tests/personal-google-drive-oauth.acceptance.test.mjs tests/personal-google-drive-oauth-ui.acceptance.test.mjs && npm run test:vacancy-generation:canonical && npm run test:editable-vacancy-prompts",
     "test:personal-drive-oauth": "node --test tests/personal-google-drive-oauth.acceptance.test.mjs tests/personal-google-drive-oauth-ui.acceptance.test.mjs",

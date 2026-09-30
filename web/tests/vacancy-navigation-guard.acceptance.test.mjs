@@ -48,7 +48,7 @@ async function setup(t, application = false) {
   globalThis.fetch = async (url, init = {}) => {
     calls.push({ url: String(url), method: init.method ?? "GET", body: init.body ? JSON.parse(init.body) : undefined });
     if (String(url).startsWith("/api/vacancies/prompts")) return { ok: true, json: async () => ({ analysis: records[0].analysisPrompt, analysisDefault: records[0].analysisPrompt }) };
-    if (url === "/api/workspace") return { ok: true, json: async () => ({ candidates: [], vacancies: records }) };
+    if (String(url).startsWith("/api/workspace")) return { ok: true, json: async () => ({ candidates: [], vacancies: records }) };
     if (url === "/api/vacancies/profile") {
       if (rejected) return { ok: false, status: 409, json: async () => ({ error: "Версия изменена другим редактором" }) };
       const submitted = JSON.parse(init.body);

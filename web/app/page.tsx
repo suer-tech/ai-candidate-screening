@@ -758,7 +758,7 @@ function ProductApp({
   const [previousView, setPreviousView] = useState<View>("dashboard");
   const [selectedCandidate, setSelectedCandidate] = useState<CandidateId>(1);
   const [candidates, setCandidates] = useState<UiCandidate[]>([]);
-  const [workspaceLoaded, setWorkspaceLoaded] = useState(false);
+  const [workspaceLoaded, setWorkspaceLoaded] = useState<"summary" | "full" | null>(null);
   const [vacancyState, setVacancyState] = useState<VacancyCreateState>({
     vacancies: [],
     operationBindings: {},
@@ -817,7 +817,8 @@ function ProductApp({
       inFlight = true;
       controller = new AbortController();
       try {
-        const response = await fetch("/api/workspace", {
+        const summaryOnly = view === "vacancies";
+        const response = await fetch(summaryOnly ? "/api/workspace?summary=1" : "/api/workspace", {
           cache: "no-store",
           signal: controller.signal,
         });
@@ -836,7 +837,7 @@ function ProductApp({
           vacancies: payload.vacancies.map(hydrateVacancy),
           operationBindings: {},
         });
-        setWorkspaceLoaded(true);
+        setWorkspaceLoaded(summaryOnly ? "summary" : "full");
       } catch {
         // A later poll reconciles a temporary workspace read failure.
       } finally {
@@ -1166,7 +1167,7 @@ function ProductApp({
           onQueueFilter={openFilteredQueue}
         />
       )}
-      {view !== "dashboard" && !workspaceLoaded && (
+      {view !== "dashboard" && (!workspaceLoaded || (view !== "vacancies" && workspaceLoaded !== "full")) && (
         <section className="page" role="status">Загружаем рабочие данные…</section>
       )}
       {view === "vacancies" && workspaceLoaded && (
@@ -1182,7 +1183,7 @@ function ProductApp({
           }
         />
       )}
-      {view === "candidates" && workspaceLoaded && (
+      {view === "candidates" && workspaceLoaded === "full" && (
         <Candidates
           items={matching}
           vacancies={vacancies}
@@ -1191,7 +1192,7 @@ function ProductApp({
           onClearDashboardFilter={() => setQueueFilter(null)}
         />
       )}
-      {view === "candidate" && workspaceLoaded && candidates.length > 0 && (
+      {view === "candidate" && workspaceLoaded === "full" && candidates.length > 0 && (
         <CandidateDetail
           candidate={
             candidates.find((item) => item.id === selectedCandidate) ??

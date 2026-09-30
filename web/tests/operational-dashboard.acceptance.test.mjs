@@ -55,7 +55,7 @@ test("TST-097: greeting boundaries, Drive polling states and no-demo boundary ar
   const source = await readProductSource();
   for (const state of ["Подключён", "Проверяем подключение", "Нет подключения"]) assert.match(source, new RegExp(state, "i"));
   assert.match(source, /15_?000|15\s*\*\s*1000/, "Drive health polling interval is exactly 15 seconds");
-  assert.match(source, /WORKSPACE_POLL_INTERVAL_MS[\s\S]*fetch\("\/api\/workspace"[\s\S]*setInterval/,
+  assert.match(source, /WORKSPACE_POLL_INTERVAL_MS[\s\S]*fetch\(summaryOnly\s*\?\s*"\/api\/workspace\?summary=1"\s*:\s*"\/api\/workspace"[\s\S]*setInterval/,
     "candidate status is refreshed for lists, vacancy views and the open card");
   assert.match(source, /DASHBOARD_POLL_INTERVAL_MS[\s\S]*fetch\(`\/api\/dashboard\?period=\$\{period\}`[\s\S]*setInterval/,
     "dashboard counts and queue poll the same current server projection");

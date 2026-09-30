@@ -86,7 +86,7 @@ test("TST-090 UI regression: confirmed archive immediately replaces the open-car
 
   const active = { ...base, status: "READY", revision: 1, tone: "blue", updated: "Готово" };
   const view = runtime.create("ProductApp", { onLogout() {} }, [
-    "candidate", "dashboard", base.id, [active], { vacancies: [], operationBindings: {} },
+    "candidate", "dashboard", base.id, [active], "full", { vacancies: [], operationBindings: {} },
     "", "", "light", null, 15, null, null, null,
   ]);
 
@@ -130,7 +130,7 @@ test("TST-091 UI regression: confirmed reprocess immediately hides the previous 
   });
 
   const view = runtime.create("ProductApp", { onLogout() {} }, [
-    "candidate", "dashboard", base.id, [ready], { vacancies: [], operationBindings: {} },
+    "candidate", "dashboard", base.id, [ready], "full", { vacancies: [], operationBindings: {} },
     "", "", "light", null, 15, null, null, null,
   ]);
   let tree = expandFunctionComponents(view.render());
