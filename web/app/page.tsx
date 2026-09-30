@@ -773,7 +773,11 @@ function ProductApp({
   const [queueFilter, setQueueFilter] = useState<QueueFilter>(null);
   const [candidateConfirmation, setCandidateConfirmation] = useState<"archive" | "delete" | "reprocess" | null>(null);
   const [driveDisconnectConfirmation, setDriveDisconnectConfirmation] = useState(false);
-  const [pendingViewAfterGeneration, setPendingViewAfterGeneration] = useState<View | null>(null);
+  const [pendingViewAfterGeneration, setPendingViewAfterGeneration] = useState(false);
+  const [pendingAppNavigation, setPendingAppNavigation] = useState(false);
+  const [appNavigationSaving, setAppNavigationSaving] = useState(false);
+  const [appNavigationError, setAppNavigationError] = useState("");
+  const pendingAppAction = useRef<(() => void) | null>(null);
   const vacancySettingsNavigation = useRef<VacancySettingsNavigation | null>(null);
 
   useEffect(() => {
@@ -948,27 +952,58 @@ function ProductApp({
     writeStoredTheme(nextTheme);
     setTheme(nextTheme);
   };
-  const navigate = (nextView: View) => {
-    if (nextView === view) return;
+  const continueAppNavigation = () => {
+    const action = pendingAppAction.current;
+    pendingAppAction.current = null;
+    setPendingAppNavigation(false);
+    setPendingViewAfterGeneration(false);
+    vacancySettingsNavigation.current = null;
+    action?.();
+  };
+  const requestAppNavigation = (action: () => void) => {
     if (view === "vacancies" && vacancySettingsNavigation.current?.isGenerating()) {
-      setPendingViewAfterGeneration(nextView);
+      pendingAppAction.current = action;
+      setPendingViewAfterGeneration(true);
       return;
     }
-    if (nextView === "candidates") setQueueFilter(null);
-    setView(nextView);
+    if (view === "vacancies" && vacancySettingsNavigation.current?.isDirty()) {
+      pendingAppAction.current = action;
+      setAppNavigationError("");
+      setPendingAppNavigation(true);
+      return;
+    }
+    action();
+  };
+  const navigate = (nextView: View) => {
+    if (nextView === view) return;
+    requestAppNavigation(() => {
+      if (nextView === "candidates") setQueueFilter(null);
+      setView(nextView);
+    });
   };
   const cancelGenerationAndNavigate = () => {
-    const nextView = pendingViewAfterGeneration;
     vacancySettingsNavigation.current?.cancelGeneration();
-    setPendingViewAfterGeneration(null);
-    if (!nextView) return;
-    if (nextView === "candidates") setQueueFilter(null);
-    setView(nextView);
+    setPendingViewAfterGeneration(false);
+    if (vacancySettingsNavigation.current?.isDirty()) setPendingAppNavigation(true);
+    else continueAppNavigation();
+  };
+  const saveAndContinueAppNavigation = async () => {
+    if (appNavigationSaving || !vacancySettingsNavigation.current) return;
+    setAppNavigationSaving(true);
+    try {
+      if (!await vacancySettingsNavigation.current.save()) {
+        setAppNavigationError(vacancySettingsNavigation.current?.getSaveError() ?? "Не удалось сохранить изменения");
+        return;
+      }
+      continueAppNavigation();
+    } finally { setAppNavigationSaving(false); }
   };
   const openCandidate = (id: CandidateId) => {
-    setPreviousView(view === "candidate" ? "candidates" : view);
-    setSelectedCandidate(id);
-    setView("candidate");
+    requestAppNavigation(() => {
+      setPreviousView(view === "candidate" ? "candidates" : view);
+      setSelectedCandidate(id);
+      setView("candidate");
+    });
   };
   const openFilteredQueue = (filter: Exclude<QueueFilter, null>) => {
     setQueueFilter(filter);
@@ -1043,7 +1078,7 @@ function ProductApp({
   );
   const vacancies = vacancyState.vacancies as UiVacancy[];
 
-  const logout = async () => {
+  const performLogout = async () => {
     const response = await fetch("/api/auth/logout", {
       method: "POST",
       headers: { "x-csrf-token": csrfToken() },
@@ -1051,6 +1086,7 @@ function ProductApp({
     if (response.ok) onLogout();
     else notify("Не удалось завершить сессию");
   };
+  const logout = () => requestAppNavigation(() => void performLogout());
   return (
     <main className="app">
       <header className="topbar">
@@ -1218,10 +1254,17 @@ function ProductApp({
           description={<p>Генерация будет завершена, поле не будет заполнено.</p>}
           confirmLabel="Прервать и перейти"
           danger
-          onCancel={() => setPendingViewAfterGeneration(null)}
+          onCancel={() => { setPendingViewAfterGeneration(false); pendingAppAction.current = null; }}
           onConfirm={cancelGenerationAndNavigate}
         />
       )}
+      {pendingAppNavigation && UnsavedChangesDialog({
+        busy: appNavigationSaving,
+        error: appNavigationError,
+        onClose: () => { setPendingAppNavigation(false); pendingAppAction.current = null; },
+        onDiscard: () => { vacancySettingsNavigation.current?.discard(); continueAppNavigation(); },
+        onSave: () => void saveAndContinueAppNavigation(),
+      })}
       {toast && (
         <div className="toast" role="status">
           ✓ {toast}
@@ -1610,8 +1653,9 @@ function Vacancies({
   const [settingsDirty, setSettingsDirty] = useState(false);
   const [settingsSaving, setSettingsSaving] = useState(false);
   const [settingsSaveError, setSettingsSaveError] = useState("");
-  const [pendingTab, setPendingTab] = useState<string | null>(null);
-  const [pendingGenerationTab, setPendingGenerationTab] = useState<string | null>(null);
+  const [pendingSettingsNavigation, setPendingSettingsNavigation] = useState(false);
+  const [pendingGenerationNavigation, setPendingGenerationNavigation] = useState(false);
+  const pendingSettingsAction = useRef<(() => void) | null>(null);
   const [confirmation, setConfirmation] = useState<"archive" | "delete" | null>(null);
   const generationLock = useRef(false);
   const localSettingsNavigation = useRef<VacancySettingsNavigation | null>(null);
@@ -1671,25 +1715,42 @@ function Vacancies({
       setGenerationLoading(false);
     }
   };
+  const continueSettingsNavigation = () => {
+    const action = pendingSettingsAction.current;
+    pendingSettingsAction.current = null;
+    setPendingSettingsNavigation(false);
+    setPendingGenerationNavigation(false);
+    setGeneratedDraft(null);
+    setSettingsDirty(false);
+    action?.();
+  };
+  const requestSettingsNavigation = (action: () => void) => {
+    if (tab === "Параметры оценки" && settingsNavigation.current?.isGenerating()) {
+      pendingSettingsAction.current = action;
+      setPendingGenerationNavigation(true);
+      return;
+    }
+    if (tab === "Параметры оценки" && (settingsNavigation.current?.isDirty?.() ?? settingsDirty)) {
+      pendingSettingsAction.current = action;
+      setSettingsSaveError("");
+      setPendingSettingsNavigation(true);
+      return;
+    }
+    setGeneratedDraft(null);
+    action();
+  };
   const requestTab = (nextTab: string) => {
-    if (nextTab === tab) return;
-    if (settingsNavigation.current?.isGenerating()) { setPendingGenerationTab(nextTab); return; }
-    if (tab === "Параметры оценки" && settingsDirty) { setSettingsSaveError(""); setPendingTab(nextTab); }
-    else setTab(nextTab);
+    if (nextTab !== tab) requestSettingsNavigation(() => setTab(nextTab));
   };
   const cancelGenerationAndNavigateTab = () => {
-    const nextTab = pendingGenerationTab;
     settingsNavigation.current?.cancelGeneration();
-    setPendingGenerationTab(null);
-    if (!nextTab) return;
-    if (settingsDirty) setPendingTab(nextTab); else setTab(nextTab);
+    setPendingGenerationNavigation(false);
+    if (settingsNavigation.current?.isDirty?.() ?? settingsDirty) setPendingSettingsNavigation(true);
+    else continueSettingsNavigation();
   };
   const discardSettingsAndNavigate = () => {
     settingsNavigation.current?.discard();
-    setGeneratedDraft(null);
-    setSettingsDirty(false);
-    if (pendingTab) setTab(pendingTab);
-    setPendingTab(null);
+    continueSettingsNavigation();
   };
   const saveSettingsAndNavigate = async () => {
     if (!settingsNavigation.current || settingsSaving) return;
@@ -1697,10 +1758,7 @@ function Vacancies({
     try {
       if (!await settingsNavigation.current.save()) return;
       setSettingsSaveError("");
-      setGeneratedDraft(null);
-      setSettingsDirty(false);
-      if (pendingTab) setTab(pendingTab);
-      setPendingTab(null);
+      continueSettingsNavigation();
     } finally { setSettingsSaving(false); }
   };
   const runLifecycle = async (action: "archive" | "restore" | "delete") => {
@@ -1758,7 +1816,7 @@ function Vacancies({
           <h1>Вакансии</h1>
           <p>Активные профили оценки и архив вакансий.</p>
         </div>
-        <button className="primary-button" onClick={() => setCreating(true)}>
+        <button className="primary-button" onClick={() => requestSettingsNavigation(() => setCreating(true))}>
           ＋ Новая вакансия
         </button>
       </section>
@@ -1768,8 +1826,7 @@ function Vacancies({
             <button
               className={scope === "active" ? "active" : ""}
               onClick={() => {
-                setScope("active");
-                setSelectedId("");
+                if (scope !== "active") requestSettingsNavigation(() => { setScope("active"); setSelectedId(""); });
               }}
             >
               Активные
@@ -1777,8 +1834,7 @@ function Vacancies({
             <button
               className={scope === "archive" ? "active" : ""}
               onClick={() => {
-                setScope("archive");
-                setSelectedId("");
+                if (scope !== "archive") requestSettingsNavigation(() => { setScope("archive"); setSelectedId(""); });
               }}
             >
               Архив
@@ -1791,8 +1847,9 @@ function Vacancies({
               placeholder="Найти вакансию"
               value={vacancyQuery}
               onChange={(event) => {
-                setVacancyQuery(event.target.value);
-                setSelectedId("");
+                const nextQuery = event.target.value;
+                if (!vacancy || vacancy.title.toLocaleLowerCase("ru").includes(nextQuery.trim().toLocaleLowerCase("ru"))) setVacancyQuery(nextQuery);
+                else requestSettingsNavigation(() => { setVacancyQuery(nextQuery); setSelectedId(""); });
               }}
             />
           </label>
@@ -1801,7 +1858,7 @@ function Vacancies({
               <button
                 className={vacancy?.id === item.id ? "active" : ""}
                 key={item.id}
-                onClick={() => setSelectedId(item.id)}
+                onClick={() => { if (item.id !== vacancy?.id) requestSettingsNavigation(() => setSelectedId(item.id)); }}
               >
                 <i style={{ background: item.color }} />
                 <span>
@@ -1847,14 +1904,14 @@ function Vacancies({
                     <button
                       className="secondary-button"
                       disabled={busy}
-                      onClick={() => void runLifecycle("restore")}
+                      onClick={() => requestSettingsNavigation(() => void runLifecycle("restore"))}
                     >
                       Восстановить
                     </button>
                     <button
                       className="danger-button"
                       disabled={busy}
-                      onClick={() => setConfirmation("delete")}
+                      onClick={() => requestSettingsNavigation(() => setConfirmation("delete"))}
                     >
                       Удалить
                     </button>
@@ -1864,7 +1921,7 @@ function Vacancies({
                     <button
                       className="generate-description-button"
                       disabled={busy}
-                      onClick={() => void openGeneration()}
+                      onClick={() => requestSettingsNavigation(() => void openGeneration())}
                     >
                       Сгенерировать описание
                     </button>
@@ -1878,7 +1935,7 @@ function Vacancies({
                     <button
                       className="danger-button"
                       disabled={busy}
-                      onClick={() => setConfirmation("archive")}
+                      onClick={() => requestSettingsNavigation(() => setConfirmation("archive"))}
                     >
                       В архив
                     </button>
@@ -1928,20 +1985,20 @@ function Vacancies({
                 </article>
               </div>
             )}
-            {pendingGenerationTab && (
+            {pendingGenerationNavigation && (
               <ConfirmationDialog
                 title="Прервать генерацию и перейти?"
                 description={<p>Генерация будет завершена, поле не будет заполнено.</p>}
                 confirmLabel="Прервать и перейти"
                 danger
-                onCancel={() => setPendingGenerationTab(null)}
+                onCancel={() => { setPendingGenerationNavigation(false); pendingSettingsAction.current = null; }}
                 onConfirm={cancelGenerationAndNavigateTab}
               />
             )}
-            {pendingTab && UnsavedChangesDialog({
+            {pendingSettingsNavigation && UnsavedChangesDialog({
               busy: settingsSaving,
               error: settingsSaveError,
-              onClose: () => setPendingTab(null),
+              onClose: () => { setPendingSettingsNavigation(false); pendingSettingsAction.current = null; },
               onDiscard: discardSettingsAndNavigate,
               onSave: () => void saveSettingsAndNavigate(),
             })}
@@ -2345,6 +2402,8 @@ void LegacyVacancySettingsDraft;
 type VacancySettingsNavigation = {
   save: () => Promise<boolean>;
   discard: () => void;
+  isDirty: () => boolean;
+  getSaveError: () => string;
   isGenerating: () => boolean;
   cancelGeneration: () => void;
 };
@@ -2390,12 +2449,18 @@ export function VacancySettings({
   const [generationKey, setGenerationKey] = useState<GenerationPromptKey | null>(null);
   const [generationConfirmation, setGenerationConfirmation] = useState<GenerationPromptKey | null>(null);
   const [pendingGenerationRule, setPendingGenerationRule] = useState<string | null>(null);
+  const [pendingRule, setPendingRule] = useState<string | null>(null);
+  const saveInProgress = useRef<Promise<boolean> | null>(null);
+  const lastSaveError = useRef("");
+  const navigationController = useRef<VacancySettingsNavigation | null>(null);
   const generationAbortRef = useRef<AbortController | null>(null);
   const generationRunRef = useRef(0);
   const generationActiveRef = useRef(false);
   const savedSnapshot = useRef({ values: structuredClone(vacancy.profile), abcDirections: vacancy.abcDirections.map((item) => ({ ...item })), analysisPrompt: vacancy.analysisPrompt?.text ?? "" });
   const currentSnapshot = JSON.stringify({ values, abcDirections, analysisPrompt });
   const isDirty = currentSnapshot !== JSON.stringify(savedSnapshot.current);
+  const dirty = useRef(isDirty);
+  dirty.current = isDirty;
   const sections = [
     "Образ результата",
     "ABC-критерии",
@@ -2447,30 +2512,44 @@ export function VacancySettings({
     setAbcDirections(next);
     if (abcErrors.length) setAbcErrors(validateAbcProfile(next).errors);
   };
-  const save = async (): Promise<boolean> => {
-    if (saving) return false;
+  const persistSettings = async (): Promise<boolean> => {
+    lastSaveError.current = "";
+    onSaveError?.("");
     const validation = validateAbcProfile(abcDirections);
     if (!validation.valid) {
       setAbcErrors(validation.errors);
       onNotify(validation.errors[0].message);
+      lastSaveError.current = validation.errors[0].message;
       onSaveError?.(validation.errors[0].message);
       return false;
     }
     setAbcErrors([]); setGenerationError(""); setSaving(true);
     try {
-      const response = await fetch("/api/vacancies/profile", { method: "POST", headers: { "content-type": "application/json", "x-csrf-token": csrfToken() }, body: JSON.stringify({ vacancyId: vacancy.id, expectedVersion: version, profile: values, abcDirections, templateVersion: initialDraft?.templateVersion ?? vacancy.templateVersion, analysisPrompt }) });
+      const response = await fetch("/api/vacancies/profile", { method: "POST", headers: { "content-type": "application/json", "x-csrf-token": csrfToken() }, body: JSON.stringify({ vacancyId: vacancy.id, expectedVersion: version, profile: values, abcDirections, templateVersion: initialDraft?.templateVersion ?? vacancy.templateVersion, ...(analysisPrompt !== savedSnapshot.current.analysisPrompt ? { analysisPrompt } : {}) }) });
       const payload = await response.json() as { vacancy?: VacancyRecord; error?: string };
       if (!response.ok || !payload.vacancy) throw new Error(payload.error ?? "Не удалось сохранить профиль вакансии");
       setVersion(payload.vacancy.version);
       const savedAnalysisPrompt = payload.vacancy.analysisPrompt?.text ?? analysisPrompt;
       setAnalysisPrompt(savedAnalysisPrompt);
       savedSnapshot.current = { values: structuredClone(payload.vacancy.profile), abcDirections: payload.vacancy.abcDirections.map((item) => ({ ...item })), analysisPrompt: savedAnalysisPrompt };
+      setValues(structuredClone(savedSnapshot.current.values));
+      setAbcDirections(savedSnapshot.current.abcDirections.map((item) => ({ ...item })));
+      dirty.current = false;
+      onDirtyChange?.(false);
       onSaved?.(payload.vacancy);
       onSaveError?.("");
       onNotify(activeRule === "Промпт для анализа" ? "Промпт для анализа сохранён" : "Профиль вакансии сохранён");
       return true;
-    } catch (reason) { const message = reason instanceof Error ? reason.message : "Не удалось сохранить профиль вакансии"; setGenerationError(message); onSaveError?.(message); onNotify(message); return false; }
+    } catch (reason) { const message = reason instanceof Error ? reason.message : "Не удалось сохранить профиль вакансии"; lastSaveError.current = message; setGenerationError(message); onSaveError?.(message); onNotify(message); return false; }
     finally { setSaving(false); }
+  };
+  const save = (): Promise<boolean> => {
+    if (saveInProgress.current) return saveInProgress.current;
+    const pending = persistSettings();
+    saveInProgress.current = pending;
+    const release = () => { if (saveInProgress.current === pending) saveInProgress.current = null; };
+    void pending.then(release, release);
+    return pending;
   };
   const errorFor = (directionId: string, field: AbcDirectionField) =>
     abcErrors.find(
@@ -2492,31 +2571,52 @@ export function VacancySettings({
   const requestRule = (item: string) => {
     if (item === activeRule) return;
     if (generationKey) { setPendingGenerationRule(item); return; }
-    setActiveRule(item);
+    if (dirty.current) { lastSaveError.current = ""; setGenerationError(""); setPendingRule(item); }
+    else setActiveRule(item);
   };
   const cancelGenerationAndContinue = () => {
     const nextRule = pendingGenerationRule;
     cancelGeneration();
     setPendingGenerationRule(null);
     if (!nextRule) return;
-    setActiveRule(nextRule);
+    if (dirty.current) setPendingRule(nextRule); else setActiveRule(nextRule);
   };
   const discard = () => {
     setValues(structuredClone(savedSnapshot.current.values));
     setAbcDirections(savedSnapshot.current.abcDirections.map((item) => ({ ...item })));
     setAnalysisPrompt(savedSnapshot.current.analysisPrompt);
+    dirty.current = false;
+    onDirtyChange?.(false);
+    lastSaveError.current = "";
     setGenerationError(""); setAbcErrors([]);
   };
-  if (navigationRef) navigationRef.current = {
+  const controller = navigationController.current ?? (navigationController.current = {} as VacancySettingsNavigation);
+  Object.assign(controller, {
     save,
     discard,
+    isDirty: () => dirty.current,
+    getSaveError: () => lastSaveError.current,
     isGenerating: () => generationActiveRef.current,
     cancelGeneration,
-  };
+  });
+  if (navigationRef) navigationRef.current = controller;
+  useEffect(() => () => {
+    if (navigationRef?.current === controller) navigationRef.current = null;
+  }, [navigationRef, controller]);
   useEffect(() => {
     onDirtyChange?.(isDirty);
     return () => onDirtyChange?.(false);
   }, [isDirty, onDirtyChange]);
+  const saveAndContinue = async () => {
+    if (!await save()) return;
+    if (pendingRule) setActiveRule(pendingRule);
+    setPendingRule(null);
+  };
+  const discardAndContinue = () => {
+    discard();
+    if (pendingRule) setActiveRule(pendingRule);
+    setPendingRule(null);
+  };
   const openPromptEditor = (key: GenerationPromptKey) => {
     setPromptEditorKey(key); setPromptDraft(fieldPrompts[key]?.text ?? fieldDefaults[key]?.text ?? ""); setGenerationError("");
   };
@@ -2805,6 +2905,13 @@ export function VacancySettings({
           onConfirm={cancelGenerationAndContinue}
         />
       )}
+      {pendingRule && UnsavedChangesDialog({
+        busy: saving,
+        error: generationError || abcErrors[0]?.message,
+        onClose: () => setPendingRule(null),
+        onDiscard: discardAndContinue,
+        onSave: () => void saveAndContinue(),
+      })}
     </div>
   );
 }
@@ -2844,7 +2951,7 @@ function UnsavedChangesDialog({ busy, error, onClose, onDiscard, onSave }: { bus
   return <div className="modal-backdrop confirmation-backdrop" role="presentation">
     <section className="confirmation-modal unsaved-changes-modal panel" role="dialog" aria-modal="true" aria-labelledby="unsaved-title">
       <button className="modal-close-button" type="button" aria-label="Закрыть" disabled={busy} onClick={onClose}>×</button>
-      <div className="confirmation-copy"><h2 id="unsaved-title">Покинуть раздел без сохранения?</h2><p>Несохранённые изменения будут сброшены.</p></div>
+      <div className="confirmation-copy"><h2 id="unsaved-title">Есть несохранённые изменения</h2><p>Сохраните изменения перед переходом или выйдите без сохранения.</p></div>
       {error && <div className="abc-validation-summary" role="alert">{error}</div>}
       <div className="confirmation-actions"><button className="danger-button red-action" disabled={busy} onClick={onDiscard}>Не сохранять</button><button autoFocus className="primary-button blue-action" disabled={busy} onClick={onSave}>{busy ? "Сохраняем…" : "Сохранить изменения"}</button></div>
     </section>

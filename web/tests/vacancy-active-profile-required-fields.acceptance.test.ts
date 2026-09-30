@@ -50,4 +50,32 @@ test("VAC-014: active profile save rejects empty competencies or owner-interview
       assert.equal(writes, 0, `${field}: neither vacancy nor profile_versions may be written`);
     });
   }
+  await t.test("existing incomplete active profile can be repaired one section at a time", async () => {
+    record = { ...structuredClone(initialRecord), profile: {
+      "Образ результата": "", "Компетенции": "", "Стоп-факторы": "", "Допуск к КЕ": "",
+    } };
+    writes = 0;
+    const savedFields: Record<string, string> = {};
+    for (const [field, value] of Object.entries(initialRecord.profile as Record<string, string>)) {
+      const currentVersion = Number(record.version);
+      const profile = { ...(record.profile as Record<string, string>), [field]: value };
+      const response = await POST(new Request("http://localhost/api/vacancies/profile", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ vacancyId: "synthetic-vacancy", expectedVersion: currentVersion, profile, abcDirections: record.abcDirections }),
+      }));
+      assert.equal(response.status, 200, `${field}: unrelated missing fields must not trap Save and navigation`);
+      savedFields[field] = value;
+      const body = await response.json() as { vacancy: { version: number; profile: Record<string, string> } };
+      assert.equal(body.vacancy.version, currentVersion + 1, "one save creates exactly one successor");
+      for (const [savedField, savedValue] of Object.entries(savedFields)) assert.equal(body.vacancy.profile[savedField], savedValue);
+    }
+    assert.equal(writes, 4, "four sequential sections produce four atomic profile writes");
+    const response = await POST(new Request("http://localhost/api/vacancies/profile", {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ vacancyId: "synthetic-vacancy", expectedVersion: record.version,
+        profile: { ...(record.profile as Record<string, string>), "Компетенции": "" }, abcDirections: record.abcDirections }),
+    }));
+    assert.equal(response.status, 422, "after repair the full active profile cannot become incomplete again");
+    assert.equal(writes, 4);
+  });
 });

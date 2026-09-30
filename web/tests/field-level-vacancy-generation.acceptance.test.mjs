@@ -141,7 +141,7 @@ test("VAC-045 real all-generation cancellation warns about overwriting all popul
   assert.equal(calls.filter((call) => call.method === "POST").length, 0, "cancelling confirmation sends no generation API request");
 });
 
-test("real VacancySettings keeps edits while moving between required sections", async (t) => {
+test("VAC-046 real VacancySettings guards changing a section until save or discard", async (t) => {
   const runtime = await loadVacancySettingsHarness();
   t.after(() => runtime.cleanup());
   const component = runtime.create({ vacancy: vacancy({ "Образ результата": "Сохранённое значение", "Компетенции": "" }), onNotify() {} });
@@ -151,12 +151,14 @@ test("real VacancySettings keeps edits while moving between required sections", 
   tree = component.render();
   button(tree, /^Компетенции$/).props.onClick();
   tree = component.render();
-  assert.equal(findAll(tree, (node) => node.props?.role === "dialog").length, 0, "editing another section needs no premature save");
-  assert.match(textContent(tree), /Компетенции/, "next section is available");
-  button(tree, /^Образ результата$/).props.onClick();
+  const dialog = findAll(tree, (node) => node.props?.role === "dialog")[0];
+  assert.ok(dialog, "unsaved section change requires an explicit decision");
+  assert.ok(button(dialog, /^Сохранить изменения$/));
+  assert.ok(button(dialog, /^Не сохранять$/));
+  button(dialog, /Закрыть/).props.onClick();
   tree = component.render();
   assert.equal(findAll(tree, (node) => node.type === "textarea" && node.props?.id === "vacancy-description-field")[0].props.value,
-    "Несохранённое изменение", "the draft survives internal navigation");
+    "Несохранённое изменение", "closing the dialog keeps the editor and its unsaved draft");
 });
 
 test("VAC-046 save failure stays visible in the exit dialog until the form is fixed", async (t) => {

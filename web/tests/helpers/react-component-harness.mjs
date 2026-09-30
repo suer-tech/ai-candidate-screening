@@ -7,6 +7,7 @@ import ts from "typescript";
 const REACT_DOUBLE_SOURCE = String.raw`
 let hookSlots = [];
 let hookCursor = 0;
+let effectContext = null;
 
 export const Fragment = Symbol.for("acceptance.react.fragment");
 
@@ -24,8 +25,9 @@ export function useState(initialValue) {
   if (!Object.prototype.hasOwnProperty.call(hookSlots, slot)) {
     hookSlots[slot] = typeof initialValue === "function" ? initialValue() : initialValue;
   }
+  const stateSlots = hookSlots;
   const setValue = (nextValue) => {
-    hookSlots[slot] = typeof nextValue === "function" ? nextValue(hookSlots[slot]) : nextValue;
+    stateSlots[slot] = typeof nextValue === "function" ? nextValue(stateSlots[slot]) : nextValue;
   };
   return [hookSlots[slot], setValue];
 }
@@ -34,7 +36,29 @@ export function useMemo(factory) {
   return factory();
 }
 
-export function useEffect() {}
+export function useEffect(callback, dependencies) {
+  if (!effectContext) return;
+  const slot = hookCursor++;
+  const previous = hookSlots[slot];
+  if (!previous || !dependencies || dependencies.some((value, index) => !Object.is(value, previous.dependencies?.[index]))) {
+    effectContext.pending.push(() => {
+      previous?.cleanup?.();
+      hookSlots[slot] = { dependencies, cleanup: callback() };
+    });
+  }
+}
+
+export function __createContext() { return { slots: [], pending: [] }; }
+export function __renderContext(context, callback) {
+  const previous = { hookSlots, hookCursor, effectContext };
+  hookSlots = context.slots; hookCursor = 0; effectContext = context;
+  try { return callback(); }
+  finally { hookSlots = previous.hookSlots; hookCursor = previous.hookCursor; effectContext = previous.effectContext; }
+}
+export function __flushContext(context) {
+  return __renderContext(context, () => { const pending = context.pending.splice(0); pending.forEach((effect) => effect()); });
+}
+export function __disposeContext(context) { context.slots.forEach((slot) => slot?.cleanup?.()); }
 
 export function useRef(initialValue) {
   const slot = hookCursor++;
@@ -79,7 +103,7 @@ async function compileModuleGraph({ sourcePath, sourceRoot, outputRoot, entry = 
   const relativeSource = path.relative(sourceRoot, sourcePath);
   const outputPath = path.join(outputRoot, relativeSource).replace(/\.tsx?$/i, ".mjs");
   let source = await readFile(sourcePath, "utf8");
-  if (entry) source += "\nexport { Dashboard, Vacancies, VacancySettings };\n";
+  if (entry) source += "\nexport { ProductApp, Dashboard, Vacancies, VacancySettings };\n";
 
   const dependencies = [...source.matchAll(RELATIVE_IMPORT)].map((match) => match[1]);
   const replacements = new Map();
@@ -210,5 +234,31 @@ export async function loadDriveDashboardHarness() {
     async cleanup() {
       await rm(outputRoot, { recursive: true, force: true });
     },
+  };
+}
+
+// Unlike the single-component harnesses, this mounts independent component hook
+// contexts and effects, so application navigation can use the actual editor ref.
+export async function loadVacancyNavigationHarness() {
+  const sourceRoot = path.resolve(import.meta.dirname, "../..");
+  const outputRoot = await mkdtemp(path.join(os.tmpdir(), "vacancy-navigation-acceptance-"));
+  await writeFile(path.join(outputRoot, "react-double.mjs"), REACT_DOUBLE_SOURCE, "utf8");
+  const entryPath = await compileModuleGraph({ sourcePath: path.join(sourceRoot, "app/page.tsx"), sourceRoot, outputRoot, entry: true });
+  const [entryModule, reactDouble] = await Promise.all([
+    import(pathToFileURL(entryPath).href), import(pathToFileURL(path.join(outputRoot, "react-double.mjs")).href),
+  ]);
+  const contexts = [];
+  return {
+    mount(component, props) {
+      const context = reactDouble.__createContext();
+      contexts.push(context);
+      const renderComponent = typeof component === "string" ? entryModule[component] : component;
+      return {
+        render(nextProps = props) { props = nextProps; return reactDouble.__renderContext(context, () => renderComponent(props)); },
+        flushEffects() { reactDouble.__flushContext(context); },
+        dispose() { reactDouble.__disposeContext(context); },
+      };
+    },
+    async cleanup() { contexts.forEach(reactDouble.__disposeContext); await rm(outputRoot, { recursive: true, force: true }); },
   };
 }

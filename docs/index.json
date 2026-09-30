@@ -1,5 +1,10 @@
 {
   "symbols": {
+    "VacancySettings": {
+      "file": "web/app/page.tsx",
+      "kind": "function",
+      "summary": "Редактор с общим Save/Discard/Close guard для разделов, вакансий и ProductApp; синхронный dirty/save-error controller и нормализованный сохранённый снимок."
+    },
     "buildCriterionClaimExtractionBatchesAsync": {
       "file": "web/server/candidate-pipeline/transcript-claim-batching.ts",
       "kind": "function",

@@ -27,7 +27,11 @@ export async function POST(request: Request) {
     if (current.active) {
       const missing = validateFullVacancyProfile({ operationId: `profile-save:${current.id}`, title: current.title,
         profile, abcDirections, templateVersion: current.templateVersion });
-      if (missing.length) return Response.json({ error: `Заполните обязательные поля: ${missing.join(", ")}` }, { status: 422, headers });
+      // Legacy active records can be repaired section by section without introducing new gaps.
+      const previouslyMissing = new Set(validateFullVacancyProfile({ operationId: `profile-current:${current.id}`, title: current.title,
+        profile: current.profile, abcDirections: current.abcDirections, templateVersion: current.templateVersion }));
+      const newlyMissing = missing.filter((field) => !previouslyMissing.has(field));
+      if (newlyMissing.length) return Response.json({ error: `Заполните обязательные поля: ${newlyMissing.join(", ")}` }, { status: 422, headers });
     }
     let analysisPrompt = current.analysisPrompt;
     if (payload.analysisPrompt !== undefined) {
