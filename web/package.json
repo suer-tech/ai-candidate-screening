@@ -120,7 +120,8 @@
     "local:stop": "powershell -NoProfile -ExecutionPolicy Bypass -File ../deploy/local/local.ps1 stop",
     "test:vps-postgres": "node --test tests/vps-postgres-runtime.acceptance.test.mjs",
     "test:fanout-artifact-replay": "tsx --test tests/fanout-artifact-replay.acceptance.integration.test.ts",
-    "test:postgres-integration": "npm run test:fanout-artifact-replay && tsx --test server/google-drive-oauth/postgres-repository.integration.test.ts server/google-drive-oauth/my-drive-adapter.test.ts server/storage/private-temp.test.ts server/candidate-pipeline/production-runtime.integration.test.ts server/candidate-pipeline/matrix-postgres-repository.integration.test.ts"
+    "test:matrix-output-budget": "tsx --test tests/matrix-output-budget.acceptance.integration.test.ts",
+    "test:postgres-integration": "npm run test:fanout-artifact-replay && npm run test:matrix-output-budget && tsx --test server/google-drive-oauth/postgres-repository.integration.test.ts server/google-drive-oauth/my-drive-adapter.test.ts server/storage/private-temp.test.ts server/candidate-pipeline/production-runtime.integration.test.ts server/candidate-pipeline/matrix-postgres-repository.integration.test.ts"
   },
   "dependencies": {
     "@pdf-lib/fontkit": "^1.1.1",

@@ -1,5 +1,10 @@
 {
   "symbols": {
+    "matrixCompilationCapabilityConfig": {
+      "file": "web/server/candidate-pipeline/matrix-compilation-output-budget.ts",
+      "kind": "function",
+      "summary": "Bounded compiler/critic output growth по shared compilation claim, полный context budget без сокращения входа и одинаковый effective limit для provider request и protected trace."
+    },
     "VacancySettings": {
       "file": "web/app/page.tsx",
       "kind": "function",

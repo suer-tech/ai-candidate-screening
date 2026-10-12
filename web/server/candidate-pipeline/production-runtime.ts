@@ -27,6 +27,7 @@ import { PostgresNotificationStore, NotificationDispatcher, ServerRecipientRegis
 import { successTelegramTemplate } from "./operations.ts";
 import { PostgresVacancyMatrixRepository } from "./matrix-postgres-repository.ts";
 import { compileVacancyMatrix, type MatrixCompilationSkills } from "./matrix-compilation.ts";
+import { matrixCompilationCapabilityConfig } from "./matrix-compilation-output-budget.ts";
 import { MATRIX_WORKFLOW_VERSION, applyCriticalVerificationDecisions, candidateClaimIsDecisionAdmissible, decisionSafeJson, matrixChecksum, validateCandidateMatrixRows, type CandidateMatrixRow, type CandidateSourceClaim, type CriticalUnmappedRisk, type CriticalVerificationDecision, type MatrixCriterion } from "./matrix-driven.ts";
 import { normalizeMatrixCapabilityOutput, type MatrixCapability } from "./matrix-schemas.ts";
 import { matrixResponseSchemaForProfile } from "../llm/matrix-response-schema.ts";
@@ -1073,10 +1074,31 @@ export async function createProductionCandidateToolExecution(input: { database: 
         execute: async (toolKey) => {
           if (!llmDependencies || !artifactStore) throw new Error("MATRIX_RUNTIME_NOT_PROVISIONED");
           const matrixRepository = new PostgresVacancyMatrixRepository(input.database, goal.workflow_version);
-          const call = async (capability: MatrixCapability, context: Record<string, unknown>, suffix: string) => {
+          const call = async (capability: MatrixCapability, context: Record<string, unknown>, suffix: string, compilationAttempt = 1) => {
             const correlation = traceCorrelation(capability, suffix);
-            const config = llmDependencies.configuration.resolve(capability);
-            const schema = matrixResponseSchemaForProfile(capability, config.responseSchema, context as JsonValue);
+            const baseConfiguration = llmDependencies.configuration;
+            const baseConfig = baseConfiguration.resolve(capability);
+            const schema = matrixResponseSchemaForProfile(capability, baseConfig.responseSchema, context as JsonValue);
+            const matrixDraftCapability = capability === "matrix_compiler" || capability === "matrix_critic";
+            const budgetInput = { compilationAttempt, userContent: context as JsonValue,
+              contextWindowTokens: Number(input.environment.ROUTERAI_CONTEXT_WINDOW_TOKENS ?? 128_000),
+              safetyTokens: Number(input.environment.MATRIX_BATCH_SAFETY_TOKENS ?? 4_096) };
+            const config = matrixDraftCapability
+              ? matrixCompilationCapabilityConfig({ ...baseConfig, responseSchema: schema }, budgetInput) : baseConfig;
+            const callDependencies: ExecuteLlmAttemptDependencies = matrixDraftCapability ? {
+              ...llmDependencies,
+              configuration: { ...baseConfiguration,
+                resolve(requested, selection) {
+                  if (requested !== capability) return baseConfiguration.resolve(requested, selection);
+                  if (!selection) return config;
+                  const selected = baseConfiguration.resolve(requested, selection);
+                  return matrixCompilationCapabilityConfig({ ...selected,
+                    responseSchema: matrixResponseSchemaForProfile(requested, selected.responseSchema, context as JsonValue) }, budgetInput);
+                },
+              },
+            } : llmDependencies;
+            const budgetMetadata = matrixDraftCapability ? { compilationAttempt,
+              outputTokenLimit: (config.limits as Record<string, JsonValue>).maxOutputTokens } : {};
             let assessmentInstruction: string | undefined;
             if (capability === "matrix_assessment_summary") {
               const promptSnapshot = await queryOne<{ analysis_prompt_text: string; analysis_prompt_artifact_id: string; analysis_prompt_hash: string }>(input.database,
@@ -1086,7 +1108,6 @@ export async function createProductionCandidateToolExecution(input: { database: 
               if (verified.hash !== promptSnapshot.analysis_prompt_hash) throw new Error("ASSESSMENT_PROMPT_INTEGRITY_MISMATCH");
               assessmentInstruction = composeProtectedAssessmentInstruction(verified);
             }
-            const matrixDraftCapability = capability === "matrix_compiler" || capability === "matrix_critic";
             const sourceFragments = matrixDraftCapability ? context.sourceFragments : undefined;
             const sourceRefs = sourceFragments && typeof sourceFragments === "object" && !Array.isArray(sourceFragments)
               ? Object.entries(sourceFragments)
@@ -1094,7 +1115,7 @@ export async function createProductionCandidateToolExecution(input: { database: 
                 .map(([key]) => key).sort()
               : [];
             try {
-              const attempt = await runLlmCapabilityWithPolicy(llmDependencies, llmBudget, {
+              const attempt = await runLlmCapabilityWithPolicy(callDependencies, llmBudget, {
                 capability,
                 correlation,
                 request: { messages: [
@@ -1111,7 +1132,7 @@ export async function createProductionCandidateToolExecution(input: { database: 
               });
               const traceId = `${correlation.traceId}:attempt:${attempt.attempts}`;
               console.info(JSON.stringify({ event: "matrix-answer-validated", runId, taskId, attemptId,
-                traceId, capability, schemaHash: schema.hash, sourceRefCount: sourceRefs.length }));
+                traceId, capability, schemaHash: schema.hash, sourceRefCount: sourceRefs.length, ...budgetMetadata }));
               return { output: normalizeMatrixCapabilityOutput(capability, attempt.response.normalizedOutput), traceRef: traceId, model: config.actualModel };
             } catch (error) {
               const providerClass = error instanceof LlmProviderAttemptError
@@ -1121,7 +1142,7 @@ export async function createProductionCandidateToolExecution(input: { database: 
                 : error instanceof Error && /^(?:MATRIX_[A-Z0-9_]+|LLM_CAPABILITY_FAILED:[a-z_]+)$/.test(error.message)
                   ? error.message : "MATRIX_ANSWER_FAILED";
               console.info(JSON.stringify({ event: "matrix-answer-failed", runId, taskId, attemptId,
-                traceIdPrefix: correlation.traceId, capability, schemaHash: schema.hash, sourceRefCount: sourceRefs.length, safeCode: code }));
+                traceIdPrefix: correlation.traceId, capability, schemaHash: schema.hash, sourceRefCount: sourceRefs.length, safeCode: code, ...budgetMetadata }));
               throw error;
             }
           };
@@ -1158,11 +1179,11 @@ export async function createProductionCandidateToolExecution(input: { database: 
           if (toolKey === "candidate.matrix-compile/v1") {
             const skills: MatrixCompilationSkills = {
               async compile(value) {
-                const result = await call("matrix_compiler", { profileVersion: value.profileVersion, canonicalProfile: value.canonicalProfile, sourceFragments: value.sourceFragments }, "compile");
+                const result = await call("matrix_compiler", { profileVersion: value.profileVersion, canonicalProfile: value.canonicalProfile, sourceFragments: value.sourceFragments }, "compile", value.compilationAttempt);
                 return { schemaVersion: "vacancy-matrix-draft/v1", criteria: result.output.criteria as never, traceRef: result.traceRef, model: result.model };
               },
               async critique(value) {
-                const result = await call("matrix_critic", { profileVersion: value.profileVersion, canonicalProfile: value.canonicalProfile, sourceFragments: value.sourceFragments, draft: value.draft, policy: value.policy }, "critic-editor");
+                const result = await call("matrix_critic", { profileVersion: value.profileVersion, canonicalProfile: value.canonicalProfile, sourceFragments: value.sourceFragments, draft: value.draft, policy: value.policy }, "critic-editor", value.compilationAttempt);
                 return { schemaVersion: "vacancy-matrix-critic/v2", decision: result.output.decision as "PASS" | "CORRECTED", changes: result.output.changes as never,
                   successor: result.output.successor as never, traceRef: result.traceRef, model: result.model };
               },

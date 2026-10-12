@@ -40,8 +40,8 @@ export interface MatrixCompilationStore {
 }
 
 export interface MatrixCompilationSkills {
-  compile(input: { profileVersion: string; canonicalProfile: Record<string, unknown>; sourceFragments: Record<string, string> }): Promise<MatrixDraftEnvelope>;
-  critique(input: { profileVersion: string; canonicalProfile: Record<string, unknown>; sourceFragments: Record<string, string>; draft: MatrixDraftEnvelope; policy: Record<string, unknown> }): Promise<MatrixCriticEnvelope>;
+  compile(input: { profileVersion: string; canonicalProfile: Record<string, unknown>; sourceFragments: Record<string, string>; compilationAttempt: number }): Promise<MatrixDraftEnvelope>;
+  critique(input: { profileVersion: string; canonicalProfile: Record<string, unknown>; sourceFragments: Record<string, string>; draft: MatrixDraftEnvelope; policy: Record<string, unknown>; compilationAttempt: number }): Promise<MatrixCriticEnvelope>;
 }
 
 export type MatrixCompilationResult =
@@ -87,7 +87,8 @@ export async function compileVacancyMatrix(input: {
   const traces: string[] = [];
   const models: Record<string, string> = {};
   try {
-    const draft = await input.skills.compile({ profileVersion: input.profileVersion, canonicalProfile: structuredClone(input.canonicalProfile), sourceFragments: structuredClone(input.sourceFragments) });
+    const compilationAttempt = claim.attempt ?? 1;
+    const draft = await input.skills.compile({ profileVersion: input.profileVersion, canonicalProfile: structuredClone(input.canonicalProfile), sourceFragments: structuredClone(input.sourceFragments), compilationAttempt });
     llmCalls += 1; traces.push(draft.traceRef); models.compiler = draft.model;
     const canonicalize = (criteria: MatrixCriterionDraft[]) => canonicalizeVacancyMatrix({
       profileVersion: input.profileVersion,
@@ -106,6 +107,7 @@ export async function compileVacancyMatrix(input: {
         sourceFragments: structuredClone(input.sourceFragments),
         draft: structuredClone(draft),
         policy: { compilerPolicyVersion: input.compilerPolicyVersion, singlePassEditor: true, failSoft: true },
+        compilationAttempt,
       });
       llmCalls += 1; traces.push(critic.traceRef); models.critic = critic.model;
       try { matrix = canonicalize(critic.successor.criteria); }
