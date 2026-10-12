@@ -13,6 +13,7 @@ import { probeMediaContent } from "../candidate-pipeline/media-tool.ts";
 import { extractAudioTrack } from "../transcription/extract-audio.ts";
 import { TRANSCRIPT_AUDIO_BLOB_LIMIT } from "../storage/blob-store.ts";
 import { createPrivateTemp, removePrivateTemp } from "../storage/private-temp.ts";
+import { mediaInputLimit } from "./limits.ts";
 
 export type MediaProcessorConfig = { token: string; host: string; port: number; maxInputBytes: number };
 const execFileAsync = promisify(execFile);
@@ -46,7 +47,7 @@ export function loadMediaProcessorConfig(source: NodeJS.ProcessEnv = process.env
   const token = source.MEDIA_PROCESSOR_TOKEN?.trim();
   if (!token || token.length < 32) throw new Error("MEDIA_PROCESSOR_TOKEN_MISSING_OR_WEAK");
   const port = Number(source.MEDIA_PROCESSOR_PORT ?? 4080);
-  const maxInputBytes = Number(source.MEDIA_PROCESSOR_MAX_INPUT_BYTES ?? 512 * 1024 * 1024);
+  const maxInputBytes = mediaInputLimit(source.MEDIA_PROCESSOR_MAX_INPUT_BYTES);
   if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error("MEDIA_PROCESSOR_PORT_INVALID");
   if (!Number.isInteger(maxInputBytes) || maxInputBytes < 1) throw new Error("MEDIA_PROCESSOR_MAX_INPUT_BYTES_INVALID");
   return { token, host: source.MEDIA_PROCESSOR_HOST?.trim() || "127.0.0.1", port, maxInputBytes };
@@ -59,7 +60,7 @@ function authorized(header: string | undefined, expected: string) {
   return left.length === right.length && timingSafeEqual(left, right);
 }
 
-async function streamRequestToFile(request: IncomingMessage, target: string, limit: number) {
+async function streamRequestToFile(request: IncomingMessage, target: string, limit: number, signal?: AbortSignal) {
   const declaredLength = Number(request.headers["content-length"] ?? 0);
   if (Number.isFinite(declaredLength) && declaredLength > limit) throw new Error("MEDIA_INPUT_TOO_LARGE");
   let length = 0;
@@ -67,7 +68,7 @@ async function streamRequestToFile(request: IncomingMessage, target: string, lim
     length += chunk.length;
     callback(length > limit ? new Error("MEDIA_INPUT_TOO_LARGE") : null, chunk);
   } });
-  await pipeline(request, limiter, createWriteStream(target, { mode: 0o600 }));
+  await pipeline(request, limiter, createWriteStream(target, { mode: 0o600 }), { signal });
   if (!length) throw new Error("MEDIA_INPUT_EMPTY");
   return length;
 }
@@ -95,14 +96,21 @@ export function createMediaProcessorServer(config: MediaProcessorConfig) {
       catch { return json(response, 503, { ready: false, code: "FFMPEG_UNAVAILABLE", storesInput: false }); }
     }
     if (request.method !== "POST" || request.url !== "/v1/extract-audio") return json(response, 404, { code: "MEDIA_PROCESSOR_ROUTE_NOT_FOUND" });
+    const cancelled = new AbortController();
+    const abortDisconnected = () => { if (!response.writableFinished) cancelled.abort(new Error("MEDIA_REQUEST_ABORTED")); };
+    request.once("aborted", abortDisconnected);
+    response.once("close", abortDisconnected);
+    const signal = AbortSignal.any([cancelled.signal, AbortSignal.timeout(20 * 60_000)]);
     const work = await createPrivateTemp("hh-media-processor-");
     try {
       const inputPath = join(work, "source.bin");
       const outputPath = join(work, "audio.m4a");
-      await streamRequestToFile(request, inputPath, config.maxInputBytes);
+      await streamRequestToFile(request, inputPath, config.maxInputBytes, signal);
+      signal.throwIfAborted();
       const ffmpegPath = await readiness;
-      const probe = await probeMediaContent(inputPath, ffmpegPath);
-      await extractAudioTrack({ inputPath, outputPath, ffmpegPath, maxOutputBytes: TRANSCRIPT_AUDIO_BLOB_LIMIT });
+      signal.throwIfAborted();
+      const probe = await probeMediaContent(inputPath, ffmpegPath, signal);
+      await extractAudioTrack({ inputPath, outputPath, ffmpegPath, maxOutputBytes: TRANSCRIPT_AUDIO_BLOB_LIMIT, signal });
       const audioSize = (await stat(outputPath)).size;
       if (!audioSize) throw new Error("MEDIA_FILE_EMPTY");
       const audioChecksum = await hashFile(outputPath);
@@ -123,6 +131,8 @@ export function createMediaProcessorServer(config: MediaProcessorConfig) {
       if (!response.headersSent) json(response, ["MEDIA_INPUT_TOO_LARGE", "MEDIA_AUDIO_TOO_LARGE"].includes(code) ? 413 : 422, { code });
       else response.destroy();
     } finally {
+      request.removeListener("aborted", abortDisconnected);
+      response.removeListener("close", abortDisconnected);
       await removePrivateTemp(work);
     }
   });

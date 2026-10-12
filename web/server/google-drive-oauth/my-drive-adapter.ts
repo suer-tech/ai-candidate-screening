@@ -1,4 +1,8 @@
 import { createHash } from "node:crypto";
+import { createWriteStream } from "node:fs";
+import { rm } from "node:fs/promises";
+import { Readable, Transform } from "node:stream";
+import { pipeline } from "node:stream/promises";
 import type { CandidateFolder } from "../candidate-pipeline/discovery.ts";
 import type { DriveObject } from "../candidate-pipeline/types.ts";
 import { GoogleDriveOAuthError, type GoogleDriveOAuthRepository, type RegisteredDriveObject } from "./types.ts";
@@ -20,6 +24,13 @@ const folderMime = "application/vnd.google-apps.folder";
 const escapeQuery = (value: string) => value.replace(/[\\']/g, (character) => `\\${character}`);
 export const DRIVE_LARGE_DOWNLOAD_TIMEOUT_MS = 15 * 60_000;
 export const DRIVE_RESUMABLE_CHUNK_BYTES = 8 * 1024 * 1024;
+
+export type VersionedFileDownload = {
+  fileId: string; expectedVersion: string; expectedSize?: number;
+  expectedModifiedTime?: string; expectedChecksum?: string;
+  checkpoint: (value: { fileId: string; version: string; checksum: string }) => Promise<void> | void;
+};
+export type DownloadedSourceFile = { path: string; checksum: string; version: string; byteSize: number };
 
 async function responseJson<T>(response: Response, code: string) {
   if (!response.ok) throw new GoogleDriveOAuthError(`${code}_${response.status}`, response.status === 429 || response.status >= 500);
@@ -139,6 +150,62 @@ export class GoogleMyDriveAdapter implements GoogleDrivePort {
     if (input.expectedChecksum && checksum !== input.expectedChecksum) throw new GoogleDriveOAuthError("DRIVE_FILE_CONTENT_CHANGED");
     await input.checkpoint({ fileId: input.fileId, version, checksum });
     return { bytes, checksum, version };
+  }
+
+  async downloadVersionToFile(input: VersionedFileDownload & { targetPath: string; maxBytes: number; signal?: AbortSignal }): Promise<DownloadedSourceFile> {
+    if (!Number.isSafeInteger(input.maxBytes) || input.maxBytes < 1) throw new Error("MEDIA_PROCESSOR_MAX_INPUT_BYTES_INVALID");
+    if (input.expectedSize !== undefined && input.expectedSize > input.maxBytes) throw new Error("MEDIA_INPUT_TOO_LARGE");
+    const signal = AbortSignal.any([AbortSignal.timeout(DRIVE_LARGE_DOWNLOAD_TIMEOUT_MS), ...(input.signal ? [input.signal] : [])]);
+    signal.throwIfAborted();
+    await this.assertAllowed(input.fileId);
+    const token = await this.options.accessToken();
+    signal.throwIfAborted();
+    const metadata = await responseJson<{ version?: string; modifiedTime?: string; size?: string }>(
+      await this.fetcher()(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(input.fileId)}?fields=id,version,modifiedTime,size`,
+        { headers: bearer(token), signal: AbortSignal.any([signal, AbortSignal.timeout(15_000)]) }), "DRIVE_METADATA_FAILED");
+    const version = String(metadata.version ?? metadata.modifiedTime ?? "unknown");
+    if (version !== input.expectedVersion) {
+      const sameStableMetadata = input.expectedSize !== undefined && Number(metadata.size) === input.expectedSize
+        && Boolean(input.expectedModifiedTime) && metadata.modifiedTime === input.expectedModifiedTime;
+      if (!sameStableMetadata) throw new GoogleDriveOAuthError("DRIVE_FILE_VERSION_CHANGED");
+    }
+    const declaredSize = metadata.size === undefined ? input.expectedSize : Number(metadata.size);
+    if (declaredSize !== undefined && (!Number.isSafeInteger(declaredSize) || declaredSize < 0)) throw new Error("DRIVE_FILE_SIZE_INVALID");
+    if (declaredSize !== undefined && declaredSize > input.maxBytes) throw new Error("MEDIA_INPUT_TOO_LARGE");
+    if (input.expectedSize !== undefined && declaredSize !== input.expectedSize) throw new GoogleDriveOAuthError("DRIVE_FILE_CONTENT_CHANGED");
+    const response = await this.fetcher()(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(input.fileId)}?alt=media`, { headers: bearer(token), signal });
+    if (!response.ok) throw new GoogleDriveOAuthError(`DRIVE_DOWNLOAD_FAILED_${response.status}`, response.status === 429 || response.status >= 500);
+    const contentLength = Number(response.headers.get("content-length") ?? 0);
+    if (contentLength > input.maxBytes) {
+      await response.body?.cancel();
+      throw new Error("MEDIA_INPUT_TOO_LARGE");
+    }
+    if (!response.body) throw new Error("MEDIA_INPUT_EMPTY");
+    const hash = createHash("sha256");
+    let byteSize = 0;
+    let ownsTarget = false;
+    const target = createWriteStream(input.targetPath, { flags: "wx", mode: 0o600 });
+    target.once("open", () => { ownsTarget = true; });
+    const limiter = new Transform({ transform(chunk: Buffer, _encoding, done) {
+      byteSize += chunk.byteLength;
+      if (byteSize > input.maxBytes) return done(new Error("MEDIA_INPUT_TOO_LARGE"));
+      hash.update(chunk);
+      done(null, chunk);
+    } });
+    try {
+      await pipeline(Readable.from(response.body as unknown as AsyncIterable<Uint8Array>), limiter, target, { signal });
+      signal.throwIfAborted();
+      if (!byteSize) throw new Error("MEDIA_INPUT_EMPTY");
+      if (declaredSize !== undefined && byteSize !== declaredSize) throw new GoogleDriveOAuthError("DRIVE_FILE_CONTENT_CHANGED");
+      const checksum = hash.digest("hex");
+      if (input.expectedChecksum && checksum !== input.expectedChecksum) throw new GoogleDriveOAuthError("DRIVE_FILE_CONTENT_CHANGED");
+      await input.checkpoint({ fileId: input.fileId, version, checksum });
+      signal.throwIfAborted();
+      return { path: input.targetPath, checksum, version, byteSize };
+    } catch (error) {
+      if (ownsTarget) await rm(input.targetPath, { force: true });
+      throw error;
+    }
   }
 
   private async findRemoteByOperationIdentity(parentFolderId: string, operationIdentity: string) {

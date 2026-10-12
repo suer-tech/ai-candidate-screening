@@ -10,13 +10,16 @@ export interface ExtractAudioOptions {
   outputPath: string;
   ffmpegPath?: string;
   maxOutputBytes?: number;
+  signal?: AbortSignal;
 }
 
-async function runFfmpeg(binaryPath: string, args: string[]): Promise<void> {
+async function runFfmpeg(binaryPath: string, args: string[], signal?: AbortSignal): Promise<void> {
+  signal?.throwIfAborted();
   await new Promise<void>((resolve, reject) => {
     const child = spawn(binaryPath, args, {
       windowsHide: true,
       stdio: ["ignore", "ignore", "pipe"],
+      signal,
     });
 
     let stderr = "";
@@ -24,8 +27,11 @@ async function runFfmpeg(binaryPath: string, args: string[]): Promise<void> {
     child.stderr.on("data", (chunk: string) => {
       stderr = (stderr + chunk).slice(-16_000);
     });
-    child.on("error", reject);
+    let processError: Error | undefined;
+    child.on("error", (error: Error) => { processError = error; });
     child.on("close", (code) => {
+      if (signal?.aborted) return reject(signal.reason);
+      if (processError) return reject(processError);
       if (code === 0) {
         resolve();
         return;
@@ -51,6 +57,7 @@ async function assertUsableFile(path: string, label: string): Promise<number> {
  * stored in M4A, the function retries with a speech-friendly AAC encoding.
  */
 export async function extractAudioTrack(options: ExtractAudioOptions): Promise<ExtractedAudio> {
+  options.signal?.throwIfAborted();
   const binaryPath = options.ffmpegPath ?? ffmpegStaticPath;
   if (!binaryPath) {
     throw new Error("Для этой платформы не найден исполняемый файл FFmpeg.");
@@ -84,13 +91,14 @@ export async function extractAudioTrack(options: ExtractAudioOptions): Promise<E
 
   let copyError: unknown;
   try {
-    await runFfmpeg(binaryPath, [...commonArgs, "-c:a", "copy", "-movflags", "+faststart", options.outputPath]);
+    await runFfmpeg(binaryPath, [...commonArgs, "-c:a", "copy", "-movflags", "+faststart", options.outputPath], options.signal);
     const sizeBytes = await assertUsableFile(options.outputPath, "Извлечённое аудио");
     if (options.maxOutputBytes === undefined || sizeBytes <= options.maxOutputBytes) {
       return { path: options.outputPath, sizeBytes, mode: "stream_copy" };
     }
     copyError = new Error("MEDIA_AUDIO_COPY_TOO_LARGE");
   } catch (error) {
+    options.signal?.throwIfAborted();
     copyError = error;
   }
   await rm(options.outputPath, { force: true });
@@ -108,8 +116,9 @@ export async function extractAudioTrack(options: ExtractAudioOptions): Promise<E
       "-movflags",
       "+faststart",
       options.outputPath,
-    ]);
+    ], options.signal);
   } catch (transcodeError) {
+    options.signal?.throwIfAborted();
     throw new AggregateError(
       [copyError, transcodeError],
       "Не удалось извлечь первую аудиодорожку из видео.",

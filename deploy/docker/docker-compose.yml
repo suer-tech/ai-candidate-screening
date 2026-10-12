@@ -37,6 +37,7 @@ x-app-common: &app-common
     MEDIA_PROCESSOR_URL: http://media-processor:4311/v1/extract-audio
     MEDIA_PROCESSOR_HOST: media-processor
     MEDIA_PROCESSOR_PORT: "4311"
+    MEDIA_PROCESSOR_MAX_INPUT_BYTES: "${MEDIA_PROCESSOR_MAX_INPUT_BYTES:-2147483648}"
     DOCUMENT_PROCESSOR_URL: http://document-processor:4312/v1/extract-document
     DOCUMENT_PROCESSOR_HOST: document-processor
     DOCUMENT_PROCESSOR_PORT: "4312"
@@ -192,9 +193,8 @@ services:
   worker-media:
     <<: *app-common
     command: ["npm", "run", "service:rabbit-worker"]
-    # Video extraction holds the source video and produced audio in memory while
-    # crossing the processor boundary. Keep this pool deliberately smaller than
-    # the cheap control/document pools so several candidates cannot OOM the host.
+    # Source videos cross the processor boundary through bounded file streams.
+    # Keep extraction concurrency small to bound temporary disk and FFmpeg usage.
     environment: { <<: *app-env, AGENT_RUNTIME_WORKER_ID: docker-media, RABBITMQ_WORKER_CLASSES: media, RABBITMQ_PREFETCH: "${RABBITMQ_MEDIA_PREFETCH:-1}", RABBITMQ_POOL_CONCURRENCY: "${RABBITMQ_MEDIA_CONCURRENCY:-1}" }
     depends_on: { postgres: { condition: service_healthy }, rabbitmq: { condition: service_healthy }, migrate: { condition: service_completed_successfully }, web: { condition: service_started } }
 

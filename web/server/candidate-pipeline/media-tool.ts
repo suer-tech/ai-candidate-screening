@@ -10,22 +10,29 @@ import { createPrivateTemp, removePrivateTemp } from "../storage/private-temp.ts
 export type MediaProbe = { hasAudio: true; containerEvidence: string; durationSeconds?: number };
 export type AudioArtifactSink = { put(input: { operationIdentity: string; bytes: Uint8Array; checksum: string; contentType: "audio/mp4"; configVersion: string }): Promise<{ storageIdentity: string }> };
 
-function run(binary: string, args: string[]) {
+function run(binary: string, args: string[], signal?: AbortSignal) {
+  signal?.throwIfAborted();
   return new Promise<string>((resolve, reject) => {
-    const child = spawn(binary, args, { windowsHide: true, stdio: ["ignore", "ignore", "pipe"] });
+    const child = spawn(binary, args, { windowsHide: true, stdio: ["ignore", "ignore", "pipe"], signal });
     let stderr = "";
     child.stderr.setEncoding("utf8");
     child.stderr.on("data", (chunk: string) => { stderr = (stderr + chunk).slice(-32_000); });
-    child.on("error", reject);
-    child.on("close", (code) => code === 0 ? resolve(stderr) : reject(new Error("MEDIA_CONTENT_PROBE_FAILED")));
+    let processError: Error | undefined;
+    child.on("error", (error: Error) => { processError = error; });
+    child.on("close", (code) => {
+      if (signal?.aborted) return reject(signal.reason);
+      if (processError) return reject(processError);
+      return code === 0 ? resolve(stderr) : reject(new Error("MEDIA_CONTENT_PROBE_FAILED"));
+    });
   });
 }
 
-export async function probeMediaContent(inputPath: string, ffmpegPath = ffmpegStaticPath ?? undefined): Promise<MediaProbe> {
+export async function probeMediaContent(inputPath: string, ffmpegPath = ffmpegStaticPath ?? undefined, signal?: AbortSignal): Promise<MediaProbe> {
+  signal?.throwIfAborted();
   if (!ffmpegPath) throw new Error("FFMPEG_UNAVAILABLE");
   const source = await stat(inputPath);
   if (!source.isFile() || !source.size) throw new Error("MEDIA_FILE_EMPTY");
-  const output = await run(ffmpegPath, ["-nostdin", "-hide_banner", "-i", inputPath, "-map", "0:a:0", "-frames:a", "1", "-f", "null", "-"]);
+  const output = await run(ffmpegPath, ["-nostdin", "-hide_banner", "-i", inputPath, "-map", "0:a:0", "-frames:a", "1", "-f", "null", "-"], signal);
   const duration = /Duration:\s*(\d+):(\d+):(\d+(?:\.\d+)?)/.exec(output);
   const durationSeconds = duration ? Number(duration[1]) * 3600 + Number(duration[2]) * 60 + Number(duration[3]) : undefined;
   return { hasAudio: true, containerEvidence: createHash("sha256").update(output.replace(/[A-Z]:\\[^\s]+|\/[^\s]+/g, "<path>")).digest("hex").slice(0, 16), durationSeconds };

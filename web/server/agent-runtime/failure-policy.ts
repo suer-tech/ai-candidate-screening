@@ -6,6 +6,7 @@ const TRANSIENT_CODES = [
   /^HTTP_(?:429|5\d\d)$/,
   /^JEV_TRACE_WRITE_FAILED$/,
   /^LEASE_EXPIRED_RECOVERED$/,
+  /^TASK_LEASE_CHECK_UNAVAILABLE$/,
 ];
 
 const MAX_ATTEMPTS_BY_TOOL: Readonly<Record<string, number>> = Object.freeze({

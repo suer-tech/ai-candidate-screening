@@ -98,7 +98,7 @@
     "GoogleMyDriveAdapter": {
       "file": "web/server/google-drive-oauth/my-drive-adapter.ts",
       "kind": "class",
-      "summary": "Работа с разрешённым корнем личного My Drive, включая resumable upload."
+      "summary": "Работа с разрешённым корнем личного My Drive, включая resumable upload и bounded pinned downloadVersionToFile с SHA256 и очисткой частичного файла."
     },
     "ScopedGoogleDriveExecutor": {
       "file": "web/server/google-drive-oauth/scoped-executor.ts",
@@ -123,7 +123,17 @@
     "createMediaProcessorServer": {
       "file": "web/server/media-processor/server.ts",
       "kind": "function",
-      "summary": "Приватный FFmpeg processor: потоково сохраняет входное видео во временный файл и потоково отдаёт аудио без полного входного или выходного буфера в Node heap."
+      "summary": "Приватный FFmpeg processor: bounded потоковая запись видео на диск, отмена FFmpeg при отключении клиента, потоковый возврат аудио и cleanup. Общий input limit по умолчанию 2 GiB."
+    },
+    "extractVideoAudio": {
+      "file": "web/server/candidate-pipeline/streamed-video.ts",
+      "kind": "function",
+      "summary": "Pinned Drive source -> private file с checksum -> bounded stream upload в media processor -> checksum-verified audio <=256 MiB; execution signal и unconditional temp cleanup."
+    },
+    "createTaskExecutionSignal": {
+      "file": "web/server/candidate-pipeline/task-execution-signal.ts",
+      "kind": "function",
+      "summary": "Single-flight lease monitor для recording tools: exact task/run/attempt/owner/token, last confirmed absolute deadline, fail-closed start и cancellation без позднего возобновления."
     },
     "createFanoutDescriptor": {
       "file": "web/server/agent-runtime/fanout.ts",

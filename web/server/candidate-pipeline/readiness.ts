@@ -20,6 +20,7 @@ export type CandidatePipelineEnvironment = {
   TELEGRAM_BOT_TOKEN?: string;
   TELEGRAM_RECIPIENT_REFS_JSON?: string;
   MEDIA_PROCESSOR_URL?: string;
+  MEDIA_PROCESSOR_MAX_INPUT_BYTES?: string;
   MEDIA_PROCESSOR_TOKEN?: string;
   DOCUMENT_PROCESSOR_URL?: string;
   DOCUMENT_PROCESSOR_TOKEN?: string;

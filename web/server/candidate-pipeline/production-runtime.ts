@@ -39,6 +39,8 @@ import { canonicalJoin, createFanoutDescriptor } from "../agent-runtime/fanout.t
 import { buildAssessmentJoin } from "./assessment-join.ts";
 import { callRouterAiJev, protectedJevTrace, reviewAbcDirectionWithJev, type JevChoiceCall } from "./jev-decisions.ts";
 import { runCandidatePhase } from "./phase-diagnostics.ts";
+import { extractVideoAudio } from "./streamed-video.ts";
+import { mediaInputLimit } from "../media-processor/limits.ts";
 import { CANDIDATE_ASSESSMENT_PROMPT_ARTIFACT, composeProtectedAssessmentInstruction, createEditablePromptSnapshot } from "../product/prompt-contracts.ts";
 
 type ExecutionEnvironment = CandidatePipelineEnvironment & GoogleDriveOAuthEnvironment;
@@ -374,7 +376,7 @@ function dockerInternalProcessorEndpoint(url: URL, service: "document-processor"
     && !url.hash;
 }
 
-export async function createProductionCandidateToolExecution(input: { database: PostgresClient; environment: ExecutionEnvironment; task: Record<string, unknown> }) {
+export async function createProductionCandidateToolExecution(input: { database: PostgresClient; environment: ExecutionEnvironment; task: Record<string, unknown>; signal?: AbortSignal }) {
   const candidatePk = integer(input.task.candidatePk, "PRODUCTION_TASK_CANDIDATE_PK_MISSING");
   const candidate = await queryOne<{ public_id: string | null; drive_folder_id: string }>(input.database,
     `SELECT c.public_id,f.drive_folder_id FROM candidates c
@@ -402,12 +404,14 @@ export async function createProductionCandidateToolExecution(input: { database: 
   const benchmarkGuard = await queryOne<{ deny_checksums_json: string }>(input.database,
     "SELECT deny_checksums_json FROM private_benchmark_guards WHERE run_id=$1", [runId]);
   const deniedBenchmarkChecksums = new Set<string>(benchmarkGuard ? JSON.parse(benchmarkGuard.deny_checksums_json) as string[] : []);
-  const auditBoundary = async (boundary: "drive" | "provider" | "blob", bytes: Uint8Array) => {
+  const auditChecksum = async (boundary: "drive" | "provider" | "blob", checksum: string) => {
     if (!benchmarkGuard) return;
-    const checksum = createHash("sha256").update(bytes).digest("hex");
     if (deniedBenchmarkChecksums.has(checksum)) throw new Error(`PRIVATE_BENCHMARK_REFERENCE_DENIED:${boundary}`);
     await execute(input.database, `INSERT INTO private_benchmark_boundary_audits(run_id,boundary,payload_checksum,created_at_utc)
       VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING`, [runId, boundary, checksum, new Date().toISOString()]);
+  };
+  const auditBoundary = async (boundary: "drive" | "provider" | "blob", bytes: Uint8Array) => {
+    if (benchmarkGuard) await auditChecksum(boundary, createHash("sha256").update(bytes).digest("hex"));
   };
   const traceCorrelation = (stage: string, suffix = "main"): TraceCorrelation => ({
     traceId: `trace-${sha256([runId, taskId, attemptId, stage, suffix]).slice(0, 32)}`,
@@ -881,26 +885,21 @@ export async function createProductionCandidateToolExecution(input: { database: 
             if (toolKey === "candidate.transcript-media-shard/v1") {
               if (!input.environment.MEDIA_PROCESSOR_URL || !input.environment.MEDIA_PROCESSOR_TOKEN) throw new Error("PRODUCTION_MEDIA_PROCESSOR_NOT_PROVISIONED");
               const correlation = { runId, taskId, attemptId };
-              const downloaded = await runCandidatePhase(correlation, "media-source-download", download);
               const mediaUrl = new URL(input.environment.MEDIA_PROCESSOR_URL);
               if (input.environment.E2E_ENVIRONMENT === "local") {
                 if (!loopbackOrDockerHostname(mediaUrl.hostname) || !["http:", "https:"].includes(mediaUrl.protocol)) throw new Error("LOCAL_MEDIA_PROCESSOR_MUST_BE_LOOPBACK");
               } else if (mediaUrl.protocol !== "https:" && !dockerInternalProcessorEndpoint(mediaUrl, "media-processor")) throw new Error("REMOTE_MEDIA_PROCESSOR_MUST_USE_HTTPS");
-              await auditBoundary("provider", downloaded.bytes);
-              const response = await runCandidatePhase(correlation, "media-processor-request", async () => {
-                const result = await fetch(mediaUrl, { method: "POST", headers: { authorization: `Bearer ${input.environment.MEDIA_PROCESSOR_TOKEN}`, "content-type": sourceEntry.mimeType },
-                  body: downloaded.bytes.slice().buffer as ArrayBuffer, signal: AbortSignal.timeout(15 * 60_000) });
-                if (!result.ok) {
-                  const failure = await result.json().catch(() => null) as { code?: unknown } | null;
-                  const safeCode = failure?.code === "MEDIA_AUDIO_TOO_LARGE" || failure?.code === "MEDIA_INPUT_TOO_LARGE"
-                    ? failure.code : `MEDIA_PROCESSOR_HTTP_${result.status}`;
-                  throw new Error(safeCode);
-                }
-                return result;
+              await authorizeFile("download", sourceFileId);
+              const audioBytes = await extractVideoAudio({ drive, source: sourceEntry,
+                expectedChecksum: await immutableFileChecksum(sourceFileId),
+                checkpoint: (value) => checkpoint({ kind: "drive-download", identity: `${operationIdentity}:source`, artifactIdentity: `${value.fileId}:${value.version}`, checksum: value.checksum }),
+                mediaUrl, mediaToken: input.environment.MEDIA_PROCESSOR_TOKEN, mimeType: sourceEntry.mimeType,
+                maxInputBytes: mediaInputLimit(input.environment.MEDIA_PROCESSOR_MAX_INPUT_BYTES), signal: input.signal, correlation,
+                auditSource: (source) => auditChecksum("provider", source.checksum),
               });
-              const audioBytes = await runCandidatePhase(correlation, "media-response-read", async () => new Uint8Array(await response.arrayBuffer()));
+              input.signal?.throwIfAborted();
               const stored = await runCandidatePhase(correlation, "media-artifact-store", () =>
-                storeBytes("transcript-audio", operationIdentity, audioBytes, response.headers.get("content-type") ?? "audio/mpeg"));
+                storeBytes("transcript-audio", operationIdentity, audioBytes, "audio/mp4"));
               return { artifactRef: stored.artifactRef, checksum: stored.checksum };
             }
             if (toolKey === "candidate.transcript-submit-shard/v1") {
@@ -1577,10 +1576,10 @@ export async function createProductionCandidateToolExecution(input: { database: 
             const sourceIdentity = { sourceFileId: interview.fileId, sourceFileVersion: interview.version, sourceFileName: interview.name };
             await authorizeFile("download", interview.fileId);
             const expectedChecksum = await immutableFileChecksum(interview.fileId);
-            const source = await drive.downloadVersion({ fileId: interview.fileId, expectedVersion: interview.version,
-              expectedSize: interview.size, expectedModifiedTime: interview.modifiedTime, expectedChecksum,
-              checkpoint: (value) => checkpoint({ kind: "drive-download", identity: `${operationIdentity}:source:${interview.fileId}`, artifactIdentity: `${value.fileId}:${value.version}`, checksum: value.checksum }) });
             if (interview.interviewSource === "ready-transcript") {
+              const source = await drive.downloadVersion({ fileId: interview.fileId, expectedVersion: interview.version,
+                expectedSize: interview.size, expectedModifiedTime: interview.modifiedTime, expectedChecksum,
+                checkpoint: (value) => checkpoint({ kind: "drive-download", identity: `${operationIdentity}:source:${interview.fileId}`, artifactIdentity: `${value.fileId}:${value.version}`, checksum: value.checksum }) });
               let extractedText: string | undefined;
               if (interview.mimeType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
                 if (!input.environment.DOCUMENT_PROCESSOR_URL || !input.environment.DOCUMENT_PROCESSOR_TOKEN) throw new Error("PRODUCTION_DOCUMENT_PROCESSOR_NOT_PROVISIONED");
@@ -1614,17 +1613,14 @@ export async function createProductionCandidateToolExecution(input: { database: 
               if (input.environment.E2E_ENVIRONMENT === "local") {
                 if (!loopbackOrDockerHostname(mediaUrl.hostname) || !["http:", "https:"].includes(mediaUrl.protocol)) throw new Error("LOCAL_MEDIA_PROCESSOR_MUST_BE_LOOPBACK");
               } else if (mediaUrl.protocol !== "https:" && !dockerInternalProcessorEndpoint(mediaUrl, "media-processor")) throw new Error("REMOTE_MEDIA_PROCESSOR_MUST_USE_HTTPS");
-              await auditBoundary("provider", source.bytes);
-              const mediaResponse = await fetch(mediaUrl, { method: "POST", headers: { authorization: `Bearer ${input.environment.MEDIA_PROCESSOR_TOKEN}`, "content-type": interview.mimeType },
-                body: source.bytes.slice().buffer as ArrayBuffer, signal: AbortSignal.timeout(15 * 60_000) });
-              if (!mediaResponse.ok) {
-                const failure = await mediaResponse.json().catch(() => null) as { code?: unknown } | null;
-                const safeCode = failure?.code === "MEDIA_AUDIO_TOO_LARGE" || failure?.code === "MEDIA_INPUT_TOO_LARGE"
-                  ? failure.code : `MEDIA_PROCESSOR_HTTP_${mediaResponse.status}`;
-                throw new Error(safeCode);
-              }
-              const audioBytes = new Uint8Array(await mediaResponse.arrayBuffer());
-              const audioChecksum = mediaResponse.headers.get("x-audio-sha256") ?? sha256(audioBytes);
+              const audioBytes = await extractVideoAudio({ drive, source: interview, expectedChecksum,
+                checkpoint: (value) => checkpoint({ kind: "drive-download", identity: `${operationIdentity}:source:${interview.fileId}`, artifactIdentity: `${value.fileId}:${value.version}`, checksum: value.checksum }),
+                mediaUrl, mediaToken: input.environment.MEDIA_PROCESSOR_TOKEN, mimeType: interview.mimeType,
+                maxInputBytes: mediaInputLimit(input.environment.MEDIA_PROCESSOR_MAX_INPUT_BYTES), signal: input.signal,
+                correlation: { runId, taskId, attemptId }, auditSource: (source) => auditChecksum("provider", source.checksum),
+              });
+              input.signal?.throwIfAborted();
+              const audioChecksum = createHash("sha256").update(audioBytes).digest("hex");
               await checkpoint({ kind: "audio-extracted", identity: `${sourceOperationIdentity}:audio`, artifactIdentity: `audio:${audioChecksum}`, checksum: audioChecksum });
               await auditBoundary("provider", audioBytes);
               const provider = new DurableAssemblyAiAdapter({ apiKey: input.environment.ASSEMBLYAI_API_KEY });
