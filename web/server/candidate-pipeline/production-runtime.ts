@@ -533,6 +533,7 @@ export async function createProductionCandidateToolExecution(input: { database: 
     if (!artifactStore) throw new Error("PRODUCTION_ARTIFACT_STORE_NOT_PROVISIONED");
     await auditBoundary("blob", new TextEncoder().encode(JSON.stringify(value)));
     const stored = await artifactStore.putJson({ candidatePk, runId, kind, identity, value });
+    if (kind === "fanout-descriptor") await auditChecksum("blob", stored.checksum);
     const domainArtifactId = `domain-artifact-${sha256([candidatePk, kind, stored.checksum]).slice(0, 24)}`;
     await execute(input.database, `INSERT INTO candidate_domain_artifacts
       (id,candidate_id,run_id,input_version_id,profile_version,kind,schema_version,provider,tool_version,config_fingerprint,checksum,payload_ref,created_at_utc)
@@ -786,7 +787,7 @@ export async function createProductionCandidateToolExecution(input: { database: 
             const descriptor = createFanoutDescriptor({ workflowVersion: goal.workflow_version, runId, planVersion, groupKey, kind,
               inputFingerprint: inputVersion, profileFingerprint: profileVersion, configFingerprint, shards });
             const materialized = await agentRuntime.materializeFanout({ coordinatorTaskId: taskId, joinTaskId: join.id, descriptor, shardToolKey, expectedOutputs: [`${kind}-shard-result`] });
-            const stored = await storeJson("fanout-descriptor", operationIdentity, { descriptor, groupId: materialized.groupId, created: materialized.created });
+            const stored = await storeJson("fanout-descriptor", operationIdentity, { descriptor, groupId: materialized.groupId });
             return { artifactRef: stored.artifactRef, checksum: stored.checksum, groupId: materialized.groupId, shardCount: shards.length };
           };
           const readGroup = async (groupKey: string) => agentRuntime.readFanout({ joinTaskId: taskId, groupKey });

@@ -57,11 +57,17 @@ export class PostgresBlobStore {
       await transaction`INSERT INTO artifact_blobs
         (id, scope, kind, checksum, mime_type, byte_size, content, retention_until_utc, protected, created_at_utc)
         VALUES (${id}, ${input.scope}, ${input.kind}, ${checksum}, ${input.mimeType}, ${input.bytes.byteLength}, ${Buffer.from(input.bytes)}, ${input.retentionUntilUtc ?? null}, ${input.protected ?? false}, ${createdAtUtc})
-        ON CONFLICT (scope, checksum) DO NOTHING`;
-      const [row] = await transaction<BlobDescriptor[]>`SELECT id, scope, kind, checksum, mime_type AS "mimeType", byte_size::integer AS "byteSize",
+        ON CONFLICT DO NOTHING`;
+      const rows = await transaction<BlobDescriptor[]>`SELECT id, scope, kind, checksum, mime_type AS "mimeType", byte_size::integer AS "byteSize",
         retention_until_utc AS "retentionUntilUtc", protected, created_at_utc AS "createdAtUtc"
-        FROM artifact_blobs WHERE scope=${input.scope} AND checksum=${checksum}`;
-      if (!row || row.kind !== input.kind || row.mimeType !== input.mimeType || row.byteSize !== input.bytes.byteLength) throw new BlobStoreError("BLOB_IDENTITY_CONFLICT");
+        FROM artifact_blobs WHERE id=${id} OR (scope=${input.scope} AND checksum=${checksum})`;
+      const identity = rows.find((row) => row.id === id);
+      if (identity && (identity.scope !== input.scope || identity.checksum !== checksum || identity.kind !== input.kind
+        || identity.mimeType !== input.mimeType || identity.byteSize !== input.bytes.byteLength
+        || identity.protected !== (input.protected ?? false))) throw new BlobStoreError("BLOB_IDENTITY_CONFLICT");
+      const row = rows.find((row) => row.scope === input.scope && row.checksum === checksum);
+      if (!row || row.kind !== input.kind || row.mimeType !== input.mimeType || row.byteSize !== input.bytes.byteLength
+        || row.protected !== (input.protected ?? false)) throw new BlobStoreError("BLOB_IDENTITY_CONFLICT");
       return row;
     });
   }
