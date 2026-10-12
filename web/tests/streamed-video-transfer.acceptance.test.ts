@@ -228,6 +228,8 @@ test("INT-009/INT-018: application sends the file to media as bounded chunks and
   const nativeFetch = globalThis.fetch;
   globalThis.fetch = async (input, init) => {
     assert.equal(String(input), mediaUrl);
+    assert.equal(init?.redirect, "error",
+      "streamed media upload must reject redirects so Undici cannot retain a whole replay copy of the video");
     const body = init?.body as unknown as { [Symbol.asyncIterator]?: unknown; getReader?: unknown } | undefined;
     assert.ok(body && (typeof body[Symbol.asyncIterator] === "function" || typeof body.getReader === "function"),
       "media upload must receive a stream, never a collected video ArrayBuffer or Uint8Array");

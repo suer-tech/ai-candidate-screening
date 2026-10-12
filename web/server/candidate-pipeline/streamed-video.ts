@@ -41,7 +41,8 @@ export async function extractVideoAudio(input: VideoTransferInput): Promise<Uint
     const response = await phase("media-processor-request", async () => {
       const result = await fetch(input.mediaUrl, {
         method: "POST", headers: { authorization: `Bearer ${input.mediaToken}`, "content-type": input.mimeType, "content-length": String(source.byteSize) },
-        body: upload as unknown as BodyInit, duplex: "half", signal,
+        // Undici clones request bodies when redirects are enabled, retaining the whole upload.
+        body: upload as unknown as BodyInit, duplex: "half", redirect: "error", signal,
       } as RequestInit & { duplex: "half" });
       if (!result.ok) {
         const failure = await result.json().catch(() => null) as { code?: unknown } | null;
