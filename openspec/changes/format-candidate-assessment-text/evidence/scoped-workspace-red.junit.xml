@@ -1,0 +1,762 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="workspace GET summary boundary keeps vacancy profiles and candidate metadata without full candidate content" time="0.021130" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs"/>
+	<testcase name="workspace GET selected detail preserves typed ID 701" time="0.007486" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs" failure="Repository receives the exact typed selection, never a broad full read&#10;+ actual - expected&#10;&#10;  [&#10;    {&#10;-     candidateId: 701,&#10;      summaryOnly: false&#10;    }&#10;  ]&#10;">
+		<failure type="testCodeFailure" message="Repository receives the exact typed selection, never a broad full read&#10;+ actual - expected&#10;&#10;  [&#10;    {&#10;-     candidateId: 701,&#10;      summaryOnly: false&#10;    }&#10;  ]">
+[Error [ERR_TEST_FAILURE]: Repository receives the exact typed selection, never a broad full read
++ actual - expected
+
+  [
+    {
+-     candidateId: 701,
+      summaryOnly: false
+    }
+  ]
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Repository receives the exact typed selection, never a broad full read
+  + actual - expected
+  
+    [
+      {
+  -     candidateId: 701,
+        summaryOnly: false
+      }
+    ]
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs:134:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [ [Object] ],
+    expected: [ [Object] ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="workspace GET selected detail preserves typed ID &amp;quot;701&amp;quot;" time="0.001765" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs" failure="Repository receives the exact typed selection, never a broad full read&#10;+ actual - expected&#10;&#10;  [&#10;    {&#10;-     candidateId: '701',&#10;      summaryOnly: false&#10;    }&#10;  ]&#10;">
+		<failure type="testCodeFailure" message="Repository receives the exact typed selection, never a broad full read&#10;+ actual - expected&#10;&#10;  [&#10;    {&#10;-     candidateId: '701',&#10;      summaryOnly: false&#10;    }&#10;  ]">
+[Error [ERR_TEST_FAILURE]: Repository receives the exact typed selection, never a broad full read
++ actual - expected
+
+  [
+    {
+-     candidateId: '701',
+      summaryOnly: false
+    }
+  ]
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Repository receives the exact typed selection, never a broad full read
+  + actual - expected
+  
+    [
+      {
+  -     candidateId: '701',
+        summaryOnly: false
+      }
+    ]
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs:134:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [ [Object] ],
+    expected: [ [Object] ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="workspace GET selected detail preserves typed ID &amp;quot;synthetic/public id + русский&amp;quot;" time="0.001164" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs" failure="Repository receives the exact typed selection, never a broad full read&#10;+ actual - expected&#10;&#10;  [&#10;    {&#10;-     candidateId: 'synthetic/public id + русский',&#10;      summaryOnly: false&#10;    }&#10;  ]&#10;">
+		<failure type="testCodeFailure" message="Repository receives the exact typed selection, never a broad full read&#10;+ actual - expected&#10;&#10;  [&#10;    {&#10;-     candidateId: 'synthetic/public id + русский',&#10;      summaryOnly: false&#10;    }&#10;  ]">
+[Error [ERR_TEST_FAILURE]: Repository receives the exact typed selection, never a broad full read
++ actual - expected
+
+  [
+    {
+-     candidateId: 'synthetic/public id + русский',
+      summaryOnly: false
+    }
+  ]
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Repository receives the exact typed selection, never a broad full read
+  + actual - expected
+  
+    [
+      {
+  -     candidateId: 'synthetic/public id + русский',
+        summaryOnly: false
+      }
+    ]
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs:134:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [ [Object] ],
+    expected: [ [Object] ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="workspace GET selected detail preserves typed ID &amp;quot;xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" time="0.000972" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs" failure="Repository receives the exact typed selection, never a broad full read&#10;+ actual - expected&#10;&#10;  [&#10;    {&#10;-     candidateId: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',&#10;      summaryOnly: false&#10;    }&#10;  ]&#10;">
+		<failure type="testCodeFailure" message="Repository receives the exact typed selection, never a broad full read&#10;+ actual - expected&#10;&#10;  [&#10;    {&#10;-     candidateId: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',&#10;      summaryOnly: false&#10;    }&#10;  ]">
+[Error [ERR_TEST_FAILURE]: Repository receives the exact typed selection, never a broad full read
++ actual - expected
+
+  [
+    {
+-     candidateId: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+      summaryOnly: false
+    }
+  ]
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Repository receives the exact typed selection, never a broad full read
+  + actual - expected
+  
+    [
+      {
+  -     candidateId: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+        summaryOnly: false
+      }
+    ]
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs:134:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [ [Object] ],
+    expected: [ [Object] ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="workspace GET rejects invalid selected ID " time="0.000987" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs" failure="Expected values to be strictly equal:&#10;&#10;200 !== 400&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly equal:&#10;&#10;200 !== 400">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly equal:
+
+200 !== 400
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  200 !== 400
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs:149:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 200,
+    expected: 400,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="workspace GET rejects invalid selected ID not-json" time="0.000846" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs" failure="Expected values to be strictly equal:&#10;&#10;200 !== 400&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly equal:&#10;&#10;200 !== 400">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly equal:
+
+200 !== 400
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  200 !== 400
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs:149:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 200,
+    expected: 400,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="workspace GET rejects invalid selected ID &amp;quot;&amp;quot;" time="0.000861" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs" failure="Expected values to be strictly equal:&#10;&#10;200 !== 400&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly equal:&#10;&#10;200 !== 400">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly equal:
+
+200 !== 400
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  200 !== 400
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs:149:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 200,
+    expected: 400,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="workspace GET rejects invalid selected ID &amp;quot;   &amp;quot;" time="0.000902" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs" failure="Expected values to be strictly equal:&#10;&#10;200 !== 400&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly equal:&#10;&#10;200 !== 400">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly equal:
+
+200 !== 400
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  200 !== 400
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs:149:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 200,
+    expected: 400,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="workspace GET rejects invalid selected ID &amp;quot;xxxxxxxxxxxxxxxxxxxxxxxxxxxxx" time="0.000782" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs" failure="Expected values to be strictly equal:&#10;&#10;200 !== 400&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly equal:&#10;&#10;200 !== 400">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly equal:
+
+200 !== 400
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  200 !== 400
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs:149:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 200,
+    expected: 400,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="workspace GET rejects invalid selected ID 0" time="0.000669" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs" failure="Expected values to be strictly equal:&#10;&#10;200 !== 400&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly equal:&#10;&#10;200 !== 400">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly equal:
+
+200 !== 400
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  200 !== 400
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs:149:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 200,
+    expected: 400,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="workspace GET rejects invalid selected ID -1" time="0.000769" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs" failure="Expected values to be strictly equal:&#10;&#10;200 !== 400&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly equal:&#10;&#10;200 !== 400">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly equal:
+
+200 !== 400
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  200 !== 400
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs:149:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 200,
+    expected: 400,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="workspace GET rejects invalid selected ID 1.5" time="0.001448" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs" failure="Expected values to be strictly equal:&#10;&#10;200 !== 400&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly equal:&#10;&#10;200 !== 400">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly equal:
+
+200 !== 400
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  200 !== 400
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs:149:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 200,
+    expected: 400,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="workspace GET rejects invalid selected ID 9007199254740992" time="0.000870" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs" failure="Expected values to be strictly equal:&#10;&#10;200 !== 400&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly equal:&#10;&#10;200 !== 400">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly equal:
+
+200 !== 400
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  200 !== 400
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs:149:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 200,
+    expected: 400,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="workspace GET rejects invalid selected ID null" time="0.000698" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs" failure="Expected values to be strictly equal:&#10;&#10;200 !== 400&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly equal:&#10;&#10;200 !== 400">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly equal:
+
+200 !== 400
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  200 !== 400
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs:149:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 200,
+    expected: 400,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="workspace GET rejects invalid selected ID true" time="0.000710" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs" failure="Expected values to be strictly equal:&#10;&#10;200 !== 400&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly equal:&#10;&#10;200 !== 400">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly equal:
+
+200 !== 400
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  200 !== 400
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs:149:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 200,
+    expected: 400,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="workspace GET rejects invalid selected ID []" time="0.000639" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs" failure="Expected values to be strictly equal:&#10;&#10;200 !== 400&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly equal:&#10;&#10;200 !== 400">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly equal:
+
+200 !== 400
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  200 !== 400
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs:149:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 200,
+    expected: 400,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="workspace GET rejects invalid selected ID {}" time="0.000918" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs" failure="Expected values to be strictly equal:&#10;&#10;200 !== 400&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly equal:&#10;&#10;200 !== 400">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly equal:
+
+200 !== 400
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  200 !== 400
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs:149:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 200,
+    expected: 400,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="workspace selected detail preserves authorization and reports a missing candidate without fallback" time="0.001726" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs" failure="A missing selection must not fall back to another candidate or return broad data&#10;&#10;200 !== 404&#10;">
+		<failure type="testCodeFailure" message="A missing selection must not fall back to another candidate or return broad data&#10;&#10;200 !== 404">
+[Error [ERR_TEST_FAILURE]: A missing selection must not fall back to another candidate or return broad data
+
+200 !== 404
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: A missing selection must not fall back to another candidate or return broad data
+  
+  200 !== 404
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs:163:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 200,
+    expected: 404,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="vacancies mount from real summary route and candidate detail waits for its full workspace response" time="0.336807" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs" failure="opening candidate requests only the selected full projection&#10;+ actual - expected&#10;&#10;+ '/api/workspace'&#10;- '/api/workspace?candidateId=701'&#10;                 ^&#10;">
+		<failure type="testCodeFailure" message="opening candidate requests only the selected full projection&#10;+ actual - expected&#10;&#10;+ '/api/workspace'&#10;- '/api/workspace?candidateId=701'&#10;                 ^">
+[Error [ERR_TEST_FAILURE]: opening candidate requests only the selected full projection
++ actual - expected
+
++ '/api/workspace'
+- '/api/workspace?candidateId=701'
+                 ^
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: opening candidate requests only the selected full projection
+  + actual - expected
+  
+  + '/api/workspace'
+  - '/api/workspace?candidateId=701'
+                   ^
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs:182:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: '/api/workspace',
+    expected: '/api/workspace?candidateId=701',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="aborted late summary cannot overwrite a newer full workspace response" time="0.175655" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs"/>
+	<testcase name="aborted late full detail response cannot overwrite current vacancy summary" time="0.150140" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs"/>
+	<testcase name="candidate list uses real summary route and preserves search, status, vacancy and archive filters with result metadata" time="0.143775" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs"/>
+	<testcase name="opening a candidate from compact Candidates render fetches full workspace and waits before mounting detail" time="0.130124" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs" failure="Expected values to be strictly equal:&#10;+ actual - expected&#10;&#10;+ '/api/workspace'&#10;- '/api/workspace?candidateId=701'&#10;                 ^&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly equal:&#10;+ actual - expected&#10;&#10;+ '/api/workspace'&#10;- '/api/workspace?candidateId=701'&#10;                 ^">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly equal:
++ actual - expected
+
++ '/api/workspace'
+- '/api/workspace?candidateId=701'
+                 ^
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + '/api/workspace'
+  - '/api/workspace?candidateId=701'
+                   ^
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs:276:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '/api/workspace',
+    expected: '/api/workspace?candidateId=701',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="switching compact vacancy and candidate lists aborts obsolete reads and late responses keep the latest list" time="0.144048" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs"/>
+	<testcase name="candidate detail and its polls use only selected projection and merge without dropping other list candidates" time="0.132465" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs" failure="Expected values to be strictly equal:&#10;+ actual - expected&#10;&#10;+ '/api/workspace'&#10;- '/api/workspace?candidateId=701'&#10;                 ^&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly equal:&#10;+ actual - expected&#10;&#10;+ '/api/workspace'&#10;- '/api/workspace?candidateId=701'&#10;                 ^">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly equal:
++ actual - expected
+
++ '/api/workspace'
+- '/api/workspace?candidateId=701'
+                 ^
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + '/api/workspace'
+  - '/api/workspace?candidateId=701'
+                   ^
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs:307:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '/api/workspace',
+    expected: '/api/workspace?candidateId=701',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="changing selected candidate to 702 cancels old request and ignores a late old response" time="0.125706" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs" failure="Expected values to be strictly equal:&#10;+ actual - expected&#10;&#10;+ '/api/workspace'&#10;- '/api/workspace?candidateId=701'&#10;                 ^&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly equal:&#10;+ actual - expected&#10;&#10;+ '/api/workspace'&#10;- '/api/workspace?candidateId=701'&#10;                 ^">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly equal:
++ actual - expected
+
++ '/api/workspace'
+- '/api/workspace?candidateId=701'
+                 ^
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + '/api/workspace'
+  - '/api/workspace?candidateId=701'
+                   ^
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs:331:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '/api/workspace',
+    expected: '/api/workspace?candidateId=701',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="changing selected candidate to &amp;quot;701&amp;quot; cancels old request and ignores a late old response" time="0.130314" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs" failure="Expected values to be strictly equal:&#10;+ actual - expected&#10;&#10;+ '/api/workspace'&#10;- '/api/workspace?candidateId=701'&#10;                 ^&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly equal:&#10;+ actual - expected&#10;&#10;+ '/api/workspace'&#10;- '/api/workspace?candidateId=701'&#10;                 ^">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly equal:
++ actual - expected
+
++ '/api/workspace'
+- '/api/workspace?candidateId=701'
+                 ^
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + '/api/workspace'
+  - '/api/workspace?candidateId=701'
+                   ^
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs:331:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '/api/workspace',
+    expected: '/api/workspace?candidateId=701',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="new candidate empty response cannot expose a previously loaded candidate or fallback" time="0.144142" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs" failure="Expected values to be strictly equal:&#10;+ actual - expected&#10;&#10;+ '/api/workspace'&#10;- '/api/workspace?candidateId=701'&#10;                 ^&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly equal:&#10;+ actual - expected&#10;&#10;+ '/api/workspace'&#10;- '/api/workspace?candidateId=701'&#10;                 ^">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly equal:
++ actual - expected
+
++ '/api/workspace'
+- '/api/workspace?candidateId=701'
+                 ^
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + '/api/workspace'
+  - '/api/workspace?candidateId=701'
+                   ^
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs:351:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '/api/workspace',
+    expected: '/api/workspace?candidateId=701',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="new candidate error response cannot expose a previously loaded candidate or fallback" time="0.127831" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs" failure="Expected values to be strictly equal:&#10;+ actual - expected&#10;&#10;+ '/api/workspace'&#10;- '/api/workspace?candidateId=701'&#10;                 ^&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly equal:&#10;+ actual - expected&#10;&#10;+ '/api/workspace'&#10;- '/api/workspace?candidateId=701'&#10;                 ^">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly equal:
++ actual - expected
+
++ '/api/workspace'
+- '/api/workspace?candidateId=701'
+                 ^
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + '/api/workspace'
+  - '/api/workspace?candidateId=701'
+                   ^
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs:351:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '/api/workspace',
+    expected: '/api/workspace?candidateId=701',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="new candidate wrong candidate response cannot expose a previously loaded candidate or fallback" time="0.127649" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs" failure="Expected values to be strictly equal:&#10;+ actual - expected&#10;&#10;+ '/api/workspace'&#10;- '/api/workspace?candidateId=701'&#10;                 ^&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly equal:&#10;+ actual - expected&#10;&#10;+ '/api/workspace'&#10;- '/api/workspace?candidateId=701'&#10;                 ^">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly equal:
++ actual - expected
+
++ '/api/workspace'
+- '/api/workspace?candidateId=701'
+                 ^
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + '/api/workspace'
+  - '/api/workspace?candidateId=701'
+                   ^
+  
+      at TestContext.&lt;anonymous> (C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs:351:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '/api/workspace',
+    expected: '/api/workspace?candidateId=701',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 31 -->
+	<!-- suites 0 -->
+	<!-- pass 5 -->
+	<!-- fail 26 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 2572.9872 -->
+</testsuites>

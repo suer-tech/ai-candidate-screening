@@ -64,7 +64,7 @@ export interface ProductRepository extends VacancyGenerationRepository {
   findCurrentResult(principalId: string, candidateId: CandidateId, type: ResultDocumentType, version: number): Promise<ResultDocumentDescriptor | null>;
   appendAudit(event: AuditEvent): Promise<void>;
   commitResultPair(candidate: StoredCandidate, expectedRevision: number, descriptors: readonly [ResultDocumentDescriptor, ResultDocumentDescriptor]): Promise<StoredCandidate>;
-  dashboardSource(options?: { summaryOnly?: boolean }): Promise<{ candidates: CandidateRecord[]; vacancies: VacancyRecord[] }>;
+  dashboardSource(options?: { summaryOnly?: boolean; candidateId?: CandidateId }): Promise<{ candidates: CandidateRecord[]; vacancies: VacancyRecord[] }>;
 }
 
 export interface VacancyFolderGateway {
@@ -446,9 +446,9 @@ export class InMemoryProductRepository implements ProductRepository {
     return structuredClone(candidate);
   }
 
-  async dashboardSource() {
+  async dashboardSource(options: { summaryOnly?: boolean; candidateId?: CandidateId } = {}) {
     return {
-      candidates: [...this.candidates.values()].map((item) => {
+      candidates: [...this.candidates.values()].filter((item) => options.candidateId === undefined || item.id === options.candidateId).map((item) => {
         const candidate = structuredClone(item) as Partial<StoredCandidate>;
         delete candidate.revision;
         return candidate as CandidateRecord;

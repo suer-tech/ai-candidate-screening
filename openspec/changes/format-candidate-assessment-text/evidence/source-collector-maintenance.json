@@ -1,0 +1,47 @@
+{
+  "generatedAtUtc": "2026-10-14T11:27:45.729Z",
+  "author": "/root/regression_fixture_audit",
+  "executor": "/root/regression_fixture_audit",
+  "scope": "One line in sourceFiles helper only; excludes generated duplicate test artifacts by two exact directory prefixes. Real source reads still fail on ENOENT; no runtime oracle is removed.",
+  "sourceHash": "63751e583d89774f69ecf300f19a157e7bee957afc40840cfea952787b2f741f",
+  "before": {
+    "generatedAt": "2026-10-14T11:26:57.003Z",
+    "kind": "source collector maintenance RED",
+    "generatedArtifactsExcluded": false,
+    "realWorkspaceRouteIncluded": true,
+    "realRuntimeIncluded": true,
+    "productionWrites": false
+  },
+  "after": {
+    "generatedAt": "2026-10-14T11:26:57.661Z",
+    "kind": "source collector maintenance GREEN",
+    "generatedArtifactsExcluded": true,
+    "realWorkspaceRouteIncluded": true,
+    "realRuntimeIncluded": true,
+    "productionWrites": false
+  },
+  "concurrent": {
+    "command": "node --import tsx --test --test-concurrency=2 tests/protected-llm-tracing.acceptance.test.mjs tests/candidate-assessment-formatting.acceptance.test.mjs",
+    "artifact": "source-collector-concurrent.junit.xml",
+    "sha256": "9d8d68a6b443b81120c68eeea3a4247e7e04886c8be3159400a4461b314f0ea0",
+    "tests": 33,
+    "failed": 0,
+    "skipped": 0
+  },
+  "lint": {
+    "status": "BASELINE_ONLY",
+    "unchangedRules": [
+      {
+        "line": 108,
+        "rule": "@next/next/no-assign-module-variable"
+      },
+      {
+        "line": 128,
+        "rule": "@next/next/no-assign-module-variable"
+      }
+    ],
+    "baselineCommand": "git show HEAD:web/tests/helpers/product-acceptance-harness.mjs | npx eslint --stdin --stdin-filename tests/helpers/product-acceptance-harness.mjs --format json"
+  },
+  "productionWrites": false,
+  "limits": "Collector regression fix and concurrent33 GREEN do not constitute full production-like E2E."
+}

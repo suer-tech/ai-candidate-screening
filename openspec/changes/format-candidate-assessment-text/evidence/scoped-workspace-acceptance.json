@@ -1,0 +1,80 @@
+{
+  "generatedAtUtc": "2026-10-14T11:26:15.542Z",
+  "author": "/root/regression_fixture_audit",
+  "executor": "/root/regression_fixture_audit",
+  "independence": "Authored acceptance only, did not implement scoped runtime or deploy it.",
+  "baselineHead": "f5995e2b74db4c7f6810f5d16056dac5251fd084",
+  "purpose": "Avoid full workspace detail reads by fetching only selected candidate while preserving data/authorization/summary/full compatibility and avoiding stale/wrong-candidate display.",
+  "requirementsBasis": "Existing workspace behavior plus explicit owner-approved scoped optimization; REP-050–052 presentation remains unchanged.",
+  "commands": [
+    "node --import tsx --experimental-test-module-mocks --test tests/workspace-vacancy-summary.acceptance.test.mjs",
+    "npx eslint tests/workspace-vacancy-summary.acceptance.test.mjs tests/workspace-candidate-scope.postgres.acceptance.test.ts"
+  ],
+  "red": {
+    "artifact": "scoped-workspace-red.junit.xml",
+    "sha256": "41d0b5d17508c33d2216443705c2d29a37fdb56170727d39c939431fcc77ad79",
+    "tests": 31,
+    "failed": 26,
+    "skipped": 0
+  },
+  "green": {
+    "artifact": "scoped-workspace-green.junit.xml",
+    "sha256": "ee5946513e5149d4d807c7da76a405176c46e7d2674d95ed6e6eb588ce3092c8",
+    "tests": 31,
+    "failed": 0,
+    "skipped": 0
+  },
+  "sourceHashes": {
+    "tests/workspace-vacancy-summary.acceptance.test.mjs": "2f21818df8e87c37da99666999f254b2e44f641fbd9ce1e94fcff54c223b68e7",
+    "tests/workspace-candidate-scope.postgres.acceptance.test.ts": "9b17cb4ee2959f56847ab67fb53a78173a89cdd4c1042b585fd0b5828e2c6fae",
+    "app/api/workspace/route.ts": "242551781324875b4361c6117987881a1d6d002c7fb6dc8278c69f23754b2de4",
+    "app/page.tsx": "b09db1315d61915b76a8d203182465073ece8c2677b40455f4dff2056add0035",
+    "server/product/application.ts": "476a64972435be5c53d9238f5568def7c94a977c47e377ce84a4c80213ba9041",
+    "server/product/postgres-repository.ts": "2b7c5f184132ac8f376dcdc9e562d9e8ef50f322ce122a03a5cc644ce2874eea"
+  },
+  "oracleUnchangedAfterRed": true,
+  "coverage": [
+    "Typed JSON numeric/string ID incl special Unicode and 200-character bounds",
+    "Malformed/null/array/object/boolean/nonpositive/fraction/unsafe ID rejects 400 without repository access",
+    "401 before repository access; missing selection404",
+    "Summary and unfiltered full backwards compatibility",
+    "Selected full candidate URL for detail and polls, never broad workspace request",
+    "Merge selected into existing list without dropping other candidates",
+    "Same-view numeric/string selection change aborts old request; late responses cannot replace current candidate",
+    "Empty/error/mismatched response shows no other candidate or fallback"
+  ],
+  "review": {
+    "route": "Auth before decoded JSON ID validation; no-store preserved; same envelope; not-found maps to404.",
+    "repository": "SQL scoped before projection in candidate/runtime/report summary/report full/recursive lineage/material queries. Scope casts use bigint to support all allowed positive safe-integer IDs. Vacancy envelope unchanged.",
+    "ui": "Scoped fetch depends on selectedCandidate; inactive responses ignored. Merge preserves unrelated list records; loadedCandidateId gate prevents previous candidate fallback.",
+    "postgres": "Independent own-PG baseline RED executed. Candidate-image GREEN pending parent native runner. Six subcases: typed identities, own materials, missing numeric/public IDs including MAX_SAFE, old full/summary compatibility, unrelated unusable valid-JSON null candidate and manifest exclusion."
+  },
+  "postgresTestStatus": "EXPECTED_PRODUCT_RED_ON_BASELINE_IMAGE",
+  "status": "FOCUSED_GREEN",
+  "productionWrites": false,
+  "providerCalls": false,
+  "fullProductionLikeE2eStatus": "BLOCKED",
+  "limits": "Local route/repository boundary uses explicit test doubles, UI uses existing component harness. No PostgreSQL or latency proof is claimed by these31 cases. Real PostgreSQL runner and production performance checks are separate.",
+  "postgresBaseline": {
+    "artifact": "detail-loading-postgres-red.json",
+    "sha256": "ad81e95af2e29af9a91351effbcb1647eaa7488c0510b7de4455c9449c9850a6",
+    "imageId": "sha256:4a06887617318b49e6b88da5b38f25b9b0e5ad7b1b761e23de15928930bee49c",
+    "exitCode": 1,
+    "actualCounts": {
+      "tests": 7,
+      "passed": 1,
+      "failed": 6,
+      "skipped": 0
+    },
+    "classification": "Five product subcase failures plus failed parent; legacy broad summary/full compatibility subcase passes. Real isolated PostgreSQL16 and final valid-JSON null sentinels; trigger errors absent.",
+    "method": "Own PostgreSQL container network none, Node22 previous immutable image; test uploaded, no production mutations/providers."
+  },
+  "finalReview": {
+    "status": "PASS_SCOPED_SOURCE_REVIEW",
+    "inMemory": "dashboardSource applies strict typed candidate ID filter before cloning, retains the full vacancy envelope and unfiltered behavior. No mutation methods changed.",
+    "uiHooks": "New loadedCandidateId/workspaceError states appended after existing state hooks. Rendering requires exact loaded selection. Error reset occurs in openCandidate event and async success, not synchronously inside effect.",
+    "sql": "Only dashboardSource query scope changed; all six candidate-related WHERE/lineage paths use nullable bigint comparisons. Existing candidatePk/lifecycle/mutation methods unchanged.",
+    "testEnvironment": "WORKSPACE_SCOPE_TEST_DATABASE_URL is preferred, TEST_DATABASE_URL remains fallback; same own-database prefix, consent, empty DB guard and synthetic fixtures. Alias does not alter oracle.",
+    "gate": "Focused UI31 and fixture14 GREEN; independent realPG baseline RED confirmed, new immutable-image PG GREEN pending parent runner. Full production-like E2E remains BLOCKED."
+  }
+}

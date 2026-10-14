@@ -14,9 +14,9 @@ import subprocess
 import time
 from datetime import datetime, timezone
 
-BASE = "fde657a5ae7dbad0846f4524482d3acd040f52ab"
+BASE = "f5995e2b74db4c7f6810f5d16056dac5251fd084"
 RELEASE = ""
-OLD_IMAGE = "sha256:1b9909fb6b0345b0bac093df1576dbfdf13fd29be3db65ef0c187af3cf5f4d45"
+OLD_IMAGE = "sha256:4a06887617318b49e6b88da5b38f25b9b0e5ad7b1b761e23de15928930bee49c"
 RUNTIME_SHA = "3cda817c384010ecf1953c2cf08aaaadb73755bb444f8c89505aa87231592664"
 SERVICES = ("web", "worker", "dispatch-publisher", "media-processor", "document-processor",
             "worker-control", "worker-documents", "worker-media", "worker-transcription",
@@ -110,7 +110,7 @@ def main():
     assert image_id("hh-agent:local") == OLD_IMAGE
     probe = "const fs=require('node:fs'),c=require('node:crypto');console.log(c.createHash('sha256').update(fs.readFileSync('/app/web/server/agent-runtime/postgres-runtime-repository.ts')).digest('hex'))"
     assert call(["docker", "run", "--rm", "--network", "none", "--read-only", "--entrypoint", "node", args.image_id, "-e", probe]).strip() == RUNTIME_SHA
-    public_files = ["app/page.tsx", "app/globals.css", "app/assessment-text.tsx", "server/product/postgres-repository.ts", "server/configuration/runtime.ts", "server/llm/artifacts.ts", "server/candidate-pipeline/assessment-join.ts", "server/candidate-pipeline/production-runtime.ts", "package.json"]
+    public_files = ["app/api/workspace/route.ts", "server/product/application.ts", "app/page.tsx", "app/globals.css", "app/assessment-text.tsx", "server/product/postgres-repository.ts", "server/configuration/runtime.ts", "server/llm/artifacts.ts", "server/candidate-pipeline/assessment-join.ts", "server/candidate-pipeline/production-runtime.ts", "package.json"]
     expected = {name: hashlib.sha256(subprocess.check_output(["git", "-C", str(ROOT), "show", RELEASE + ":web/" + name])).hexdigest() for name in public_files}
     probe_files = "const fs=require('fs'),c=require('crypto');const names=JSON.parse(process.argv[1]);console.log(JSON.stringify(Object.fromEntries(names.map(n=>[n,c.createHash('sha256').update(fs.readFileSync('/app/web/'+n)).digest('hex')]))))"
     actual = json.loads(call(["docker", "run", "--rm", "--network", "none", "--read-only", "--entrypoint", "node", args.image_id, "-e", probe_files, json.dumps(public_files)]))

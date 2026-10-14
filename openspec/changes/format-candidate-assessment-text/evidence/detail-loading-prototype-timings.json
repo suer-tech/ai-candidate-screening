@@ -1,0 +1,30 @@
+{
+  "mode": "prototype",
+  "readOnly": true,
+  "providerCalls": false,
+  "results": [
+    {
+      "sample": 1,
+      "readMs": 1102,
+      "bytes": 1884815,
+      "candidateCount": 1,
+      "reportRows": 1
+    },
+    {
+      "sample": 2,
+      "readMs": 388,
+      "bytes": 2800266,
+      "candidateCount": 1,
+      "reportRows": 2
+    },
+    {
+      "sample": 3,
+      "readMs": 290,
+      "bytes": 1358608,
+      "candidateCount": 1,
+      "reportRows": 1
+    }
+  ],
+  "generatedAtUtc": "2026-10-14T11:18:39.562334+00:00",
+  "sourceSha": "f5995e2b74db4c7f6810f5d16056dac5251fd084"
+}

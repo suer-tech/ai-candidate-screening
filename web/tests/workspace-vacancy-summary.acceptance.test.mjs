@@ -43,6 +43,7 @@ function button(tree, suffix) {
 }
 const component = (tree, name) => nodes(tree, (node) => node.type?.name === name)[0];
 const settle = () => new Promise((resolve) => setImmediate(resolve));
+const detailUrl = (candidateId) => `/api/workspace?candidateId=${encodeURIComponent(JSON.stringify(candidateId))}`;
 
 async function setup(t, { deferSummary = false, deferFull = false, sourcePayload } = {}) {
   const runtime = await loadVacancyNavigationHarness();
@@ -53,9 +54,11 @@ async function setup(t, { deferSummary = false, deferFull = false, sourcePayload
     const summary = options?.summaryOnly === true;
     reads.push({ summary, options });
     if ((summary && deferSummary) || (!summary && deferFull)) {
-      return await new Promise((resolve) => pending.push({ summary, resolve }));
+      return await new Promise((resolve, reject) => pending.push({ summary, options, resolve, reject }));
     }
-    return sourcePayload ? structuredClone(sourcePayload) : payload("Синтетический кандидат", !summary);
+    const body = sourcePayload ? structuredClone(sourcePayload) : payload("Синтетический кандидат", !summary);
+    if (options?.candidateId !== undefined) body.candidates = body.candidates.filter((candidate) => candidate.id === options.candidateId);
+    return body;
   };
   globalThis.window = { addEventListener() {}, removeEventListener() {}, setInterval(callback, milliseconds) { const id = nextInterval++; intervals.set(id, { callback, milliseconds }); return id; }, clearInterval(id) { intervals.delete(id); }, setTimeout() { return 1; },
     localStorage: { getItem() { return null; }, setItem() {} } };
@@ -81,6 +84,16 @@ async function setup(t, { deferSummary = false, deferFull = false, sourcePayload
       assert.ok(index >= 0, `${summary ? "summary" : "full"} request is pending`);
       pending.splice(index, 1)[0].resolve(body); await settle();
     },
+    async resolveCandidate(candidateId, body) {
+      const index = pending.findIndex((entry) => entry.options?.candidateId === candidateId);
+      assert.ok(index >= 0, `candidate-scoped request ${JSON.stringify(candidateId)} is pending`);
+      pending.splice(index, 1)[0].resolve(body); await settle();
+    },
+    async rejectCandidate(candidateId) {
+      const index = pending.findIndex((entry) => entry.options?.candidateId === candidateId);
+      assert.ok(index >= 0, "selected candidate request is pending");
+      pending.splice(index, 1)[0].reject(new Error("synthetic scoped repository outage")); await settle();
+    },
   };
 }
 
@@ -105,6 +118,51 @@ test("workspace GET summary boundary keeps vacancy profiles and candidate metada
   principal = "synthetic-hr";
 });
 
+for (const candidateId of [701, "701", "synthetic/public id + русский", "x".repeat(200)]) {
+  test(`workspace GET selected detail preserves typed ID ${JSON.stringify(candidateId).slice(0, 45)}`, async () => {
+    principal = "synthetic-hr";
+    const reads = [];
+    repositoryRead = async (options) => {
+      reads.push(options);
+      const body = payload("Только выбранный кандидат", true);
+      body.candidates[0].id = candidateId;
+      return body;
+    };
+    const response = await GET(new Request(`http://localhost${detailUrl(candidateId)}`));
+    assert.equal(response.status, 200);
+    assert.match(response.headers.get("cache-control"), /no-store/);
+    assert.deepEqual(reads, [{ summaryOnly: false, candidateId }], "Repository receives the exact typed selection, never a broad full read");
+    const body = await response.json();
+    assert.equal(body.candidates.length, 1);
+    assert.equal(body.candidates[0].id, candidateId);
+    assert.equal(typeof body.candidates[0].id, typeof candidateId);
+    assert.deepEqual(body.vacancies[0].profile, fixtureVacancy.profile, "Workspace envelope is backward compatible");
+  });
+}
+
+for (const encoded of ["", "not-json", '""', '"   "', JSON.stringify("x".repeat(201)), "0", "-1", "1.5", "9007199254740992", "null", "true", "[]", "{}"] ) {
+  test(`workspace GET rejects invalid selected ID ${encoded.slice(0, 30)}`, async () => {
+    principal = "synthetic-hr";
+    let reads = 0;
+    repositoryRead = async () => { reads += 1; return payload(); };
+    const response = await GET(new Request(`http://localhost/api/workspace?candidateId=${encodeURIComponent(encoded)}`));
+    assert.equal(response.status, 400);
+    assert.equal(reads, 0, "Invalid selection cannot trigger a broad repository read");
+  });
+}
+
+test("workspace selected detail preserves authorization and reports a missing candidate without fallback", async () => {
+  let reads = 0;
+  repositoryRead = async () => { reads += 1; return { candidates: [], vacancies: [fixtureVacancy] }; };
+  principal = null;
+  const denied = await GET(new Request(`http://localhost${detailUrl(999)}`));
+  assert.equal(denied.status, 401);
+  assert.equal(reads, 0);
+  principal = "synthetic-hr";
+  const missing = await GET(new Request(`http://localhost${detailUrl(999)}`));
+  assert.equal(missing.status, 404, "A missing selection must not fall back to another candidate or return broad data");
+});
+
 test("vacancies mount from real summary route and candidate detail waits for its full workspace response", async (t) => {
   const context = await setup(t, { deferFull: true }); const { app, runtime, requests } = context;
   await context.navigate("Вакансии");
@@ -121,7 +179,7 @@ test("vacancies mount from real summary route and candidate detail waits for its
   vacancyNode.props.onOpen(701);
   assert.equal(component(app.render(), "CandidateDetail"), undefined, "loaded summary cannot unlock candidate detail before full fetch effect");
   app.flushEffects(); await settle();
-  assert.equal(requests[1].url, "/api/workspace", "opening candidate starts full endpoint");
+  assert.equal(requests[1].url, detailUrl(701), "opening candidate requests only the selected full projection");
   assert.equal(component(app.render(), "CandidateDetail"), undefined, "detail remains hidden while full response is pending");
   assert.ok(nodes(app.render(), (node) => node.props?.role === "status").length, "pending detail displays loading status");
   await context.resolve(false, payload("Синтетический кандидат с полными данными", true));
@@ -215,7 +273,7 @@ test("opening a candidate from compact Candidates render fetches full workspace 
   assert.ok(open); open.props.onClick();
   assert.equal(component(app.render(), "CandidateDetail"), undefined, "summary never unlocks detail in the navigation render");
   app.flushEffects(); await settle();
-  assert.equal(requests[1].url, "/api/workspace");
+  assert.equal(requests[1].url, detailUrl(701));
   assert.equal(component(app.render(), "CandidateDetail"), undefined, "detail remains blocked while full response is pending");
   await context.resolve(false, payload("Полный кандидат из списка", true));
   const detail = component(app.render(), "CandidateDetail");
@@ -233,3 +291,72 @@ test("switching compact vacancy and candidate lists aborts obsolete reads and la
   await context.resolve(true, payload("Устаревший кандидат вакансии"));
   assert.equal(component(app.render(), "Candidates").props.items[0].name, "Актуальный кандидат списка");
 });
+
+function selectedPayload(candidateId, name = "Выбранный полный кандидат") {
+  const body = payload(name, true);
+  body.candidates[0].id = candidateId;
+  return body;
+}
+
+test("candidate detail and its polls use only selected projection and merge without dropping other list candidates", async (t) => {
+  const initial = candidateListPayload();
+  const context = await setup(t, { deferFull: true, sourcePayload: initial });
+  await context.navigate("Кандидаты");
+  component(context.app.render(), "Candidates").props.onOpen(701);
+  context.app.render(); context.app.flushEffects(); await settle();
+  assert.equal(context.requests.at(-1).url, detailUrl(701));
+  await context.resolveCandidate(701, selectedPayload(701));
+  assert.equal(component(context.app.render(), "CandidateDetail").props.candidate.id, 701);
+  await context.pollWorkspace();
+  assert.equal(context.requests.at(-1).url, detailUrl(701), "Detail poll never loads every candidate's private content");
+  assert.ok(context.requests.every((request) => request.url !== "/api/workspace"), "No broad workspace fetch for detail or polls");
+  await context.resolveCandidate(701, selectedPayload(701, "Обновлённый выбранный кандидат"));
+  component(context.app.render(), "CandidateDetail").props.onBack();
+  const list = component(context.app.render(), "Candidates");
+  assert.deepEqual(list.props.items.map((item) => item.id).sort(), initial.candidates.map((item) => item.id).sort());
+  for (const expected of initial.candidates.filter((item) => item.id !== 701)) {
+    assert.equal(list.props.items.find((item) => item.id === expected.id).name, expected.name);
+  }
+});
+
+for (const secondId of [702, "701"]) {
+  test(`changing selected candidate to ${JSON.stringify(secondId)} cancels old request and ignores a late old response`, async (t) => {
+    const initial = candidateListPayload();
+    initial.candidates.push({ ...payload().candidates[0], id: "701", name: "Строковый ID, другой кандидат" });
+    const context = await setup(t, { deferFull: true, sourcePayload: initial });
+    await context.navigate("Кандидаты");
+    const open = component(context.app.render(), "Candidates").props.onOpen;
+    open(701); context.app.render(); context.app.flushEffects(); await settle();
+    const first = context.requests.at(-1);
+    assert.equal(first.url, detailUrl(701));
+    open(secondId);
+    assert.equal(component(context.app.render(), "CandidateDetail"), undefined, "No summary or previous candidate may flash for the new selection");
+    context.app.flushEffects(); await settle();
+    assert.equal(first.signal.aborted, true);
+    assert.equal(context.requests.at(-1).url, detailUrl(secondId), "Same-view selection change starts a new typed scoped request");
+    await context.resolveCandidate(secondId, selectedPayload(secondId, "Актуальный второй кандидат"));
+    await context.resolveCandidate(701, selectedPayload(701, "Устаревший первый кандидат"));
+    const detail = component(context.app.render(), "CandidateDetail");
+    assert.equal(detail.props.candidate.id, secondId);
+    assert.equal(detail.props.candidate.name, "Актуальный второй кандидат");
+  });
+}
+
+for (const outcome of ["empty", "error", "wrong candidate"]) {
+  test(`new candidate ${outcome} response cannot expose a previously loaded candidate or fallback`, async (t) => {
+    const context = await setup(t, { deferFull: true, sourcePayload: candidateListPayload() });
+    await context.navigate("Кандидаты");
+    const open = component(context.app.render(), "Candidates").props.onOpen;
+    open(701); context.app.render(); context.app.flushEffects(); await settle();
+    assert.equal(context.requests.at(-1).url, detailUrl(701));
+    await context.resolveCandidate(701, selectedPayload(701));
+    assert.equal(component(context.app.render(), "CandidateDetail").props.candidate.id, 701);
+    open(702);
+    assert.equal(component(context.app.render(), "CandidateDetail"), undefined, "Previously loaded full data does not authorize another selection");
+    context.app.flushEffects(); await settle();
+    assert.equal(context.requests.at(-1).url, detailUrl(702));
+    if (outcome === "error") await context.rejectCandidate(702);
+    else await context.resolveCandidate(702, outcome === "empty" ? { candidates: [], vacancies: [fixtureVacancy] } : selectedPayload(701));
+    assert.equal(component(context.app.render(), "CandidateDetail"), undefined, "Missing/error/mismatched response must not show a different candidate");
+  });
+}

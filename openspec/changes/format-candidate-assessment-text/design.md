@@ -26,3 +26,7 @@ See proposal.md. Initial production base 99a7bb4; refinement base fde657a. Read-
 ## Migration Plan
 
 Build/test immutable image from reviewed source; pin current trial image 1b9909f for the refinement and configuration build identity. Under deployment lock, pause external intake, stop discovery, require idle, recreate only existing app services with exact replica counts. Verify processing/public health and metadata fingerprints; restore intake only after readiness. Forward compatible rollback returns prior image/source/build ID without reverting DB state. Newly stored multiline strings are compatible with the old renderer.
+
+## Performance follow-up
+
+Selected detail uses the existing authenticated workspace application boundary with an optional JSON-encoded CandidateId query parameter. Omitted parameter retains existing API behavior; invalid input fails400 and missing candidate fails404. The repository resolves the public/number identity and restricts candidate/runtime/report lineage/blob/material reads in SQL before projection. The UI merges only that candidate into the list, tracks which ID is fully loaded, cancels/ignores obsolete reads and never renders another candidate as fallback. Polling keeps the same selected scope. No arbitrary cache or stale assessment reuse; immutable report/recovery lineage semantics remain unchanged.
