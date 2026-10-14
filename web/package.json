@@ -7,6 +7,7 @@
   },
   "scripts": {
     "dev": "vite dev",
+    "test:ops-gate": "node --test ../deploy/ops/*.test.mjs",
     "build": "vite build",
     "start": "tsx scripts/run-runtime-process.ts web",
     "test": "npm run test:streamed-video && npm run test:batch-responsiveness && npm run test:runtime-config && npm run test:heartbeat-recovery && npm run test:assessment-join && npm run build && node --test tests/rendered-html.test.mjs && npm run test:acceptance && npm run test:changes && npm run test:auth && npm run test:theme && npm run test:abc && npm run test:product && npm run test:server-product && npm run test:ui && npm run test:transcription && npm run test:llm && npm run test:agent-runtime:focused && npm run test:canonical-pipeline && npm run test:e2e-harness",

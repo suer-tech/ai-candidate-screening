@@ -1,4 +1,12 @@
 {
+  "externalComponents": {
+    "candidateTelegramCodeFixer": {
+      "sourceRepository": "https://github.com/suer-tech/OCR_document_reader",
+      "sourcePath": "OCR-document-parser/admin_ops/bot.py",
+      "runtime": "/fix_hh -> isolated Codex worker -> diff -> approved PR -> exact reviewed SHA/CI -> candidate deploy workflow -> forced SSH command",
+      "summary": "Shared administrator bot targets suer-tech/ai-candidate-screening production; persisted target/repository/branch prevent cross-project releases. Candidate materials and runtime credentials are outside the clone."
+    }
+  },
   "symbols": {
     "matrixCompilationCapabilityConfig": {
       "file": "web/server/candidate-pipeline/matrix-compilation-output-budget.ts",

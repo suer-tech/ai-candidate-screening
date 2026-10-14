@@ -1,0 +1,58 @@
+name: Candidate approved code deploy
+run-name: Candidate production deploy ${{ inputs.proposal_id }} ${{ inputs.sha }}
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: Exact approved PR merge SHA
+        required: true
+        type: string
+      proposal_id:
+        description: Authorized administrator proposal ID
+        required: true
+        type: string
+      pr_number:
+        description: Merged maintenance PR number
+        required: true
+        type: string
+permissions:
+  contents: read
+  pull-requests: read
+  checks: read
+concurrency:
+  group: hh-production
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify approved candidate PR and exact CI revision
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          OPS_RELEASE_SHA: ${{ inputs.sha }}
+          OPS_PROPOSAL_ID: ${{ inputs.proposal_id }}
+          OPS_PR_NUMBER: ${{ inputs.pr_number }}
+        run: node web/scripts/hh-ops-verify-release.mjs
+      - name: Deploy through fixed SSH command
+        env:
+          OPS_RELEASE_SHA: ${{ inputs.sha }}
+          HH_VPS_HOST: ${{ secrets.HH_VPS_HOST }}
+          HH_VPS_SSH_KEY: ${{ secrets.HH_VPS_SSH_KEY }}
+          HH_VPS_KNOWN_HOSTS: ${{ secrets.HH_VPS_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          test -n "$HH_VPS_HOST" && test -n "$HH_VPS_SSH_KEY" && test -n "$HH_VPS_KNOWN_HOSTS"
+          umask 077
+          mkdir -p "$RUNNER_TEMP/hh-ssh"
+          printf '%s\n' "$HH_VPS_SSH_KEY" > "$RUNNER_TEMP/hh-ssh/key"
+          printf '%s\n' "$HH_VPS_KNOWN_HOSTS" > "$RUNNER_TEMP/hh-ssh/known_hosts"
+          ssh -i "$RUNNER_TEMP/hh-ssh/key" -o BatchMode=yes -o IdentitiesOnly=yes -o UserKnownHostsFile="$RUNNER_TEMP/hh-ssh/known_hosts" -o StrictHostKeyChecking=yes "hh-ops-deploy@$HH_VPS_HOST" "deploy $OPS_RELEASE_SHA"
