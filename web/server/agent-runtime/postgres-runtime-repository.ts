@@ -34,7 +34,10 @@ async function enqueueDispatch(transaction: PostgresClient, task: DispatchableTa
 }
 
 async function promoteEligible(transaction: PostgresClient, runId: string) {
+  const [run] = await transaction<{ state: string }[]>`SELECT state FROM agent_runs WHERE id=${runId} FOR UPDATE`;
+  if (run?.state !== "ACTIVE") return [];
   const rows = await transaction<DispatchableTask[]>`UPDATE agent_tasks task SET state='RUNNABLE',revision=revision+1,available_at=0 WHERE task.run_id=${runId} AND task.state='PENDING'
+    AND EXISTS (SELECT 1 FROM agent_runs run WHERE run.id=task.run_id AND run.state='ACTIVE')
     AND NOT EXISTS (SELECT 1 FROM agent_task_dependencies dep JOIN agent_tasks required ON required.id=dep.depends_on_task_id WHERE dep.task_id=task.id AND
       CASE WHEN EXISTS (SELECT 1 FROM agent_fanout_groups failed_fanout WHERE failed_fanout.join_task_id=task.id AND failed_fanout.state='FAILED')
         THEN false
@@ -48,7 +51,36 @@ async function promoteEligible(transaction: PostgresClient, runId: string) {
 
 export class PostgresAgentRuntimeRepository {
   private readonly sql: PostgresClient;
+  private lastTerminalRetirementAt?: number;
   constructor(sql: PostgresClient) { this.sql = sql; }
+
+  private async retireTerminalTasks(transaction: PostgresClient, at: string, runId?: string) {
+    // Never cancel executing/uncertain effects or rewrite terminal run timestamps.
+    // Run locks serialize each retirement with outcome; SKIP LOCKED lets other
+    // candidates continue while another worker is committing their own result.
+    const retired = await transaction<{ id: string; run_id: string }[]>`
+      WITH targets AS (
+        SELECT task.id FROM agent_tasks task JOIN agent_runs run ON run.id=task.run_id
+        WHERE run.state IN ('FAILED','CANCELLED','SUPERSEDED')
+          AND (${runId ?? null}::text IS NULL OR run.id=${runId ?? null})
+          AND task.state IN ('PENDING','RUNNABLE','WAITING')
+          AND task.lease_owner IS NULL AND task.lease_expires_at IS NULL
+        ORDER BY task.run_id,task.id FOR UPDATE OF task,run SKIP LOCKED LIMIT 2000
+      )
+      UPDATE agent_tasks task SET state='CANCELLED',revision=task.revision+1,lease_token=task.lease_token+1,
+        lease_owner=NULL,lease_expires_at=NULL,available_at=0
+      FROM targets WHERE task.id=targets.id RETURNING task.id,task.run_id`;
+    for (const id of [...new Set(retired.map((task) => task.run_id))].sort()) {
+      const ids = retired.filter((task) => task.run_id === id).map((task) => task.id);
+      await transaction`UPDATE agent_task_dispatch_outbox SET state='FAILED',last_error_code='RUN_TERMINATED',publish_owner=NULL,publish_lease_until=NULL
+        WHERE task_id=ANY(${ids}::text[]) AND state='PENDING'`;
+      const [run] = await transaction<{ current_plan_version: number }[]>`SELECT current_plan_version FROM agent_runs WHERE id=${id}`;
+      const sequence = await this.nextSequence(id, transaction);
+      await transaction`INSERT INTO agent_events (id,run_id,sequence,event_identity,type,actor,plan_version,safe_payload_json,created_at)
+        VALUES (${randomUUID()},${id},${sequence},${`terminal-task-retirement:${id}:${sequence}`},'TERMINAL_TASK_TAILS_CANCELLED','runtime',${run.current_plan_version},
+          ${JSON.stringify({ reason: "RUN_TERMINATED", cancelledTasks: ids.length })},${at})`;
+    }
+  }
 
   async createGoal(input: { goalId: string; runId: string; candidateId: number; goalType: string; workflowVersion?: string; inputVersion: string; profileVersion: string; policyVersion: string; completionCriteriaVersion: string; completionCriteria: string[]; budgets: BudgetLimits; triggerIdentity: string }) {
     const existing = await this.sql<{ id: string }[]>`SELECT id FROM agent_runs WHERE trigger_identity=${input.triggerIdentity}`; if (existing[0]) return { created: false, runId: existing[0].id };
@@ -406,13 +438,13 @@ export class PostgresAgentRuntimeRepository {
   }
   async outcome(input: { taskId: string; attemptId: string; worker: string; leaseToken: number; outcome: "SUCCEEDED" | "FAILED" | "UNKNOWN_OUTCOME"; errorCode?: string }) {
     await withTransaction(this.sql, async (transaction) => {
-      const task = await transaction<{ idempotency_identity: string; run_id: string; task_key: string; tool_key: string; attempt_count: number; failure_count: number; current_plan_version: number; goal_id: string; candidate_id: number; fanout_group_id: string | null; shard_identity: string | null; routing_class: string }[]>`SELECT task.idempotency_identity,task.run_id,task.task_key,task.tool_key,task.attempt_count,task.fanout_group_id,task.shard_identity,task.routing_class,run.current_plan_version,run.goal_id,goal.candidate_id,
+      const task = await transaction<{ idempotency_identity: string; run_id: string; run_state: string; task_key: string; tool_key: string; attempt_count: number; failure_count: number; current_plan_version: number; goal_id: string; candidate_id: number; fanout_group_id: string | null; shard_identity: string | null; routing_class: string }[]>`SELECT task.idempotency_identity,task.run_id,run.state AS run_state,task.task_key,task.tool_key,task.attempt_count,task.fanout_group_id,task.shard_identity,task.routing_class,run.current_plan_version,run.goal_id,goal.candidate_id,
           ((SELECT count(*) FROM agent_attempts prior WHERE prior.task_id=task.id AND prior.state='FAILED')+1)::integer AS failure_count
         FROM agent_tasks task JOIN agent_runs run ON run.id=task.run_id JOIN agent_goals goal ON goal.id=run.goal_id
         WHERE task.id=${input.taskId} FOR UPDATE`; if (!task[0]) throw new RuntimeConflictError("TASK_NOT_FOUND");
       const current = task[0];
       const finishedAt = new Date().toISOString();
-      const policy = input.outcome === "FAILED" ? taskFailurePolicy(current.tool_key, input.errorCode ?? "TASK_FAILED", current.failure_count) : undefined;
+      const policy = input.outcome === "FAILED" && current.run_state === "ACTIVE" ? taskFailurePolicy(current.tool_key, input.errorCode ?? "TASK_FAILED", current.failure_count) : undefined;
       const nextTaskState = policy?.retry ? "RUNNABLE" : input.outcome;
       const retryAt = policy?.retry ? Date.now() + policy.delayMs : null;
       const tasks = await transaction<{ id: string; revision: number }[]>`UPDATE agent_tasks SET state=${nextTaskState},revision=revision+1,lease_owner=NULL,lease_expires_at=NULL,available_at=${retryAt ?? 0} WHERE id=${input.taskId} AND state='RUNNING' AND lease_owner=${input.worker} AND lease_token=${input.leaseToken} RETURNING id,revision`;
@@ -424,9 +456,13 @@ export class PostgresAgentRuntimeRepository {
           ${JSON.stringify({ workerId: input.worker, routingClass: current.routing_class, fanoutGroupId: current.fanout_group_id, shardIdentity: current.shard_identity, outcome: input.outcome, errorCode: input.errorCode ?? null })},${finishedAt})`;
       const outboxState = input.outcome === "SUCCEEDED" ? "SENT" : input.outcome === "UNKNOWN_OUTCOME" ? "UNKNOWN_OUTCOME" : "FAILED";
       await transaction`UPDATE agent_outbox SET state=${outboxState},unknown_outcome=${input.outcome === "UNKNOWN_OUTCOME"},attempts=attempts+1 WHERE operation_identity=${current.idempotency_identity}`;
+      if (current.run_state !== "ACTIVE") {
+        await this.retireTerminalTasks(transaction, finishedAt, current.run_id);
+        return;
+      }
       if (input.outcome === "FAILED") {
-        const sequence = await this.nextSequence(current.run_id, transaction);
         if (policy?.retry) {
+          const sequence = await this.nextSequence(current.run_id, transaction);
           await enqueueDispatch(transaction, { id: input.taskId, run_id: current.run_id, revision: tasks[0].revision, attempt_count: current.attempt_count, tool_key: current.tool_key }, retryAt ?? 0);
           await transaction`UPDATE agent_runs SET revision=revision+1,last_progress_at=${finishedAt} WHERE id=${current.run_id} AND state='ACTIVE'`;
           await transaction`INSERT INTO agent_events (id,run_id,sequence,event_identity,type,actor,plan_version,task_id,safe_payload_json,created_at)
@@ -442,12 +478,14 @@ export class PostgresAgentRuntimeRepository {
         const safeCode = input.errorCode ?? "TASK_FAILED";
         const safeMessage = candidateFailureMessage(safeCode);
         await transaction`UPDATE agent_runs SET state='FAILED',revision=revision+1,last_progress_at=${finishedAt} WHERE id=${current.run_id} AND state='ACTIVE'`;
+        await this.retireTerminalTasks(transaction, finishedAt, current.run_id);
         await transaction`UPDATE agent_goals SET state='FAILED',revision=revision+1 WHERE id=${current.goal_id} AND state='ACTIVE'
           AND NOT EXISTS (SELECT 1 FROM agent_runs other WHERE other.goal_id=${current.goal_id} AND other.id<>${current.run_id} AND other.state='ACTIVE')`;
         await transaction`UPDATE candidates SET revision=revision+1,record_json=(record_json::jsonb || ${JSON.stringify({
           status: "FAILED", failedStage: current.task_key, failureReason: safeMessage,
           attempts: current.failure_count, automaticRetriesExhausted: true,
         })}::jsonb)::text WHERE id=${current.candidate_id}`;
+        const sequence = await this.nextSequence(current.run_id, transaction);
         await transaction`INSERT INTO agent_events (id,run_id,sequence,event_identity,type,actor,plan_version,task_id,safe_payload_json,created_at)
           VALUES (${randomUUID()},${current.run_id},${sequence},${`run-failed:${current.run_id}`},'RUN_FAILED','runtime',${current.current_plan_version},${input.taskId},${JSON.stringify({ taskKey: current.task_key, errorCode: safeCode, attempts: current.failure_count, deliveryAttempts: current.attempt_count })},${finishedAt}) ON CONFLICT (event_identity) DO NOTHING`;
         return;
@@ -472,6 +510,7 @@ export class PostgresAgentRuntimeRepository {
   async recoverStale(now: number) {
     return withTransaction(this.sql, async (transaction) => {
       const recoveredAt = new Date(now).toISOString();
+      await this.retireTerminalTasks(transaction, recoveredAt);
       const completedNotifications = await transaction<{ id: string; run_id: string; goal_id: string; current_plan_version: number }[]>`UPDATE agent_tasks task
         SET state='SUCCEEDED',revision=task.revision+1,lease_owner=NULL,lease_expires_at=NULL,available_at=0
         FROM agent_runs run
@@ -556,7 +595,9 @@ export class PostgresAgentRuntimeRepository {
     return rows.length > 0;
   }
   async reconcileDispatch(now = Date.now(), republishAfterMs?: number) {
-    return withTransaction(this.sql, async (transaction) => {
+    const retireDue = this.lastTerminalRetirementAt === undefined || now - this.lastTerminalRetirementAt >= 60_000;
+    const result = await withTransaction(this.sql, async (transaction) => {
+      if (retireDue) await this.retireTerminalTasks(transaction, new Date(now).toISOString());
       await transaction`UPDATE agent_task_dispatch_outbox SET state='PENDING',publish_owner=NULL,publish_lease_until=NULL,last_error_code='PUBLISH_LEASE_EXPIRED'
         WHERE state='PUBLISHING' AND publish_lease_until<=${now}`;
       const republished = republishAfterMs && republishAfterMs > 0
@@ -576,6 +617,8 @@ export class PostgresAgentRuntimeRepository {
       for (const task of tasks) await enqueueDispatch(transaction, task, 0);
       return [...new Set([...republished.map((row) => row.task_id), ...tasks.map((task) => task.id)])];
     });
+    if (retireDue) this.lastTerminalRetirementAt = now;
+    return result;
   }
   async dispatchStats(now = Date.now()) {
     const [row] = await this.sql<{ pending: number; publishing: number; published: number; failed: number; oldest_pending_ms: number; runnable_without_delivery: number }[]>`SELECT
