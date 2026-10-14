@@ -1,0 +1,47 @@
+name: Candidate Telegram maintenance CI
+on:
+  push:
+    branches: ['codex/ops-*', 'codex/infra-hh-*']
+  pull_request:
+    branches: [main, production]
+permissions:
+  contents: read
+jobs:
+  validate-hh:
+    name: validate-hh
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify fixed maintenance and release gates
+        run: |
+          node --test deploy/ops/*.test.mjs
+          bash -n deploy/ops/deploy-approved.sh
+          python3 -m py_compile deploy/ops/hh-ops-dispatch.py
+      - name: Enforce narrow proposal policy
+        if: startsWith(github.head_ref, 'codex/ops-') || startsWith(github.ref, 'refs/heads/codex/ops-')
+        env:
+          HH_OPS_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: node web/scripts/hh-ops-policy.mjs
+      - name: Install synthetic test dependencies
+        if: startsWith(github.head_ref, 'codex/ops-') || startsWith(github.ref, 'refs/heads/codex/ops-')
+        working-directory: web
+        run: npm ci
+      - name: Build and run candidate regression
+        if: startsWith(github.head_ref, 'codex/ops-') || startsWith(github.ref, 'refs/heads/codex/ops-')
+        working-directory: web
+        run: npm test
+      - name: State validation scope
+        run: echo 'This check validates maintenance policy and synthetic regression. It does not close the separate mandatory production-like E2E gate.' >> "$GITHUB_STEP_SUMMARY"
