@@ -38,7 +38,7 @@ import { deduplicateCoverageEvidence, matrixCriterionIds, technicalFallbackRow, 
 import { countOpenAiCompatibleContextTokens } from "../llm/token-counting.ts";
 import { canonicalJoin, createFanoutDescriptor } from "../agent-runtime/fanout.ts";
 import { buildAssessmentJoin } from "./assessment-join.ts";
-import { callRouterAiJev, protectedJevTrace, reviewAbcDirectionWithJev, type JevChoiceCall } from "./jev-decisions.ts";
+import { callRouterAiDecision, protectedDecisionTrace, reviewAbcDirectionWithDecision, DECISION_MODEL, DECISION_MAX_STATE_BYTES, type JevChoiceCall } from "./jev-decisions.ts";
 import { runCandidatePhase } from "./phase-diagnostics.ts";
 import { extractVideoAudio } from "./streamed-video.ts";
 import { mediaInputLimit } from "../media-processor/limits.ts";
@@ -540,7 +540,7 @@ export async function createProductionCandidateToolExecution(input: { database: 
       (id,candidate_id,run_id,input_version_id,profile_version,kind,schema_version,provider,tool_version,config_fingerprint,checksum,payload_ref,created_at_utc)
       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) ON CONFLICT DO NOTHING`, [domainArtifactId, candidatePk, runId, inputVersion, profileVersion, kind,
         `${kind}/v1`, kind.includes("document") ? "local-extraction" : "routerai", String(task.toolKey ?? "candidate-pipeline/v1"),
-        sha256([input.environment.CANDIDATE_PIPELINE_BUILD_ID, input.environment.LLM_RUNTIME_CONFIG_JSON]), stored.checksum, stored.artifactRef, new Date().toISOString()]);
+        sha256([input.environment.CANDIDATE_PIPELINE_BUILD_ID, input.environment.LLM_RUNTIME_CONFIG_JSON, input.environment.ROUTERAI_DECISION_MODEL ?? DECISION_MODEL, input.environment.ROUTERAI_DECISION_MAX_STATE_BYTES ?? String(DECISION_MAX_STATE_BYTES)]), stored.checksum, stored.artifactRef, new Date().toISOString()]);
     return { ...stored, domainArtifactId };
   };
   const storeBytes = async (kind: string, identity: string, bytes: Uint8Array, contentType: string) => {
@@ -552,7 +552,7 @@ export async function createProductionCandidateToolExecution(input: { database: 
       (id,candidate_id,run_id,input_version_id,profile_version,kind,schema_version,provider,tool_version,config_fingerprint,checksum,payload_ref,created_at_utc)
       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) ON CONFLICT DO NOTHING`, [domainArtifactId, candidatePk, runId, inputVersion, profileVersion, kind,
         `${kind}/v1`, "node-pdf-renderer", String(task.toolKey ?? "candidate-pipeline/v1"),
-        sha256([input.environment.CANDIDATE_PIPELINE_BUILD_ID, input.environment.LLM_RUNTIME_CONFIG_JSON]), stored.checksum, stored.artifactRef, new Date().toISOString()]);
+        sha256([input.environment.CANDIDATE_PIPELINE_BUILD_ID, input.environment.LLM_RUNTIME_CONFIG_JSON, input.environment.ROUTERAI_DECISION_MODEL ?? DECISION_MODEL, input.environment.ROUTERAI_DECISION_MAX_STATE_BYTES ?? String(DECISION_MAX_STATE_BYTES)]), stored.checksum, stored.artifactRef, new Date().toISOString()]);
     return { ...stored, domainArtifactId };
   };
   const vacancyContext = async () => {
@@ -780,7 +780,7 @@ export async function createProductionCandidateToolExecution(input: { database: 
       parallel: {
         execute: async (toolKey) => {
           if (!artifactStore) throw new Error("PRODUCTION_PARALLEL_ARTIFACT_STORE_NOT_PROVISIONED");
-          const configFingerprint = sha256([input.environment.CANDIDATE_PIPELINE_BUILD_ID, input.environment.LLM_RUNTIME_CONFIG_JSON]);
+          const configFingerprint = sha256([input.environment.CANDIDATE_PIPELINE_BUILD_ID, input.environment.LLM_RUNTIME_CONFIG_JSON, input.environment.ROUTERAI_DECISION_MODEL ?? DECISION_MODEL, input.environment.ROUTERAI_DECISION_MAX_STATE_BYTES ?? String(DECISION_MAX_STATE_BYTES)]);
           const planVersion = Number((await queryOne<{ current_plan_version: number }>(input.database, "SELECT current_plan_version FROM agent_runs WHERE id=$1", [runId]))?.current_plan_version ?? 1);
           const createGroup = async (groupKey: string, kind: string, shardToolKey: string, shards: Array<{ identity: string; payload: Record<string, unknown>; toolKey?: string; dependsOn?: readonly string[] }>) => {
             const join = await queryOne<{ id: string }>(input.database, "SELECT id FROM agent_tasks WHERE run_id=$1 AND task_key=$2", [runId, `${groupKey}-join`]);
@@ -1147,23 +1147,26 @@ export async function createProductionCandidateToolExecution(input: { database: 
             }
           };
           const jevChoice: JevChoiceCall = async (request) => {
+            const model = input.environment.ROUTERAI_DECISION_MODEL ?? DECISION_MODEL;
+            const maxStateBytes = Number(input.environment.ROUTERAI_DECISION_MAX_STATE_BYTES ?? DECISION_MAX_STATE_BYTES);
+            const stateBytes = Buffer.byteLength(JSON.stringify(request.state), "utf8");
             const reservation = { llmCalls: 1, externalRequests: 1 } as const;
             await llmBudget.reserve(reservation);
             try {
-              const response = await callRouterAiJev(request, input.environment.ROUTERAI_API_KEY ?? "");
-              const correlation = traceCorrelation("jev-decision", Object.keys(request.questions).sort().join("-"));
-              const trace = protectedJevTrace(correlation, request, response);
+              const response = await callRouterAiDecision(request, input.environment.ROUTERAI_API_KEY ?? "", fetch, { model, maxStateBytes });
+              const correlation = traceCorrelation("decision-classification", Object.keys(request.questions).sort().join("-"));
+              const trace = protectedDecisionTrace(correlation, request, response);
               try {
                 await new PostgresBlobStore(input.database).put({ id: `trace:${correlation.traceId}`,
                   scope: "protected-jev-traces", kind: "protected-jev-trace", mimeType: "application/json",
                   bytes: new TextEncoder().encode(JSON.stringify(trace)), retentionUntilUtc: trace.expiresAt, protected: true });
-              } catch { throw new Error("JEV_TRACE_WRITE_FAILED"); }
-              console.info(JSON.stringify({ event: "jev-decision-validated", runId, taskId, attemptId,
-                traceRef: correlation.traceId, model: response.model, questionIds: Object.keys(request.questions) }));
+              } catch { throw new Error("DECISION_TRACE_WRITE_FAILED"); }
+              console.info(JSON.stringify({ event: "decision-classification-validated", runId, taskId, attemptId,
+                traceRef: correlation.traceId, model: response.model, stateBytes, maxStateBytes, questionIds: Object.keys(request.questions) }));
               return { ...response, traceRef: correlation.traceId };
             } catch (error) {
-              console.info(JSON.stringify({ event: "jev-decision-failed", runId, taskId, attemptId,
-                safeCode: error instanceof Error && /^JEV_[A-Z0-9_]+$/.test(error.message) ? error.message : "JEV_UNEXPECTED_FAILURE" }));
+              console.info(JSON.stringify({ event: "decision-classification-failed", runId, taskId, attemptId, model, stateBytes, maxStateBytes,
+                safeCode: error instanceof Error && /^(?:JEV|DECISION)_[A-Z0-9_]+$/.test(error.message) ? error.message : "DECISION_UNEXPECTED_FAILURE" }));
               throw error;
             } finally { await llmBudget.commit(reservation); }
           };
@@ -1404,7 +1407,7 @@ export async function createProductionCandidateToolExecution(input: { database: 
               fallbackScale: { A: "выше ожиданий роли", B: "соответствует ожиданиям роли", C: "ниже ожиданий или требует заметной поддержки" }, insufficientOnlyWhenNoRelevantCandidateEvidence: true } }, `abc-shard-${directionId}`);
             const assessedDirections = assessed.output.directions as Array<Record<string, unknown>>;
             if (assessedDirections.length !== 1 || assessedDirections[0]?.directionId !== directionId) throw new Error("ABC_SHARD_DIRECTION_COVERAGE_INVALID");
-            const jevReview = await reviewAbcDirectionWithJev({ ...(directions[0] as Record<string, unknown>), vacancyTitle: vacancy.vacancy?.title }, assessedDirections[0], claims, jevChoice);
+            const jevReview = await reviewAbcDirectionWithDecision({ ...(directions[0] as Record<string, unknown>), vacancyTitle: vacancy.vacancy?.title }, assessedDirections[0], claims, jevChoice);
             const stored = await storeJson("matrix-abc-shard", operationIdentity, { schemaVersion: "matrix-abc-shard/v1", shardIdentity: task.shardIdentity, directions: assessedDirections, warnings: jevReview.warning ? [jevReview.warning] : [], traceRefs: [assessed.traceRef, jevReview.traceRef].filter((value): value is string => Boolean(value)) });
             return { artifactRef: stored.artifactRef, checksum: stored.checksum };
           }
@@ -1415,7 +1418,7 @@ export async function createProductionCandidateToolExecution(input: { database: 
             const evidence = await artifactStore.getJson<Record<string, unknown>>(evidenceRef);
             const claimBundle = typeof evidence.claimsRef === "string" ? await artifactStore.getJson<{ claims?: CandidateSourceClaim[] }>(evidence.claimsRef) : {};
             const joined = await buildAssessmentJoin({ matrix, matrixId: published.matrixId, evidenceRef,
-              evidence: { ...evidence, claims: claimBundle.claims ?? [] }, rows, abc }, call, jevChoice);
+              evidence: { ...evidence, claims: claimBundle.claims ?? [] }, rows, abc }, call);
             const stored = await storeJson("matrix-rows", operationIdentity, joined);
             return { artifactRef: stored.artifactRef, checksum: stored.checksum };
           }

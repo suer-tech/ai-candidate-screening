@@ -1,8 +1,10 @@
 import { PROTECTED_TRACE_RETENTION_MS, type TraceCorrelation } from "../llm/tracing.ts";
 
 export const JEV_MODEL = "typesafe/jev-1.13";
+export const ASSESSMENT_MODEL = "anthropic/claude-fable-5.1";
+export const DECISION_MODEL = "perplexity/pplx-decider-v1.1-27b";
+export const DECISION_MAX_STATE_BYTES = 256 * 1024;
 const JEV_ENDPOINT = "https://routerai.ru/api/v1/decisions";
-const MAX_STATE_BYTES = 48_000;
 
 export type JevChoiceQuestion = { type: "choice"; instructions: string; criteria: Record<string, string> };
 export type JevChoiceRequest = { state: unknown; questions: Record<string, JevChoiceQuestion> };
@@ -23,29 +25,47 @@ function record(value: unknown): value is Record<string, unknown> {
 }
 
 export async function callRouterAiJev(request: JevChoiceRequest, apiKey: string, fetcher: typeof fetch = fetch): Promise<JevChoiceResponse> {
-  if (!apiKey.trim()) throw new Error("JEV_CREDENTIAL_MISSING");
+  return callChoice(request, apiKey, fetcher, JEV_MODEL, DECISION_MAX_STATE_BYTES, "JEV");
+}
+
+export async function callRouterAiDecision(request: JevChoiceRequest, apiKey: string, fetcher: typeof fetch = fetch,
+  options: { model?: string; maxStateBytes?: number } = {}): Promise<JevChoiceResponse> {
+  return callChoice(request, apiKey, fetcher, options.model ?? DECISION_MODEL,
+    options.maxStateBytes ?? DECISION_MAX_STATE_BYTES, "DECISION");
+}
+
+export const protectedDecisionTrace = protectedJevTrace;
+export const reviewAbcDirectionWithDecision = reviewAbcDirectionWithJev;
+
+async function callChoice(request: JevChoiceRequest, apiKey: string, fetcher: typeof fetch,
+  model: string, maxStateBytes: number, prefix: "JEV" | "DECISION"): Promise<JevChoiceResponse> {
+  const fail = (code: string): never => { throw new Error(`${prefix}_${code}`); };
+  if (!apiKey.trim()) fail("CREDENTIAL_MISSING");
+  if (!/^[a-z0-9_-]+\/[A-Za-z0-9._-]+$/.test(model)) fail("MODEL_INVALID");
+  if (!Number.isSafeInteger(maxStateBytes) || maxStateBytes < 4096 || maxStateBytes > 1024 * 1024) fail("CONTEXT_LIMIT_INVALID");
   const stateBytes = Buffer.byteLength(JSON.stringify(request.state), "utf8");
-  if (stateBytes > MAX_STATE_BYTES) throw new Error("JEV_CONTEXT_TOO_LARGE");
-  if (!Object.keys(request.questions).length) throw new Error("JEV_QUESTIONS_MISSING");
+  if (stateBytes > maxStateBytes) fail("CONTEXT_TOO_LARGE");
+  if (!Object.keys(request.questions).length) fail("QUESTIONS_MISSING");
   let response: Response;
   try {
     response = await fetcher(JEV_ENDPOINT, {
       method: "POST", headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ model: JEV_MODEL, state: request.state, questions: request.questions }),
+      body: JSON.stringify({ model, state: request.state, questions: request.questions }),
       signal: AbortSignal.timeout(30_000),
     });
   } catch (error) {
-    throw new Error(error instanceof Error && error.name === "TimeoutError" ? "JEV_TIMEOUT" : "JEV_NETWORK");
+    fail(error instanceof Error && error.name === "TimeoutError" ? "TIMEOUT" : "NETWORK");
   }
   if (!response.ok) {
-    if (response.status === 429) throw new Error("JEV_HTTP_429");
-    if (response.status >= 500) throw new Error(`JEV_HTTP_${response.status}`);
-    throw new Error("JEV_PROVIDER_REJECTED");
+    if (response.status === 429) fail("HTTP_429");
+    if (response.status >= 500) fail(`HTTP_${response.status}`);
+    fail("PROVIDER_REJECTED");
   }
   let payload: unknown;
   try { payload = await response.json(); }
-  catch { throw new Error("JEV_RESPONSE_INVALID"); }
-  if (!record(payload) || typeof payload.model !== "string" || !/^typesafe\/jev-1\.13(?:-|$)/.test(payload.model) || !record(payload.answers)) throw new Error("JEV_RESPONSE_INVALID");
+  catch { fail("RESPONSE_INVALID"); }
+  const modelPattern = new RegExp(`^${model.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?:-\\d{8})?$`);
+  if (!record(payload) || typeof payload.model !== "string" || !modelPattern.test(payload.model) || !record(payload.answers)) fail("RESPONSE_INVALID");
   const answers: Record<string, JevChoiceAnswer> = {};
   for (const [questionId, question] of Object.entries(request.questions)) {
     const answer = payload.answers[questionId];
@@ -57,7 +77,7 @@ export async function callRouterAiJev(request: JevChoiceRequest, apiKey: string,
       || Object.values(answer.probabilities).some((value) => typeof value !== "number" || !Number.isFinite(value) || value < 0 || value > 1)
       || Math.abs(Object.values(answer.probabilities).reduce<number>((sum, value) => sum + Number(value), 0) - 1) > 0.02
       || Number(answer.probabilities[answer.choice]) + 0.001 < Math.max(...Object.values(answer.probabilities).map(Number))) {
-      throw new Error("JEV_RESPONSE_INVALID");
+      fail("RESPONSE_INVALID");
     }
     answers[questionId] = answer as JevChoiceAnswer;
   }

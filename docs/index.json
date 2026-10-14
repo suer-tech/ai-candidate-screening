@@ -85,10 +85,15 @@
       "kind": "function",
       "summary": "Передаёт ответ матрицы и профильную схему Python PydanticAI через stdin; возвращает только безопасный код валидации."
     },
-    "callRouterAiJev": {
+    "callRouterAiDecision": {
       "file": "web/server/candidate-pipeline/jev-decisions.ts",
       "kind": "function",
-      "summary": "Типизированный Choice-вызов закреплённой Jev-модели через RouterAI decisions API; используется для проверки ABC и итоговой рекомендации, сохраняет только категориальный outcome и закрытую трассу без числовой уверенности."
+      "summary": "Типизированная проверка ABC через Perplexity Decider V1.1 / RouterAI decisions API с настраиваемым UTF-8 пределом 256 КиБ без усечения; сохраняет категориальный outcome и закрытую трассу без числовой уверенности. Итоговую рекомендацию формирует отдельно Fable 5.1."
+    },
+    "smokeDecisionModels": {
+      "file": "web/scripts/smoke-decision-models.ts",
+      "kind": "script",
+      "summary": "Два ограниченных реальных вызова Fable и Perplexity на синтетических данных с флагом --allow-provider-smoke; проверяет structured summary и контекст больше 48 000 байт без DB/Drive/Telegram эффектов, выводит только безопасные метаданные. Не заменяет обязательные E2E."
     },
     "testMatrixIsolated": {
       "file": "deploy/local/test-matrix-isolated.ps1",

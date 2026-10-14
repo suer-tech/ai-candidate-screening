@@ -54,7 +54,7 @@ test("docker environment overrides reroute processor endpoints and database url 
 });
 
 for (const model of ["x-ai/grok-4.7", "openai/gpt-5.6-luna-pro"])
-test(`configured ${model} reaches every LLM capability and env overrides the runtime file without changing contracts`, () => {
+test(`configured ${model} reaches non-summary LLM capabilities while assessment remains on Fable`, () => {
   const previous = process.env;
   try {
     process.env = { NODE_ENV: "test" };
@@ -91,13 +91,17 @@ test(`configured ${model} reaches every LLM capability and env overrides the run
     assert.deepEqual(overridden, configured);
     for (const projected of [configured, overridden]) {
       assert.equal(projected.ROUTERAI_MODEL, model);
+      assert.equal(projected.ROUTERAI_ASSESSMENT_MODEL, "anthropic/claude-fable-5.1");
+      assert.equal(projected.ROUTERAI_DECISION_MODEL, "perplexity/pplx-decider-v1.1-27b");
+      assert.equal(projected.ROUTERAI_DECISION_MAX_STATE_BYTES, "262144");
       const llm = JSON.parse(projected.LLM_RUNTIME_CONFIG_JSON);
       assert.deepEqual(Object.keys(llm.capabilities).sort(), Object.keys(schemas).sort());
       for (const [name, responseSchemaArtifact] of Object.entries(schemas)) {
-        assert.equal(baselineLlm.capabilities[name].model, "sol", name);
+        const isSummary = name === "matrix_assessment_summary";
+        assert.equal(baselineLlm.capabilities[name].model, isSummary ? "anthropic/claude-fable-5.1" : "sol", name);
         assert.deepEqual(llm.capabilities[name], {
-          ...baselineLlm.capabilities[name], model,
-          generationParameters: model === "openai/gpt-5.6-luna-pro" ? {} : { temperature: 0 },
+          ...baselineLlm.capabilities[name], model: isSummary ? "anthropic/claude-fable-5.1" : model,
+          generationParameters: isSummary || model === "openai/gpt-5.6-luna-pro" ? {} : { temperature: 0 },
         }, name);
         assert.equal(llm.capabilities[name].responseSchemaArtifact, responseSchemaArtifact, name);
         assert.deepEqual(llm.capabilities[name].limits, {
@@ -113,6 +117,40 @@ test(`configured ${model} reaches every LLM capability and env overrides the run
   } finally {
     process.env = previous;
   }
+});
+
+test("assessment and decision model overrides are allowlisted and the decision context limit is bounded", () => {
+  const previous = process.env;
+  try {
+    process.env = { NODE_ENV: "test",
+      ROUTERAI_ASSESSMENT_MODEL: "anthropic/claude-fable-5.1-20261014",
+      ROUTERAI_DECISION_MODEL: "perplexity/pplx-decider-v1.1-27b-20261014",
+      ROUTERAI_DECISION_MAX_STATE_BYTES: "131072" };
+    const configuration = {
+      values: { ...valid, APP_ORIGIN: "http://localhost:3000", ROUTERAI_MODEL: "openai/gpt-5.6-sol",
+        ROUTERAI_STRUCTURED_OUTPUTS: "true", CANDIDATE_PIPELINE_BUILD_ID: "synthetic-build" },
+      credentials: { "database-url": "postgresql://synthetic:synthetic@127.0.0.1:5432/synthetic",
+        "internal-service-tokens.json": "{}", "rabbitmq-password": "synthetic-rabbit-password" }, root: "/synthetic/config",
+    };
+    const projected = environmentProjection(configuration as never);
+    const llm = JSON.parse(projected.LLM_RUNTIME_CONFIG_JSON);
+    assert.equal(projected.ROUTERAI_ASSESSMENT_MODEL, process.env.ROUTERAI_ASSESSMENT_MODEL);
+    assert.equal(projected.ROUTERAI_DECISION_MODEL, process.env.ROUTERAI_DECISION_MODEL);
+    assert.equal(projected.ROUTERAI_DECISION_MAX_STATE_BYTES, "131072");
+    assert.equal(llm.capabilities.matrix_assessment_summary.model, process.env.ROUTERAI_ASSESSMENT_MODEL);
+    assert.deepEqual(llm.capabilities.matrix_assessment_summary.generationParameters, {});
+    assert.equal(llm.capabilities.abc_matrix_assessment.model, "openai/gpt-5.6-sol");
+    for (const invalid of ["4095", "1048577", "NaN"]) {
+      process.env.ROUTERAI_DECISION_MAX_STATE_BYTES = invalid;
+      assert.throws(() => environmentProjection(configuration as never), /ROUTERAI_DECISION_MAX_STATE_BYTES_INVALID/);
+    }
+    process.env.ROUTERAI_DECISION_MAX_STATE_BYTES = "131072";
+    process.env.ROUTERAI_ASSESSMENT_MODEL = "invalid model";
+    assert.throws(() => environmentProjection(configuration as never), /ROUTERAI_ASSESSMENT_MODEL_INVALID/);
+    process.env.ROUTERAI_ASSESSMENT_MODEL = "anthropic/claude-fable-5.1-20261014";
+    process.env.ROUTERAI_DECISION_MODEL = "invalid model";
+    assert.throws(() => environmentProjection(configuration as never), /ROUTERAI_DECISION_MODEL_INVALID/);
+  } finally { process.env = previous; }
 });
 
 test("runtime fails closed until RouterAI Structured Outputs support is explicitly confirmed", () => {

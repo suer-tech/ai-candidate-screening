@@ -15,6 +15,9 @@ export type CandidatePipelineEnvironment = {
   LLM_RUNTIME_CONFIG_JSON?: string;
   ROUTERAI_API_KEY?: string;
   ROUTERAI_CONTEXT_WINDOW_TOKENS?: string;
+  ROUTERAI_ASSESSMENT_MODEL?: string;
+  ROUTERAI_DECISION_MODEL?: string;
+  ROUTERAI_DECISION_MAX_STATE_BYTES?: string;
   MATRIX_BATCH_SAFETY_TOKENS?: string;
   ASSEMBLYAI_API_KEY?: string;
   TELEGRAM_BOT_TOKEN?: string;

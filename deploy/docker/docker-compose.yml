@@ -30,6 +30,9 @@ x-app-common: &app-common
   environment: &app-env
     HH_RUNTIME_CONFIG_ROOT: /config
     ROUTERAI_MODEL: ${ROUTERAI_MODEL:-openai/gpt-5.6-luna-pro}
+    ROUTERAI_ASSESSMENT_MODEL: ${ROUTERAI_ASSESSMENT_MODEL:-anthropic/claude-fable-5.1}
+    ROUTERAI_DECISION_MODEL: ${ROUTERAI_DECISION_MODEL:-perplexity/pplx-decider-v1.1-27b}
+    ROUTERAI_DECISION_MAX_STATE_BYTES: "${ROUTERAI_DECISION_MAX_STATE_BYTES:-262144}"
     DATABASE_URL: postgresql://hh_agent:${HH_POSTGRES_PASSWORD:?set HH_POSTGRES_PASSWORD in .env}@postgres:5432/hh_agent
     HOST: "0.0.0.0"
     PORT: "3000"

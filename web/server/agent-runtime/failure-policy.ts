@@ -5,6 +5,7 @@ const TRANSIENT_CODES = [
   /_HTTP_(?:429|5\d\d)$/,
   /^HTTP_(?:429|5\d\d)$/,
   /^JEV_TRACE_WRITE_FAILED$/,
+  /^DECISION_TRACE_WRITE_FAILED$/,
   /^LEASE_EXPIRED_RECOVERED$/,
   /^TASK_LEASE_CHECK_UNAVAILABLE$/,
 ];
@@ -65,6 +66,11 @@ const RUSSIAN_FAILURES: Readonly<Record<string, string>> = Object.freeze({
   JEV_PROVIDER_REJECTED: "Сервис независимой проверки отклонил запрос. Обратитесь к администратору",
   JEV_RESPONSE_INVALID: "Сервис независимой проверки вернул некорректный ответ. Результат не опубликован",
   JEV_TRACE_WRITE_FAILED: "Не удалось сохранить закрытую трассу независимой проверки. Обработка будет повторена",
+  JEV_CONTEXT_TOO_LARGE: "Контекст независимой проверки превышает установленный лимит. Требуется настройка размера запроса администратором",
+  DECISION_CONTEXT_TOO_LARGE: "Контекст классификации превышает установленный лимит. Требуется настройка размера запроса администратором",
+  DECISION_PROVIDER_REJECTED: "Сервис классификации отклонил запрос. Обратитесь к администратору",
+  DECISION_RESPONSE_INVALID: "Сервис классификации вернул некорректный ответ. Результат не опубликован",
+  DECISION_TRACE_WRITE_FAILED: "Не удалось сохранить закрытую трассу классификации. Обработка будет повторена",
 });
 
 export function candidateFailureMessage(errorCode: string) {

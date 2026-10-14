@@ -1,5 +1,6 @@
 import { lstat, readFile, readdir, realpath } from "node:fs/promises";
 import path from "node:path";
+import { ASSESSMENT_MODEL, DECISION_MODEL, DECISION_MAX_STATE_BYTES } from "../candidate-pipeline/jev-decisions.ts";
 
 export const LOCAL_RUNTIME_ENV = ".runtime/runtime.env";
 export const LOCAL_CREDENTIAL_DIRECTORY = ".runtime/credentials";
@@ -23,7 +24,7 @@ const RUNTIME_KEYS = new Set([
   "APP_ORIGIN", "INTERNAL_APP_ORIGIN", "HOST", "PORT", "NODE_ENV", "AUTH_MODE", "LOCAL_AUTH_USER_ID", "LOCAL_AUTH_USER_EMAIL", "LOCAL_AUTH_USER_FULL_NAME",
   "DATABASE_MAX_CONNECTIONS", "DATABASE_IDLE_TIMEOUT_SECONDS", "DATABASE_CONNECT_TIMEOUT_SECONDS",
   "GOOGLE_OAUTH_CLIENT_ID", "GOOGLE_OAUTH_REDIRECT_URI", "GOOGLE_OAUTH_DEPLOYMENT_MODE",
-  "ROUTERAI_ENDPOINT", "ROUTERAI_MODEL", "ROUTERAI_STRUCTURED_OUTPUTS", "ROUTERAI_CONTEXT_WINDOW_TOKENS", "MATRIX_BATCH_SAFETY_TOKENS", "MATRIX_EVIDENCE_MAX_OUTPUT_TOKENS", "LLM_RELEASE_VERSION",
+  "ROUTERAI_ENDPOINT", "ROUTERAI_MODEL", "ROUTERAI_ASSESSMENT_MODEL", "ROUTERAI_DECISION_MODEL", "ROUTERAI_DECISION_MAX_STATE_BYTES", "ROUTERAI_STRUCTURED_OUTPUTS", "ROUTERAI_CONTEXT_WINDOW_TOKENS", "MATRIX_BATCH_SAFETY_TOKENS", "MATRIX_EVIDENCE_MAX_OUTPUT_TOKENS", "LLM_RELEASE_VERSION",
   "AGENT_RUNTIME_ENVIRONMENT", "AGENT_RUNTIME_WORKER_ID", "AGENT_RUNTIME_POLLING_MS", "AGENT_RUNTIME_HEARTBEAT_MS", "AGENT_RUNTIME_LEASE_MS",
   "CANDIDATE_TOOL_EXECUTION_MODE", "CANDIDATE_PIPELINE_ROUTING", "CANDIDATE_PIPELINE_BUILD_ID",
   "CANDIDATE_DISPATCH_TRANSPORT", "RABBITMQ_HOST", "RABBITMQ_PORT", "RABBITMQ_USERNAME", "RABBITMQ_PREFETCH", "RABBITMQ_MAX_PER_RUN", "RABBITMQ_POOL_CONCURRENCY", "RABBITMQ_PUBLISH_BATCH_SIZE", "RABBITMQ_PUBLISH_LEASE_MS", "RABBITMQ_PUBLISH_POLLING_MS", "RABBITMQ_MESSAGE_TTL_MS", "RABBITMQ_DEAD_LETTER_TTL_MS", "RABBITMQ_GRACEFUL_TIMEOUT_MS", "RABBITMQ_WORKER_CLASSES", "MATRIX_ROW_SHARD_SIZE",
@@ -195,6 +196,12 @@ export function environmentProjection(configuration: RuntimeConfiguration): Reco
   const endpoint = values.ROUTERAI_ENDPOINT || "https://routerai.ru/api/v1/chat/completions";
   const model = values.ROUTERAI_MODEL;
   if (!model) throw new RuntimeConfigurationError("ROUTERAI_MODEL_MISSING");
+  const assessmentModel = values.ROUTERAI_ASSESSMENT_MODEL || ASSESSMENT_MODEL;
+  const decisionModel = values.ROUTERAI_DECISION_MODEL || DECISION_MODEL;
+  const decisionMaxStateBytes = Number(values.ROUTERAI_DECISION_MAX_STATE_BYTES || DECISION_MAX_STATE_BYTES);
+  if (!/^[a-z0-9_-]+\/[A-Za-z0-9._-]+$/.test(assessmentModel)) throw new RuntimeConfigurationError("ROUTERAI_ASSESSMENT_MODEL_INVALID");
+  if (!/^[a-z0-9_-]+\/[A-Za-z0-9._-]+$/.test(decisionModel)) throw new RuntimeConfigurationError("ROUTERAI_DECISION_MODEL_INVALID");
+  if (!Number.isSafeInteger(decisionMaxStateBytes) || decisionMaxStateBytes < 4096 || decisionMaxStateBytes > 1024 * 1024) throw new RuntimeConfigurationError("ROUTERAI_DECISION_MAX_STATE_BYTES_INVALID");
   if (values.ROUTERAI_STRUCTURED_OUTPUTS !== "true") throw new RuntimeConfigurationError("ROUTERAI_STRUCTURED_OUTPUTS_SUPPORT_REQUIRED");
   const contextWindowTokens = Number(values.ROUTERAI_CONTEXT_WINDOW_TOKENS || 128_000);
   const matrixBatchSafetyTokens = Number(values.MATRIX_BATCH_SAFETY_TOKENS || 4_096);
@@ -229,7 +236,8 @@ export function environmentProjection(configuration: RuntimeConfiguration): Reco
       evidence_consolidation: { ...capability("consolidate-evidence/v1", "candidate-evidence-consolidation/v1", 1), timeoutMs: 600_000 },
       global_conflict_detection: { ...capability("detect-global-conflicts/v1", "candidate-global-conflicts/v1", 1), timeoutMs: 600_000 },
       matrix_row_evaluation: { ...capability("fill-matrix-rows/v2", "candidate-matrix-rows/v2", 1), timeoutMs: 600_000 },
-      matrix_assessment_summary: { ...capability("summarize-matrix-assessment/v1", "candidate-assessment-summary/v1", 1), timeoutMs: 600_000 },
+      matrix_assessment_summary: { ...capability("summarize-matrix-assessment/v1", "candidate-assessment-summary/v1", 1), model: assessmentModel,
+        generationParameters: assessmentModel === "openai/gpt-5.6-luna-pro" || assessmentModel.startsWith("anthropic/claude-fable-") ? {} : { temperature: 0 }, timeoutMs: 600_000 },
       abc_matrix_assessment: { ...capability("assess-abc-direction/v2", "candidate-abc-matrix/v1", 1), timeoutMs: 600_000 },
       critical_row_verification: { ...capability("verify-critical-row/v1", "candidate-row-verification/v1", 1), timeoutMs: 600_000 },
       candidate_report_composer: { ...capability("compose-candidate-report/v2", "candidate-report-composition/v2", 1), timeoutMs: 300_000 },
@@ -248,6 +256,9 @@ export function environmentProjection(configuration: RuntimeConfiguration): Reco
     ...values,
     CANDIDATE_DISPATCH_TRANSPORT: dispatchTransport,
     ROUTERAI_CONTEXT_WINDOW_TOKENS: String(contextWindowTokens),
+    ROUTERAI_ASSESSMENT_MODEL: assessmentModel,
+    ROUTERAI_DECISION_MODEL: decisionModel,
+    ROUTERAI_DECISION_MAX_STATE_BYTES: String(decisionMaxStateBytes),
     MATRIX_BATCH_SAFETY_TOKENS: String(matrixBatchSafetyTokens),
     MATRIX_EVIDENCE_MAX_OUTPUT_TOKENS: String(matrixEvidenceMaxOutputTokens),
     DATABASE_URL: overrides.DATABASE_URL ?? configuration.credentials["database-url"],
