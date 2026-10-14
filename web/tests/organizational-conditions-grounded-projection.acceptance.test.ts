@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { PROMPT_ARTIFACTS } from "../server/llm/artifacts.ts";
 import * as productionRuntime from "../server/candidate-pipeline/production-runtime.ts";
 
 type OrganizationalFact = {
@@ -11,22 +10,6 @@ type OrganizationalFact = {
 };
 
 type ProjectOrganizationalConditions = (facts: readonly OrganizationalFact[]) => readonly string[];
-
-test("REP-023: existing fact_extraction explicitly requests four separate grounded organizational facts", () => {
-  const prompt = PROMPT_ARTIFACTS["fact-extraction/v1"].template;
-  const failures: string[] = [];
-  const subjects: Array<[string, RegExp]> = [
-    ["work format and city", /(?:work\s*format|формат\s+работы).*(?:city|город)|(?:city|город).*(?:work\s*format|формат\s+работы)/isu],
-    ["expected net income", /(?:expected\s+(?:net\s+)?income|income\s+after\s+tax|ожидаем\S*\s+(?:доход|зарплат)|доход\S*\s+(?:на\s+руки|после\s+налог))/isu],
-    ["trial-day readiness", /(?:trial\s+day|тестов\S*\s+дн)/isu],
-    ["start readiness and timing", /(?:start\s+(?:readiness|availability|date)|готов\S*\s+(?:к\s+)?выход)/isu],
-  ];
-  for (const [label, pattern] of subjects) if (!pattern.test(prompt)) failures.push(`fact_extraction prompt omits ${label}`);
-  if (!/(?:separate|отдельн)/iu.test(prompt)) failures.push("prompt does not require the four subjects as separate facts");
-  if (!/locatorRef/u.test(prompt)) failures.push("prompt does not require a supplied source locator for every fact");
-  if (!/(?:never infer missing|не (?:выдум|додум|предполаг))/iu.test(prompt)) failures.push("prompt does not prohibit invented answers for missing organizational facts");
-  assert.deepEqual(failures, []);
-});
 
 test("REP-023: report projection renders exactly four grounded organizational lines and explicit missing defaults without an LLM call", () => {
   const project = (productionRuntime as Record<string, unknown>).projectOrganizationalConditions as ProjectOrganizationalConditions | undefined;

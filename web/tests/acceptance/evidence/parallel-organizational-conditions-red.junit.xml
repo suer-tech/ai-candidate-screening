@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="REP-023: parallel transcript evidence shard preserves organizational statements for the report" time="0.123025" classname="test" file="C:\Users\user2\.codex\worktrees\report-organizational-conditions\hh\web\tests\parallel-organizational-conditions.acceptance.test.ts" failure="parallel production request omitted organizational fields&#10;+ actual - expected&#10;&#10;+ undefined&#10;- [&#10;-   {&#10;-     field: 'workFormat',&#10;-     sourceClass: 'report.organization.work-format'&#10;-   },&#10;-   {&#10;-     field: 'city',&#10;-     sourceClass: 'report.organization.city'&#10;-   },&#10;-   {&#10;-     field: 'income',&#10;-     sourceClass: 'report.organization.income'&#10;-   },&#10;-   {&#10;-     field: 'trialDay',&#10;-     sourceClass: 'report.organization.trial-day'&#10;-   },&#10;-   {&#10;-     field: 'start',&#10;-     sourceClass: 'report.organization.start'&#10;-   }&#10;- ]&#10;">
+		<failure type="testCodeFailure" message="parallel production request omitted organizational fields&#10;+ actual - expected&#10;&#10;+ undefined&#10;- [&#10;-   {&#10;-     field: 'workFormat',&#10;-     sourceClass: 'report.organization.work-format'&#10;-   },&#10;-   {&#10;-     field: 'city',&#10;-     sourceClass: 'report.organization.city'&#10;-   },&#10;-   {&#10;-     field: 'income',&#10;-     sourceClass: 'report.organization.income'&#10;-   },&#10;-   {&#10;-     field: 'trialDay',&#10;-     sourceClass: 'report.organization.trial-day'&#10;-   },&#10;-   {&#10;-     field: 'start',&#10;-     sourceClass: 'report.organization.start'&#10;-   }&#10;- ]">
+[Error [ERR_TEST_FAILURE]: parallel production request omitted organizational fields
++ actual - expected
+
++ undefined
+- [
+-   {
+-     field: 'workFormat',
+-     sourceClass: 'report.organization.work-format'
+-   },
+-   {
+-     field: 'city',
+-     sourceClass: 'report.organization.city'
+-   },
+-   {
+-     field: 'income',
+-     sourceClass: 'report.organization.income'
+-   },
+-   {
+-     field: 'trialDay',
+-     sourceClass: 'report.organization.trial-day'
+-   },
+-   {
+-     field: 'start',
+-     sourceClass: 'report.organization.start'
+-   }
+- ]
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: parallel production request omitted organizational fields
+  + actual - expected
+  
+  + undefined
+  - [
+  -   {
+  -     field: 'workFormat',
+  -     sourceClass: 'report.organization.work-format'
+  -   },
+  -   {
+  -     field: 'city',
+  -     sourceClass: 'report.organization.city'
+  -   },
+  -   {
+  -     field: 'income',
+  -     sourceClass: 'report.organization.income'
+  -   },
+  -   {
+  -     field: 'trialDay',
+  -     sourceClass: 'report.organization.trial-day'
+  -   },
+  -   {
+  -     field: 'start',
+  -     sourceClass: 'report.organization.start'
+  -   }
+  - ]
+  
+      at executeShard (C:\Users\user2\.codex\worktrees\report-organizational-conditions\hh\web\tests\parallel-organizational-conditions.acceptance.test.ts:115:10)
+      at async TestContext.&lt;anonymous> (C:\Users\user2\.codex\worktrees\report-organizational-conditions\hh\web\tests\parallel-organizational-conditions.acceptance.test.ts:123:20)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: [ [Object], [Object], [Object], [Object], [Object] ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="REP-023: parallel document evidence shard preserves organizational statements for the report" time="0.017924" classname="test" file="C:\Users\user2\.codex\worktrees\report-organizational-conditions\hh\web\tests\parallel-organizational-conditions.acceptance.test.ts" failure="parallel production request omitted organizational fields&#10;+ actual - expected&#10;&#10;+ undefined&#10;- [&#10;-   {&#10;-     field: 'workFormat',&#10;-     sourceClass: 'report.organization.work-format'&#10;-   },&#10;-   {&#10;-     field: 'city',&#10;-     sourceClass: 'report.organization.city'&#10;-   },&#10;-   {&#10;-     field: 'income',&#10;-     sourceClass: 'report.organization.income'&#10;-   },&#10;-   {&#10;-     field: 'trialDay',&#10;-     sourceClass: 'report.organization.trial-day'&#10;-   },&#10;-   {&#10;-     field: 'start',&#10;-     sourceClass: 'report.organization.start'&#10;-   }&#10;- ]&#10;">
+		<failure type="testCodeFailure" message="parallel production request omitted organizational fields&#10;+ actual - expected&#10;&#10;+ undefined&#10;- [&#10;-   {&#10;-     field: 'workFormat',&#10;-     sourceClass: 'report.organization.work-format'&#10;-   },&#10;-   {&#10;-     field: 'city',&#10;-     sourceClass: 'report.organization.city'&#10;-   },&#10;-   {&#10;-     field: 'income',&#10;-     sourceClass: 'report.organization.income'&#10;-   },&#10;-   {&#10;-     field: 'trialDay',&#10;-     sourceClass: 'report.organization.trial-day'&#10;-   },&#10;-   {&#10;-     field: 'start',&#10;-     sourceClass: 'report.organization.start'&#10;-   }&#10;- ]">
+[Error [ERR_TEST_FAILURE]: parallel production request omitted organizational fields
++ actual - expected
+
++ undefined
+- [
+-   {
+-     field: 'workFormat',
+-     sourceClass: 'report.organization.work-format'
+-   },
+-   {
+-     field: 'city',
+-     sourceClass: 'report.organization.city'
+-   },
+-   {
+-     field: 'income',
+-     sourceClass: 'report.organization.income'
+-   },
+-   {
+-     field: 'trialDay',
+-     sourceClass: 'report.organization.trial-day'
+-   },
+-   {
+-     field: 'start',
+-     sourceClass: 'report.organization.start'
+-   }
+- ]
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: parallel production request omitted organizational fields
+  + actual - expected
+  
+  + undefined
+  - [
+  -   {
+  -     field: 'workFormat',
+  -     sourceClass: 'report.organization.work-format'
+  -   },
+  -   {
+  -     field: 'city',
+  -     sourceClass: 'report.organization.city'
+  -   },
+  -   {
+  -     field: 'income',
+  -     sourceClass: 'report.organization.income'
+  -   },
+  -   {
+  -     field: 'trialDay',
+  -     sourceClass: 'report.organization.trial-day'
+  -   },
+  -   {
+  -     field: 'start',
+  -     sourceClass: 'report.organization.start'
+  -   }
+  - ]
+  
+      at executeShard (C:\Users\user2\.codex\worktrees\report-organizational-conditions\hh\web\tests\parallel-organizational-conditions.acceptance.test.ts:115:10)
+      at async TestContext.&lt;anonymous> (C:\Users\user2\.codex\worktrees\report-organizational-conditions\hh\web\tests\parallel-organizational-conditions.acceptance.test.ts:123:20)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: [ [Object], [Object], [Object], [Object], [Object] ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="REP-023: a trial-day statement never fills missing income, format or permanent start" time="0.019480" classname="test" file="C:\Users\user2\.codex\worktrees\report-organizational-conditions\hh\web\tests\parallel-organizational-conditions.acceptance.test.ts" failure="parallel production request omitted organizational fields&#10;+ actual - expected&#10;&#10;+ undefined&#10;- [&#10;-   {&#10;-     field: 'workFormat',&#10;-     sourceClass: 'report.organization.work-format'&#10;-   },&#10;-   {&#10;-     field: 'city',&#10;-     sourceClass: 'report.organization.city'&#10;-   },&#10;-   {&#10;-     field: 'income',&#10;-     sourceClass: 'report.organization.income'&#10;-   },&#10;-   {&#10;-     field: 'trialDay',&#10;-     sourceClass: 'report.organization.trial-day'&#10;-   },&#10;-   {&#10;-     field: 'start',&#10;-     sourceClass: 'report.organization.start'&#10;-   }&#10;- ]&#10;">
+		<failure type="testCodeFailure" message="parallel production request omitted organizational fields&#10;+ actual - expected&#10;&#10;+ undefined&#10;- [&#10;-   {&#10;-     field: 'workFormat',&#10;-     sourceClass: 'report.organization.work-format'&#10;-   },&#10;-   {&#10;-     field: 'city',&#10;-     sourceClass: 'report.organization.city'&#10;-   },&#10;-   {&#10;-     field: 'income',&#10;-     sourceClass: 'report.organization.income'&#10;-   },&#10;-   {&#10;-     field: 'trialDay',&#10;-     sourceClass: 'report.organization.trial-day'&#10;-   },&#10;-   {&#10;-     field: 'start',&#10;-     sourceClass: 'report.organization.start'&#10;-   }&#10;- ]">
+[Error [ERR_TEST_FAILURE]: parallel production request omitted organizational fields
++ actual - expected
+
++ undefined
+- [
+-   {
+-     field: 'workFormat',
+-     sourceClass: 'report.organization.work-format'
+-   },
+-   {
+-     field: 'city',
+-     sourceClass: 'report.organization.city'
+-   },
+-   {
+-     field: 'income',
+-     sourceClass: 'report.organization.income'
+-   },
+-   {
+-     field: 'trialDay',
+-     sourceClass: 'report.organization.trial-day'
+-   },
+-   {
+-     field: 'start',
+-     sourceClass: 'report.organization.start'
+-   }
+- ]
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: parallel production request omitted organizational fields
+  + actual - expected
+  
+  + undefined
+  - [
+  -   {
+  -     field: 'workFormat',
+  -     sourceClass: 'report.organization.work-format'
+  -   },
+  -   {
+  -     field: 'city',
+  -     sourceClass: 'report.organization.city'
+  -   },
+  -   {
+  -     field: 'income',
+  -     sourceClass: 'report.organization.income'
+  -   },
+  -   {
+  -     field: 'trialDay',
+  -     sourceClass: 'report.organization.trial-day'
+  -   },
+  -   {
+  -     field: 'start',
+  -     sourceClass: 'report.organization.start'
+  -   }
+  - ]
+  
+      at executeShard (C:\Users\user2\.codex\worktrees\report-organizational-conditions\hh\web\tests\parallel-organizational-conditions.acceptance.test.ts:115:10)
+      at async TestContext.&lt;anonymous> (C:\Users\user2\.codex\worktrees\report-organizational-conditions\hh\web\tests\parallel-organizational-conditions.acceptance.test.ts:146:18)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: [ [Object], [Object], [Object], [Object], [Object] ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 3 -->
+	<!-- suites 0 -->
+	<!-- pass 0 -->
+	<!-- fail 3 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 866.7191 -->
+</testsuites>

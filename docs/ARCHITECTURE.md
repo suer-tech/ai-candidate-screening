@@ -41,6 +41,7 @@ My Drive: папка кандидата
   -> decision-safe нормализованная стенограмма разбивается на перекрывающиеся окна по полному токенному бюджету provider-запроса без суммаризации
   -> каждый batch возвращает extraction coverage по всем criterion IDs; deterministic harness делает missing-only retry, merge/dedup и один gap-search
   -> evidence batches выполняются независимо и объединяются exact join
+  -> каждый document/transcript batch также извлекает явно указанные формат/город, доход, тестовый день и срок выхода для отчёта; общий reportFieldRequests учитывается в token budget до разбивки, отсутствующие значения не выдумываются
   -> claims объединяются -> fail-soft global conflicts
   -> ABC-направления и группы строк матрицы выполняются параллельно, затем объединяются assessment join
   -> выбранные критические строки проверяются независимыми shards и объединяются exact join

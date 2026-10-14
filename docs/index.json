@@ -13,7 +13,7 @@
     "buildCriterionClaimExtractionBatchesAsync": {
       "file": "web/server/candidate-pipeline/transcript-claim-batching.ts",
       "kind": "function",
-      "summary": "Cooperative production batch planner: yields to I/O between token counts while preserving deterministic synchronous batch content and identity."
+      "summary": "Cooperative production batch planner: yields to I/O between token counts, includes optional reportFieldRequests before budgeting, and preserves deterministic synchronous batch content and identity."
     },
     "runCandidatePhase": {
       "file": "web/server/candidate-pipeline/phase-diagnostics.ts",

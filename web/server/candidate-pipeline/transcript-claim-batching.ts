@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { setImmediate as yieldToIo } from "node:timers/promises";
 
 type UnknownRecord = Record<string, unknown>;
+export type ReportFieldRequest = Readonly<{ field: string; sourceClass: string; instruction: string }>;
 type BatchSteps<T> = Generator<Readonly<UnknownRecord>, T, number>;
 
 export type CriterionClaimExtractionBatch = Readonly<{
@@ -78,6 +79,7 @@ function makeRequest(input: {
   matrix: unknown;
   scope: unknown;
   flags: UnknownRecord;
+  reportFieldRequests?: readonly ReportFieldRequest[];
   order: number;
   kind: "document" | "transcript" | "empty";
   documents?: readonly unknown[];
@@ -90,6 +92,7 @@ function makeRequest(input: {
     request: {
       matrix: input.matrix,
       requestedCriterionIds: collectCriterionIds(record(input.matrix)?.criteria),
+      ...(input.reportFieldRequests ? { reportFieldRequests: input.reportFieldRequests } : {}),
       materials: {
         ...input.flags,
         documents: input.documents ?? [],
@@ -114,6 +117,7 @@ function* packDocuments(input: {
   matrix: unknown;
   scope: unknown;
   flags: UnknownRecord;
+  reportFieldRequests?: readonly ReportFieldRequest[];
   segments: readonly unknown[];
   maxContextTokens: number;
   countContextTokens: (request: Readonly<UnknownRecord>) => number;
@@ -167,6 +171,7 @@ function* packUtterances(input: {
   matrix: unknown;
   scope: unknown;
   flags: UnknownRecord;
+  reportFieldRequests?: readonly ReportFieldRequest[];
   utterances: readonly unknown[];
   maxContextTokens: number;
   countContextTokens: (request: Readonly<UnknownRecord>) => number;
@@ -239,6 +244,7 @@ type BatchInput = Readonly<{
   matrix: unknown;
   materials: unknown;
   scope: unknown;
+  reportFieldRequests?: readonly ReportFieldRequest[];
   maxContextTokens: number;
   countContextTokens: (request: Readonly<UnknownRecord>) => number;
   overlapUtterances: number;
@@ -254,12 +260,13 @@ function* batchSteps(input: BatchInput): BatchSteps<readonly CriterionClaimExtra
   const utterances = Array.isArray(normalized?.utterances) ? normalized.utterances : [];
   const flags = Object.fromEntries(Object.entries(materials).filter(([key]) => !["documents", "transcript"].includes(key)));
   const matrix = projectMatrixForClaimExtraction(input.matrix);
-  const empty = makeRequest({ matrix, scope: input.scope, flags, order: 0, kind: "empty" });
+  const reportFieldRequests = input.reportFieldRequests;
+  const empty = makeRequest({ matrix, scope: input.scope, flags, reportFieldRequests, order: 0, kind: "empty" });
   if ((yield empty.request) > input.maxContextTokens) throw new Error("MATRIX_CLAIM_BATCH_BASE_EXCEEDS_LIMIT");
 
-  const documents = yield* packDocuments({ matrix, scope: input.scope, flags, segments: documentSegments(materials.documents), maxContextTokens: input.maxContextTokens,
+  const documents = yield* packDocuments({ matrix, scope: input.scope, flags, reportFieldRequests, segments: documentSegments(materials.documents), maxContextTokens: input.maxContextTokens,
     countContextTokens: input.countContextTokens, startOrder: 0 });
-  const transcriptBatches = yield* packUtterances({ matrix, scope: input.scope, flags, utterances, maxContextTokens: input.maxContextTokens,
+  const transcriptBatches = yield* packUtterances({ matrix, scope: input.scope, flags, reportFieldRequests, utterances, maxContextTokens: input.maxContextTokens,
     countContextTokens: input.countContextTokens,
     overlapUtterances: input.overlapUtterances, startOrder: documents.length });
   const batches = [...documents, ...transcriptBatches];

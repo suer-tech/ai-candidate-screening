@@ -49,6 +49,18 @@ type ExecutionEnvironment = CandidatePipelineEnvironment & GoogleDriveOAuthEnvir
 type OrganizationalFact = Pick<EvidenceFact, "predicate" | "value"> & { locator?: unknown };
 type OrganizationalClaim = Pick<CandidateSourceClaim, "sourceClass" | "text" | "locator">;
 
+// Both execution paths extract report context even when it is outside the
+// vacancy criteria. Include these fields before budgeting and splitting input.
+const REPORT_FIELD_REQUESTS = [
+  { field: "workFormat", sourceClass: "report.organization.work-format", instruction: "Предпочтительный формат работы: удалённо, офис или гибрид." },
+  { field: "city", sourceClass: "report.organization.city", instruction: "Город проживания кандидата." },
+  { field: "income", sourceClass: "report.organization.income", instruction: "Ожидаемый доход кандидата с валютой и net/gross, если указано." },
+  { field: "trialDay", sourceClass: "report.organization.trial-day", instruction: "Готовность и срок выхода на тестовый день." },
+  { field: "start", sourceClass: "report.organization.start", instruction: "Готовность и срок постоянного выхода на работу; не подменять тестовым днём." },
+  { field: "technical", sourceClass: "report.technical", instruction: "Конкретные программы, сервисы, ИИ-инструменты и технические способы работы." },
+  { field: "motivation", sourceClass: "report.motivation", instruction: "Почему кандидату интересна роль, что мотивирует и какие условия он ценит." },
+] as const;
+
 export function projectOrganizationalConditions(facts: readonly OrganizationalFact[], claims: readonly OrganizationalClaim[] = []): readonly string[] {
   const missingValue = /(?:не\s+(?:указан|указана|указано|назван|названа|названо|раскрыт|раскрыта|раскрыто|сообщил|сообщила)|нет\s+(?:данных|сведений|информации)|отсутств(?:ует|уют)|неизвестн)/iu;
   const groundedValue = (patterns: readonly RegExp[]) => {
@@ -969,7 +981,7 @@ export async function createProductionCandidateToolExecution(input: { database: 
             const signalConfig = llmDependencies.configuration.resolve("unmapped_signal_discovery");
             const maxContextTokens = Number(input.environment.ROUTERAI_CONTEXT_WINDOW_TOKENS ?? 128_000);
             const safetyTokens = Number(input.environment.MATRIX_BATCH_SAFETY_TOKENS ?? 4_096);
-            const batches = await buildCriterionClaimExtractionBatchesAsync({ matrix, materials: context.materials,
+            const batches = await buildCriterionClaimExtractionBatchesAsync({ matrix, materials: context.materials, reportFieldRequests: REPORT_FIELD_REQUESTS,
               scope: { candidateId: candidatePk, runId, inputVersion, profileVersion }, maxContextTokens,
               countContextTokens: (request) => Math.max(
                 countOpenAiCompatibleContextTokens({ config: claimConfig, userContent: request as JsonValue, safetyTokens }),
@@ -1220,7 +1232,7 @@ export async function createProductionCandidateToolExecution(input: { database: 
             const claimConfig = llmDependencies.configuration.resolve("criterion_claim_extraction");
             const signalConfig = llmDependencies.configuration.resolve("unmapped_signal_discovery");
             const safetyTokens = Number(input.environment.MATRIX_BATCH_SAFETY_TOKENS ?? 4_096);
-            const batches = await buildCriterionClaimExtractionBatchesAsync({ matrix, materials: context.materials,
+            const batches = await buildCriterionClaimExtractionBatchesAsync({ matrix, materials: context.materials, reportFieldRequests: REPORT_FIELD_REQUESTS,
               scope: { candidateId: candidatePk, runId, inputVersion, profileVersion }, maxContextTokens: Number(input.environment.ROUTERAI_CONTEXT_WINDOW_TOKENS ?? 128_000),
               countContextTokens: (request) => Math.max(countOpenAiCompatibleContextTokens({ config: claimConfig, userContent: request as JsonValue, safetyTokens }), countOpenAiCompatibleContextTokens({ config: signalConfig, userContent: request as JsonValue, safetyTokens })), overlapUtterances: 2 });
             const batch = batches.find((item) => item.batchId === batchId); if (!batch) throw new Error("EVIDENCE_SHARD_DESCRIPTOR_STALE");
@@ -1270,6 +1282,7 @@ export async function createProductionCandidateToolExecution(input: { database: 
             const claimBatches = await buildCriterionClaimExtractionBatchesAsync({
               matrix,
               materials,
+              reportFieldRequests: REPORT_FIELD_REQUESTS,
               scope: { candidateId: candidatePk, runId, inputVersion, profileVersion },
               maxContextTokens,
               countContextTokens: (request) => Math.max(
@@ -1284,18 +1297,9 @@ export async function createProductionCandidateToolExecution(input: { database: 
             const coverageEntries: BatchCoverageEntry[] = [];
             const coverageLedger: Array<{ batchId: string; requestedCriterionIds: string[]; coverage: BatchCoverageEntry[] }> = [];
             const allCriterionIds = matrixCriterionIds(matrix.criteria);
-            const reportFieldRequests = [
-              { field: "workFormat", sourceClass: "report.organization.work-format", instruction: "Предпочтительный формат работы: удалённо, офис или гибрид." },
-              { field: "city", sourceClass: "report.organization.city", instruction: "Город проживания кандидата." },
-              { field: "income", sourceClass: "report.organization.income", instruction: "Ожидаемый доход кандидата с валютой и net/gross, если указано." },
-              { field: "trialDay", sourceClass: "report.organization.trial-day", instruction: "Готовность и срок выхода на тестовый день." },
-              { field: "start", sourceClass: "report.organization.start", instruction: "Готовность и срок постоянного выхода на работу; не подменять тестовым днём." },
-              { field: "technical", sourceClass: "report.technical", instruction: "Конкретные программы, сервисы, ИИ-инструменты и технические способы работы." },
-              { field: "motivation", sourceClass: "report.motivation", instruction: "Почему кандидату интересна роль, что мотивирует и какие условия он ценит." },
-            ];
             for (const claimBatch of claimBatches) {
               let directed: Awaited<ReturnType<typeof call>> | undefined;
-              const reportAwareRequest = { ...claimBatch.request, reportFieldRequests };
+              const reportAwareRequest = claimBatch.request;
               try { directed = await call("criterion_claim_extraction", reportAwareRequest, `directed-${claimBatch.batchId}`); }
               catch { coverageWarnings.push(`PRIMARY_EXTRACTION_FAILED:${claimBatch.batchId}`); }
               const primaryCoverage = Array.isArray(directed?.output.coverage) ? directed.output.coverage as unknown as BatchCoverageEntry[] : [];
