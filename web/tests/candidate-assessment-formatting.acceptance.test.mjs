@@ -17,11 +17,11 @@ after(async () => {
   await rm(output, { recursive: true, force: true });
 });
 const uiSource = await readFile(path.join(root, "app/page.tsx"), "utf8");
-const compiled = await build({ stdin: { contents: `${uiSource}\nexport { CandidateDetail };`, loader: "tsx", resolveDir: path.join(root, "app") },
+const compiled = await build({ stdin: { contents: `${uiSource}\nexport { CandidateDetail, CriterionDisclosureRow };`, loader: "tsx", resolveDir: path.join(root, "app") },
   bundle: true, platform: "node", format: "esm", packages: "external", jsx: "automatic", write: false, logLevel: "silent" });
 const entry = path.join(output, "ui.mjs");
 await writeFile(entry, compiled.outputFiles[0].text);
-const { CandidateDetail } = await import(pathToFileURL(entry).href);
+const { CandidateDetail, CriterionDisclosureRow } = await import(pathToFileURL(entry).href);
 const projected = await build({ stdin: { contents: 'export { projectAssessment } from "../server/product/postgres-repository.ts"; export { PROMPT_ARTIFACTS, RESPONSE_SCHEMA_ARTIFACTS } from "../server/llm/artifacts.ts"; export { environmentProjection } from "../server/configuration/runtime.ts";',
   loader: "ts", resolveDir: path.join(root, "tests") }, bundle: true, platform: "node", format: "esm", packages: "external", write: false, logLevel: "silent" });
 const projectionEntry = path.join(output, "projection.mjs");
@@ -78,6 +78,36 @@ function bodyFor(node, source) {
   return result;
 }
 
+function evidenceLayout(row, title, reason, hasScale) {
+  const trigger = find(row, (node) => node.tag === "button" && node.attributes["aria-controls"])[0];
+  assert.ok(trigger, "Evidence retains a dedicated accessible toggle");
+  const panel = find(row, (node) => node.attributes.id === trigger.attributes["aria-controls"])[0];
+  assert.ok(panel, "aria-controls resolves to the evidence panel in the same card");
+  assert.equal(trigger.attributes["aria-expanded"], "false");
+  assert.equal(panel.attributes["aria-hidden"], "true");
+  assert.match(text(trigger), /доказательств/iu);
+  assert.equal(text(trigger).includes(title), false, "The title is not part of the evidence toggle");
+  const elements = find(row, () => true);
+  const heading = find(row, (node) => /^(?:b|h[1-6])$/.test(node.tag) && text(node) === title)[0];
+  assert.ok(heading, "The criterion title remains visible before its content");
+  assert.ok(elements.indexOf(heading) < elements.indexOf(trigger), "Title precedes the evidence toggle");
+  if (reason) {
+    assert.ok(elements.indexOf(bodyFor(row, reason)) < elements.indexOf(trigger), "Reason precedes the evidence toggle");
+  }
+  if (hasScale) {
+    const scale = find(row, (node) => node.tag === "details")[0];
+    assert.ok(scale, "The supplied scale remains available");
+    assert.ok(elements.indexOf(scale) < elements.indexOf(trigger), "Scale precedes the evidence toggle");
+  }
+  const parent = find(row, (node) => node.children.includes(trigger)).at(-1);
+  const siblings = parent.children.filter((child) => typeof child !== "string");
+  assert.equal(siblings[siblings.indexOf(trigger) + 1], panel,
+    "The panel immediately follows its toggle, opening downward after the card content");
+  assert.equal(siblings.at(-1), panel, "No card content is placed after the evidence panel");
+  assert.equal(find(trigger, (node) => ["details", "summary", "ul", "ol"].includes(node.tag)).length, 0);
+  return { trigger, panel };
+}
+
 function candidate(basis, summary = "Отдельная синтетическая выжимка.", abc = []) {
   return { id: 7001, name: "Синтетический кандидат Формат", initials: "СФ", vacancyId: "synthetic-format-vacancy", vacancy: "Синтетическая роль",
     status: "READY", archived: false, stageStartedAt: "2026-10-14T01:00:00.000Z", elapsedMinutes: 12, etaMinutes: null, tone: "blue", updated: "сейчас",
@@ -101,22 +131,65 @@ test("REP-050/051: multiline AI recommendation preserves content and produces se
     "Two explicit paragraphs must not be presented as one dense inline block");
 });
 
-test("REP-050: ABC reasoning, neutral conditions and scale have separate structures outside the evidence button", () => {
+test("REP-050 clarification: ABC hides defining conditions while preserving reasoning, scale and the input data", () => {
   const reason = "Самостоятельный пример не подтверждён. Условие уровня не является доказанным фактом.";
   const conditions = ["Не менее двух отдельных эпизодов", "Роль кандидата должна быть описана явно"];
-  const { tree } = render(candidate("Краткое синтетическое обоснование.", undefined,
+  const value = candidate("Краткое синтетическое обоснование.", undefined,
     [{ direction: "Синтетическая автономность", grade: "B", reason, definingConditions: conditions,
-      gradeA: "Два эпизода без подсказок", gradeB: "Один эпизод с уточнением", gradeC: "Нет проверяемого эпизода", factIds: [] }]));
+      gradeA: "Два эпизода без подсказок", gradeB: "Один эпизод с уточнением", gradeC: "Нет проверяемого эпизода", factIds: [] }]);
+  const before = JSON.stringify(value);
+  const { tree } = render(value);
   const row = abcRegion(tree);
   assert.ok(row);
   bodyFor(row, reason);
-  const neutral = find(row, (node) => node.tag === "ul" && conditions.every((condition) => text(node).includes(condition)))[0];
-  assert.ok(neutral, "Defining conditions must be a neutral list separate from prose");
-  assert.equal(find(neutral, (node) => node.tag === "li").length, 2);
+  assert.doesNotMatch(text(row), /Учтённые признаки/u);
+  for (const condition of conditions) assert.equal(text(row).includes(condition), false, "Defining conditions are not rendered");
+  assert.equal(JSON.stringify(value), before, "Hiding conditions must not remove them from the stored/projection input");
   const scale = find(row, (node) => node.tag === "details")[0];
   assert.ok(scale, "Scale is a separate native disclosure");
   assert.equal(find(row, (node) => node.tag === "button" && find(node, (child) => ["details", "summary", "ul"].includes(child.tag)).length > 0).length, 0,
-    "Independent scale/list controls must not be nested inside an evidence button");
+    "Independent scale controls must not be nested inside an evidence button");
+});
+
+for (const [label, fields] of [
+  ["reason and full scale", { reason: "Обоснование до доказательств.", gradeA: "Самостоятельно", gradeB: "С уточнением", gradeC: "Не подтверждено" }],
+  ["reason only", { reason: "Краткое основание без шкалы." }],
+  ["partial scale only", { gradeB: "Один синтетический эпизод." }],
+  ["no optional content or evidence", {}],
+]) {
+  test(`REP-050 clarification: evidence toggle follows content and immediately precedes its panel (${label})`, () => {
+    const title = `Синтетический критерий: ${label}`;
+    const { tree } = render(candidate("Отдельное основание.", undefined,
+      [{ direction: title, grade: "B", factIds: [], ...fields }]));
+    const row = abcRegion(tree);
+    evidenceLayout(row, title, fields.reason, Boolean(fields.gradeA || fields.gradeB || fields.gradeC));
+    assert.doesNotMatch(text(row), /Учтённые признаки|undefined|null/u);
+  });
+}
+
+test("REP-050 clarification: actual evidence toggle binding preserves downward panel expansion and collapse", () => {
+  let open = false;
+  const toggle = () => { open = !open; };
+  const reactNodes = (node) => Array.isArray(node) ? node.flatMap(reactNodes)
+    : node && typeof node === "object" ? [node, ...reactNodes(node.props?.children)] : [];
+  const component = () => CriterionDisclosureRow({ badge: "B", badgeClass: "grade-b", title: "Синтетическая строка",
+    reason: "Обоснование не меняется при раскрытии.", facts: [], factCount: 0,
+    evidenceId: "synthetic-evidence-binding-panel", open, onToggle: toggle });
+  const inspect = () => {
+    const nodes = reactNodes(component());
+    const trigger = nodes.find((node) => node.type === "button" && node.props["aria-controls"]);
+    const panel = nodes.find((node) => node.props?.id === trigger.props["aria-controls"]);
+    assert.ok(panel);
+    assert.equal(trigger.props.onClick, toggle, "The actual toggle button binds the provided handler");
+    assert.equal(trigger.props["aria-expanded"], open);
+    assert.equal(panel.props["aria-hidden"], !open);
+    return trigger;
+  };
+  inspect().props.onClick();
+  assert.equal(open, true);
+  inspect().props.onClick();
+  assert.equal(open, false);
+  inspect();
 });
 
 for (const [label, source] of [
@@ -251,6 +324,7 @@ test("REP-052: actual assessment projection preserves multiline prose and inputs
   const overview = projectAssessment(snapshot, evidence, undefined, vacancy);
   assert.equal(overview.recommendationBasis, basis, "Projection must not collapse paragraphs into spaces");
   assert.equal(overview.abc[0].reason, reason);
+  assert.deepEqual(overview.abc[0].definingConditions, ["Два независимых эпизода"], "Hidden conditions remain available in the projected data");
   assert.equal(overview.criteria[0].reason, matrixReason);
   assert.equal(overview.abc[0].gradeB, gradeB);
   assert.equal(JSON.stringify({ snapshot, evidence, vacancy }), before);

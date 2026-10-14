@@ -404,10 +404,12 @@ html[data-theme="dark"] .generate-field-button{background:#172b42;border-color:#
 /* ABC grade descriptions need enough room to compare each observable level. */
 .abc-grade-grid textarea{min-height:132px}
 
-/* The complete criterion row is the disclosure control; evidence opens below it. */
+/* Criterion content precedes its footer control; evidence opens immediately below. */
 .criterion-detail-item.criterion-detail-row{display:block;padding:0;gap:0;border:1px solid transparent;border-top-color:var(--line);border-radius:12px;overflow:hidden;transition:background .2s ease,border-color .2s ease,box-shadow .2s ease,margin .2s ease}
 .criterion-detail-item.is-open{margin:8px 0;border:1px solid color-mix(in srgb,var(--blue) 42%,var(--line));background:color-mix(in srgb,var(--paper) 92%,var(--blue-soft));box-shadow:0 9px 24px color-mix(in srgb,var(--blue) 10%,transparent)}
-.criterion-row-trigger{appearance:none;width:100%;display:grid;grid-template-columns:42px minmax(0,1fr) 28px;align-items:start;gap:12px;padding:16px 12px;border:0;border-radius:11px;background:transparent;color:var(--ink);text-align:left;cursor:pointer;transition:background .2s ease,color .2s ease}
+.criterion-heading{display:grid;grid-template-columns:42px minmax(0,1fr);align-items:center;gap:12px;padding:16px 12px}
+.criterion-heading>b{min-width:0;font-size:12px;color:var(--criterion-accent)}
+.criterion-row-trigger{appearance:none;width:100%;display:grid;grid-template-columns:minmax(0,1fr) 28px;align-items:center;gap:12px;padding:12px 12px 12px 66px;border:0;border-radius:11px;background:transparent;color:var(--ink);text-align:left;cursor:pointer;transition:background .2s ease,color .2s ease}
 .criterion-row-trigger:hover{background:color-mix(in srgb,var(--blue-soft) 62%,transparent)}
 .criterion-row-trigger:focus-visible{outline:2px solid var(--blue);outline-offset:-3px}
 .criterion-row-copy{min-width:0;display:block}
@@ -430,9 +432,8 @@ html[data-theme="dark"] .generate-field-button{background:#172b42;border-color:#
 .ai-recommendation-callout .recommendation-verdict{font-size:14px!important;font-weight:650;line-height:1.5!important}
 .decision-summary-prose{margin:18px 0;color:var(--ink)}
 .criterion-assessment-body{margin:0 40px 18px 66px;font-size:13px;color:var(--ink)}
-.criterion-assessment-body>section+section,.criterion-assessment-body>.criterion-scale{margin-top:16px}
+.criterion-assessment-body>section+.criterion-scale{margin-top:16px}
 .criterion-assessment-body h4{margin:0 0 7px;font-size:11px;font-weight:650;color:var(--muted)}
-.criterion-conditions>ul{margin:0;padding-left:18px;display:grid;gap:8px;list-style:disc}
 .criterion-scale{max-width:none!important;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:color-mix(in srgb,var(--paper) 85%,var(--blue-soft))}
 .criterion-scale>summary{font-size:12px!important;line-height:1.5;white-space:normal!important;color:var(--muted)!important}
 .criterion-scale>summary{display:flex;justify-content:space-between;gap:12px}
@@ -460,7 +461,8 @@ html[data-theme="dark"] .generate-field-button{background:#172b42;border-color:#
 .criterion-detail-item.is-open .criterion-evidence-content{padding:14px 18px 18px 70px}
 .criterion-evidence-content .criterion-fact{margin:0 0 10px;background:color-mix(in srgb,var(--paper) 88%,transparent)}
 .criterion-evidence-content .criterion-fact:last-child{margin-bottom:0}
-@media(max-width:820px){.criterion-row-trigger{grid-template-columns:38px minmax(0,1fr) 26px;padding:14px 8px}.criterion-evidence-content,.criterion-detail-item.is-open .criterion-evidence-content{padding-left:58px;padding-right:10px}}
+@media(max-width:820px){.criterion-heading{grid-template-columns:38px minmax(0,1fr);padding:14px 8px}.criterion-row-trigger{grid-template-columns:minmax(0,1fr) 26px;padding:12px 8px 12px 58px}.criterion-evidence-content,.criterion-detail-item.is-open .criterion-evidence-content{padding-left:58px;padding-right:10px}}
+@media(max-width:520px){.criterion-row-trigger{padding-left:12px;padding-right:12px}.criterion-evidence-content,.criterion-detail-item.is-open .criterion-evidence-content{padding-left:12px;padding-right:12px}}
 @media(prefers-reduced-motion:reduce){
   .criterion-detail-item,.criterion-evidence-area,.criterion-evidence-content,.criterion-row-trigger,.criterion-row-chevron{transition:none}
 }

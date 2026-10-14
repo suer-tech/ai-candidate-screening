@@ -1,0 +1,39 @@
+{
+  "generatedAtUtc": "2026-10-14T10:28:19.296Z",
+  "author": "/root/regression_fixture_audit",
+  "executor": "/root/regression_fixture_audit",
+  "independence": "Acceptance author did not implement the UI clarification or deploy it.",
+  "requirements": [
+    "REP-050 user clarification",
+    "REP-051",
+    "REP-052"
+  ],
+  "approvedClarification": "Hide defining conditions in Detailed assessment while keeping the data and level scale. Move evidence toggle after title/reason/scale, directly before its downward panel.",
+  "preconditions": "Actual React SSR and actual stateless criterion component; synthetic candidate fixtures only; no browser/provider/DB effects.",
+  "command": "node --import tsx --test tests/candidate-assessment-formatting.acceptance.test.mjs",
+  "baselineHead": "fde657a5ae7dbad0846f4524482d3acd040f52ab",
+  "baselineUiSha256": "812f5cf57e5ae9756fd43df32c52a48db9224d272696c1a5ac7971b3b66f73aa",
+  "testSha256": "8b12380b5204c63a4ef7bdd46436f638ee06bad5a2e2e1d21affe19996e90e4c",
+  "junit": {
+    "artifact": "simplification-red.junit.xml",
+    "sha256": "8f21680be0f1436cbdbbd1cf75092055ba84a06ee09b68edcab627b00de4ac82"
+  },
+  "actual": {
+    "tests": 28,
+    "passed": 23,
+    "failed": 5,
+    "skipped": 0
+  },
+  "failureCases": [
+    "test",
+    "test",
+    "test",
+    "test",
+    "test"
+  ],
+  "expected": "Conditions do not occur in rendered HTML but remain in input and projection; title/reason/optional scale precede a dedicated evidence toggle; panel is its next element sibling and final card element; aria target and actual click binding remain correct in collapsed and expanded states.",
+  "status": "EXPECTED_PRODUCT_RED",
+  "lint": "npx eslint tests/candidate-assessment-formatting.acceptance.test.mjs: exit 0",
+  "postconditions": "Only acceptance test edited by this author; no runtime or production mutations.",
+  "limits": "SSR/component-boundary acceptance is not a full browser or production-like E2E."
+}

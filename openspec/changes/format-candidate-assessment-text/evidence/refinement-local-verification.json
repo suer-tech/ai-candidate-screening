@@ -1,0 +1,33 @@
+{
+  "generatedAtUtc": "2026-10-14T10:29:51.416667+00:00",
+  "baseline": "fde657a5ae7dbad0846f4524482d3acd040f52ab",
+  "npmTest": {
+    "exitCode": 0,
+    "logSha256": "60a1154923742f39bf5b22c2722bcd2bdc7c75978f1060502e54edad12084af6",
+    "vpsIntegrationSkips": 2
+  },
+  "independentAcceptance": {
+    "passed": 28,
+    "failed": 0,
+    "skipped": 0
+  },
+  "browser": "refinement-browser/checks.json",
+  "baselineComparison": "refinement-baseline-regression-comparison.json",
+  "e2ePreflight": {
+    "exitCode": 2,
+    "status": "BLOCKED",
+    "reason": "Missing protected E2E configuration/identity; separate OAuth callback not configured; existing requirements basis conflict remains."
+  },
+  "e2eRequired": {
+    "exitCode": 1,
+    "status": "BLOCKED",
+    "requiredScenarios": [
+      "E2E-VAC-001",
+      "E2E-TRN-001",
+      "E2E-ABC-001",
+      "E2E-RESULT-001"
+    ]
+  },
+  "fullGreenClaimed": false,
+  "providerCalls": false
+}

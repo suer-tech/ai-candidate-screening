@@ -3592,7 +3592,6 @@ function AiOverviewDetails({
             badgeClass={["A", "B", "C"].includes(criterion.grade) ? `grade-${criterion.grade.toLowerCase()}` : "grade-neutral"}
             title={criterion.direction}
             reason={criterion.reason}
-            definingConditions={criterion.definingConditions}
             gradeDefinitions={[["A", criterion.gradeA], ["B", criterion.gradeB], ["C", criterion.gradeC]]}
             facts={facts}
             factCount={linkedFactCount}
@@ -3630,7 +3629,6 @@ function CriterionDisclosureRow({
   onToggle,
   rowClassName = "",
   emptyEvidenceLabel,
-  definingConditions,
   gradeDefinitions,
 }: {
   badge: ReactNode;
@@ -3644,26 +3642,26 @@ function CriterionDisclosureRow({
   onToggle: () => void;
   rowClassName?: string;
   emptyEvidenceLabel?: string;
-  definingConditions?: string[];
   gradeDefinitions?: Array<[string, string | undefined]>;
 }) {
-  const conditions = (definingConditions ?? []).filter((value) => typeof value === "string" && value.trim());
   const definitions = (gradeDefinitions ?? []).filter((entry): entry is [string, string] => typeof entry[1] === "string" && Boolean(entry[1].trim()));
   return <div className={`criterion-detail-item criterion-detail-row ${rowClassName} ${open ? "is-open" : ""}`.trim()}>
-    <button className="criterion-row-trigger" type="button" aria-expanded={open} aria-controls={evidenceId} onClick={onToggle}>
+    <div className="criterion-heading">
       <span className={`assessment-grade ${badgeClass}`}>{badge}</span>
-      <span className="criterion-row-copy"><b>{title}</b><small>{factCount === 0 && emptyEvidenceLabel ? emptyEvidenceLabel : formatEvidenceCount(factCount)}</small></span>
+      <b>{title}</b>
+    </div>
+    {(reason?.trim() || definitions.length > 0) && <div className="criterion-assessment-body">
+      {reason?.trim() && <section className="criterion-reason"><h4>Обоснование</h4><AssessmentText text={reason} /></section>}
+      {definitions.length > 0 && <details className="criterion-scale"><summary>Критерии уровней</summary><dl>{definitions.map(([grade, definition]) => <div key={grade}><dt>{grade}</dt><dd><AssessmentText text={definition} /></dd></div>)}</dl></details>}
+    </div>}
+    <button className="criterion-row-trigger" type="button" aria-expanded={open} aria-controls={evidenceId} onClick={onToggle}>
+      <span className="criterion-row-copy"><b>Доказательства</b><small>{factCount === 0 && emptyEvidenceLabel ? emptyEvidenceLabel : formatEvidenceCount(factCount)}</small></span>
       <span className="criterion-row-chevron" aria-hidden="true">
         <svg className="criterion-row-chevron-icon" viewBox="0 0 16 16" focusable="false">
           <path d="M4 6L8 10L12 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </span>
     </button>
-    {(reason?.trim() || conditions.length > 0 || definitions.length > 0) && <div className="criterion-assessment-body">
-      {reason?.trim() && <section className="criterion-reason"><h4>Обоснование</h4><AssessmentText text={reason} /></section>}
-      {conditions.length > 0 && <section className="criterion-conditions"><h4>Учтённые признаки</h4><ul>{conditions.map((condition, index) => <li key={index}><AssessmentText text={condition} /></li>)}</ul></section>}
-      {definitions.length > 0 && <details className="criterion-scale"><summary>Критерии уровней</summary><dl>{definitions.map(([grade, definition]) => <div key={grade}><dt>{grade}</dt><dd><AssessmentText text={definition} /></dd></div>)}</dl></details>}
-    </div>}
     <div className="criterion-evidence-area" id={evidenceId} aria-hidden={!open}>
       <div className="criterion-evidence-content">
         {facts.length ? facts.map((fact) => {
