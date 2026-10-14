@@ -10,13 +10,13 @@ import tempfile
 from datetime import datetime, timezone
 
 root = Path(__file__).resolve().parents[2]
-base = '99a7bb469d348ac13f63c0dd04327f1725044368'
+base = 'fde657a5ae7dbad0846f4524482d3acd040f52ab'
 temporary = Path(tempfile.mkdtemp(prefix='hh-format-public-baseline-'))
 assert temporary.resolve().parent == Path(tempfile.gettempdir()).resolve()
 assert temporary.name.startswith('hh-format-public-baseline-')
 files = ['app/page.tsx', 'app/assessment-text.tsx', 'server/product/postgres-repository.ts', 'server/llm/artifacts.ts', 'server/configuration/runtime.ts', 'server/candidate-pipeline/assessment-join.ts', 'server/candidate-pipeline/production-runtime.ts']
 try:
-    archive = subprocess.run(['git', 'archive', '--format=tar', base, 'web'], cwd=root, capture_output=True, check=True)
+    archive = subprocess.run(['git', '-c', 'core.autocrlf=false', 'archive', '--format=tar', base, 'web'], cwd=root, capture_output=True, check=True)
     with tarfile.open(fileobj=io.BytesIO(archive.stdout)) as source:
         source.extractall(temporary, filter='data')
     dependencies = root / 'web/node_modules'
@@ -32,7 +32,7 @@ try:
     same_review = results['productionBase']['reviewFailures'] == results['candidate']['reviewFailures']
     same_lint = sorted(json.dumps(x, sort_keys=True) for x in results['productionBase']['lintErrors']) == sorted(json.dumps(x, sort_keys=True) for x in results['candidate']['lintErrors'])
     evidence = {'generatedAtUtc': datetime.now(timezone.utc).isoformat(), 'baseSha': base, 'noAdditionalReviewFailures': same_review, 'noAdditionalLintErrors': same_lint, 'results': results}
-    output = root / 'openspec/changes/format-candidate-assessment-text/evidence/baseline-regression-comparison.json'
+    output = root / 'openspec/changes/format-candidate-assessment-text/evidence/refinement-baseline-regression-comparison.json'
     output.write_text(json.dumps(evidence, ensure_ascii=False, indent=2), encoding='utf-8')
     print(json.dumps({'noAdditionalReviewFailures': same_review, 'noAdditionalLintErrors': same_lint, 'baseReviewFailures': results['productionBase']['reviewFailures'], 'candidateReviewFailures': results['candidate']['reviewFailures'], 'baseLintErrors': len(results['productionBase']['lintErrors']), 'candidateLintErrors': len(results['candidate']['lintErrors'])}))
     assert same_review and same_lint

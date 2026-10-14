@@ -6,7 +6,7 @@ import { build } from "esbuild";
 import { chromium } from "@playwright/test";
 
 const root = path.resolve(import.meta.dirname, "..");
-const output = path.join(root, "../openspec/changes/format-candidate-assessment-text/evidence/browser");
+const output = path.join(root, "../openspec/changes/format-candidate-assessment-text/evidence/refinement-browser");
 await mkdir(output, { recursive: true });
 const basis = "Кандидат самостоятельно выстроил рабочий процесс и описал измеримый результат. Это подтверждает соответствие части требований.\n\nОговорки: точный вклад в общий результат требует проверки. Отсутствие подробностей не означает отсутствия опыта.\n\nНа встрече обязательно проверить:\n1) Уточнить личные действия и исходные показатели.\n2) Разобрать пример решения с неполными данными.";
 const abc = { direction: "Самостоятельность", grade: "B", reason: "Кандидат самостоятельно планировал работу и доводил задачи до результата.\n\nОднако пример сложного решения с эскалацией раскрыт частично, поэтому уровень A не подтверждён.",
@@ -62,18 +62,38 @@ try {
   await page.getByRole("button", { name: "Абзацы", exact: true }).click();
   await page.getByText("Критерии уровней", { exact: true }).click();
   assert.equal(await page.locator(".criterion-scale[open] dt").count(), 3);
-  await page.locator(".criterion-row-trigger").first().click();
+  const row = page.locator(".criterion-detail-row").first();
+  assert.equal(await row.getByText("Учтённые признаки", { exact: true }).count(), 0);
+  const order = await row.evaluate((element) => {
+    const title = element.querySelector(".criterion-heading");
+    const scale = element.querySelector(".criterion-scale");
+    const button = element.querySelector(".criterion-row-trigger");
+    const panel = element.querySelector(".criterion-evidence-area");
+    return { titleBeforeButton: Boolean(title.compareDocumentPosition(button) & Node.DOCUMENT_POSITION_FOLLOWING),
+      scaleBeforeButton: Boolean(scale.compareDocumentPosition(button) & Node.DOCUMENT_POSITION_FOLLOWING),
+      adjacentPanel: button.nextElementSibling === panel,
+      footerBelowScale: button.getBoundingClientRect().top >= scale.getBoundingClientRect().bottom - 1 };
+  });
+  assert.deepEqual(order, { titleBeforeButton: true, scaleBeforeButton: true, adjacentPanel: true, footerBelowScale: true });
+  await page.locator(".criterion-row-trigger").first().focus();
+  await page.keyboard.press("Enter");
   assert.equal(await page.locator(".criterion-row-trigger").first().getAttribute("aria-expanded"), "true");
   assert.equal(await page.locator(".criterion-evidence-area").first().getAttribute("aria-hidden"), "false");
   await page.screenshot({ path: path.join(output, "desktop-expanded.png"), fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
   const metrics = await page.evaluate(() => ({ content: document.documentElement.scrollWidth, viewport: innerWidth }));
   assert.ok(metrics.content <= metrics.viewport + 1, JSON.stringify(metrics));
+  const mobileOrder = await row.evaluate((element) => {
+    const button = element.querySelector(".criterion-row-trigger").getBoundingClientRect();
+    const scale = element.querySelector(".criterion-scale").getBoundingClientRect();
+    return button.top >= scale.bottom - 1;
+  });
+  assert.equal(mobileOrder, true);
   await page.screenshot({ path: path.join(output, "mobile.png"), fullPage: true });
   await page.evaluate(() => document.documentElement.setAttribute("data-theme", "dark"));
   await page.screenshot({ path: path.join(output, "mobile-dark.png"), fullPage: true });
   assert.deepEqual(errors, []);
-  const evidence = { generatedAtUtc: new Date().toISOString(), status: "PASSED", boundary: "Actual React client mount and Chromium; synthetic fixtures; real production CSS", checks, scaleToggle: true, evidenceToggle: true, mobileOverflow: false, browserErrors: errors, providerCalls: false };
+  const evidence = { generatedAtUtc: new Date().toISOString(), status: "PASSED", boundary: "Actual React client mount and Chromium; synthetic fixtures; real production CSS", checks, scaleToggle: true, evidenceToggle: true, footerOrder: order, mobileFooterOrder: mobileOrder, keyboardToggle: true, mobileOverflow: false, browserErrors: errors, providerCalls: false };
   await writeFile(path.join(output, "checks.json"), JSON.stringify(evidence, null, 2));
   console.log(JSON.stringify(evidence));
 } finally {

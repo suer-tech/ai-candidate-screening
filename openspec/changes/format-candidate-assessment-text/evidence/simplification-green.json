@@ -1,0 +1,54 @@
+{
+  "generatedAtUtc": "2026-10-14T10:28:53.855Z",
+  "author": "/root/regression_fixture_audit",
+  "executor": "/root/regression_fixture_audit",
+  "independence": "Authored acceptance only, did not implement runtime or deploy UI change.",
+  "requirements": [
+    "REP-050 clarified by user and synchronized main spec",
+    "REP-051",
+    "REP-052"
+  ],
+  "command": "node --import tsx --test tests/candidate-assessment-formatting.acceptance.test.mjs",
+  "baselineHead": "fde657a5ae7dbad0846f4524482d3acd040f52ab",
+  "oracleUnchangedFromProductRed": true,
+  "testSha256": "8b12380b5204c63a4ef7bdd46436f638ee06bad5a2e2e1d21affe19996e90e4c",
+  "workingTreeSourceHashes": {
+    "app/page.tsx": "374678db5fb8f6bf80432ba28672b264127b5f3c24c61788ddf27e36ee362b36",
+    "app/globals.css": "ceaf530882a4d30df0574495d84748ee026675fbf67e6160f7f075e7d0ab0368",
+    "server/product/postgres-repository.ts": "bb49eeb3956bf2266a55879f5c7e5eebe5434ba639170eee4e9ad7bae22bc5bd",
+    "server/candidate-pipeline/production-runtime.ts": "a768062d1871531d2cea9a999c712a94541b142ca1d0969c9d4e38003c2c9f94",
+    "server/agent-runtime/postgres-runtime-repository.ts": "084ba31ddada920b17ac6739ee30b20470fb33c8275f9b0107f931114eb944c9"
+  },
+  "backendUnchangedFromHead": {
+    "server/product/postgres-repository.ts": true,
+    "server/candidate-pipeline/production-runtime.ts": true,
+    "server/agent-runtime/postgres-runtime-repository.ts": true
+  },
+  "previousRed": {
+    "tests": 28,
+    "passed": 23,
+    "failed": 5,
+    "skipped": 0
+  },
+  "actual": {
+    "tests": 28,
+    "failed": 0,
+    "skipped": 0,
+    "passed": 28
+  },
+  "junit": {
+    "artifact": "simplification-green.junit.xml",
+    "sha256": "9af85eb2f7eace1b952582fa1cd27eafb65eb968db9fd69242f653173e4c42e1"
+  },
+  "status": "PASS",
+  "review": {
+    "scope": "Only page/CSS changes affect application behavior. Storage, projection, runtime, prompts and schemas unchanged.",
+    "layout": "Grade/title are noninteractive. Reason and optional native level scale precede a dedicated evidence button. Its aria-controls resolves to its immediate following panel, final element in card; toggle handler and expanded/hidden state pair verified.",
+    "data": "Defining conditions are hidden in DOM and unchanged in candidate input and actual projection. Optional/empty reason or scale creates no invented headings or values. Evidence remains associated with the same criterion.",
+    "safety": "Existing HTML-escaping, exact content/order, paragraph/list, partial-scale and prompt-policy tests retained."
+  },
+  "productionWrites": false,
+  "providerCalls": false,
+  "fullProductionLikeE2eStatus": "BLOCKED",
+  "limits": "Synthetic actual React SSR and stateless component interaction only. No claim of real candidate processing or postdeployment browser verification."
+}

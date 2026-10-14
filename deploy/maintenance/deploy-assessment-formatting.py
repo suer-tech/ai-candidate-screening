@@ -14,9 +14,9 @@ import subprocess
 import time
 from datetime import datetime, timezone
 
-BASE = "99a7bb469d348ac13f63c0dd04327f1725044368"
+BASE = "fde657a5ae7dbad0846f4524482d3acd040f52ab"
 RELEASE = ""
-OLD_IMAGE = "sha256:7cd3b3c669269e6ced9da5491da3def3805114a6137936e26ab37abdc4b1cfa9"
+OLD_IMAGE = "sha256:1b9909fb6b0345b0bac093df1576dbfdf13fd29be3db65ef0c187af3cf5f4d45"
 RUNTIME_SHA = "3cda817c384010ecf1953c2cf08aaaadb73755bb444f8c89505aa87231592664"
 SERVICES = ("web", "worker", "dispatch-publisher", "media-processor", "document-processor",
             "worker-control", "worker-documents", "worker-media", "worker-transcription",
