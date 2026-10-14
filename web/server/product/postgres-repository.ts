@@ -464,9 +464,10 @@ export class PostgresProductRepository implements ProductRepository {
       if (!updated.length) throw new ProductConflictError("Состояние кандидата изменилось"); return candidate;
     });
   }
-  async dashboardSource(options: { summaryOnly?: boolean } = {}) {
+  async dashboardSource(options: { summaryOnly?: boolean; candidateId?: CandidateId } = {}) {
+    const candidatePk = options.candidateId === undefined ? null : await this.candidatePk(options.candidateId);
     const [candidateRows, vacancyRows, runtimeRows, reportRows, materialRows] = await Promise.all([
-      this.sql<{ id: number; revision: number; record_json: string }[]>`SELECT id,revision,record_json FROM candidates`,
+      this.sql<{ id: number; revision: number; record_json: string }[]>`SELECT id,revision,record_json FROM candidates WHERE (${candidatePk}::bigint IS NULL OR id=${candidatePk}::bigint)`,
       this.sql<{ record_json: string }[]>`SELECT record_json FROM vacancies`,
       this.sql<Row[]>`SELECT g.candidate_id,r.id AS run_id,r.state AS run_state,r.workflow_version,g.created_at AS run_started_at,r.last_progress_at,t.task_key,t.state AS task_state,t.attempt_count,a.error_code,
           compilation.state AS matrix_state,compilation.repair_cycles AS matrix_repair_count,compilation.terminal_error_code AS matrix_terminal_error_code
@@ -474,7 +475,7 @@ export class PostgresProductRepository implements ProductRepository {
         LEFT JOIN vacancy_matrix_compilations compilation
           ON compilation.profile_version=g.profile_version
          AND compilation.workflow_identity=r.workflow_version
-        WHERE g.goal_type IN ('candidate-analysis/v1','candidate-analysis-matrix/v1') ORDER BY g.candidate_id,g.created_at DESC,r.last_progress_at DESC,t.id`,
+        WHERE g.goal_type IN ('candidate-analysis/v1','candidate-analysis-matrix/v1') AND (${candidatePk}::bigint IS NULL OR g.candidate_id=${candidatePk}::bigint) ORDER BY g.candidate_id,g.created_at DESC,r.last_progress_at DESC,t.id`,
       options.summaryOnly
         ? this.sql<Row[]>`SELECT r.candidate_id,r.analysis_version,r.run_id,r.state,d.id AS document_id,d.type,d.file_name,d.drive_file_id,a.recommendation,
             COALESCE(publication.finished_at,run.last_progress_at) AS last_progress_at,
@@ -489,10 +490,10 @@ export class PostgresProductRepository implements ProductRepository {
               AND publication_task.state='SUCCEEDED' AND attempt.state='SUCCEEDED' AND attempt.finished_at IS NOT NULL
             ORDER BY attempt.finished_at DESC LIMIT 1
           ) publication ON TRUE
-          WHERE r.state='PUBLISHED' AND d.drive_file_id IS NOT NULL
+          WHERE r.state='PUBLISHED' AND (${candidatePk}::bigint IS NULL OR r.candidate_id=${candidatePk}::bigint) AND d.drive_file_id IS NOT NULL
           ORDER BY r.candidate_id,r.analysis_version DESC,d.type`
         : this.sql<Row[]>`WITH RECURSIVE report_lineage(report_run_id,id,depth) AS (
-          SELECT DISTINCT published.run_id,published.run_id,0 FROM candidate_report_versions published WHERE published.state='PUBLISHED'
+          SELECT DISTINCT published.run_id,published.run_id,0 FROM candidate_report_versions published WHERE published.state='PUBLISHED' AND (${candidatePk}::bigint IS NULL OR published.candidate_id=${candidatePk}::bigint)
           UNION ALL
           SELECT lineage.report_run_id,source.recovery_source_run_id,lineage.depth+1
           FROM report_lineage lineage JOIN agent_runs source ON source.id=lineage.id
@@ -535,9 +536,9 @@ export class PostgresProductRepository implements ProductRepository {
             AND transcript_blob.id LIKE ('candidate:' || r.candidate_id || ':' || lineage.id || ':transcript-bundle:%')
           ORDER BY lineage.depth,transcript_blob.created_at_utc DESC LIMIT 1
         ) transcript ON transcript.kind='transcript-bundle'
-        WHERE r.state='PUBLISHED' AND d.drive_file_id IS NOT NULL ORDER BY r.candidate_id,r.analysis_version DESC,d.type`,
+        WHERE r.state='PUBLISHED' AND (${candidatePk}::bigint IS NULL OR r.candidate_id=${candidatePk}::bigint) AND d.drive_file_id IS NOT NULL ORDER BY r.candidate_id,r.analysis_version DESC,d.type`,
       options.summaryOnly ? Promise.resolve([] as Row[]) : this.sql<Row[]>`SELECT DISTINCT ON (candidate_id) candidate_id,manifest_json
-        FROM candidate_input_versions ORDER BY candidate_id,sequence DESC`,
+        FROM candidate_input_versions WHERE (${candidatePk}::bigint IS NULL OR candidate_id=${candidatePk}::bigint) ORDER BY candidate_id,sequence DESC`,
     ]);
     const parsedVacancies = vacancyRows.map((row) => parse<VacancyRecord>(row.record_json));
     const vacancyById = new Map(parsedVacancies.map((vacancy) => [vacancy.id, vacancy]));

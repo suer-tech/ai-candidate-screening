@@ -10,6 +10,10 @@
 - Для сплошного старого текста использовать только консервативные явные границы; неоднозначный текст оставлять вместе.
 - Сохранить предыдущий immutable image и точную команду отката trial release; отчёты и сохранённые результаты не переписывать.
 
+## Performance follow-up (2026-10-14)
+
+The user reports 5–10s+ loading indicators for every candidate card. Read-only production measurement: summary ~189ms; all-candidate detailed SQL exceeded 12s; the same report projection scoped to one candidate ~476ms. Preserve REP-020/050/051 content and existing summary/full API compatibility, but request detailed data for only the selected candidate. Keep list entries intact, invalidate stale detail responses on selection changes, and never fall back to another candidate. No scoring, processing, schema or stored data changes.
+
 ## Capabilities
 
 ### New Capabilities

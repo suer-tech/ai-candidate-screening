@@ -778,6 +778,8 @@ function ProductApp({
   const [pendingAppNavigation, setPendingAppNavigation] = useState(false);
   const [appNavigationSaving, setAppNavigationSaving] = useState(false);
   const [appNavigationError, setAppNavigationError] = useState("");
+  const [loadedCandidateId, setLoadedCandidateId] = useState<CandidateId | null>(null);
+  const [workspaceError, setWorkspaceError] = useState("");
   const pendingAppAction = useRef<(() => void) | null>(null);
   const vacancySettingsNavigation = useRef<VacancySettingsNavigation | null>(null);
 
@@ -819,7 +821,7 @@ function ProductApp({
       controller = new AbortController();
       try {
         const summaryOnly = view === "vacancies" || view === "candidates";
-        const response = await fetch(summaryOnly ? "/api/workspace?summary=1" : "/api/workspace", {
+        const response = await fetch(summaryOnly ? "/api/workspace?summary=1" : `/api/workspace?candidateId=${encodeURIComponent(JSON.stringify(selectedCandidate))}`, {
           cache: "no-store",
           signal: controller.signal,
         });
@@ -827,19 +829,31 @@ function ProductApp({
           candidates?: StoredUiCandidate[];
           vacancies?: VacancyRecord[];
         };
-        if (!active || !response.ok || !payload.candidates || !payload.vacancies) return;
-        const incoming = payload.candidates.map(hydrateCandidate);
-        setCandidates((current) => incoming.map((candidate) => {
+        if (!active) return;
+        if (!response.ok || !payload.candidates || !payload.vacancies) throw new Error("WORKSPACE_UNAVAILABLE");
+        const incoming = payload.candidates.filter((candidate) => summaryOnly || candidate.id === selectedCandidate).map(hydrateCandidate);
+        if (!summaryOnly && incoming.length !== 1) throw new Error("CANDIDATE_UNAVAILABLE");
+        setWorkspaceError("");
+        setCandidates((current) => {
+          const reconciled = incoming.map((candidate) => {
           const previous = current.find((item) => item.id === candidate.id);
           if (previous?.revision !== undefined && candidate.revision !== undefined && previous.revision > candidate.revision) return previous;
           return { ...candidate, tone: previous?.tone ?? candidate.tone };
-        }));
+          });
+          if (summaryOnly) return reconciled;
+          const selected = reconciled[0];
+          return current.some((candidate) => candidate.id === selected.id)
+            ? current.map((candidate) => candidate.id === selected.id ? selected : candidate)
+            : [...current, selected];
+        });
+        if (!summaryOnly) setLoadedCandidateId(selectedCandidate);
         setVacancyState({
           vacancies: payload.vacancies.map(hydrateVacancy),
           operationBindings: {},
         });
         setWorkspaceLoaded(summaryOnly ? "summary" : "full");
       } catch {
+        if (active) setWorkspaceError("Не удалось загрузить рабочие данные. Повторяем запрос…");
         // A later poll reconciles a temporary workspace read failure.
       } finally {
         inFlight = false;
@@ -852,7 +866,7 @@ function ProductApp({
       controller?.abort();
       window.clearInterval(poll);
     };
-  }, [view]);
+  }, [view, selectedCandidate]);
   useEffect(() => {
     let active = true;
     const checkDrive = async () => {
@@ -1002,6 +1016,7 @@ function ProductApp({
   };
   const openCandidate = (id: CandidateId) => {
     requestAppNavigation(() => {
+      setWorkspaceError("");
       setPreviousView(view === "candidate" ? "candidates" : view);
       setSelectedCandidate(id);
       setView("candidate");
@@ -1168,8 +1183,8 @@ function ProductApp({
           onQueueFilter={openFilteredQueue}
         />
       )}
-      {view !== "dashboard" && (!workspaceLoaded || (view === "candidate" && workspaceLoaded !== "full")) && (
-        <section className="page" role="status">Загружаем рабочие данные…</section>
+      {view !== "dashboard" && (!workspaceLoaded || (view === "candidate" && (workspaceLoaded !== "full" || loadedCandidateId !== selectedCandidate))) && (
+        <section className="page" role={workspaceError ? "alert" : "status"}>{workspaceError || "Загружаем рабочие данные…"}</section>
       )}
       {view === "vacancies" && workspaceLoaded && (
         <Vacancies
@@ -1193,11 +1208,10 @@ function ProductApp({
           onClearDashboardFilter={() => setQueueFilter(null)}
         />
       )}
-      {view === "candidate" && workspaceLoaded === "full" && candidates.length > 0 && (
+      {view === "candidate" && workspaceLoaded === "full" && loadedCandidateId === selectedCandidate && candidates.some((item) => item.id === selectedCandidate) && (
         <CandidateDetail
           candidate={
-            candidates.find((item) => item.id === selectedCandidate) ??
-            candidates[0]
+            candidates.find((item) => item.id === selectedCandidate)!
           }
           onBack={() => setView(previousView)}
           onPreview={setPreview}

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="workspace GET summary boundary keeps vacancy profiles and candidate metadata without full candidate content" time="0.025897" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs"/>
+	<testcase name="workspace GET selected detail preserves typed ID 701" time="0.001963" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs"/>
+	<testcase name="workspace GET selected detail preserves typed ID &amp;quot;701&amp;quot;" time="0.002144" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs"/>
+	<testcase name="workspace GET selected detail preserves typed ID &amp;quot;synthetic/public id + русский&amp;quot;" time="0.002310" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs"/>
+	<testcase name="workspace GET selected detail preserves typed ID &amp;quot;xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" time="0.001163" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs"/>
+	<testcase name="workspace GET rejects invalid selected ID " time="0.000329" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs"/>
+	<testcase name="workspace GET rejects invalid selected ID not-json" time="0.000244" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs"/>
+	<testcase name="workspace GET rejects invalid selected ID &amp;quot;&amp;quot;" time="0.000280" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs"/>
+	<testcase name="workspace GET rejects invalid selected ID &amp;quot;   &amp;quot;" time="0.000230" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs"/>
+	<testcase name="workspace GET rejects invalid selected ID &amp;quot;xxxxxxxxxxxxxxxxxxxxxxxxxxxxx" time="0.000185" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs"/>
+	<testcase name="workspace GET rejects invalid selected ID 0" time="0.000129" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs"/>
+	<testcase name="workspace GET rejects invalid selected ID -1" time="0.000167" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs"/>
+	<testcase name="workspace GET rejects invalid selected ID 1.5" time="0.000174" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs"/>
+	<testcase name="workspace GET rejects invalid selected ID 9007199254740992" time="0.000101" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs"/>
+	<testcase name="workspace GET rejects invalid selected ID null" time="0.000101" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs"/>
+	<testcase name="workspace GET rejects invalid selected ID true" time="0.000094" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs"/>
+	<testcase name="workspace GET rejects invalid selected ID []" time="0.000108" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs"/>
+	<testcase name="workspace GET rejects invalid selected ID {}" time="0.000096" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs"/>
+	<testcase name="workspace selected detail preserves authorization and reports a missing candidate without fallback" time="0.000913" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs"/>
+	<testcase name="vacancies mount from real summary route and candidate detail waits for its full workspace response" time="0.402243" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs"/>
+	<testcase name="aborted late summary cannot overwrite a newer full workspace response" time="0.208019" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs"/>
+	<testcase name="aborted late full detail response cannot overwrite current vacancy summary" time="0.229262" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs"/>
+	<testcase name="candidate list uses real summary route and preserves search, status, vacancy and archive filters with result metadata" time="0.190554" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs"/>
+	<testcase name="opening a candidate from compact Candidates render fetches full workspace and waits before mounting detail" time="0.170514" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs"/>
+	<testcase name="switching compact vacancy and candidate lists aborts obsolete reads and late responses keep the latest list" time="0.173951" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs"/>
+	<testcase name="candidate detail and its polls use only selected projection and merge without dropping other list candidates" time="0.239137" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs"/>
+	<testcase name="changing selected candidate to 702 cancels old request and ignores a late old response" time="0.210325" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs"/>
+	<testcase name="changing selected candidate to &amp;quot;701&amp;quot; cancels old request and ignores a late old response" time="0.176304" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs"/>
+	<testcase name="new candidate empty response cannot expose a previously loaded candidate or fallback" time="0.194211" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs"/>
+	<testcase name="new candidate error response cannot expose a previously loaded candidate or fallback" time="0.219517" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs"/>
+	<testcase name="new candidate wrong candidate response cannot expose a previously loaded candidate or fallback" time="0.183843" classname="test" file="C:\Users\user2\.codex\worktrees\terminal-task-production-release\hh\web\tests\workspace-vacancy-summary.acceptance.test.mjs"/>
+	<!-- tests 31 -->
+	<!-- suites 0 -->
+	<!-- pass 31 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 3455.726 -->
+</testsuites>

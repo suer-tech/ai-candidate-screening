@@ -23,4 +23,12 @@
 - [x] 4.2 Independent rendered acceptance records product RED before implementation.
 - [x] 4.3 Hide conditions in UI, retain scale, and move accessible evidence toggle to the card footer.
 - [x] 4.4 Pass focused acceptance/browser/build and attempt the required fail-closed E2E gates.
-- [ ] 4.5 Deploy the authorized trial refinement with pinned rollback and idle/state guards; verify the live result.
+- [x] 4.5 Deploy the authorized trial refinement with pinned rollback and idle/state guards; verify the live result.
+
+## 5. Candidate detail loading regression
+
+- [x] 5.1 Reproduce server latency with read-only timings and verify selected scope is faster without exposing candidate contents.
+- [x] 5.2 Independent application-boundary acceptance RED for scoped detail, selection races and unchanged lists.
+- [x] 5.3 Restrict detailed SQL to the selected candidate and preserve identity-safe client reconciliation.
+- [ ] 5.4 Pass focused acceptance, actual PostgreSQL and browser/regression/build; attempt full E2E fail closed.
+- [ ] 5.5 Deploy the authorized repair with state/rollback guards and measure selected reads after deployment.

@@ -1,0 +1,21 @@
+{
+  "generatedAtUtc": "2026-10-14T11:21:24.617Z",
+  "status": "PASSED",
+  "boundary": "Actual React ProductApp + Chromium with synthetic network fixtures; not server latency proof",
+  "requests": [
+    "/api/workspace?summary=1",
+    "/api/workspace?candidateId=1",
+    "/api/workspace?candidateId=1",
+    "/api/workspace?summary=1",
+    "/api/workspace?candidateId=2"
+  ],
+  "candidatesPreserved": true,
+  "selectedDetailAndPolling": true,
+  "secondCandidateShown": true,
+  "mobileMetrics": {
+    "contentWidth": 410,
+    "viewport": 390
+  },
+  "browserErrors": [],
+  "providerCalls": false
+}

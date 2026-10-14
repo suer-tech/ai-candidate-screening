@@ -165,6 +165,7 @@ async function sourceFiles(root) {
   const files = [];
   for (const entry of entries) {
     if (["tests", "node_modules", ".next", ".output", ".vinext", ".wrangler", ".runtime", "dist"].includes(entry.name)) continue;
+    if (entry.isDirectory() && [".assessment-formatting-acceptance-", ".postgres-assessment-projection-"].some((prefix) => entry.name.startsWith(prefix))) continue;
     const absolute = path.join(root, entry.name);
     if (entry.isDirectory()) files.push(...await sourceFiles(absolute));
     else if (!/\.test\.[^.]+$/i.test(entry.name) && /\.(?:ts|tsx|js|mjs|json)$/i.test(entry.name)) files.push(absolute);

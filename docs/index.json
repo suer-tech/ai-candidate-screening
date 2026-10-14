@@ -11,7 +11,7 @@
     "AssessmentText": {
       "file": "web/app/assessment-text.tsx",
       "kind": "function",
-      "summary": "Adaptive paragraphs and literal lists preserve HR-safe text and order. ABC conditions stay in data but are hidden in the card; the independent evidence toggle follows reasoning and scale, directly before its panel. New presentation-only prompts keep old string schemas and scoring policy; reversible trial, full E2E remains BLOCKED."
+      "summary": "Candidate detail/polls scope SQL reads to the selected typed CandidateId before projection; summary lists and unscoped API stay compatible. Adaptive paragraphs and literal lists preserve HR-safe text and order. ABC conditions stay in data but are hidden in the card; the independent evidence toggle follows reasoning and scale, directly before its panel. New presentation-only prompts keep old string schemas and scoring policy; reversible trial, full E2E remains BLOCKED."
     },
     "matrixCompilationCapabilityConfig": {
       "file": "web/server/candidate-pipeline/matrix-compilation-output-budget.ts",

@@ -1,0 +1,29 @@
+{
+  "generatedAtUtc": "2026-10-14T11:25:14.981Z",
+  "author": "/root/regression_fixture_audit",
+  "executor": "/root/regression_fixture_audit",
+  "independence": "Test-only author; did not implement scoped runtime.",
+  "reason": "Existing hook seed fixtures must include loaded selected candidate identity; status polling oracle must expect selected candidate full endpoint.",
+  "changes": "Only two synthetic hook-state arrays extended with defaults/new loaded identity; old archive/reprocess assertions unchanged. Existing static workspace poll assertion now expects JSON-typed encoded selected ID. Behavioral polling/race contract independently covered by31 scoped workspace cases.",
+  "before": {
+    "artifact": "scoped-fixture-maintenance-before.junit.xml",
+    "sha256": "4f5cd557e25e9b07bd1c9d5d38838d98dba46bb5605d1f0ee8bdf2407800fe65",
+    "tests": 14,
+    "failed": 3,
+    "skipped": 0
+  },
+  "after": {
+    "artifact": "scoped-fixture-maintenance-after.junit.xml",
+    "sha256": "574c3780f6c8b888a2ec8f351f52e64e16eec0c2017e40cffae55505989d9381",
+    "tests": 14,
+    "failed": 0,
+    "skipped": 0
+  },
+  "sourceHashes": {
+    "tests/candidate-lifecycle-controls.acceptance.test.mjs": "11d1ba8da10a9ecbeaf484a82fee54ba5046938a33182a4500c7106bee0c3b47",
+    "tests/operational-dashboard.acceptance.test.mjs": "4bfabbb8253fa3f8778d14f629073b56f34377129cc8aa15313c8136e0dc29bd"
+  },
+  "lint": "Both maintained files ESLint PASS",
+  "limits": "Fixture RED is not a new product defect. Local contract maintenance is not production-like E2E.",
+  "productionWrites": false
+}

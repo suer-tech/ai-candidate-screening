@@ -12,6 +12,8 @@ import uuid
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--image-id', required=True)
+parser.add_argument('--scope-only', action='store_true')
+parser.add_argument('--evidence-name', choices=['detail-loading-image-tests.json', 'detail-loading-postgres-red.json'], default='detail-loading-image-tests.json')
 parser.add_argument('--consent', required=True, choices=['synthetic-only'])
 args = parser.parse_args()
 assert re.fullmatch(r'sha256:[a-f0-9]{64}', args.image_id)
@@ -52,13 +54,18 @@ credentials = {'database-url': database, 'google-oauth-client-secret': 'syntheti
  'telegram-recipients.json': '[]', 'internal-service-tokens.json': '{}', 'rabbitmq-password': 'synthetic-rabbit-password'}
 files = {'.runtime/runtime.env': env}
 files.update({'.runtime/credentials/' + name: value for name, value in credentials.items()})
-extra_tests = ['tests/candidate-assessment-formatting.acceptance.test.mjs', 'tests/matrix-output-budget.acceptance.integration.test.ts', 'tests/abc-direction-provider-contract.acceptance.test.ts']
+extra_tests = ['tests/workspace-candidate-scope.postgres.acceptance.test.ts', 'tests/candidate-assessment-formatting.acceptance.test.mjs', 'tests/matrix-output-budget.acceptance.integration.test.ts', 'tests/abc-direction-provider-contract.acceptance.test.ts']
 files.update({name: (root / 'web' / name).read_text(encoding='utf-8') for name in extra_tests})
 commands = ['node --import tsx scripts/postgres-migrate.ts',
  'node --test tests/candidate-assessment-formatting.acceptance.test.mjs',
  'node --import tsx --test server/google-drive-oauth/postgres-repository.integration.test.ts server/google-drive-oauth/my-drive-adapter.test.ts server/storage/private-temp.test.ts server/candidate-pipeline/production-runtime.integration.test.ts server/candidate-pipeline/matrix-postgres-repository.integration.test.ts server/agent-runtime/terminal-task-retirement-postgres.integration.test.ts',
  'node --import tsx --test server/candidate-pipeline/assessment-join.acceptance.test.ts tests/abc-direction-provider-contract.acceptance.test.ts',
  'node --import tsx --test tests/matrix-output-budget.acceptance.integration.test.ts']
+scope_database_name = 'hh_workspace_scope_acceptance_' + uuid.uuid4().hex
+scope_database = 'postgresql://hh_agent@127.0.0.1:5432/' + scope_database_name
+commands.append('TEST_DATABASE_URL=' + shlex.quote(scope_database) + ' HH_WORKSPACE_SCOPE_ACCEPTANCE_CONSENT=isolated-synthetic-only node --import tsx --test tests/workspace-candidate-scope.postgres.acceptance.test.ts')
+if args.scope_only:
+    commands = [commands[-1]]
 files['image-tests.sh'] = 'set -eu\n' + '\n'.join(commands) + '\n'
 created_pg = created_node = False
 try:
@@ -72,6 +79,7 @@ try:
         time.sleep(1)
     else:
         raise RuntimeError('Synthetic PostgreSQL not ready')
+    remote(['docker', 'exec', pg, 'createdb', '-U', 'hh_agent', scope_database_name])
     remote(['docker', 'create', '--name', node, '--network', 'container:' + pg, '--memory', '768m', '--cpus', '1', '--pids-limit', '150', '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges:true', '--tmpfs', '/tmp:rw,size=64m', '-w', '/app/web', '-e', 'TEST_DATABASE_URL=' + database, '-e', 'MATRIX_TEST_POSTGRES_URL=' + database, '-e', 'HH_RUNTIME_CONFIG_ROOT=/app/web/.runtime', '--entrypoint', '/bin/sh', args.image_id, '-ec', '/bin/sh /app/web/image-tests.sh'])
     created_node = True
     remote(['docker', 'cp', folder + '/.', node + ':/app/web'])
@@ -82,7 +90,7 @@ try:
         code = 3
     evidence = {'generatedAtUtc': datetime.now(timezone.utc).isoformat(), 'status': 'PASSED' if code == 0 else 'FAILED', 'imageId': args.image_id, 'commands': commands, 'exitCode': code,
                 'skippedByGroup': skips, 'stdout': run.stdout, 'stderr': run.stderr, 'productionWrites': False, 'externalProviderCalls': False, 'environment': 'Own PostgreSQL16, network none, synthetic credentials, Node22 packaged source'}
-    (root / 'openspec/changes/format-candidate-assessment-text/evidence/refinement-image-tests.json').write_text(json.dumps(evidence, indent=2), encoding='utf-8')
+    (root / 'openspec/changes/format-candidate-assessment-text/evidence' / args.evidence_name).write_text(json.dumps(evidence, indent=2), encoding='utf-8')
     print(json.dumps({'status': evidence['status'], 'exitCode': code, 'stdoutTail': run.stdout[-2300:], 'stderrTail': run.stderr[-800:]}))
     raise SystemExit(code)
 finally:
