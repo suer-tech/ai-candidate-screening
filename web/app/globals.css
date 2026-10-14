@@ -415,6 +415,36 @@ html[data-theme="dark"] .generate-field-button{background:#172b42;border-color:#
 .criterion-row-copy>b{font-size:12px;color:var(--criterion-accent)}
 .criterion-row-copy>span{margin:5px 0;color:var(--ink);font-size:12px;line-height:1.5}
 .criterion-row-copy>small{color:var(--blue);font-size:11px!important}
+
+/* Assessment prose keeps its original words; spacing expresses the supplied structure. */
+.assessment-prose{min-width:0;font-size:13px;line-height:1.7;overflow-wrap:anywhere}
+.assessment-prose p{margin:0!important;font-size:inherit!important;line-height:inherit!important;color:inherit;white-space:pre-line}
+.assessment-prose p+p,.assessment-prose p+.assessment-text-list,.assessment-prose .assessment-text-list+p{margin-top:12px!important}
+.assessment-prose strong{font-weight:650}
+.assessment-text-list{margin:10px 0!important;padding:0;display:grid;gap:8px;line-height:inherit}
+.assessment-text-list.literal-markers{list-style:none}
+.assessment-text-list li{padding-left:14px;text-indent:-14px;white-space:pre-line}
+.ai-recommendation-copy{min-width:0;flex:1}
+.ai-recommendation-callout .assessment-prose{margin-top:12px;color:var(--ink);font-size:13px}
+.ai-recommendation-callout .assessment-prose p{display:block;color:inherit}
+.ai-recommendation-callout .recommendation-verdict{font-size:14px!important;font-weight:650;line-height:1.5!important}
+.decision-summary-prose{margin:18px 0;color:var(--ink)}
+.criterion-assessment-body{margin:0 40px 18px 66px;font-size:13px;color:var(--ink)}
+.criterion-assessment-body>section+section,.criterion-assessment-body>.criterion-scale{margin-top:16px}
+.criterion-assessment-body h4{margin:0 0 7px;font-size:11px;font-weight:650;color:var(--muted)}
+.criterion-conditions>ul{margin:0;padding-left:18px;display:grid;gap:8px;list-style:disc}
+.criterion-scale{max-width:none!important;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:color-mix(in srgb,var(--paper) 85%,var(--blue-soft))}
+.criterion-scale>summary{font-size:12px!important;line-height:1.5;white-space:normal!important;color:var(--muted)!important}
+.criterion-scale>summary{display:flex;justify-content:space-between;gap:12px}
+.criterion-scale>summary:after{content:"⌄";font-size:14px;color:var(--blue)}
+.criterion-scale[open]>summary:after{content:"⌃"}
+.criterion-scale>summary:focus-visible{outline:2px solid var(--blue);outline-offset:3px}
+.criterion-scale dl{display:grid;gap:12px;margin:14px 0 0}
+.criterion-scale dl>div{display:grid;grid-template-columns:20px minmax(0,1fr);gap:10px}
+.criterion-scale dt{font-size:12px;font-weight:700;color:var(--muted)}
+.criterion-scale dd{margin:0;min-width:0}
+@media(max-width:820px){.criterion-assessment-body{margin-left:58px;margin-right:10px}}
+@media(max-width:520px){.criterion-assessment-body{margin-left:12px;margin-right:12px}.ai-recommendation-callout{padding:12px;gap:9px}.assessment-prose{font-size:13px;line-height:1.7}}
 .criterion-fact>b{color:var(--evidence-verified-ink)}
 .criterion-fact.is-match>b{color:var(--evidence-verified-ink)}
 .criterion-fact.is-mismatch>b{color:var(--risk-ink)}

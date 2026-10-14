@@ -1492,6 +1492,8 @@ export async function createProductionCandidateToolExecution(input: { database: 
             const stored = await storeJson("matrix-rows", operationIdentity, { schemaVersion: "candidate-matrix-rows-bundle/v3", matrixId: published.matrixId, evidenceRef, rows: candidateRows, abcDirections,
               recommendation: String(initial?.output.recommendation ?? (missingIds.length === ids.length ? "Недостаточно данных" : "Рекомендовать с оговорками")),
               recommendationReason: String(initial?.output.recommendationReason ?? "Рекомендация сформирована по доступным строкам; часть оценки потребовала технического fallback."),
+              ...(initial ? { recommendationPromptVersion: (() => { const prompt = llmDependencies.configuration.resolve("matrix_row_evaluation").prompt; return `${prompt.id}/${prompt.version}`; })(),
+                recommendationSchemaVersion: (() => { const schema = llmDependencies.configuration.resolve("matrix_row_evaluation").responseSchema; return `${schema.id}/${schema.version}`; })() } : {}),
               coverageSummary: { extraction: claimCoverage.coverageSummary, evaluation: { criterionCount: ids.length, evaluatedCount: ids.length, technicalFallbackCount: missingIds.length } },
               warnings: [...(claimCoverage.warnings ?? []), ...(Array.isArray(evidence.warnings) ? evidence.warnings.filter((item): item is string => typeof item === "string") : []), ...warnings], traceRefs });
             return { artifactRef: stored.artifactRef, checksum: stored.checksum };

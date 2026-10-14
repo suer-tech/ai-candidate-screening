@@ -1,0 +1,28 @@
+{
+  "generatedAtUtc": "2026-10-14T09:29:59.143318+00:00",
+  "phase": "baseline-before-implementation",
+  "results": [
+    {
+      "command": [
+        "npm.cmd",
+        "run",
+        "e2e:preflight"
+      ],
+      "exitCode": 2,
+      "status": "BLOCKED",
+      "stdout": "\n> site-creator-vinext-starter@0.1.0 e2e:preflight\n> node tests/e2e/preflight.mjs\n\n",
+      "stderr": "E2E preflight BLOCKED: Missing E2E configuration: E2E_BASE_URL, E2E_AUTH_STORAGE_STATE, E2E_PREFLIGHT_TOKEN, E2E_CONTROL_URL, E2E_CONTROL_TOKEN, E2E_FIXTURE_SET_ID, E2E_BUILD_ID, E2E_ENVIRONMENT, E2E_ALLOW_DESTRUCTIVE_CLEANUP\n"
+    },
+    {
+      "command": [
+        "npm.cmd",
+        "run",
+        "e2e:required"
+      ],
+      "exitCode": 1,
+      "status": "BLOCKED",
+      "stdout": "\n> site-creator-vinext-starter@0.1.0 e2e:required\n> playwright test --config tests/e2e/playwright.config.mjs\n\n",
+      "stderr": "Error: Missing E2E configuration: E2E_BASE_URL, E2E_AUTH_STORAGE_STATE, E2E_PREFLIGHT_TOKEN, E2E_CONTROL_URL, E2E_CONTROL_TOKEN, E2E_FIXTURE_SET_ID, E2E_BUILD_ID, E2E_ENVIRONMENT, E2E_ALLOW_DESTRUCTIVE_CLEANUP\n    at readE2eConfig (file:///C:/Users/user2/.codex/worktrees/terminal-task-production-release/hh/web/tests/e2e/config.mjs:60:29)\n    at file:///C:/Users/user2/.codex/worktrees/terminal-task-production-release/hh/web/tests/e2e/playwright.config.mjs:4:16\n    at ModuleJob.run (node:internal/modules/esm/module_job:430:25)\n    at onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:661:26)\n    at requireOrImport (C:\\Users\\user2\\Documents\\Cursor\\hh\\web\\node_modules\\playwright\\lib\\common\\index.js:1136:12)\n    at loadUserConfig (C:\\Users\\user2\\Documents\\Cursor\\hh\\web\\node_modules\\playwright\\lib\\common\\index.js:1323:46)\n    at loadConfig (C:\\Users\\user2\\Documents\\Cursor\\hh\\web\\node_modules\\playwright\\lib\\common\\index.js:1330:22)\n    at Object.loadConfigFromFile (C:\\Users\\user2\\Documents\\Cursor\\hh\\web\\node_modules\\playwright\\lib\\common\\index.js:1546:10)\n    at runTests (C:\\Users\\user2\\Documents\\Cursor\\hh\\web\\node_modules\\playwright\\lib\\cli\\testActions.js:46:18)\n    at _Command.<anonymous> (C:\\Users\\user2\\Documents\\Cursor\\hh\\web\\node_modules\\playwright\\lib\\program.js:55:7)\n"
+    }
+  ]
+}

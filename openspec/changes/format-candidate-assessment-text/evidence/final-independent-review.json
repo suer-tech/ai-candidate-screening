@@ -1,0 +1,95 @@
+{
+  "generatedAt": "2026-10-14T09:50:29.540Z",
+  "node": "v24.14.0",
+  "head": "99a7bb469d348ac13f63c0dd04327f1725044368",
+  "author": "/root/regression_fixture_audit",
+  "executor": "/root/regression_fixture_audit",
+  "independence": "Reviewer did not implement formatting runtime/UI or author the formatting acceptance oracle; tests were executed without changing assertions.",
+  "requirements": [
+    "REP-050",
+    "REP-051",
+    "REP-052"
+  ],
+  "scope": "Read-only implementation/deployment review and independent synthetic checks; evidence writes only.",
+  "codeHashes": {
+    "tests/candidate-assessment-formatting.acceptance.test.mjs": "148d7cbbbbc28da1ae5ef0892a3d1224fa10c10b8f0970ab767ad29a8291f4c0",
+    "server/candidate-pipeline/assessment-join.acceptance.test.ts": "f71309c1391bebae1d78fadde274dd378627fd854e69de25af84b45240dcfada",
+    "app/page.tsx": "a0ca37b05ad4460253665f76a32a384b81afaad70c83314e5761fe6e32df7607",
+    "app/globals.css": "4ce8dc38d799356b2ad67743849638f5b7bd9838fb1ef75473106f28f86d900a",
+    "app/assessment-text.tsx": "7b74203ab63b0ce4057cf2a50f8c2b698f304e388140342aa980c608e269a358",
+    "server/product/postgres-repository.ts": "bb49eeb3956bf2266a55879f5c7e5eebe5434ba639170eee4e9ad7bae22bc5bd",
+    "server/llm/artifacts.ts": "21974e31508c44aaafc0ee276f848c3d3c3df81c4ab43e30d21dedf3f4d3a955",
+    "server/configuration/runtime.ts": "a747b8e40058e3db474e972995d845b310adb14625eab2533d9720b9a69c15ef",
+    "server/candidate-pipeline/assessment-join.ts": "0a8505f24a17a95ced4aa739ea785276ae0abc3b936380b33d5a71f3c6238ef4",
+    "server/candidate-pipeline/production-runtime.ts": "a768062d1871531d2cea9a999c712a94541b142ca1d0969c9d4e38003c2c9f94",
+    "package.json": "c9b02071f4aa605ff4b1a3a8ce8c7f0fd47a97a8f01883bc08d85f9fbe90fc2e",
+    "../deploy/maintenance/deploy-assessment-formatting.py": "c01b3926b534070e31b785eefeea41bd3c07b0d0afd68841ed45546a525b75a3",
+    "../openspec/specs/reporting-and-notifications/spec.md": "6e52bc5b4c07bb8c76079678dcf3701dbe78b95e2bf40b5d600238756ae4d47f",
+    "../deploy/maintenance/rollback-assessment-formatting.py": "0505b6d85668ea5d4abcb9585a13b63217f3fd1bd1e7dcedda1ef84a1e7c616c"
+  },
+  "executedChecks": [
+    {
+      "command": "node --import tsx --test tests/candidate-assessment-formatting.acceptance.test.mjs",
+      "artifact": "final-independent-review.junit.xml",
+      "sha256": "ad8209ff12b7aa077924d365ea1b66eb5db3ac477a40c6e4e20a599d36a7feb0",
+      "tests": 23,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "command": "npx tsx --test server/candidate-pipeline/assessment-join.acceptance.test.ts",
+      "artifact": "final-independent-join.junit.xml",
+      "sha256": "5cbcbea93337c89e70f7fcbdb070104bcde81750207657c5502081d489855ec7",
+      "tests": 37,
+      "failed": 0,
+      "skipped": 0
+    }
+  ],
+  "observations": {
+    "ui": "Separate paragraphs, neutral conditions, native scale disclosure and evidence preserve content. Empty optional sections omitted. Exact text preservation, HTML safety and old/new results verified by 23 synthetic SSR cases.",
+    "promptCompatibility": "New versions append complete old template as exact prefix; prior artifacts remain addressable, response schemas unchanged, no extra stage.",
+    "legacyMetadata": "Serial rows bundle adds actual resolved matrix_row_evaluation prompt/schema identity only when initial call produced result; snapshot reads bundle metadata; historical fill-matrix-rows/v2 fallback is unchanged. This final two-line addition was reviewed in source, not separately exercised through PostgreSQL provider boundary.",
+    "summaryMetadata": "Assessment join prompt version updated to summarize-matrix-assessment/v2; summary schema unchanged; 37 focused checks preserve rows/ABC/evidence and retry semantics.",
+    "deploymentPreconditions": "Explicit release/image/consent, exact base/remote ref, pinned previous image, public source hashes, no changed migrations/lock/Docker config, deployment lock, idle/recheck, replica preservation, infrastructure identity, no state restoration/destructive migrations.",
+    "deploymentRollback": "Re-reviewed both scripts after guard fix. No production state restoration or migration. Python compile succeeds without executing either script. Guard failure leaves ongoing application workers running and intake paused."
+  },
+  "findings": [
+    {
+      "id": "ROLLOUT-DISCOVERY-ROLLBACK-RACE",
+      "status": "RESOLVED_AND_REVIEWED",
+      "priority": "P1",
+      "file": "deploy/maintenance/deploy-assessment-formatting.py",
+      "lines": [
+        200,
+        228
+      ],
+      "description": "Discovery worker is resumed before rollback-sensitive readiness/identity/count postchecks. A failure thereafter can enter rollback and recreate services even if discovery created an ACTIVE run, since exception path has no intake stop/idle or drain guard.",
+      "requestedFix": "Perform identity/count checks before discovery resumes; exception after resumed discovery must stop discovery and wait/recheck idle before any image/source rollback, otherwise leave intake paused for manual recovery.",
+      "resolution": "Switched exception re-pauses public intake, stops only discovery and checks active runs/running tasks/running attempts/unsafe effects before image, build, source or service recreation. If new work exists, assertion leaves application pools intact and public intake paused for manual recovery. Explicit rollback script applies equivalent guard before restoring the trial."
+    }
+  ],
+  "gateStatus": {
+    "focusedAcceptance": "GREEN",
+    "productionLikeE2e": "BLOCKED_NOT_RUN_BY_THIS_REVIEW",
+    "productionDeployment": "NOT_PERFORMED",
+    "deployReview": "PASS_SCOPED_IDLE_TRIAL",
+    "productReadiness": false
+  },
+  "limits": "Synthetic SSR/config/join GREEN is not a real provider or four required production-like E2E GREEN. Main security/integration specs on this production-base worktree still retain known personalOAuth conflict. No credentials, candidate materials, provider effects, production writes or implementation edits. Explicitly authorized production read-only technical baseline is included.",
+  "productionBaseline": {
+    "artifact": "independent-production-before.json",
+    "sha256": "5283735da26cbec3a8d086adf34234dc28aade7417226daa51d2cbc3760f5107",
+    "head": "99a7bb469d348ac13f63c0dd04327f1725044368",
+    "publicWorkingTreeDirty": false,
+    "snapshotAtUtc": "2026-10-14T09:49:22.538Z",
+    "activeRuns": 0,
+    "runningTasks": 0,
+    "runningAttempts": 0,
+    "unsafeEffects": 0,
+    "terminalPending": 0,
+    "tableFingerprintCount": 6,
+    "containerCount": 25,
+    "method": "Actual repeatable-read read-only PostgreSQL transaction; SHA256 of sorted explicit technical columns computed server-side. Selected Docker image/label/running/start metadata only. No env or content/credentials reads.",
+    "limits": "Not under deployment lock; rollout must recheck idleness after intake/discovery pause. No production writes."
+  }
+}

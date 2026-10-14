@@ -188,7 +188,7 @@ test("WF-044 assessment assembly preserves persisted rows, evidence, ABC and pen
   assert.equal(result.recommendation, summary.recommendation);
   assert.equal(result.recommendationReason, summary.recommendationReason);
   assert.equal(result.recommendationSchemaVersion, "candidate-assessment-summary/v1");
-  assert.equal(result.recommendationPromptVersion, "summarize-matrix-assessment/v1");
+  assert.equal(result.recommendationPromptVersion, "summarize-matrix-assessment/v2");
   assert.deepEqual(input, before);
 });
 

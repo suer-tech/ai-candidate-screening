@@ -8,6 +8,11 @@
     }
   },
   "symbols": {
+    "AssessmentText": {
+      "file": "web/app/assessment-text.tsx",
+      "kind": "function",
+      "summary": "Adaptive paragraphs, literal lists and neutral ABC sections preserve HR-safe text and order. New presentation-only prompts keep old string schemas and scoring policy; reversible trial, full E2E remains BLOCKED."
+    },
     "matrixCompilationCapabilityConfig": {
       "file": "web/server/candidate-pipeline/matrix-compilation-output-budget.ts",
       "kind": "function",

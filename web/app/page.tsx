@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent, type MutableRefObject, type ReactNode } from "react";
+import { AssessmentText } from "./assessment-text";
 import {
   type AbcDirectionField,
   type AbcProfileDirection,
@@ -3467,10 +3468,10 @@ function CandidateDetail({
                     </div>
                     <span>Версия {candidate.result!.version}</span>
                   </div>
-                  {candidateDecisionSummary(candidate) && <p className="lead">{candidateDecisionSummary(candidate)}</p>}
+                  {candidateDecisionSummary(candidate) && <AssessmentText className="decision-summary-prose" text={candidateDecisionSummary(candidate)} />}
                   <div className={`ai-recommendation-callout recommendation-${recommendationStyle!.tone}`}>
                     <RecommendationIcon tone={recommendationStyle!.tone} />
-                    <div><b>Итог AI</b><p>{candidate.result!.recommendation}</p>{candidate.result!.aiOverview && <small>{candidateRecommendationBasis(candidate.result!.aiOverview)}</small>}</div>
+                    <div className="ai-recommendation-copy"><b>Итог AI</b><p className="recommendation-verdict">{candidate.result!.recommendation}</p>{candidate.result!.aiOverview && <AssessmentText text={candidateRecommendationBasis(candidate.result!.aiOverview)} />}</div>
                   </div>
                 </article>
                 {candidate.result!.aiOverview ? (
@@ -3585,20 +3586,14 @@ function AiOverviewDetails({
           <h3 id="abc-criteria-heading">Расшифровка ABC-оценки</h3>
         {abcCriteria.map(({ criterion, facts, linkedFactCount }, index) => {
           const rowKey = `abc:${criterion.direction}:${index}`;
-          const definitions = [["A", criterion.gradeA], ["B", criterion.gradeB], ["C", criterion.gradeC]]
-            .filter((entry): entry is [string, string] => typeof entry[1] === "string" && Boolean(entry[1].trim()))
-            .map(([grade, definition]) => `${grade} — ${definition}`);
-          const inferredConditions = Array.isArray(criterion.definingConditions) && criterion.definingConditions.length
-            ? `Учтённые признаки: ${criterion.definingConditions.join("; ")}` : "";
-          const scale = definitions.length ? `Критерии уровней: ${definitions.join("; ")}`
-            : "Использована стандартная шкала: A — выше ожиданий роли; B — соответствует ожиданиям роли; C — ниже ожиданий или требуется заметная поддержка";
-          const reason = [criterion.reason, inferredConditions, scale].filter(Boolean).join(" ");
           return <CriterionDisclosureRow
             key={rowKey}
             badge={["A", "B", "C"].includes(criterion.grade) ? criterion.grade : "?"}
             badgeClass={["A", "B", "C"].includes(criterion.grade) ? `grade-${criterion.grade.toLowerCase()}` : "grade-neutral"}
             title={criterion.direction}
-            reason={reason}
+            reason={criterion.reason}
+            definingConditions={criterion.definingConditions}
+            gradeDefinitions={[["A", criterion.gradeA], ["B", criterion.gradeB], ["C", criterion.gradeC]]}
             facts={facts}
             factCount={linkedFactCount}
             evidenceId={`criterion-evidence-abc-${index}`}
@@ -3607,7 +3602,7 @@ function AiOverviewDetails({
           />
         })}
         </section>
-        <section className="assessment-subsection additional-criteria-subsection" aria-labelledby="additional-criteria-heading">
+        {(additionalCriteria.length > 0 || groupedAdditionalEvidence.length > 0) && <section className="assessment-subsection additional-criteria-subsection" aria-labelledby="additional-criteria-heading">
           <h3 id="additional-criteria-heading">Дополнительные критерии</h3>
         {additionalCriteria.map(({ criterion: item, facts, linkedFactCount }, index) => {
           const rowKey = `competency:${item.name}:${index}`;
@@ -3617,7 +3612,7 @@ function AiOverviewDetails({
           const rowKey = `evidence:${criterion}`;
           return <CriterionDisclosureRow key={rowKey} rowClassName="grouped-evidence-detail-row" badge={<GroupedEvidenceIcon />} badgeClass="grade-neutral" title={criterion} reason="Доказательства, связанные с этим критерием" facts={facts} factCount={facts.length} evidenceId={`criterion-evidence-grouped-${index}`} open={openCriterion === rowKey} onToggle={() => setOpenCriterion((current) => current === rowKey ? null : rowKey)} />;
         })}
-        </section>
+        </section>}
       </article>
     </>
   );
@@ -3635,6 +3630,8 @@ function CriterionDisclosureRow({
   onToggle,
   rowClassName = "",
   emptyEvidenceLabel,
+  definingConditions,
+  gradeDefinitions,
 }: {
   badge: ReactNode;
   badgeClass: string;
@@ -3647,17 +3644,26 @@ function CriterionDisclosureRow({
   onToggle: () => void;
   rowClassName?: string;
   emptyEvidenceLabel?: string;
+  definingConditions?: string[];
+  gradeDefinitions?: Array<[string, string | undefined]>;
 }) {
+  const conditions = (definingConditions ?? []).filter((value) => typeof value === "string" && value.trim());
+  const definitions = (gradeDefinitions ?? []).filter((entry): entry is [string, string] => typeof entry[1] === "string" && Boolean(entry[1].trim()));
   return <div className={`criterion-detail-item criterion-detail-row ${rowClassName} ${open ? "is-open" : ""}`.trim()}>
     <button className="criterion-row-trigger" type="button" aria-expanded={open} aria-controls={evidenceId} onClick={onToggle}>
       <span className={`assessment-grade ${badgeClass}`}>{badge}</span>
-      <span className="criterion-row-copy"><b>{title}</b>{reason && <span>{reason}</span>}<small>{factCount === 0 && emptyEvidenceLabel ? emptyEvidenceLabel : formatEvidenceCount(factCount)}</small></span>
+      <span className="criterion-row-copy"><b>{title}</b><small>{factCount === 0 && emptyEvidenceLabel ? emptyEvidenceLabel : formatEvidenceCount(factCount)}</small></span>
       <span className="criterion-row-chevron" aria-hidden="true">
         <svg className="criterion-row-chevron-icon" viewBox="0 0 16 16" focusable="false">
           <path d="M4 6L8 10L12 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </span>
     </button>
+    {(reason?.trim() || conditions.length > 0 || definitions.length > 0) && <div className="criterion-assessment-body">
+      {reason?.trim() && <section className="criterion-reason"><h4>Обоснование</h4><AssessmentText text={reason} /></section>}
+      {conditions.length > 0 && <section className="criterion-conditions"><h4>Учтённые признаки</h4><ul>{conditions.map((condition, index) => <li key={index}><AssessmentText text={condition} /></li>)}</ul></section>}
+      {definitions.length > 0 && <details className="criterion-scale"><summary>Критерии уровней</summary><dl>{definitions.map(([grade, definition]) => <div key={grade}><dt>{grade}</dt><dd><AssessmentText text={definition} /></dd></div>)}</dl></details>}
+    </div>}
     <div className="criterion-evidence-area" id={evidenceId} aria-hidden={!open}>
       <div className="criterion-evidence-content">
         {facts.length ? facts.map((fact) => {
@@ -3781,9 +3787,9 @@ function candidateDecisionSummary(candidate: UiCandidate) {
   if (!overview) return summary;
   const normalizedBasis = normalizedDecisionText(candidateRecommendationBasis(overview));
   if (!normalizedBasis) return summary;
-  const withoutRepeatedBasis = summary.split(/(?<=[.!?])\s+/u)
+  const withoutRepeatedBasis = summary.split(/(?<=[.!?])(?=\s)/u)
     .filter((sentence) => normalizedDecisionText(sentence) !== normalizedBasis)
-    .join(" ").trim();
+    .join("").trim();
   return withoutRepeatedBasis || "";
 }
 
