@@ -81,7 +81,7 @@ export async function buildAssessmentJoin(input: AssessmentJoinInput, call: Summ
     schemaVersion: "candidate-matrix-rows-bundle/v3", matrixId: input.matrixId,
     evidenceRef: input.evidenceRef, rows: rows.rows ?? [], abcDirections: abc.directions ?? [],
     recommendation: summary.recommendation, recommendationReason: summary.recommendationReason,
-    recommendationPromptVersion: "summarize-matrix-assessment/v1",
+    recommendationPromptVersion: "summarize-matrix-assessment/v2",
     recommendationSchemaVersion: "candidate-assessment-summary/v1",
     coverageSummary: rows.coverageSummary,
     warnings: [...(rows.warnings ?? []), ...(abc.warnings ?? []), ...(jevWarning ? [jevWarning] : [])],

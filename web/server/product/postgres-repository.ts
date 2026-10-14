@@ -107,6 +107,10 @@ function hrText(value: unknown) {
   return typeof value === "string" ? hrSafeReportText(value).replace(/\s+/g, " ").trim() : "";
 }
 
+function hrProse(value: unknown) {
+  return typeof value === "string" ? hrSafeReportText(value).replace(/\r\n?/g, "\n").trim() : "";
+}
+
 function normalizedDecisionText(value: unknown) {
   return hrText(value).toLocaleLowerCase("ru").replace(/[«»"'.,;:!?—–\-()]/g, " ").replace(/\s+/g, " ").trim();
 }
@@ -142,7 +146,7 @@ export function projectAssessment(snapshotValue: unknown, evidenceValue: unknown
     const factIds = publicFactIds(item.factIds);
     if (!factIds.length) return [];
     const safeName = hrText(item.name);
-    const safeReason = hrText(item.reason);
+    const safeReason = hrProse(item.reason);
     const basis = concreteBasisByPublicId.get(factIds[0]);
     const reasonIsGeneric = !safeReason
       || /^(?:Вывод основан на указанном фрагменте материалов кандидата\.?|Дополнительн(?:ое наблюдение|ая сильная сторона из материалов)\s*:?)$/iu.test(safeReason);
@@ -162,7 +166,7 @@ export function projectAssessment(snapshotValue: unknown, evidenceValue: unknown
     }) : [];
     const factIds = publicFactIds([...evidenceIds, ...(Array.isArray(row.supportingClaimIds) ? row.supportingClaimIds : []), ...(Array.isArray(row.contradictingClaimIds) ? row.contradictingClaimIds : [])]);
     return [{ name: hrText(criterion.sourceText ?? criterion.interpretation) || "Пункт вакансии", category: String(criterion.category ?? "additional"), state: String(row.state ?? ""),
-      reason: hrText(row.conclusion ?? row.reason), factIds, missingData: hrText(row.missingData), followUpQuestion: hrText(row.followUpQuestion) }];
+      reason: hrProse(row.conclusion ?? row.reason), factIds, missingData: hrProse(row.missingData), followUpQuestion: hrProse(row.followUpQuestion) }];
   }) : [];
   const evidenceBackedRows = matrixRows.filter((item) => item.factIds.length > 0);
   const positiveMatrixRows = evidenceBackedRows.filter((item) => ["Соответствует", "Подтверждено"].includes(item.state));
@@ -182,7 +186,7 @@ export function projectAssessment(snapshotValue: unknown, evidenceValue: unknown
     const title = [direction.name, direction.title].find((item) => typeof item === "string" && item.trim());
     if (!id && typeof title !== "string") return [];
     return [{ id: id || String(title), direction: typeof title === "string" ? hrText(title) : ABC_LABELS[id] ?? hrText(id),
-      gradeA: hrText(direction.gradeA), gradeB: hrText(direction.gradeB), gradeC: hrText(direction.gradeC) }];
+      gradeA: hrProse(direction.gradeA), gradeB: hrProse(direction.gradeB), gradeC: hrProse(direction.gradeC) }];
   }) : [];
   const stateDirectionIds = Object.keys(abcStates).filter((key) => !/^criterion-/i.test(key));
   const abcConfigured = vacancyDirections.length > 0 || structured.abcConfigured === true || stateDirectionIds.length > 0;
@@ -190,10 +194,10 @@ export function projectAssessment(snapshotValue: unknown, evidenceValue: unknown
   const abc = abcConfigured ? projectedDirections.map((direction) => {
     const basis = record(abcEvidence[direction.id]);
     const definingConditions = Array.isArray(basis.definingConditions) ? basis.definingConditions.flatMap((value) => {
-      const condition = hrText(value); return condition ? [condition] : [];
+      const condition = hrProse(value); return condition ? [condition] : [];
     }) : [];
     return { direction: direction.direction, grade: typeof abcStates[direction.id] === "string" ? String(abcStates[direction.id]) : "Недостаточно данных",
-      reason: hrText(basis.reason) || undefined, factIds: publicFactIds(basis.factIds), gradeA: direction.gradeA || undefined, gradeB: direction.gradeB || undefined,
+      reason: hrProse(basis.reason) || undefined, factIds: publicFactIds(basis.factIds), gradeA: direction.gradeA || undefined, gradeB: direction.gradeB || undefined,
       gradeC: direction.gradeC || undefined, definingConditions: definingConditions.length ? definingConditions : undefined };
   }) : [{ direction: "ABC-профиль не настроен для вакансии", grade: "Не настроен", reason: "В профиле вакансии нет ABC-направлений.", factIds: [] }];
   const criterionByFactId = new Map<string, string>();
@@ -225,13 +229,13 @@ export function projectAssessment(snapshotValue: unknown, evidenceValue: unknown
   }
   const evidence = internalEvidence.map((item) => ({ id: publicIdByInternal.get(item.internalId)!, label: item.relation === "CONTRADICTS" ? "Основание несоответствия" : "Основание вывода",
     claim: item.quote, source: claimSourceLabel(item.locator, item.sourceClass), criterion: nameByInternalId.get(item.internalId) ?? "Общий анализ", quote: item.quote })).concat(legacyEvidence);
-  const recommendationBasis = hrText(snapshot.recommendationReason)
+  const recommendationBasis = hrProse(snapshot.recommendationReason)
     || stopFactors.find((item) => item.state === "Подтверждено")?.reason
     || risks[0]?.reason || competencies.find((item) => item.reason)?.reason
     || "Предметное основание рекомендации отсутствует в актуальной версии оценки.";
   const normalizedBasis = normalizedDecisionText(recommendationBasis);
   const summaryPart = (item: { name?: string; state?: string; reason?: string } | undefined) => {
-    const reason = hrText(item?.reason);
+    const reason = hrProse(item?.reason);
     if (reason && normalizedDecisionText(reason) !== normalizedBasis) return reason;
     const name = hrText(item?.name);
     return name && normalizedDecisionText(name) !== normalizedBasis ? `${name}${item?.state ? `: ${hrText(item.state)}` : ""}.` : "";
@@ -244,9 +248,9 @@ export function projectAssessment(snapshotValue: unknown, evidenceValue: unknown
     ...abc.map((item) => summaryPart({ name: item.direction, state: item.grade, reason: item.reason })),
   ].find((value) => value && !used.has(normalizedDecisionText(value))) ?? "";
   const summaryParts = [positivePart, attentionPart, additionalPart].filter(Boolean);
-  const summary = summaryParts.join(" ")
+  const summary = summaryParts.join("\n\n")
     || `Анализ завершён${typeof snapshot.recommendation === "string" ? ` с рекомендацией «${snapshot.recommendation}»` : ""}. Детальные основания приведены в критериях и доказательствах.`;
-  return { summary, recommendationBasis: hrText(recommendationBasis), stopFactors, abcConfigured, abc, criteria: matrixRows, competencies, strengths, risks, accessToKe, evidence };
+  return { summary, recommendationBasis: hrProse(recommendationBasis), stopFactors, abcConfigured, abc, criteria: matrixRows, competencies, strengths, risks, accessToKe, evidence };
 }
 
 export class PostgresProductRepository implements ProductRepository {

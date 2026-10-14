@@ -1,0 +1,36 @@
+{
+  "generatedAtUtc": "2026-10-14T09:40:38.242Z",
+  "status": "PASSED",
+  "boundary": "Actual React client mount and Chromium; synthetic fixtures; real production CSS",
+  "checks": [
+    {
+      "variant": "Абзацы",
+      "exactContent": true
+    },
+    {
+      "variant": "Короткий итог",
+      "exactContent": true
+    },
+    {
+      "variant": "Сплошной текст",
+      "exactContent": true
+    },
+    {
+      "variant": "Явные разделы",
+      "exactContent": true
+    },
+    {
+      "variant": "Список в строке",
+      "exactContent": true
+    },
+    {
+      "variant": "Неполная оценка",
+      "exactContent": true
+    }
+  ],
+  "scaleToggle": true,
+  "evidenceToggle": true,
+  "mobileOverflow": false,
+  "browserErrors": [],
+  "providerCalls": false
+}

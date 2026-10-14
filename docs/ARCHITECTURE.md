@@ -59,6 +59,8 @@ Dashboard projection также проходит по recovery lineage: опуб
 
 ## Границы модулей
 
+- `web/app/assessment-text.tsx` — безопасное представление готового HR-safe текста: исходные абзацы, явные разделы/списки и conservative fallback с проверкой непробельного содержимого и порядка. Карточка разделяет ABC-обоснование, нейтральные признаки, native disclosure шкалы и evidence. `hrProse` в product projection сохраняет переносы, labels/comparison продолжают нормализоваться отдельно. Новые presentation-only prompts `fill-matrix-rows/v3`, `assess-abc-direction/v3`, `summarize-matrix-assessment/v2` добавляют оформление поверх прежних правил и прежних string schemas; дополнительного LLM-вызова нет. Trial/rollback описаны в change `format-candidate-assessment-text`.
+
 - `web/server/configuration/` — fail-closed загрузка одного `runtime.env`, точного credential allowlist и server dependency container.
 - `web/server/storage/` и `web/drizzle-postgres/` — PostgreSQL pool, migrations, `bytea` blob store и приватные временные каталоги.
 - `web/server/product/` — вакансии, кандидаты, lifecycle, dashboard и LLM-генерация вакансии.
